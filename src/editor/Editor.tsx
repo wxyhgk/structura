@@ -60,7 +60,7 @@ export function Editor() {
   const mod = isMac() ? "⌘" : "Ctrl"
 
   useEffect(() => {
-    document.title = "结构式"
+    document.title = "Structura"
   }, [])
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export function Editor() {
       <header className="flex h-8 shrink-0 items-center gap-1 border-b border-[#d0d0d0] bg-[#f2f2f2] pr-3 pl-2">
         <div className="mr-1 flex items-center gap-1.5 px-1.5 font-medium">
           <LogoMark />
-          结构式
+          Structura
         </div>
         <MenuButton label="文件">
           <DropdownMenuItem onClick={editor.newDocument}>

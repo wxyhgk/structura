@@ -19,7 +19,7 @@ function chargeCode(charge: number): number {
   return 0
 }
 
-export function toMolfile(mol: Molecule, title = "结构式"): string {
+export function toMolfile(mol: Molecule, title = "Structura"): string {
   const index = new Map(mol.atoms.map((atom, position) => [atom.id, position + 1]))
   const lines = [
     title,

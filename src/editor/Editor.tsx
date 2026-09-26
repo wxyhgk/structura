@@ -15,7 +15,8 @@ import {
 import { sceneToSvg } from "@/chem/draw"
 import { shortcutToElement } from "@/chem/elements/index"
 import { toMolfile } from "@/chem/molfile"
-import { readSdf, sideBySide } from "@/chem/sdf"
+import { placeBeside, readMolfile, readSdf, sideBySide } from "@/chem/sdf"
+import type { Molecule } from "@/chem/types"
 import type { Problem } from "@/chem/validate"
 import { Button } from "@/components/ui/button"
 import {
@@ -39,7 +40,9 @@ import { Canvas, type CanvasHandle } from "@/editor/Canvas"
 import { LogoMark } from "@/editor/icons"
 import { ToolPalette } from "@/editor/ToolPalette"
 import { toolLabel } from "@/editor/tools"
+import { loadRDKit } from "@/editor/rdkit"
 import { useEditor } from "@/editor/useEditor"
+import { looksLikeSmiles, smilesLines, smilesToMolfile } from "@/rdkit/smiles"
 
 function download(filename: string, contents: string, type: string) {
   const blob = new Blob([contents], { type })
@@ -80,7 +83,51 @@ export function Editor() {
   const [zoom, setZoom] = useState(1)
   const [notes, setNotes] = useState<{ opened: boolean; lines: string[] } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [smilesOpen, setSmilesOpen] = useState(false)
+  const [smilesText, setSmilesText] = useState("")
+  const [smilesStatus, setSmilesStatus] = useState<{ busy: boolean; errors: string[] }>({ busy: false, errors: [] })
   const mod = isMac() ? "⌘" : "Ctrl"
+
+  /** Adds molecules to the right of the drawing, as one undoable step, and shows them all. */
+  function addBeside(molecules: Molecule[]) {
+    if (molecules.length === 0) return
+    const merged = placeBeside(editor.mol, molecules)
+    editor.commit(merged)
+    canvasRef.current?.fitContent(merged)
+  }
+
+  /** Converts SMILES with RDKit, loading it on first use. Returns the lines that failed. */
+  async function importSmiles(text: string): Promise<string[]> {
+    const lines = smilesLines(text)
+    if (lines.length === 0) return ["没有找到 SMILES。"]
+    const rdkit = await loadRDKit()
+    const molecules: Molecule[] = []
+    const errors: string[] = []
+    for (const { smiles } of lines) {
+      const result = smilesToMolfile(rdkit, smiles)
+      if ("error" in result) {
+        errors.push(`无法解析：${smiles}`)
+        continue
+      }
+      molecules.push(readMolfile(result.molfile).mol)
+    }
+    addBeside(molecules)
+    return errors
+  }
+
+  async function submitSmiles() {
+    setSmilesStatus({ busy: true, errors: [] })
+    try {
+      const errors = await importSmiles(smilesText)
+      setSmilesStatus({ busy: false, errors })
+      if (errors.length === 0) {
+        setSmilesOpen(false)
+        setSmilesText("")
+      }
+    } catch {
+      setSmilesStatus({ busy: false, errors: ["RDKit 加载失败，请检查网络后重试。"] })
+    }
+  }
 
   async function openFile(file: File) {
     const records = readSdf(await file.text())
@@ -99,6 +146,29 @@ export function Editor() {
   useEffect(() => {
     document.title = "Structura"
   }, [])
+
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      const target = event.target
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
+      if (document.querySelector("[data-slot=dialog-content]")) return
+      const text = event.clipboardData?.getData("text/plain") ?? ""
+      if (/^\s*M {2}END/m.test(text)) {
+        event.preventDefault()
+        const records = readSdf(text)
+        addBeside(records.filter((record) => record.mol.atoms.length > 0).map((record) => record.mol))
+        const found = importNotes(records)
+        if (found.length > 0) setNotes({ opened: true, lines: found })
+      } else if (looksLikeSmiles(text)) {
+        event.preventDefault()
+        void importSmiles(text)
+          .then((errors) => errors.length > 0 && setNotes({ opened: true, lines: errors }))
+          .catch(() => setNotes({ opened: false, lines: ["RDKit 加载失败，请检查网络后重试。"] }))
+      }
+    }
+    window.addEventListener("paste", onPaste)
+    return () => window.removeEventListener("paste", onPaste)
+  })
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -234,6 +304,7 @@ export function Editor() {
             打开 MOL/SDF…
             <DropdownMenuShortcut>{mod}O</DropdownMenuShortcut>
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSmilesOpen(true)}>导入 SMILES…</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => {
@@ -420,6 +491,35 @@ export function Editor() {
           <ul className="max-h-72 list-disc space-y-1 overflow-y-auto pl-5 text-[13px]" data-testid="import-notes">
             {notes?.lines.map((line, index) => <li key={index}>{line}</li>)}
           </ul>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={smilesOpen} onOpenChange={(open) => !smilesStatus.busy && setSmilesOpen(open)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>导入 SMILES</DialogTitle>
+            <DialogDescription>每行一个 SMILES，后面可以跟名称。第一次使用会下载 RDKit（约 2.4 MB）。也可以直接在画布上粘贴。</DialogDescription>
+          </DialogHeader>
+          <textarea
+            className="h-32 w-full resize-y rounded border border-[#c8c8c8] p-2 font-mono text-[13px] outline-none focus:border-[#1a73e8]"
+            placeholder={"CC(=O)Oc1ccccc1C(=O)O aspirin\nc1ccc2ccccc2c1"}
+            value={smilesText}
+            data-testid="smiles-input"
+            onChange={(event) => setSmilesText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) void submitSmiles()
+            }}
+          />
+          {smilesStatus.errors.length > 0 && (
+            <ul className="list-disc pl-5 text-[13px] text-[#d1242f]" data-testid="smiles-errors">
+              {smilesStatus.errors.map((error, index) => <li key={index}>{error}</li>)}
+            </ul>
+          )}
+          <div className="flex justify-end">
+            <Button size="sm" disabled={smilesStatus.busy || smilesText.trim() === ""} onClick={() => void submitSmiles()} data-testid="smiles-submit">
+              {smilesStatus.busy ? "正在转换…" : "导入"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

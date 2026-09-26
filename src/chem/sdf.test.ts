@@ -5,7 +5,7 @@ import { plainFormula } from "./formula.ts"
 import { setAtomLabel } from "./hotkeys.ts"
 import { addAtom, addBond, bumpCharge, createBondAt, emptyMolecule, fuseRing, placeRing, sprout } from "./molecule.ts"
 import { toMolfile } from "./molfile.ts"
-import { readMolfile, readSdf, sideBySide } from "./sdf.ts"
+import { placeBeside, readMolfile, readSdf, sideBySide } from "./sdf.ts"
 import type { Molecule } from "./types.ts"
 import { validate } from "./validate.ts"
 
@@ -127,4 +127,15 @@ test("files the editor cannot hold are reported, not guessed at", () => {
 
   const radical = toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)).replace("M  END", "M  RAD  1   1   2\nM  END")
   assert.ok(readMolfile(radical).problems.some((problem) => problem.message.includes("radical")))
+})
+
+test("pasted molecules go to the right of the drawing without moving it", () => {
+  const drawn = createBondAt(emptyMolecule(), { x: 100, y: 200 }, SINGLE)
+  const [pasted] = readSdf(fixture("rdkit-molecules.sdf"))
+  const merged = placeBeside(drawn, [pasted.mol])
+  assert.deepEqual(merged.atoms.slice(0, 2), drawn.atoms)
+  assert.ok(merged.atoms.slice(2).every((atom) => atom.x > Math.max(...drawn.atoms.map((item) => item.x))))
+  assert.ok(merged.atoms.slice(2).every((atom) => atom.id >= drawn.nextAtomId))
+  assert.deepEqual(validate(merged).filter((problem) => problem.severity === "error"), [])
+  assert.equal(placeBeside(emptyMolecule(), [pasted.mol]).atoms.length, pasted.mol.atoms.length)
 })

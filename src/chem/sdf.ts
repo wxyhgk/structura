@@ -249,3 +249,23 @@ export function sideBySide(molecules: Molecule[], after: Molecule = emptyMolecul
   }
   return merged
 }
+
+/**
+ * Adds molecules to the right of what is already drawn, two bond lengths away and
+ * centred on it, without moving the existing atoms.
+ */
+export function placeBeside(existing: Molecule, molecules: Molecule[]): Molecule {
+  const incoming = sideBySide(molecules, existing)
+  if (existing.atoms.length === 0) return incoming
+  if (incoming.atoms.length === 0) return existing
+  const right = Math.max(...existing.atoms.map((atom) => atom.x))
+  const ys = existing.atoms.map((atom) => atom.y)
+  const dx = right + BOND_LENGTH * 2 - Math.min(...incoming.atoms.map((atom) => atom.x))
+  const dy = (Math.min(...ys) + Math.max(...ys)) / 2
+  return {
+    ...incoming,
+    atoms: [...existing.atoms, ...incoming.atoms.map((atom) => ({ ...atom, x: atom.x + dx, y: atom.y + dy }))],
+    bonds: [...existing.bonds, ...incoming.bonds],
+    groups: [...existing.groups, ...incoming.groups],
+  }
+}

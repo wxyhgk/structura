@@ -1,0 +1,4832 @@
+[
+ {
+  "label": "Me",
+  "synonyms": [
+   "CH3",
+   "Methyl",
+   "H3C"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C",
+  "attachments": 1,
+  "formula": "CH3",
+  "category": "alkyl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "structura-code",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": "CH3 is also a plain formula label; resolve CH3 as Me."
+ },
+ {
+  "label": "Et",
+  "synonyms": [
+   "C2H5",
+   "CH2CH3",
+   "Ethyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CC",
+  "attachments": 1,
+  "formula": "C2H5",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "structura-code",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": "RDKit/Marvin agree."
+ },
+ {
+  "label": "nPr",
+  "synonyms": [
+   "Pr",
+   "n-Pr",
+   "C3H7",
+   "n-C3H7",
+   "CH2CH2CH3",
+   "Propyl",
+   "Prn",
+   "n-Propyl",
+   "nPropyl",
+   "n-Pro"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCC",
+  "attachments": 1,
+  "formula": "C3H7",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Pr (unprefixed) means n-propyl by convention, but Pr is also praseodymium (element-first lookup wins)."
+ },
+ {
+  "label": "iPr",
+  "synonyms": [
+   "i-Pr",
+   "iso-Pr",
+   "Pri",
+   "CHMe2",
+   "CH(CH3)2",
+   "i-C3H7",
+   "Isopropyl",
+   "i-Propyl",
+   "i-Pro"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(C)C",
+  "attachments": 1,
+  "formula": "C3H7",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "cPr",
+  "synonyms": [
+   "c-Pr",
+   "cyclopropyl",
+   "c-C3H5",
+   "cC3H5",
+   "cPropyl",
+   "c-Propyl",
+   "c-Pro"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C1CC1",
+  "attachments": 1,
+  "formula": "C3H5",
+  "category": "alkyl",
+  "sources": [
+   "openbabel",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "nBu",
+  "synonyms": [
+   "Bu",
+   "n-Bu",
+   "Bun",
+   "C4H9",
+   "n-C4H9",
+   "Butyl",
+   "n-Butyl",
+   "nButyl",
+   "n-But"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCCC",
+  "attachments": 1,
+  "formula": "C4H9",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Bu without prefix means n-butyl."
+ },
+ {
+  "label": "iBu",
+  "synonyms": [
+   "i-Bu",
+   "iso-Bu",
+   "Bui",
+   "i-C4H9",
+   "CH2CHMe2",
+   "Isobutyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CC(C)C",
+  "attachments": 1,
+  "formula": "C4H9",
+  "category": "alkyl",
+  "sources": [
+   "ketcher",
+   "marvin",
+   "literature"
+  ],
+  "notes": "RDKit's built-in iBu is *C(C)CC, which is sec-butyl (an RDKit bug); Ketcher/Marvin/IUPAC = isobutyl."
+ },
+ {
+  "label": "sBu",
+  "synonyms": [
+   "s-Bu",
+   "sec-Bu",
+   "Bus",
+   "s-C4H9",
+   "sec-Butyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(C)CC",
+  "attachments": 1,
+  "formula": "C4H9",
+  "category": "alkyl",
+  "sources": [
+   "ketcher",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Stereocentre at C1 left unspecified."
+ },
+ {
+  "label": "tBu",
+  "synonyms": [
+   "t-Bu",
+   "tert-Bu",
+   "But",
+   "CMe3",
+   "C(CH3)3",
+   "t-C4H9",
+   "tert-Butyl",
+   "t-Butyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(C)(C)C",
+  "attachments": 1,
+  "formula": "C4H9",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": "'But' (Bu^t) is the older British spelling."
+ },
+ {
+  "label": "cBu",
+  "synonyms": [
+   "c-Bu",
+   "cyclobutyl",
+   "c-C4H7",
+   "cButyl",
+   "c-Butyl",
+   "c-But"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C1CCC1",
+  "attachments": 1,
+  "formula": "C4H7",
+  "category": "alkyl",
+  "sources": [
+   "openbabel",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "nPent",
+  "synonyms": [
+   "n-Pent",
+   "Pent",
+   "n-Am",
+   "Amyl",
+   "n-C5H11",
+   "C5H11",
+   "Pentyl",
+   "n-Pentyl",
+   "nPentyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCCCC",
+  "attachments": 1,
+  "formula": "C5H11",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "'Am' (amyl) is deliberately NOT a synonym: Am = americium."
+ },
+ {
+  "label": "iAm",
+  "synonyms": [
+   "i-Am",
+   "i-Pent",
+   "Isoamyl",
+   "Isopentyl",
+   "i-C5H11"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCC(C)C",
+  "attachments": 1,
+  "formula": "C5H11",
+  "category": "alkyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "RDKit's iPent is *C(C)CCC (= 2-pentyl, a bug); iPent therefore not listed as synonym."
+ },
+ {
+  "label": "neoPent",
+  "synonyms": [
+   "neo-Pent",
+   "neoAm",
+   "neo-Am",
+   "Neopentyl",
+   "neo-C5H11"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CC(C)(C)C",
+  "attachments": 1,
+  "formula": "C5H11",
+  "category": "alkyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Np is sometimes used for neopentyl but collides with neptunium and Marvin's Np (p-nitrophenyl); not a synonym."
+ },
+ {
+  "label": "tAm",
+  "synonyms": [
+   "t-Am",
+   "t-Pent",
+   "tPent",
+   "tert-Pentyl",
+   "t-C5H11"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(C)(C)CC",
+  "attachments": 1,
+  "formula": "C5H11",
+  "category": "alkyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "cPent",
+  "synonyms": [
+   "c-Pent",
+   "cPen",
+   "Cyp",
+   "cyclopentyl",
+   "c-C5H9",
+   "cPentyl",
+   "c-Pentyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C1CCCC1",
+  "attachments": 1,
+  "formula": "C5H9",
+  "category": "alkyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "nHex",
+  "synonyms": [
+   "n-Hex",
+   "Hex",
+   "Hexyl",
+   "n-C6H13",
+   "C6H13",
+   "n-Hexyl",
+   "nHexyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCCCCC",
+  "attachments": 1,
+  "formula": "C6H13",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Cy",
+  "synonyms": [
+   "cHex",
+   "c-Hex",
+   "cHx",
+   "Chx",
+   "Cyclohexyl",
+   "c-C6H11",
+   "cHexyl",
+   "c-Hexyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C1CCCCC1",
+  "attachments": 1,
+  "formula": "C6H11",
+  "category": "alkyl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Thex",
+  "synonyms": [
+   "tHex",
+   "t-Hex",
+   "Thexyl",
+   "t-C6H13",
+   "tHexyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(C)(C)C(C)C",
+  "attachments": 1,
+  "formula": "C6H13",
+  "category": "alkyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "nHept",
+  "synonyms": [
+   "n-Hept",
+   "Hept",
+   "Heptyl",
+   "n-C7H15",
+   "C7H15",
+   "n-Heptyl",
+   "nHeptyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCCCCCC",
+  "attachments": 1,
+  "formula": "C7H15",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "RDKit uses 'Hept' for the divalent -(CH2)7- linker; here Hept = heptyl. Resolve by bond count if needed."
+ },
+ {
+  "label": "cHept",
+  "synonyms": [
+   "c-Hept",
+   "cycloheptyl",
+   "cHeptyl",
+   "c-Heptyl",
+   "c-C7H13"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C1CCCCCC1",
+  "attachments": 1,
+  "formula": "C7H13",
+  "category": "alkyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "nOct",
+  "synonyms": [
+   "n-Oct",
+   "Oct",
+   "Octyl",
+   "n-C8H17",
+   "C8H17",
+   "n-Octyl",
+   "nOctyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCCCCCCC",
+  "attachments": 1,
+  "formula": "C8H17",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "nNon",
+  "synonyms": [
+   "n-Non",
+   "Non",
+   "Nonyl",
+   "n-C9H19"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCCCCCCCC",
+  "attachments": 1,
+  "formula": "C9H19",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "nDec",
+  "synonyms": [
+   "n-Dec",
+   "Dec",
+   "Decyl",
+   "n-C10H21",
+   "C10H21"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCCCCCCCCC",
+  "attachments": 1,
+  "formula": "C10H21",
+  "category": "alkyl",
+  "sources": [
+   "rdkit",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "nDodec",
+  "synonyms": [
+   "n-Dodec",
+   "Dodecyl",
+   "Lauryl",
+   "n-C12H25",
+   "C12H25"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCCCCCCCCCCC",
+  "attachments": 1,
+  "formula": "C12H25",
+  "category": "alkyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Ad",
+  "synonyms": [
+   "1-Ad",
+   "Adm",
+   "Adamantyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C12CC3CC(CC(C3)C1)C2",
+  "attachments": 1,
+  "formula": "C10H15",
+  "category": "alkyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "1-adamantyl (bridgehead). 2-adamantyl must be drawn explicitly."
+ },
+ {
+  "label": "Vinyl",
+  "synonyms": [
+   "Vi",
+   "CH=CH2",
+   "Ethenyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C=C",
+  "attachments": 1,
+  "formula": "C2H3",
+  "category": "alkyl",
+  "sources": [
+   "openbabel",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Allyl",
+  "synonyms": [
+   "All",
+   "CH2CH=CH2"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CC=C",
+  "attachments": 1,
+  "formula": "C3H5",
+  "category": "alkyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Propargyl",
+  "synonyms": [
+   "CH2C#CH",
+   "Prg"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CC#C",
+  "attachments": 1,
+  "formula": "C3H3",
+  "category": "alkyl",
+  "sources": [
+   "openbabel",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Ethynyl",
+  "synonyms": [
+   "C#CH",
+   "CCH"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C#C",
+  "attachments": 1,
+  "formula": "C2H",
+  "category": "alkyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Prenyl",
+  "synonyms": [
+   "Pre",
+   "3-Methylbut-2-enyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CC=C(C)C",
+  "attachments": 1,
+  "formula": "C5H9",
+  "category": "alkyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Cinnamyl",
+  "synonyms": [
+   "trans-Cinnamyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C/C=C/c1ccccc1",
+  "attachments": 1,
+  "formula": "C9H9",
+  "category": "alkyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": "(E)-cinnamyl."
+ },
+ {
+  "label": "Ph",
+  "synonyms": [
+   "Phenyl",
+   "C6H5"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccccc1",
+  "attachments": 1,
+  "formula": "C6H5",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "structura-code",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Tol",
+  "synonyms": [
+   "p-Tol",
+   "pTol",
+   "4-Tol",
+   "p-Tolyl",
+   "Tolyl",
+   "4-MeC6H4"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccc(C)cc1",
+  "attachments": 1,
+  "formula": "C7H7",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Unqualified Tol = p-tolyl."
+ },
+ {
+  "label": "o-Tol",
+  "synonyms": [
+   "oTol",
+   "2-Tol",
+   "o-Tolyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccccc1C",
+  "attachments": 1,
+  "formula": "C7H7",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "m-Tol",
+  "synonyms": [
+   "mTol",
+   "3-Tol",
+   "m-Tolyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1cccc(C)c1",
+  "attachments": 1,
+  "formula": "C7H7",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Mes",
+  "synonyms": [
+   "Mesityl",
+   "2,4,6-Me3C6H2"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1c(C)cc(C)cc1C",
+  "attachments": 1,
+  "formula": "C9H11",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Ketcher's 'Mes' template is actually 3-methylbenzyl (bug). Very old literature used Mes for mesyl; use Ms."
+ },
+ {
+  "label": "Dipp",
+  "synonyms": [
+   "Dip",
+   "2,6-iPr2C6H3"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1c(C(C)C)cccc1C(C)C",
+  "attachments": 1,
+  "formula": "C12H17",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Marvin names it Dip."
+ },
+ {
+  "label": "Tipp",
+  "synonyms": [
+   "Trip",
+   "2,4,6-iPr3C6H2"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1c(C(C)C)cc(C(C)C)cc1C(C)C",
+  "attachments": 1,
+  "formula": "C15H23",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": "'Trip' also names the TRIP chiral phosphoric acid; Tipp is unambiguous."
+ },
+ {
+  "label": "PMP",
+  "synonyms": [
+   "Anisyl",
+   "p-Anisyl",
+   "4-MeOC6H4",
+   "p-MeOC6H4"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccc(OC)cc1",
+  "attachments": 1,
+  "formula": "C7H7O",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "C6F5",
+  "synonyms": [
+   "Pfp",
+   "PFP",
+   "F5C6"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1c(F)c(F)c(F)c(F)c1F",
+  "attachments": 1,
+  "formula": "C6F5",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Pfp is used mostly in active esters (OPfp)."
+ },
+ {
+  "label": "1-Naph",
+  "synonyms": [
+   "Naph",
+   "1-Np",
+   "alpha-Naph",
+   "1-Naphthyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1cccc2ccccc12",
+  "attachments": 1,
+  "formula": "C10H7",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Marvin's 'Naph' = 1-naphthyl."
+ },
+ {
+  "label": "2-Naph",
+  "synonyms": [
+   "2-Np",
+   "beta-Naph",
+   "2-Naphthyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccc2ccccc2c1",
+  "attachments": 1,
+  "formula": "C10H7",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "2-Py",
+  "synonyms": [
+   "Py",
+   "2-Pyr",
+   "2-Pyridyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccccn1",
+  "attachments": 1,
+  "formula": "C5H4N",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Marvin's 'Py' = 2-pyridyl; 'py' (lower case) usually means the pyridine ligand."
+ },
+ {
+  "label": "3-Py",
+  "synonyms": [
+   "3-Pyr",
+   "3-Pyridyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1cccnc1",
+  "attachments": 1,
+  "formula": "C5H4N",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "4-Py",
+  "synonyms": [
+   "4-Pyr",
+   "4-Pyridyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccncc1",
+  "attachments": 1,
+  "formula": "C5H4N",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "2-Pyrim",
+  "synonyms": [
+   "Pyrim",
+   "2-Pyrimidinyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ncccn1",
+  "attachments": 1,
+  "formula": "C4H3N2",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "2-Fur",
+  "synonyms": [
+   "2-Furyl",
+   "Fu"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccco1",
+  "attachments": 1,
+  "formula": "C4H3O",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "3-Fur",
+  "synonyms": [
+   "3-Furyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccoc1",
+  "attachments": 1,
+  "formula": "C4H3O",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "2-Thienyl",
+  "synonyms": [
+   "2-Th",
+   "2-Thi",
+   "Thio"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1cccs1",
+  "attachments": 1,
+  "formula": "C4H3S",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": "'Th' alone is thorium; not a synonym."
+ },
+ {
+  "label": "3-Thienyl",
+  "synonyms": [
+   "3-Th",
+   "3-Thi"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccsc1",
+  "attachments": 1,
+  "formula": "C4H3S",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "3-Indolyl",
+  "synonyms": [
+   "Indole",
+   "Ind-3-yl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1c[nH]c2ccccc12",
+  "attachments": 1,
+  "formula": "C8H6N",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "ketcher",
+   "literature"
+  ],
+  "notes": "Ketcher labels this template 'Indole'. 'Ind' is avoided (also indenyl)."
+ },
+ {
+  "label": "Im",
+  "synonyms": [
+   "1-Imidazolyl",
+   "Imid"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]n1ccnc1",
+  "attachments": 1,
+  "formula": "C3H3N2",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": "N-bound, as in CDI / Im-C(O)-."
+ },
+ {
+  "label": "Bt",
+  "synonyms": [
+   "Benzotriazol-1-yl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]n1nnc2ccccc21",
+  "attachments": 1,
+  "formula": "C6H4N3",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Biph",
+  "synonyms": [
+   "4-Biphenylyl",
+   "Bip",
+   "p-PhC6H4"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccc(-c2ccccc2)cc1",
+  "attachments": 1,
+  "formula": "C12H9",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "literature"
+  ],
+  "notes": "'Bip' also = biphenylalanine in peptide work."
+ },
+ {
+  "label": "Ac",
+  "synonyms": [
+   "Acetyl",
+   "COMe",
+   "COCH3",
+   "MeCO",
+   "Acet"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(C)=O",
+  "attachments": 1,
+  "formula": "C2H3O",
+  "category": "acyl",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "structura-code",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": "Ac is also actinium. The editor must prefer acetyl in a label context (see collisions.md)."
+ },
+ {
+  "label": "Bz",
+  "synonyms": [
+   "Benzoyl",
+   "COPh",
+   "PhCO"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)c1ccccc1",
+  "attachments": 1,
+  "formula": "C7H5O",
+  "category": "acyl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Bz = benzoyl (IUPAC/Greene). Some authors misuse Bz for benzyl; benzyl is Bn (or Bzl in peptide chemistry)."
+ },
+ {
+  "label": "Piv",
+  "synonyms": [
+   "Pv",
+   "Pivaloyl",
+   "COtBu",
+   "COt-Bu",
+   "tBuCO"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)C(C)(C)C",
+  "attachments": 1,
+  "formula": "C5H9O",
+  "category": "acyl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Tfa",
+  "synonyms": [
+   "COCF3",
+   "Trifluoroacetyl",
+   "CF3CO",
+   "F3CCO"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)C(F)(F)F",
+  "attachments": 1,
+  "formula": "C2F3O",
+  "category": "acyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Marvin calls this 'TFA', but TFA normally means trifluoroacetic acid (a solvent/reagent), so TFA is not a synonym."
+ },
+ {
+  "label": "COEt",
+  "synonyms": [
+   "Propionyl",
+   "Ppa",
+   "EtCO"
+  ],
+  "labelLeft": "EtC(O)",
+  "smiles": "[*:1]C(=O)CC",
+  "attachments": 1,
+  "formula": "C3H5O",
+  "category": "acyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "COiPr",
+  "synonyms": [
+   "Isobutyryl",
+   "iBu-CO",
+   "iPrCO"
+  ],
+  "labelLeft": "iPrC(O)",
+  "smiles": "[*:1]C(=O)C(C)C",
+  "attachments": 1,
+  "formula": "C4H7O",
+  "category": "acyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Lev",
+  "synonyms": [
+   "Levulinoyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)CCC(C)=O",
+  "attachments": 1,
+  "formula": "C5H7O2",
+  "category": "protecting-group",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": "Protecting group (esters)."
+ },
+ {
+  "label": "Suc",
+  "synonyms": [
+   "Succinyl",
+   "HO2CCH2CH2CO"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)CCC(=O)O",
+  "attachments": 1,
+  "formula": "C4H5O3",
+  "category": "acyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Boc",
+  "synonyms": [
+   "BOC",
+   "t-Boc",
+   "tBoc",
+   "tBuOCO"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)OC(C)(C)C",
+  "attachments": 1,
+  "formula": "C5H9O2",
+  "category": "protecting-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "structura-code",
+   "chemdraw-hotkeys",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Cbz",
+  "synonyms": [
+   "Z",
+   "CBz",
+   "CBZ",
+   "Cbo",
+   "BnOCO"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)OCc1ccccc1",
+  "attachments": 1,
+  "formula": "C8H7O2",
+  "category": "protecting-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "structura-code",
+   "chemdraw-hotkeys",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Fmoc",
+  "synonyms": [
+   "FMOC"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)OCC1c2ccccc2-c2ccccc21",
+  "attachments": 1,
+  "formula": "C15H11O2",
+  "category": "protecting-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "structura-code",
+   "chemdraw-hotkeys",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Alloc",
+  "synonyms": [
+   "AOC",
+   "Aloc",
+   "Allyloxycarbonyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)OCC=C",
+  "attachments": 1,
+  "formula": "C4H5O2",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Troc",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)OCC(Cl)(Cl)Cl",
+  "attachments": 1,
+  "formula": "C3H2Cl3O2",
+  "category": "protecting-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Teoc",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)OCC[Si](C)(C)C",
+  "attachments": 1,
+  "formula": "C6H13O2Si",
+  "category": "protecting-group",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Moz",
+  "synonyms": [
+   "MeOZ",
+   "Z(OMe)",
+   "Pmoc"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)OCc1ccc(OC)cc1",
+  "attachments": 1,
+  "formula": "C9H9O3",
+  "category": "protecting-group",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Dde",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]C(C)=C1C(=O)CC(C)(C)CC1=O",
+  "attachments": 1,
+  "formula": "C10H13O2",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": "1-(4,4-dimethyl-2,6-dioxocyclohexylidene)ethyl."
+ },
+ {
+  "label": "Phth",
+  "synonyms": [
+   "Pht",
+   "Phthaloyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(=O)c1ccccc1C([*:2])=O",
+  "attachments": 2,
+  "formula": "C8H4O2",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": "Divalent: both acyl carbons attach (normally to the same N). For the imide substituent use NPhth."
+ },
+ {
+  "label": "NPhth",
+  "synonyms": [
+   "NPht",
+   "Phthalimido"
+  ],
+  "labelLeft": "PhthN",
+  "smiles": "[*:1]N1C(=O)c2ccccc2C1=O",
+  "attachments": 1,
+  "formula": "C8H4NO2",
+  "category": "protecting-group",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Ts",
+  "synonyms": [
+   "Tos",
+   "Tosyl",
+   "p-Ts",
+   "pTs",
+   "p-Tos"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)c1ccc(C)cc1",
+  "attachments": 1,
+  "formula": "C7H7O2S",
+  "category": "sulfonyl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Ts is also tennessine (element 117)."
+ },
+ {
+  "label": "Ms",
+  "synonyms": [
+   "Mesyl",
+   "Methanesulfonyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)C",
+  "attachments": 1,
+  "formula": "CH3O2S",
+  "category": "sulfonyl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Tf",
+  "synonyms": [
+   "Triflyl",
+   "SO2CF3"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)C(F)(F)F",
+  "attachments": 1,
+  "formula": "CF3O2S",
+  "category": "sulfonyl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Nf",
+  "synonyms": [
+   "Nonaflyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)C(F)(F)C(F)(F)C(F)(F)C(F)(F)F",
+  "attachments": 1,
+  "formula": "C4F9O2S",
+  "category": "sulfonyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Ns",
+  "synonyms": [
+   "oNs",
+   "o-Ns",
+   "Nosyl",
+   "2-Ns"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)c1ccccc1[N+](=O)[O-]",
+  "attachments": 1,
+  "formula": "C6H4NO4S",
+  "category": "sulfonyl",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": "Ns usually = 2-nitrobenzenesulfonyl (Fukuyama); some authors use Ns for the 4-isomer (pNs)."
+ },
+ {
+  "label": "pNs",
+  "synonyms": [
+   "p-Ns",
+   "4-Ns"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)c1ccc([N+](=O)[O-])cc1",
+  "attachments": 1,
+  "formula": "C6H4NO4S",
+  "category": "sulfonyl",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Bs",
+  "synonyms": [
+   "Brosyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)c1ccc(Br)cc1",
+  "attachments": 1,
+  "formula": "C6H4BrO2S",
+  "category": "sulfonyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Mts",
+  "synonyms": [
+   "Mesitylenesulfonyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)c1c(C)cc(C)cc1C",
+  "attachments": 1,
+  "formula": "C9H11O2S",
+  "category": "sulfonyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Trisyl",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)c1c(C(C)C)cc(C(C)C)cc1C(C)C",
+  "attachments": 1,
+  "formula": "C15H23O2S",
+  "category": "sulfonyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": "'Tris' is also used but collides with the TRIS buffer; not a synonym."
+ },
+ {
+  "label": "Dns",
+  "synonyms": [
+   "Dansyl",
+   "Dan"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)c1cccc2c(N(C)C)cccc12",
+  "attachments": 1,
+  "formula": "C12H12NO2S",
+  "category": "sulfonyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SES",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)CC[Si](C)(C)C",
+  "attachments": 1,
+  "formula": "C5H13O2SSi",
+  "category": "sulfonyl",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Pbf",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)c1c(C)c(C)c2OC(C)(C)Cc2c1C",
+  "attachments": 1,
+  "formula": "C13H17O3S",
+  "category": "sulfonyl",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": "2,2,4,6,7-pentamethyl-2,3-dihydrobenzofuran-5-sulfonyl (Arg side chain)."
+ },
+ {
+  "label": "Pmc",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]S(=O)(=O)c1c(C)c(C)c2OC(C)(C)CCc2c1C",
+  "attachments": 1,
+  "formula": "C14H19O3S",
+  "category": "sulfonyl",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": "2,2,5,7,8-pentamethylchroman-6-sulfonyl."
+ },
+ {
+  "label": "Bn",
+  "synonyms": [
+   "Bzl",
+   "Benzyl",
+   "CH2Ph",
+   "PhCH2"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]Cc1ccccc1",
+  "attachments": 1,
+  "formula": "C7H7",
+  "category": "protecting-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": "Bzl is the peptide-chemistry spelling. Never Bz (= benzoyl)."
+ },
+ {
+  "label": "PMB",
+  "synonyms": [
+   "MPM",
+   "p-Methoxybenzyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]Cc1ccc(OC)cc1",
+  "attachments": 1,
+  "formula": "C8H9O",
+  "category": "protecting-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "DMB",
+  "synonyms": [
+   "Dmb",
+   "2,4-DMB"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]Cc1ccc(OC)cc1OC",
+  "attachments": 1,
+  "formula": "C9H11O2",
+  "category": "protecting-group",
+  "sources": [
+   "openbabel",
+   "greene",
+   "literature"
+  ],
+  "notes": "DMB usually = 2,4-dimethoxybenzyl; the 3,4-isomer is DMPM."
+ },
+ {
+  "label": "DMPM",
+  "synonyms": [
+   "3,4-DMB"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]Cc1ccc(OC)c(OC)c1",
+  "attachments": 1,
+  "formula": "C9H11O2",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Nap",
+  "synonyms": [
+   "2-NAP",
+   "NAP"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]Cc1ccc2ccccc2c1",
+  "attachments": 1,
+  "formula": "C11H9",
+  "category": "protecting-group",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": "2-naphthylmethyl."
+ },
+ {
+  "label": "Tr",
+  "synonyms": [
+   "Trt",
+   "Trityl",
+   "CPh3",
+   "Ph3C",
+   "Trit"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(c1ccccc1)(c1ccccc1)c1ccccc1",
+  "attachments": 1,
+  "formula": "C19H15",
+  "category": "protecting-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "MMTr",
+  "synonyms": [
+   "MMT",
+   "Mmt"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(c1ccccc1)(c1ccccc1)c1ccc(OC)cc1",
+  "attachments": 1,
+  "formula": "C20H17O",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "DMTr",
+  "synonyms": [
+   "DMT",
+   "Dmt",
+   "DMTr"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(c1ccccc1)(c1ccc(OC)cc1)c1ccc(OC)cc1",
+  "attachments": 1,
+  "formula": "C21H19O2",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Mtt",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]C(c1ccccc1)(c1ccccc1)c1ccc(C)cc1",
+  "attachments": 1,
+  "formula": "C20H17",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "MOM",
+  "synonyms": [
+   "CH2OMe",
+   "Methoxymethyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]COC",
+  "attachments": 1,
+  "formula": "C2H5O",
+  "category": "protecting-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "MEM",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]COCCOC",
+  "attachments": 1,
+  "formula": "C4H9O2",
+  "category": "protecting-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SEM",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]COCC[Si](C)(C)C",
+  "attachments": 1,
+  "formula": "C6H15OSi",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "BOM",
+  "synonyms": [
+   "Bom"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]COCc1ccccc1",
+  "attachments": 1,
+  "formula": "C8H9O",
+  "category": "protecting-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "MTM",
+  "synonyms": [
+   "MSM"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CSC",
+  "attachments": 1,
+  "formula": "C2H5S",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "POM",
+  "synonyms": [
+   "Pom"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]COC(=O)C(C)(C)C",
+  "attachments": 1,
+  "formula": "C6H11O2",
+  "category": "protecting-group",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "EE",
+  "synonyms": [
+   "Ethoxyethyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C(C)OCC",
+  "attachments": 1,
+  "formula": "C4H9O",
+  "category": "protecting-group",
+  "sources": [
+   "greene",
+   "literature"
+  ],
+  "notes": "1-ethoxyethyl; stereocentre unspecified."
+ },
+ {
+  "label": "THP",
+  "synonyms": [
+   "Tetrahydropyranyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C1CCCCO1",
+  "attachments": 1,
+  "formula": "C5H9O",
+  "category": "protecting-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": "Tetrahydropyran-2-yl; stereocentre unspecified."
+ },
+ {
+  "label": "Acm",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]CNC(C)=O",
+  "attachments": 1,
+  "formula": "C3H6NO",
+  "category": "protecting-group",
+  "sources": [
+   "marvin",
+   "greene",
+   "literature"
+  ],
+  "notes": "Acetamidomethyl (Cys)."
+ },
+ {
+  "label": "TMS",
+  "synonyms": [
+   "SiMe3",
+   "Me3Si"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](C)(C)C",
+  "attachments": 1,
+  "formula": "C3H9Si",
+  "category": "silyl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "TES",
+  "synonyms": [
+   "SiEt3",
+   "Et3Si"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](CC)(CC)CC",
+  "attachments": 1,
+  "formula": "C6H15Si",
+  "category": "silyl",
+  "sources": [
+   "openbabel",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "TIPS",
+  "synonyms": [
+   "Si(iPr)3",
+   "iPr3Si",
+   "TIPS"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](C(C)C)(C(C)C)C(C)C",
+  "attachments": 1,
+  "formula": "C9H21Si",
+  "category": "silyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "TBS",
+  "synonyms": [
+   "TBDMS",
+   "SiMe2tBu",
+   "tBuMe2Si"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](C)(C)C(C)(C)C",
+  "attachments": 1,
+  "formula": "C6H15Si",
+  "category": "silyl",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "TBDPS",
+  "synonyms": [
+   "SiPh2tBu",
+   "tBuPh2Si"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](c1ccccc1)(c1ccccc1)C(C)(C)C",
+  "attachments": 1,
+  "formula": "C16H19Si",
+  "category": "silyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Ketcher's TBDPS template is malformed (5-valent Si, isopropyl instead of tBu)."
+ },
+ {
+  "label": "DEIPS",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](CC)(CC)C(C)C",
+  "attachments": 1,
+  "formula": "C7H17Si",
+  "category": "silyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "IPDMS",
+  "synonyms": [
+   "DMIPS"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](C)(C)C(C)C",
+  "attachments": 1,
+  "formula": "C5H13Si",
+  "category": "silyl",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "TDS",
+  "synonyms": [
+   "TDMS",
+   "Thexyldimethylsilyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](C)(C)C(C)(C)C(C)C",
+  "attachments": 1,
+  "formula": "C8H19Si",
+  "category": "silyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SiPh3",
+  "synonyms": [
+   "TPS",
+   "Ph3Si"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](c1ccccc1)(c1ccccc1)c1ccccc1",
+  "attachments": 1,
+  "formula": "C18H15Si",
+  "category": "silyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": "TPS is ambiguous (triphenylsilyl vs. 2,4,6-triisopropylbenzenesulfonyl); label kept as SiPh3."
+ },
+ {
+  "label": "DTBS",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1][Si]([*:2])(C(C)(C)C)C(C)(C)C",
+  "attachments": 2,
+  "formula": "C8H18Si",
+  "category": "silyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Di-tert-butylsilylene (diol protection), divalent. Marvin's DTBS wrongly inserts CH2 groups."
+ },
+ {
+  "label": "TIPDS",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](C(C)C)(C(C)C)O[Si]([*:2])(C(C)C)C(C)C",
+  "attachments": 2,
+  "formula": "C12H28OSi2",
+  "category": "silyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "1,1,3,3-tetraisopropyldisiloxane-1,3-diyl, divalent."
+ },
+ {
+  "label": "OTMS",
+  "synonyms": [
+   "OSiMe3"
+  ],
+  "labelLeft": "TMSO",
+  "smiles": "[*:1]O[Si](C)(C)C",
+  "attachments": 1,
+  "formula": "C3H9OSi",
+  "category": "silyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OTES",
+  "synonyms": [
+   "OSiEt3"
+  ],
+  "labelLeft": "TESO",
+  "smiles": "[*:1]O[Si](CC)(CC)CC",
+  "attachments": 1,
+  "formula": "C6H15OSi",
+  "category": "silyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OTBS",
+  "synonyms": [
+   "OTBDMS"
+  ],
+  "labelLeft": "TBSO",
+  "smiles": "[*:1]O[Si](C)(C)C(C)(C)C",
+  "attachments": 1,
+  "formula": "C6H15OSi",
+  "category": "silyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OTIPS",
+  "synonyms": [],
+  "labelLeft": "TIPSO",
+  "smiles": "[*:1]O[Si](C(C)C)(C(C)C)C(C)C",
+  "attachments": 1,
+  "formula": "C9H21OSi",
+  "category": "silyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OTBDPS",
+  "synonyms": [],
+  "labelLeft": "TBDPSO",
+  "smiles": "[*:1]O[Si](c1ccccc1)(c1ccccc1)C(C)(C)C",
+  "attachments": 1,
+  "formula": "C16H19OSi",
+  "category": "silyl",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OMe",
+  "synonyms": [
+   "OCH3",
+   "Methoxy"
+  ],
+  "labelLeft": "MeO",
+  "smiles": "[*:1]OC",
+  "attachments": 1,
+  "formula": "CH3O",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OEt",
+  "synonyms": [
+   "OC2H5",
+   "Ethoxy"
+  ],
+  "labelLeft": "EtO",
+  "smiles": "[*:1]OCC",
+  "attachments": 1,
+  "formula": "C2H5O",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OPr",
+  "synonyms": [
+   "OnPr",
+   "On-Pr"
+  ],
+  "labelLeft": "PrO",
+  "smiles": "[*:1]OCCC",
+  "attachments": 1,
+  "formula": "C3H7O",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OiPr",
+  "synonyms": [
+   "Oi-Pr",
+   "OCHMe2"
+  ],
+  "labelLeft": "iPrO",
+  "smiles": "[*:1]OC(C)C",
+  "attachments": 1,
+  "formula": "C3H7O",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OiBu",
+  "synonyms": [
+   "Oi-Bu"
+  ],
+  "labelLeft": "iBuO",
+  "smiles": "[*:1]OCC(C)C",
+  "attachments": 1,
+  "formula": "C4H9O",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OtBu",
+  "synonyms": [
+   "Ot-Bu",
+   "OBut"
+  ],
+  "labelLeft": "tBuO",
+  "smiles": "[*:1]OC(C)(C)C",
+  "attachments": 1,
+  "formula": "C4H9O",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OPh",
+  "synonyms": [
+   "Phenoxy"
+  ],
+  "labelLeft": "PhO",
+  "smiles": "[*:1]Oc1ccccc1",
+  "attachments": 1,
+  "formula": "C6H5O",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OBn",
+  "synonyms": [
+   "OCH2Ph",
+   "Benzyloxy"
+  ],
+  "labelLeft": "BnO",
+  "smiles": "[*:1]OCc1ccccc1",
+  "attachments": 1,
+  "formula": "C7H7O",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Open Babel's list maps OBz to benzyloxy (wrong); OBz = benzoyloxy."
+ },
+ {
+  "label": "OPMB",
+  "synonyms": [
+   "OMPM"
+  ],
+  "labelLeft": "PMBO",
+  "smiles": "[*:1]OCc1ccc(OC)cc1",
+  "attachments": 1,
+  "formula": "C8H9O2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OAc",
+  "synonyms": [
+   "Acetoxy"
+  ],
+  "labelLeft": "AcO",
+  "smiles": "[*:1]OC(C)=O",
+  "attachments": 1,
+  "formula": "C2H3O2",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OBz",
+  "synonyms": [
+   "Benzoyloxy"
+  ],
+  "labelLeft": "BzO",
+  "smiles": "[*:1]OC(=O)c1ccccc1",
+  "attachments": 1,
+  "formula": "C7H5O2",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OPiv",
+  "synonyms": [
+   "OPv"
+  ],
+  "labelLeft": "PivO",
+  "smiles": "[*:1]OC(=O)C(C)(C)C",
+  "attachments": 1,
+  "formula": "C5H9O2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OBoc",
+  "synonyms": [],
+  "labelLeft": "BocO",
+  "smiles": "[*:1]OC(=O)OC(C)(C)C",
+  "attachments": 1,
+  "formula": "C5H9O3",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OMOM",
+  "synonyms": [],
+  "labelLeft": "MOMO",
+  "smiles": "[*:1]OCOC",
+  "attachments": 1,
+  "formula": "C2H5O2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OTHP",
+  "synonyms": [],
+  "labelLeft": "THPO",
+  "smiles": "[*:1]OC1CCCCO1",
+  "attachments": 1,
+  "formula": "C5H9O2",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OTs",
+  "synonyms": [
+   "OTos",
+   "Tosylate"
+  ],
+  "labelLeft": "TsO",
+  "smiles": "[*:1]OS(=O)(=O)c1ccc(C)cc1",
+  "attachments": 1,
+  "formula": "C7H7O3S",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OMs",
+  "synonyms": [
+   "Mesylate"
+  ],
+  "labelLeft": "MsO",
+  "smiles": "[*:1]OS(=O)(=O)C",
+  "attachments": 1,
+  "formula": "CH3O3S",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Open Babel's OMs SMILES is wrong (CS(O)(=O)=O)."
+ },
+ {
+  "label": "OTf",
+  "synonyms": [
+   "Triflate"
+  ],
+  "labelLeft": "TfO",
+  "smiles": "[*:1]OS(=O)(=O)C(F)(F)F",
+  "attachments": 1,
+  "formula": "CF3O3S",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OSu",
+  "synonyms": [
+   "ONHS"
+  ],
+  "labelLeft": "SuO",
+  "smiles": "[*:1]ON1C(=O)CCC1=O",
+  "attachments": 1,
+  "formula": "C4H4NO3",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": "N-succinimidyloxy (NHS ester)."
+ },
+ {
+  "label": "OBt",
+  "synonyms": [],
+  "labelLeft": "BtO",
+  "smiles": "[*:1]On1nnc2ccccc21",
+  "attachments": 1,
+  "formula": "C6H4N3O",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OPfp",
+  "synonyms": [
+   "OC6F5"
+  ],
+  "labelLeft": "PfpO",
+  "smiles": "[*:1]Oc1c(F)c(F)c(F)c(F)c1F",
+  "attachments": 1,
+  "formula": "C6F5O",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OCF3",
+  "synonyms": [],
+  "labelLeft": "F3CO",
+  "smiles": "[*:1]OC(F)(F)F",
+  "attachments": 1,
+  "formula": "CF3O",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OCHF2",
+  "synonyms": [],
+  "labelLeft": "F2HCO",
+  "smiles": "[*:1]OC(F)F",
+  "attachments": 1,
+  "formula": "CHF2O",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OCN",
+  "synonyms": [
+   "Cyanato"
+  ],
+  "labelLeft": "NCO",
+  "smiles": "[*:1]OC#N",
+  "attachments": 1,
+  "formula": "CNO",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OPO3H2",
+  "synonyms": [
+   "OP(O)(OH)2",
+   "PO4H2"
+  ],
+  "labelLeft": "H2O3PO",
+  "smiles": "[*:1]OP(=O)(O)O",
+  "attachments": 1,
+  "formula": "H2O4P",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Ketcher/Marvin call this PO4H2."
+ },
+ {
+  "label": "SMe",
+  "synonyms": [
+   "SCH3"
+  ],
+  "labelLeft": "MeS",
+  "smiles": "[*:1]SC",
+  "attachments": 1,
+  "formula": "CH3S",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SEt",
+  "synonyms": [],
+  "labelLeft": "EtS",
+  "smiles": "[*:1]SCC",
+  "attachments": 1,
+  "formula": "C2H5S",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "StBu",
+  "synonyms": [
+   "St-Bu"
+  ],
+  "labelLeft": "tBuS",
+  "smiles": "[*:1]SC(C)(C)C",
+  "attachments": 1,
+  "formula": "C4H9S",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SPh",
+  "synonyms": [],
+  "labelLeft": "PhS",
+  "smiles": "[*:1]Sc1ccccc1",
+  "attachments": 1,
+  "formula": "C6H5S",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SAc",
+  "synonyms": [],
+  "labelLeft": "AcS",
+  "smiles": "[*:1]SC(C)=O",
+  "attachments": 1,
+  "formula": "C2H3OS",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SCF3",
+  "synonyms": [],
+  "labelLeft": "F3CS",
+  "smiles": "[*:1]SC(F)(F)F",
+  "attachments": 1,
+  "formula": "CF3S",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SCN",
+  "synonyms": [
+   "Thiocyanato"
+  ],
+  "labelLeft": "NCS",
+  "smiles": "[*:1]SC#N",
+  "attachments": 1,
+  "formula": "CNS",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "literature"
+  ],
+  "notes": "Left form NCS is textually identical to the isothiocyanate label."
+ },
+ {
+  "label": "SF5",
+  "synonyms": [],
+  "labelLeft": "F5S",
+  "smiles": "[*:1]S(F)(F)(F)(F)F",
+  "attachments": 1,
+  "formula": "F5S",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SOMe",
+  "synonyms": [
+   "S(O)Me"
+  ],
+  "labelLeft": "MeS(O)",
+  "smiles": "[*:1]S(C)=O",
+  "attachments": 1,
+  "formula": "CH3OS",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SO2Me",
+  "synonyms": [
+   "SO2CH3"
+  ],
+  "labelLeft": "MeO2S",
+  "smiles": "[*:1]S(=O)(=O)C",
+  "attachments": 1,
+  "formula": "CH3O2S",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "literature"
+  ],
+  "notes": "Same structure as Ms."
+ },
+ {
+  "label": "SO2Ph",
+  "synonyms": [],
+  "labelLeft": "PhO2S",
+  "smiles": "[*:1]S(=O)(=O)c1ccccc1",
+  "attachments": 1,
+  "formula": "C6H5O2S",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SO2Cl",
+  "synonyms": [
+   "ClSO2"
+  ],
+  "labelLeft": "ClO2S",
+  "smiles": "[*:1]S(=O)(=O)Cl",
+  "attachments": 1,
+  "formula": "ClO2S",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SO2NH2",
+  "synonyms": [
+   "H2NSO2"
+  ],
+  "labelLeft": "H2NO2S",
+  "smiles": "[*:1]S(N)(=O)=O",
+  "attachments": 1,
+  "formula": "H2NO2S",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SO3H",
+  "synonyms": [],
+  "labelLeft": "HO3S",
+  "smiles": "[*:1]S(=O)(=O)O",
+  "attachments": 1,
+  "formula": "HO3S",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SO3-",
+  "synonyms": [
+   "SO3^-"
+  ],
+  "labelLeft": "-O3S",
+  "smiles": "[*:1]S(=O)(=O)[O-]",
+  "attachments": 1,
+  "formula": "O3S-",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NMe2",
+  "synonyms": [
+   "N(CH3)2"
+  ],
+  "labelLeft": "Me2N",
+  "smiles": "[*:1]N(C)C",
+  "attachments": 1,
+  "formula": "C2H6N",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NEt2",
+  "synonyms": [],
+  "labelLeft": "Et2N",
+  "smiles": "[*:1]N(CC)CC",
+  "attachments": 1,
+  "formula": "C4H10N",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHMe",
+  "synonyms": [
+   "NHCH3",
+   "MeNH",
+   "HNMe"
+  ],
+  "labelLeft": "MeHN",
+  "smiles": "[*:1]NC",
+  "attachments": 1,
+  "formula": "CH4N",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "RDKit's 'NMe' abbreviation is this (monovalent NHMe); here NMe is the divalent N-methyl."
+ },
+ {
+  "label": "NHEt",
+  "synonyms": [
+   "EtNH",
+   "HNEt"
+  ],
+  "labelLeft": "EtHN",
+  "smiles": "[*:1]NCC",
+  "attachments": 1,
+  "formula": "C2H6N",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHPh",
+  "synonyms": [
+   "PhNH",
+   "HNPh"
+  ],
+  "labelLeft": "PhHN",
+  "smiles": "[*:1]Nc1ccccc1",
+  "attachments": 1,
+  "formula": "C6H6N",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHBn",
+  "synonyms": [
+   "BnNH",
+   "HNBn"
+  ],
+  "labelLeft": "BnHN",
+  "smiles": "[*:1]NCc1ccccc1",
+  "attachments": 1,
+  "formula": "C7H8N",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHAc",
+  "synonyms": [
+   "AcNH",
+   "HNAc"
+  ],
+  "labelLeft": "AcHN",
+  "smiles": "[*:1]NC(C)=O",
+  "attachments": 1,
+  "formula": "C2H4NO",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHBz",
+  "synonyms": [],
+  "labelLeft": "BzHN",
+  "smiles": "[*:1]NC(=O)c1ccccc1",
+  "attachments": 1,
+  "formula": "C7H6NO",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHBoc",
+  "synonyms": [
+   "BocNH",
+   "HNBoc"
+  ],
+  "labelLeft": "BocHN",
+  "smiles": "[*:1]NC(=O)OC(C)(C)C",
+  "attachments": 1,
+  "formula": "C5H10NO2",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHCbz",
+  "synonyms": [
+   "NHZ",
+   "CbzNH",
+   "HNCbz",
+   "HNZ",
+   "ZNH"
+  ],
+  "labelLeft": "CbzHN",
+  "smiles": "[*:1]NC(=O)OCc1ccccc1",
+  "attachments": 1,
+  "formula": "C8H8NO2",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHFmoc",
+  "synonyms": [
+   "FmocNH"
+  ],
+  "labelLeft": "FmocHN",
+  "smiles": "[*:1]NC(=O)OCC1c2ccccc2-c2ccccc21",
+  "attachments": 1,
+  "formula": "C15H12NO2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHTs",
+  "synonyms": [
+   "NHTos",
+   "TsNH",
+   "TosNH",
+   "HNTs"
+  ],
+  "labelLeft": "TsHN",
+  "smiles": "[*:1]NS(=O)(=O)c1ccc(C)cc1",
+  "attachments": 1,
+  "formula": "C7H8NO2S",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHOH",
+  "synonyms": [],
+  "labelLeft": "HOHN",
+  "smiles": "[*:1]NO",
+  "attachments": 1,
+  "formula": "H2NO",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NHNH2",
+  "synonyms": [],
+  "labelLeft": "H2NHN",
+  "smiles": "[*:1]NN",
+  "attachments": 1,
+  "formula": "H3N2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "N(OH)CH3",
+  "synonyms": [
+   "N(Me)OH"
+  ],
+  "labelLeft": "CH3(OH)N",
+  "smiles": "[*:1]N(C)O",
+  "attachments": 1,
+  "formula": "CH4NO",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "literature"
+  ],
+  "notes": "From RDKit."
+ },
+ {
+  "label": "NHCF3",
+  "synonyms": [
+   "NCF3"
+  ],
+  "labelLeft": "F3CHN",
+  "smiles": "[*:1]NC(F)(F)F",
+  "attachments": 1,
+  "formula": "CHF3N",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "literature"
+  ],
+  "notes": "RDKit labels this NCF3."
+ },
+ {
+  "label": "NMe3+",
+  "synonyms": [
+   "N+Me3"
+  ],
+  "labelLeft": "Me3N+",
+  "smiles": "[*:1][N+](C)(C)C",
+  "attachments": 1,
+  "formula": "C3H9N+",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "N3",
+  "synonyms": [
+   "Azido"
+  ],
+  "labelLeft": "N3",
+  "smiles": "[*:1]N=[N+]=[N-]",
+  "attachments": 1,
+  "formula": "N3",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "N2+",
+  "synonyms": [
+   "Diazonium"
+  ],
+  "labelLeft": "+N2",
+  "smiles": "[*:1][N+]#N",
+  "attachments": 1,
+  "formula": "N2+",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NO2",
+  "synonyms": [
+   "Nitro"
+  ],
+  "labelLeft": "O2N",
+  "smiles": "[*:1][N+](=O)[O-]",
+  "attachments": 1,
+  "formula": "NO2",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "marvin",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": "Charge-separated form; Open Babel also lists pentavalent N(=O)=O."
+ },
+ {
+  "label": "NO",
+  "synonyms": [
+   "Nitroso"
+  ],
+  "labelLeft": "ON",
+  "smiles": "[*:1]N=O",
+  "attachments": 1,
+  "formula": "NO",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NCO",
+  "synonyms": [
+   "Isocyanato"
+  ],
+  "labelLeft": "OCN",
+  "smiles": "[*:1]N=C=O",
+  "attachments": 1,
+  "formula": "CNO",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NCS",
+  "synonyms": [
+   "Isothiocyanato"
+  ],
+  "labelLeft": "SCN",
+  "smiles": "[*:1]N=C=S",
+  "attachments": 1,
+  "formula": "CNS",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CN",
+  "synonyms": [
+   "Cyano",
+   "C#N"
+  ],
+  "labelLeft": "NC",
+  "smiles": "[*:1]C#N",
+  "attachments": 1,
+  "formula": "CN",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "NC",
+  "synonyms": [
+   "Isocyano"
+  ],
+  "labelLeft": "CN",
+  "smiles": "[*:1][N+]#[C-]",
+  "attachments": 1,
+  "formula": "CN",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "literature"
+  ],
+  "notes": "Left form of CN is 'NC' and vice versa - text alone cannot tell them apart; keep the group identity, not the text."
+ },
+ {
+  "label": "NMe",
+  "synonyms": [
+   "N-Me",
+   "NCH3"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]N([*:2])C",
+  "attachments": 2,
+  "formula": "CH3N",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Divalent N-methyl (ring nitrogen). RDKit's NMe is monovalent NHMe - conflict."
+ },
+ {
+  "label": "NBn",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]N([*:2])Cc1ccccc1",
+  "attachments": 2,
+  "formula": "C7H7N",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Divalent."
+ },
+ {
+  "label": "NBoc",
+  "synonyms": [],
+  "labelLeft": "BocN",
+  "smiles": "[*:1]N([*:2])C(=O)OC(C)(C)C",
+  "attachments": 2,
+  "formula": "C5H9NO2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Divalent."
+ },
+ {
+  "label": "NCbz",
+  "synonyms": [
+   "NZ"
+  ],
+  "labelLeft": "CbzN",
+  "smiles": "[*:1]N([*:2])C(=O)OCc1ccccc1",
+  "attachments": 2,
+  "formula": "C8H7NO2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Divalent."
+ },
+ {
+  "label": "NTs",
+  "synonyms": [],
+  "labelLeft": "TsN",
+  "smiles": "[*:1]N([*:2])S(=O)(=O)c1ccc(C)cc1",
+  "attachments": 2,
+  "formula": "C7H7NO2S",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Divalent."
+ },
+ {
+  "label": "NPh",
+  "synonyms": [],
+  "labelLeft": "PhN",
+  "smiles": "[*:1]N([*:2])c1ccccc1",
+  "attachments": 2,
+  "formula": "C6H5N",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Divalent."
+ },
+ {
+  "label": "NAc",
+  "synonyms": [],
+  "labelLeft": "AcN",
+  "smiles": "[*:1]N([*:2])C(C)=O",
+  "attachments": 2,
+  "formula": "C2H3NO",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Divalent."
+ },
+ {
+  "label": "CF3",
+  "synonyms": [
+   "Trifluoromethyl"
+  ],
+  "labelLeft": "F3C",
+  "smiles": "[*:1]C(F)(F)F",
+  "attachments": 1,
+  "formula": "CF3",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CHF2",
+  "synonyms": [
+   "CF2H"
+  ],
+  "labelLeft": "F2HC",
+  "smiles": "[*:1]C(F)F",
+  "attachments": 1,
+  "formula": "CHF2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "C2F5",
+  "synonyms": [
+   "CF2CF3"
+  ],
+  "labelLeft": "F5C2",
+  "smiles": "[*:1]C(F)(F)C(F)(F)F",
+  "attachments": 1,
+  "formula": "C2F5",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CCl3",
+  "synonyms": [],
+  "labelLeft": "Cl3C",
+  "smiles": "[*:1]C(Cl)(Cl)Cl",
+  "attachments": 1,
+  "formula": "CCl3",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CBr3",
+  "synonyms": [],
+  "labelLeft": "Br3C",
+  "smiles": "[*:1]C(Br)(Br)Br",
+  "attachments": 1,
+  "formula": "CBr3",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CH2OH",
+  "synonyms": [],
+  "labelLeft": "HOCH2",
+  "smiles": "[*:1]CO",
+  "attachments": 1,
+  "formula": "CH3O",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CHO",
+  "synonyms": [
+   "Formyl",
+   "For"
+  ],
+  "labelLeft": "OHC",
+  "smiles": "[*:1]C=O",
+  "attachments": 1,
+  "formula": "CHO",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CO2H",
+  "synonyms": [
+   "COOH",
+   "HOOC"
+  ],
+  "labelLeft": "HO2C",
+  "smiles": "[*:1]C(=O)O",
+  "attachments": 1,
+  "formula": "CHO2",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CO2-",
+  "synonyms": [
+   "COO-",
+   "CO2^-",
+   "-OOC"
+  ],
+  "labelLeft": "-O2C",
+  "smiles": "[*:1]C(=O)[O-]",
+  "attachments": 1,
+  "formula": "CO2-",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "openbabel",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CO2Me",
+  "synonyms": [
+   "COOMe",
+   "CO2CH3",
+   "MeOOC"
+  ],
+  "labelLeft": "MeO2C",
+  "smiles": "[*:1]C(=O)OC",
+  "attachments": 1,
+  "formula": "C2H3O2",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "structura-code",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CO2Et",
+  "synonyms": [
+   "COOEt",
+   "CO2C2H5",
+   "EtOOC"
+  ],
+  "labelLeft": "EtO2C",
+  "smiles": "[*:1]C(=O)OCC",
+  "attachments": 1,
+  "formula": "C3H5O2",
+  "category": "functional-group",
+  "sources": [
+   "rdkit",
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CO2Pr",
+  "synonyms": [
+   "CO2nPr",
+   "COOPr"
+  ],
+  "labelLeft": "PrO2C",
+  "smiles": "[*:1]C(=O)OCCC",
+  "attachments": 1,
+  "formula": "C4H7O2",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CO2iPr",
+  "synonyms": [
+   "COOiPr"
+  ],
+  "labelLeft": "iPrO2C",
+  "smiles": "[*:1]C(=O)OC(C)C",
+  "attachments": 1,
+  "formula": "C4H7O2",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CO2tBu",
+  "synonyms": [
+   "COOtBu",
+   "CO2t-Bu"
+  ],
+  "labelLeft": "tBuO2C",
+  "smiles": "[*:1]C(=O)OC(C)(C)C",
+  "attachments": 1,
+  "formula": "C5H9O2",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Same structure as Boc (different intent/label)."
+ },
+ {
+  "label": "CO2Bn",
+  "synonyms": [
+   "COOBn"
+  ],
+  "labelLeft": "BnO2C",
+  "smiles": "[*:1]C(=O)OCc1ccccc1",
+  "attachments": 1,
+  "formula": "C8H7O2",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": "Same structure as Cbz."
+ },
+ {
+  "label": "CO2Ph",
+  "synonyms": [
+   "COOPh"
+  ],
+  "labelLeft": "PhO2C",
+  "smiles": "[*:1]C(=O)Oc1ccccc1",
+  "attachments": 1,
+  "formula": "C7H5O2",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "COCl",
+  "synonyms": [
+   "ClCO"
+  ],
+  "labelLeft": "ClOC",
+  "smiles": "[*:1]C(=O)Cl",
+  "attachments": 1,
+  "formula": "CClO",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CONH2",
+  "synonyms": [
+   "C(O)NH2",
+   "H2NCO"
+  ],
+  "labelLeft": "H2NOC",
+  "smiles": "[*:1]C(N)=O",
+  "attachments": 1,
+  "formula": "CH2NO",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CONHMe",
+  "synonyms": [
+   "MeHNCO"
+  ],
+  "labelLeft": "MeHNOC",
+  "smiles": "[*:1]C(=O)NC",
+  "attachments": 1,
+  "formula": "C2H4NO",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CONMe2",
+  "synonyms": [],
+  "labelLeft": "Me2NOC",
+  "smiles": "[*:1]C(=O)N(C)C",
+  "attachments": 1,
+  "formula": "C3H6NO",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "PO3H2",
+  "synonyms": [
+   "P(O)(OH)2"
+  ],
+  "labelLeft": "H2O3P",
+  "smiles": "[*:1]P(=O)(O)O",
+  "attachments": 1,
+  "formula": "H2O3P",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "PO(OEt)2",
+  "synonyms": [
+   "P(O)(OEt)2",
+   "(EtO)2OP",
+   "POOEt2"
+  ],
+  "labelLeft": "(EtO)2P(O)",
+  "smiles": "[*:1]P(=O)(OCC)OCC",
+  "attachments": 1,
+  "formula": "C4H10O3P",
+  "category": "functional-group",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "PO(OMe)2",
+  "synonyms": [
+   "P(O)(OMe)2",
+   "(MeO)2OP"
+  ],
+  "labelLeft": "(MeO)2P(O)",
+  "smiles": "[*:1]P(=O)(OC)OC",
+  "attachments": 1,
+  "formula": "C2H6O3P",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "PPh2",
+  "synonyms": [],
+  "labelLeft": "Ph2P",
+  "smiles": "[*:1]P(c1ccccc1)c1ccccc1",
+  "attachments": 1,
+  "formula": "C12H10P",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "sigma-bonded diphenylphosphanyl."
+ },
+ {
+  "label": "P(O)Ph2",
+  "synonyms": [
+   "POPh2"
+  ],
+  "labelLeft": "Ph2P(O)",
+  "smiles": "[*:1]P(=O)(c1ccccc1)c1ccccc1",
+  "attachments": 1,
+  "formula": "C12H10OP",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "B(OH)2",
+  "synonyms": [],
+  "labelLeft": "(HO)2B",
+  "smiles": "[*:1]B(O)O",
+  "attachments": 1,
+  "formula": "BH2O2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Bpin",
+  "synonyms": [
+   "BPin"
+  ],
+  "labelLeft": "pinB",
+  "smiles": "[*:1]B1OC(C)(C)C(C)(C)O1",
+  "attachments": 1,
+  "formula": "C6H12BO2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "9-BBN",
+  "synonyms": [
+   "BBN"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]B1C2CCCC1CCC2",
+  "attachments": 1,
+  "formula": "C8H14B",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SnBu3",
+  "synonyms": [],
+  "labelLeft": "Bu3Sn",
+  "smiles": "[*:1][Sn](CCCC)(CCCC)CCCC",
+  "attachments": 1,
+  "formula": "C12H27Sn",
+  "category": "ligand/organometallic",
+  "sources": [
+   "openbabel",
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "SnMe3",
+  "synonyms": [],
+  "labelLeft": "Me3Sn",
+  "smiles": "[*:1][Sn](C)(C)C",
+  "attachments": 1,
+  "formula": "C3H9Sn",
+  "category": "ligand/organometallic",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "MgBr",
+  "synonyms": [],
+  "labelLeft": "BrMg",
+  "smiles": "[*:1][Mg]Br",
+  "attachments": 1,
+  "formula": "BrMg",
+  "category": "ligand/organometallic",
+  "sources": [
+   "marvin",
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "MgCl",
+  "synonyms": [],
+  "labelLeft": "ClMg",
+  "smiles": "[*:1][Mg]Cl",
+  "attachments": 1,
+  "formula": "ClMg",
+  "category": "ligand/organometallic",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "MgI",
+  "synonyms": [],
+  "labelLeft": "IMg",
+  "smiles": "[*:1][Mg]I",
+  "attachments": 1,
+  "formula": "IMg",
+  "category": "ligand/organometallic",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "ZnCl",
+  "synonyms": [],
+  "labelLeft": "ClZn",
+  "smiles": "[*:1][Zn]Cl",
+  "attachments": 1,
+  "formula": "ClZn",
+  "category": "ligand/organometallic",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "ZnBr",
+  "synonyms": [],
+  "labelLeft": "BrZn",
+  "smiles": "[*:1][Zn]Br",
+  "attachments": 1,
+  "formula": "BrZn",
+  "category": "ligand/organometallic",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Cp",
+  "synonyms": [
+   "C5H5",
+   "Cyclopentadienyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C1C=CC=C1",
+  "attachments": 1,
+  "formula": "C5H5",
+  "category": "ligand/organometallic",
+  "sources": [
+   "ketcher",
+   "literature"
+  ],
+  "notes": "Stored as sigma-C5H5 (Ketcher does the same). eta5 hapticity is not captured."
+ },
+ {
+  "label": "Cp*",
+  "synonyms": [
+   "C5Me5",
+   "Cpstar"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C1(C)C(C)=C(C)C(C)=C1C",
+  "attachments": 1,
+  "formula": "C10H15",
+  "category": "ligand/organometallic",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Stored as sigma-C5Me5; eta5 hapticity not captured."
+ },
+ {
+  "label": "PPh3",
+  "synonyms": [
+   "Ph3P"
+  ],
+  "labelLeft": "Ph3P",
+  "smiles": "[*:1]<-P(c1ccccc1)(c1ccccc1)c1ccccc1",
+  "attachments": 1,
+  "formula": "C18H15P",
+  "category": "ligand/organometallic",
+  "sources": [
+   "literature"
+  ],
+  "notes": "L-type ligand: attachment is a dative P->M bond. Needs dative-bond support in the editor."
+ },
+ {
+  "label": "PCy3",
+  "synonyms": [
+   "Cy3P"
+  ],
+  "labelLeft": "Cy3P",
+  "smiles": "[*:1]<-P(C1CCCCC1)(C1CCCCC1)C1CCCCC1",
+  "attachments": 1,
+  "formula": "C18H33P",
+  "category": "ligand/organometallic",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Dative, as PPh3."
+ },
+ {
+  "label": "PtBu3",
+  "synonyms": [
+   "P(tBu)3",
+   "tBu3P"
+  ],
+  "labelLeft": "tBu3P",
+  "smiles": "[*:1]<-P(C(C)(C)C)(C(C)(C)C)C(C)(C)C",
+  "attachments": 1,
+  "formula": "C12H27P",
+  "category": "ligand/organometallic",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Dative, as PPh3."
+ },
+ {
+  "label": "PMe3",
+  "synonyms": [
+   "Me3P"
+  ],
+  "labelLeft": "Me3P",
+  "smiles": "[*:1]<-P(C)(C)C",
+  "attachments": 1,
+  "formula": "C3H9P",
+  "category": "ligand/organometallic",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Dative, as PPh3."
+ },
+ {
+  "label": "DMPS",
+  "synonyms": [
+   "SiMe2Ph",
+   "PhMe2Si",
+   "DMPhS"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1][Si](C)(C)c1ccccc1",
+  "attachments": 1,
+  "formula": "C8H11Si",
+  "category": "silyl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "EOM",
+  "synonyms": [
+   "Ethoxymethyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]COCC",
+  "attachments": 1,
+  "formula": "C3H7O",
+  "category": "protecting-group",
+  "sources": [
+   "openbabel",
+   "greene",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "CE",
+  "synonyms": [
+   "Cyanoethyl",
+   "CNE"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CCC#N",
+  "attachments": 1,
+  "formula": "C3H4N",
+  "category": "protecting-group",
+  "sources": [
+   "openbabel",
+   "literature"
+  ],
+  "notes": "2-cyanoethyl (phosphoramidite chemistry). Marvin spells it 'Ce', which is cerium - not a synonym."
+ },
+ {
+  "label": "Dnp",
+  "synonyms": [
+   "DNP",
+   "2,4-(NO2)2C6H3"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccc([N+](=O)[O-])cc1[N+](=O)[O-]",
+  "attachments": 1,
+  "formula": "C6H3N2O4",
+  "category": "aryl/heteroaryl",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "2,4-dinitrophenyl (also a His/Cys protecting group)."
+ },
+ {
+  "label": "PPh3+",
+  "synonyms": [
+   "P+Ph3",
+   "TPP+"
+  ],
+  "labelLeft": "Ph3P+",
+  "smiles": "[*:1][P+](c1ccccc1)(c1ccccc1)c1ccccc1",
+  "attachments": 1,
+  "formula": "C18H15P+",
+  "category": "functional-group",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Triphenylphosphonio (Wittig salts); counter-ion drawn separately."
+ },
+ {
+  "label": "ONO2",
+  "synonyms": [
+   "Nitrato"
+  ],
+  "labelLeft": "O2NO",
+  "smiles": "[*:1]O[N+](=O)[O-]",
+  "attachments": 1,
+  "formula": "NO3",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "OSO3H",
+  "synonyms": [
+   "SO4H",
+   "OSO2OH"
+  ],
+  "labelLeft": "HO3SO",
+  "smiles": "[*:1]OS(=O)(=O)O",
+  "attachments": 1,
+  "formula": "HO4S",
+  "category": "functional-group",
+  "sources": [
+   "ketcher",
+   "literature"
+  ],
+  "notes": "Ketcher calls this SO4H."
+ },
+ {
+  "label": "NTf2",
+  "synonyms": [
+   "N(Tf)2",
+   "Tf2N"
+  ],
+  "labelLeft": "Tf2N",
+  "smiles": "[*:1]N(S(=O)(=O)C(F)(F)F)S(=O)(=O)C(F)(F)F",
+  "attachments": 1,
+  "formula": "C2F6NO4S2",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Bis(triflyl)amido, e.g. AgNTf2 / Au-NTf2 drawn with an M-N bond."
+ },
+ {
+  "label": "NBoc2",
+  "synonyms": [
+   "N(Boc)2"
+  ],
+  "labelLeft": "Boc2N",
+  "smiles": "[*:1]N(C(=O)OC(C)(C)C)C(=O)OC(C)(C)C",
+  "attachments": 1,
+  "formula": "C10H18NO4",
+  "category": "functional-group",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "Ade",
+  "synonyms": [
+   "A-base",
+   "Adeninyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]n1cnc2c(N)ncnc21",
+  "attachments": 1,
+  "formula": "C5H4N5",
+  "category": "other",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Adenin-9-yl. Marvin adds a 2nd attachment on N6."
+ },
+ {
+  "label": "Gua",
+  "synonyms": [
+   "Guaninyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]n1cnc2c1nc(N)[nH]c2=O",
+  "attachments": 1,
+  "formula": "C5H4N5O",
+  "category": "other",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Guanin-9-yl."
+ },
+ {
+  "label": "Cyt",
+  "synonyms": [
+   "Cytosinyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]n1ccc(N)nc1=O",
+  "attachments": 1,
+  "formula": "C4H4N3O",
+  "category": "other",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Cytosin-1-yl."
+ },
+ {
+  "label": "Thy",
+  "synonyms": [
+   "Thyminyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]n1cc(C)c(=O)[nH]c1=O",
+  "attachments": 1,
+  "formula": "C5H5N2O2",
+  "category": "other",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Thymin-1-yl."
+ },
+ {
+  "label": "Ura",
+  "synonyms": [
+   "Uracilyl"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]n1ccc(=O)[nH]c1=O",
+  "attachments": 1,
+  "formula": "C4H3N2O2",
+  "category": "other",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Uracil-1-yl."
+ },
+ {
+  "label": "CO",
+  "synonyms": [
+   "C(O)",
+   "C=O",
+   "C(=O)"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]C([*:2])=O",
+  "attachments": 2,
+  "formula": "CO",
+  "category": "linker",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Divalent carbonyl. 'CO' also means carbon monoxide as a ligand; treat as carbonyl when two bonds attach."
+ },
+ {
+  "label": "SO2",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]S([*:2])(=O)=O",
+  "attachments": 2,
+  "formula": "O2S",
+  "category": "linker",
+  "sources": [
+   "chemdraw-hotkeys",
+   "literature"
+  ],
+  "notes": "Divalent sulfonyl (ChemDraw hotkey k). Ketcher's SO2 template is a monovalent HSO2 (hypervalent S-H), not used."
+ },
+ {
+  "label": "CH2CH2",
+  "synonyms": [
+   "(CH2)2"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]CC[*:2]",
+  "attachments": 2,
+  "formula": "C2H4",
+  "category": "linker",
+  "sources": [
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "o-C6H4",
+  "synonyms": [
+   "o-Phenylene",
+   "1,2-C6H4"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccccc1[*:2]",
+  "attachments": 2,
+  "formula": "C6H4",
+  "category": "linker",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "m-C6H4",
+  "synonyms": [
+   "m-Phenylene",
+   "1,3-C6H4"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1cccc([*:2])c1",
+  "attachments": 2,
+  "formula": "C6H4",
+  "category": "linker",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "p-C6H4",
+  "synonyms": [
+   "p-Phenylene",
+   "1,4-C6H4"
+  ],
+  "labelLeft": null,
+  "smiles": "[*:1]c1ccc([*:2])cc1",
+  "attachments": 2,
+  "formula": "C6H4",
+  "category": "linker",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": ""
+ },
+ {
+  "label": "PEG3",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]OCCOCCOCC[*:2]",
+  "attachments": 2,
+  "formula": "C6H12O3",
+  "category": "linker",
+  "sources": [
+   "rdkit",
+   "literature"
+  ],
+  "notes": "RDKit definition -(OCH2CH2)3-. Other tools count PEG units differently (e.g. ending in O)."
+ },
+ {
+  "label": "PEG4",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]OCCOCCOCCOCC[*:2]",
+  "attachments": 2,
+  "formula": "C8H16O4",
+  "category": "linker",
+  "sources": [
+   "rdkit",
+   "literature"
+  ],
+  "notes": "RDKit definition."
+ },
+ {
+  "label": "PEG5",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]OCCOCCOCCOCCOCC[*:2]",
+  "attachments": 2,
+  "formula": "C10H20O5",
+  "category": "linker",
+  "sources": [
+   "rdkit",
+   "literature"
+  ],
+  "notes": "RDKit definition."
+ },
+ {
+  "label": "PEG6",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]OCCOCCOCCOCCOCCOCC[*:2]",
+  "attachments": 2,
+  "formula": "C12H24O6",
+  "category": "linker",
+  "sources": [
+   "rdkit",
+   "literature"
+  ],
+  "notes": "RDKit definition."
+ },
+ {
+  "label": "Gly",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "[*:1]NCC([*:2])=O",
+  "attachments": 2,
+  "formula": "C2H3NO",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration."
+ },
+ {
+  "label": "Ala",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "C[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C3H5NO",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Val",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "CC(C)[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C5H9NO",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Leu",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "CC(C)C[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C6H11NO",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Ile",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "CC[C@H](C)[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C6H11NO",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Phe",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "c1ccc(cc1)C[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C9H9NO",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Trp",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "c1ccc2c(c1)c(c[nH]2)C[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C11H10N2O",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Met",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "CSCC[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C5H9NOS",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Pro",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "C1C[C@H](N(C1)[*:1])C([*:2])=O",
+  "attachments": 2,
+  "formula": "C5H7NO",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Ser",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "OC[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C3H5NO2",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Thr",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "C[C@@H](O)[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C4H7NO2",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Cys",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "SC[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C3H5NOS",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Tyr",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "Oc1ccc(cc1)C[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C9H9NO2",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Asn",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "NC(=O)C[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C4H6N2O2",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Gln",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "NC(=O)CC[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C5H8N2O2",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Asp",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "OC(=O)C[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C4H5NO3",
+  "category": "amino-acid",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Glu",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "OC(=O)CC[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C5H7NO3",
+  "category": "amino-acid",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Lys",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "NCCCC[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C6H12N2O",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Arg",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "NC(N)=NCCC[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C6H12N4O",
+  "category": "amino-acid",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "His",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "c1ncc([nH]1)C[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C6H7N3O",
+  "category": "amino-acid",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Sar",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "CN(CC([*:2])=O)[*:1]",
+  "attachments": 2,
+  "formula": "C3H5NO",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration."
+ },
+ {
+  "label": "Aib",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "CC(C)(C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C4H7NO",
+  "category": "amino-acid",
+  "sources": [
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration."
+ },
+ {
+  "label": "Nle",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "CCCC[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C6H11NO",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Orn",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "NCCC[C@@H](C([*:2])=O)N[*:1]",
+  "attachments": 2,
+  "formula": "C5H10N2O",
+  "category": "amino-acid",
+  "sources": [
+   "marvin",
+   "literature"
+  ],
+  "notes": "Residue -NH-CH(R)-C(=O)-: [*:1] on N (N-terminal side), [*:2] on C=O (C-terminal side); L-configuration, side chain unprotected."
+ },
+ {
+  "label": "Glc",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "C([C@@H]1[C@H]([C@@H]([C@H]([C@@H](O1)[*:1])O)O)O)O",
+  "attachments": 1,
+  "formula": "C6H11O5",
+  "category": "sugar",
+  "sources": [
+   "literature"
+  ],
+  "notes": "beta-D-glucopyranosyl, attached through the anomeric carbon (C-glycoside/glycosyl convention; draw O explicitly for O-glycosides). Anomer (alpha/beta) is fixed as shown; Marvin's sugar groups instead attach via the anomeric O and cover both anomers."
+ },
+ {
+  "label": "Gal",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "C([C@@H]1[C@@H]([C@@H]([C@H]([C@@H](O1)[*:1])O)O)O)O",
+  "attachments": 1,
+  "formula": "C6H11O5",
+  "category": "sugar",
+  "sources": [
+   "literature"
+  ],
+  "notes": "beta-D-galactopyranosyl, attached through the anomeric carbon (C-glycoside/glycosyl convention; draw O explicitly for O-glycosides). Anomer (alpha/beta) is fixed as shown; Marvin's sugar groups instead attach via the anomeric O and cover both anomers."
+ },
+ {
+  "label": "Man",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "C([C@@H]1[C@H]([C@@H]([C@@H]([C@H](O1)[*:1])O)O)O)O",
+  "attachments": 1,
+  "formula": "C6H11O5",
+  "category": "sugar",
+  "sources": [
+   "literature"
+  ],
+  "notes": "alpha-D-mannopyranosyl, attached through the anomeric carbon (C-glycoside/glycosyl convention; draw O explicitly for O-glycosides). Anomer (alpha/beta) is fixed as shown; Marvin's sugar groups instead attach via the anomeric O and cover both anomers."
+ },
+ {
+  "label": "Fuc",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "C[C@H]1[C@H]([C@H]([C@@H]([C@@H](O1)[*:1])O)O)O",
+  "attachments": 1,
+  "formula": "C6H11O4",
+  "category": "sugar",
+  "sources": [
+   "literature"
+  ],
+  "notes": "alpha-L-fucopyranosyl, attached through the anomeric carbon (C-glycoside/glycosyl convention; draw O explicitly for O-glycosides). Anomer (alpha/beta) is fixed as shown; Marvin's sugar groups instead attach via the anomeric O and cover both anomers."
+ },
+ {
+  "label": "GlcNAc",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "CC(=O)N[C@@H]1[C@H]([C@@H]([C@H](O[C@H]1[*:1])CO)O)O",
+  "attachments": 1,
+  "formula": "C8H14NO5",
+  "category": "sugar",
+  "sources": [
+   "literature"
+  ],
+  "notes": "2-acetamido-2-deoxy-beta-D-glucopyranosyl, attached through the anomeric carbon (C-glycoside/glycosyl convention; draw O explicitly for O-glycosides). Anomer (alpha/beta) is fixed as shown; Marvin's sugar groups instead attach via the anomeric O and cover both anomers."
+ },
+ {
+  "label": "Rib",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "C([C@@H]1[C@H]([C@H]([C@@H](O1)[*:1])O)O)O",
+  "attachments": 1,
+  "formula": "C5H9O4",
+  "category": "sugar",
+  "sources": [
+   "literature"
+  ],
+  "notes": "beta-D-ribofuranosyl, attached through the anomeric carbon (C-glycoside/glycosyl convention; draw O explicitly for O-glycosides). Anomer (alpha/beta) is fixed as shown; Marvin's sugar groups instead attach via the anomeric O and cover both anomers."
+ },
+ {
+  "label": "dRib",
+  "synonyms": [],
+  "labelLeft": null,
+  "smiles": "C1[C@@H]([C@H](O[C@H]1[*:1])CO)O",
+  "attachments": 1,
+  "formula": "C5H9O3",
+  "category": "sugar",
+  "sources": [
+   "literature"
+  ],
+  "notes": "2-deoxy-beta-D-ribofuranosyl, attached through the anomeric carbon (C-glycoside/glycosyl convention; draw O explicitly for O-glycosides). Anomer (alpha/beta) is fixed as shown; Marvin's sugar groups instead attach via the anomeric O and cover both anomers."
+ }
+]

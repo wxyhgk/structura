@@ -1,4 +1,4 @@
-import type { Atom, Bond, BondLook, BondStyle, Molecule, Point, Selection } from "../types.ts"
+import type { Atom, Bond, BondLook, BondStyle, Group, Molecule, Point, Selection } from "../types.ts"
 
 /** A look only survives on a plain single bond. */
 function lookFor(style: BondStyle): BondLook | undefined {
@@ -6,16 +6,32 @@ function lookFor(style: BondStyle): BondLook | undefined {
 }
 
 export function emptyMolecule(): Molecule {
-  return { atoms: [], bonds: [], nextAtomId: 1, nextBondId: 1 }
+  return { atoms: [], bonds: [], groups: [], nextAtomId: 1, nextBondId: 1, nextGroupId: 1 }
 }
 
 export function cloneMolecule(mol: Molecule): Molecule {
   return {
     atoms: mol.atoms.map((atom) => ({ ...atom })),
     bonds: mol.bonds.map((bond) => ({ ...bond })),
+    groups: mol.groups.map((group) => ({ ...group, atoms: [...group.atoms] })),
     nextAtomId: mol.nextAtomId,
     nextBondId: mol.nextBondId,
+    nextGroupId: mol.nextGroupId,
   }
+}
+
+export function groupOf(mol: Molecule, atomId: number): Group | undefined {
+  return mol.groups.find((group) => group.atoms.includes(atomId))
+}
+
+/**
+ * Editing a group's atoms or bonds turns it back into plain atoms: it is no longer the
+ * group its label names. Moving, rotating and flipping keep it. Works on a fresh clone.
+ */
+function dissolveTouching(next: Molecule, atomIds: Iterable<number>): void {
+  const touched = new Set(atomIds)
+  if (touched.size === 0 || next.groups.length === 0) return
+  next.groups = next.groups.filter((group) => !group.atoms.some((id) => touched.has(id)))
 }
 
 export function atomById(mol: Molecule, id: number): Atom | undefined {
@@ -74,6 +90,7 @@ export function addBond(
     const next = cloneMolecule(mol)
     const bond = next.bonds.find((item) => item.id === existing.id)
     if (!bond) return null
+    dissolveTouching(next, [a, b])
     bond.order = style.order
     bond.stereo = style.order === 1 ? style.stereo : "none"
     bond.look = lookFor(style)
@@ -85,6 +102,7 @@ export function addBond(
     return { mol: next, id: existing.id }
   }
   const next = cloneMolecule(mol)
+  dissolveTouching(next, [a, b])
   const id = next.nextBondId++
   next.bonds.push({
     id,
@@ -110,6 +128,7 @@ export function paintBond(mol: Molecule, bondId: number, style: BondStyle): Mole
 export function setBondOrder(mol: Molecule, bondIds: number[], order: 1 | 2 | 3): Molecule {
   const wanted = new Set(bondIds)
   const next = cloneMolecule(mol)
+  dissolveTouching(next, mol.bonds.filter((bond) => wanted.has(bond.id)).flatMap((bond) => [bond.a, bond.b]))
   for (const bond of next.bonds) {
     if (!wanted.has(bond.id)) continue
     bond.order = order
@@ -126,6 +145,8 @@ export function deleteSelection(mol: Molecule, selection: Selection): Molecule {
   const atoms = new Set(selection.atoms)
   const bonds = new Set(selection.bonds)
   const next = cloneMolecule(mol)
+  const endpoints = mol.bonds.filter((bond) => bonds.has(bond.id)).flatMap((bond) => [bond.a, bond.b])
+  dissolveTouching(next, [...atoms, ...endpoints])
   next.bonds = next.bonds.filter(
     (bond) => !bonds.has(bond.id) && !atoms.has(bond.a) && !atoms.has(bond.b),
   )
@@ -250,6 +271,7 @@ export function flipAtoms(mol: Molecule, ids: number[], axis: "horizontal" | "ve
 export function setElement(mol: Molecule, ids: number[], el: string): Molecule {
   const wanted = new Set(ids)
   const next = cloneMolecule(mol)
+  dissolveTouching(next, wanted)
   for (const atom of next.atoms) {
     if (!wanted.has(atom.id)) continue
     atom.el = el
@@ -262,6 +284,7 @@ export function setElement(mol: Molecule, ids: number[], el: string): Molecule {
 export function setIsotope(mol: Molecule, ids: number[], isotope: number | undefined): Molecule {
   const wanted = new Set(ids)
   const next = cloneMolecule(mol)
+  dissolveTouching(next, wanted)
   for (const atom of next.atoms) {
     if (wanted.has(atom.id)) atom.isotope = isotope
   }
@@ -272,6 +295,7 @@ export function setAlias(mol: Molecule, id: number, alias: string | undefined): 
   const next = cloneMolecule(mol)
   const atom = next.atoms.find((item) => item.id === id)
   if (!atom) return mol
+  dissolveTouching(next, [id])
   atom.alias = alias
   return next
 }
@@ -279,6 +303,7 @@ export function setAlias(mol: Molecule, id: number, alias: string | undefined): 
 export function bumpCharge(mol: Molecule, ids: number[], delta: number): Molecule {
   const wanted = new Set(ids)
   const next = cloneMolecule(mol)
+  if (delta !== 0) dissolveTouching(next, wanted)
   for (const atom of next.atoms) {
     if (!wanted.has(atom.id)) continue
     atom.charge = Math.max(-3, Math.min(3, atom.charge + delta))
@@ -326,6 +351,7 @@ export function setBondLook(mol: Molecule, bondId: number, style: BondStyle): Mo
   const next = cloneMolecule(mol)
   const bond = next.bonds.find((item) => item.id === bondId)
   if (!bond) return mol
+  dissolveTouching(next, [bond.a, bond.b])
   bond.order = style.order
   bond.stereo = style.order === 1 ? style.stereo : "none"
   bond.look = lookFor(style)

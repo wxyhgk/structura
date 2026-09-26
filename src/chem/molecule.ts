@@ -16,6 +16,7 @@ export {
   emptyMolecule,
   emptySelection,
   flipAtoms,
+  groupOf,
   moveAtoms,
   neighbors,
   paintBond,
@@ -62,3 +63,4 @@ export {
   sproutAngle,
   sproutAt,
 } from "./molecule/place.ts"
+export { insertGroup } from "./molecule/abbreviate.ts"

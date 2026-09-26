@@ -4,6 +4,7 @@ import {
   attachChairAt,
   bumpCharge,
   growRing,
+  insertGroup,
   neighbors,
   setAlias,
   setElement,
@@ -11,6 +12,7 @@ import {
   sproutAngle,
   sproutAt,
 } from "../molecule.ts"
+import { templateFor } from "../templates.ts"
 import type { Molecule, RingKind } from "../types.ts"
 import { atomNext, branchAngles, degree, extend, HASH, inRing, SINGLE, DOUBLE, WEDGE, type HotResult } from "./shared.ts"
 
@@ -127,8 +129,12 @@ export function isotopeOf(mol: Molecule, id: number, el: string, isotope: number
   return atomNext(setIsotope(setElement(mol, [id], el), [id], isotope), id)
 }
 
-export function nick(mol: Molecule, id: number, alias: string, el = "C"): HotResult {
-  return atomNext(setAlias(setElement(mol, [id], el), id, alias), id)
+/** Puts the named abbreviation on the atom, or just its label when there is no template. */
+export function nick(mol: Molecule, id: number, label: string): HotResult {
+  const template = templateFor(label)
+  const placed = template ? insertGroup(mol, id, template, label) : null
+  if (placed) return atomNext(placed.mol, placed.id)
+  return atomNext(setAlias(setElement(mol, [id], "C"), id, label), id)
 }
 
 export { extend }

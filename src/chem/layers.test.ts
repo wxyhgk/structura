@@ -30,7 +30,8 @@ function violations(from: (file: string) => boolean, banned: (target: string) =>
     .flatMap(({ file, targets }) => targets.filter(banned).map((target) => `${file} → ${target}`))
 }
 
-const isLayout = (path: string) => path.startsWith("molecule/place") || path.startsWith("molecule/snap")
+const isLayout = (path: string) =>
+  path.startsWith("molecule/place") || path.startsWith("molecule/snap") || path.startsWith("molecule/abbreviate")
 const isDraw = (path: string) => path === "draw.ts" || path.startsWith("draw/")
 const isHotkeys = (path: string) => path === "hotkeys.ts" || path.startsWith("hotkeys/")
 

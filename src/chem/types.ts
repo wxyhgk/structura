@@ -42,11 +42,27 @@ export type Arrow = {
   y2: number
 }
 
+/**
+ * An abbreviation such as Ph or Boc. Its atoms are real atoms of the molecule; the group
+ * only remembers that they belong together and how to show them.
+ */
+export type Group = {
+  id: number
+  /** What the collapsed group shows, as typed: Me, CH3, Ph… */
+  label: string
+  /** atoms[0] is the anchor: it carries the label and the bonds to the rest of the molecule. */
+  atoms: number[]
+  /** Shown as the label, or drawn out atom by atom while still remembered as a group. */
+  collapsed: boolean
+}
+
 export type Molecule = {
   atoms: Atom[]
   bonds: Bond[]
+  groups: Group[]
   nextAtomId: number
   nextBondId: number
+  nextGroupId: number
 }
 
 /** The whole canvas: the molecule plus the non-chemical marks drawn around it. */

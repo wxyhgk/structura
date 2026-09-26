@@ -27,11 +27,17 @@ export function keepCounters(drawing: Drawing, current: Drawing): Drawing {
   const mol = drawing.molecule
   const nextAtomId = Math.max(mol.nextAtomId, current.molecule.nextAtomId)
   const nextBondId = Math.max(mol.nextBondId, current.molecule.nextBondId)
+  const nextGroupId = Math.max(mol.nextGroupId, current.molecule.nextGroupId)
   const nextArrowId = Math.max(drawing.nextArrowId, current.nextArrowId)
-  if (nextAtomId === mol.nextAtomId && nextBondId === mol.nextBondId && nextArrowId === drawing.nextArrowId) {
+  if (
+    nextAtomId === mol.nextAtomId &&
+    nextBondId === mol.nextBondId &&
+    nextGroupId === mol.nextGroupId &&
+    nextArrowId === drawing.nextArrowId
+  ) {
     return drawing
   }
-  return { ...drawing, molecule: { ...mol, nextAtomId, nextBondId }, nextArrowId }
+  return { ...drawing, molecule: { ...mol, nextAtomId, nextBondId, nextGroupId }, nextArrowId }
 }
 
 export function historyReducer(state: History, action: HistoryAction): History {

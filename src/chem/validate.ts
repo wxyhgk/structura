@@ -11,6 +11,9 @@ export type ProblemCode =
   | "duplicate-bond"
   | "stereo-on-multiple-bond"
   | "look-on-special-bond"
+  | "group-empty"
+  | "group-unknown-atom"
+  | "group-overlap"
   | "valence"
 
 /**
@@ -23,6 +26,7 @@ export type Problem = {
   atoms?: number[]
   bonds?: number[]
   arrows?: number[]
+  groups?: number[]
   message: string
 }
 
@@ -109,6 +113,49 @@ export function validate(mol: Molecule): Problem[] {
         bonds: [bond.id],
         message: `bond #${bond.id} has look "${bond.look}" but is not a plain single bond`,
       })
+    }
+  }
+
+  const groupIds = new Set<number>()
+  const owner = new Map<number, number>()
+  for (const group of mol.groups) {
+    if (groupIds.has(group.id)) {
+      problems.push({ code: "duplicate-id", severity: "error", groups: [group.id], message: `group #${group.id} appears twice` })
+    }
+    groupIds.add(group.id)
+    if (group.id >= mol.nextGroupId) {
+      problems.push({
+        code: "id-not-below-counter",
+        severity: "error",
+        groups: [group.id],
+        message: `group #${group.id} is not below nextGroupId ${mol.nextGroupId}`,
+      })
+    }
+    if (group.atoms.length === 0) {
+      problems.push({ code: "group-empty", severity: "error", groups: [group.id], message: `group #${group.id} (${group.label}) has no atoms` })
+    }
+    const missing = group.atoms.filter((id) => !atomIds.has(id))
+    if (missing.length > 0) {
+      problems.push({
+        code: "group-unknown-atom",
+        severity: "error",
+        groups: [group.id],
+        atoms: missing,
+        message: `group #${group.id} (${group.label}) lists missing atom ${missing.map((id) => `#${id}`).join(", ")}`,
+      })
+    }
+    for (const id of group.atoms) {
+      const other = owner.get(id)
+      if (other != null && other !== group.id) {
+        problems.push({
+          code: "group-overlap",
+          severity: "error",
+          groups: [other, group.id],
+          atoms: [id],
+          message: `atom #${id} belongs to groups #${other} and #${group.id}`,
+        })
+      }
+      owner.set(id, group.id)
     }
   }
 

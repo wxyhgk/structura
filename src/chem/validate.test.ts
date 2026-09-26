@@ -100,7 +100,7 @@ function random(seed: number) {
 const ATOM_KEYS = ["0", "1", "2", "3", "a", "4", "5", "6", "7", "8", "9", "z", "Z", "v", "u", "k", "K", "j", "J", "o", "q", "O", "n", "N", "s", "S", "f", "F", "l", "C", "b", "i", "h", "d", "L", "m", "M", "H", "y", "Q", "+", "-"]
 const BOND_KEYS = ["2", "3", "4", "5", "6", "7", "8", "9", "0", "w", "W", "h", "H", "b", "B", "d", "D", "y"]
 const RINGS: RingKind[] = ["benzene", "cyclohexane", "cyclopentane", "cyclobutane", "cyclopropane", "cycloheptane"]
-const LABELS = ["N", "O", "Cl", "Me", "Ph", "Boc", "D", "Xyz", ""]
+const LABELS = ["N", "O", "Cl", "Me", "Ph", "Boc", "D", "Xyz", "", "Ac", "Ts", "TBS", "CO2Me", "NO2", "SO2", "CF3", "13C"]
 
 test("random edits never break an invariant", () => {
   for (let seed = 1; seed <= 40; seed++) {

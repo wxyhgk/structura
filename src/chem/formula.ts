@@ -108,18 +108,6 @@ function atomMass(atom: Atom): number {
   return ISOTOPE_MASS[`${atom.el}${atom.isotope}`] ?? atom.isotope
 }
 
-const ALIAS_FORMULA: Record<string, Record<string, number>> = {
-  Me: { C: 1, H: 3 },
-  CH3: { C: 1, H: 3 },
-  Et: { C: 2, H: 5 },
-  Ac: { C: 2, H: 3, O: 1 },
-  Ph: { C: 6, H: 5 },
-  Boc: { C: 5, H: 9, O: 2 },
-  Cbz: { C: 8, H: 7, O: 2 },
-  Fmoc: { C: 15, H: 11, O: 2 },
-  CO2Me: { C: 2, H: 3, O: 2 },
-}
-
 export function atomHydrogens(mol: Molecule, atomId: number): { h: number; error: boolean } {
   const atom = atomById(mol, atomId)
   if (!atom) return { h: 0, error: false }
@@ -133,11 +121,6 @@ function eachPiece(mol: Molecule, atomIds: number[] | undefined, add: (symbol: s
   for (const id of ids) {
     const atom = atomById(mol, id)
     if (!atom) continue
-    const alias = atom.alias ? ALIAS_FORMULA[atom.alias] : undefined
-    if (alias) {
-      for (const [el, count] of Object.entries(alias)) add(el, count, elementMass(el))
-      continue
-    }
     add(formulaSymbol(atom), 1, atomMass(atom))
     const { h, error } = atomHydrogens(mol, id)
     if (!error && h > 0) add("H", h, elementMass("H"))

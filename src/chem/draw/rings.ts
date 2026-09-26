@@ -1,4 +1,4 @@
-import { atomById, cycleAround } from "../molecule.ts"
+import { atomById, cycleAround } from "../molecule/graph.ts"
 import type { Bond, Molecule, Point } from "../types.ts"
 
 export function inwardPoint(mol: Molecule, bond: Bond): Point | null {

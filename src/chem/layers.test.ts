@@ -58,3 +58,38 @@ test("chemistry and file exchange never reach for layout, rendering or hotkeys",
 test("layout does not depend on hotkeys", () => {
   assert.deepEqual(violations(isLayout, isHotkeys), [])
 })
+
+/** Every file reachable from `file` through imports, not counting `file` itself. */
+function reachable(file: string): Set<string> {
+  const byFile = new Map(imports.map(({ file: name, targets }) => [name, targets]))
+  const seen = new Set<string>()
+  const stack = [...(byFile.get(file) ?? [])]
+  while (stack.length > 0) {
+    const next = stack.pop()!
+    if (seen.has(next)) continue
+    seen.add(next)
+    stack.push(...(byFile.get(next) ?? []))
+  }
+  return seen
+}
+
+const isTemplates = (path: string) => path === "templates.ts" || path.startsWith("templates/")
+
+test("chemistry, file exchange and history do not reach layout even through a barrel", () => {
+  const pure = ["formula.ts", "validate.ts", "molfile.ts", "sdf.ts", "import.ts", "drawing.ts", "history.ts", "molecule/kekule.ts", "molecule/graph.ts"]
+  const leaks = pure.flatMap((file) =>
+    [...reachable(file)]
+      .filter((target) => isLayout(target) || isDraw(target) || isHotkeys(target) || isTemplates(target))
+      .map((target) => `${file} ⇒ ${target}`),
+  )
+  assert.deepEqual(leaks, [])
+})
+
+test("rendering does not reach layout or hotkeys even through a barrel", () => {
+  const leaks = imports
+    .filter(({ file }) => isDraw(file))
+    .flatMap(({ file }) =>
+      [...reachable(file)].filter((target) => isLayout(target) || isHotkeys(target) || isTemplates(target)).map((target) => `${file} ⇒ ${target}`),
+    )
+  assert.deepEqual(leaks, [])
+})

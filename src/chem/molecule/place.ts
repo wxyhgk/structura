@@ -1,7 +1,7 @@
 import { ATOM_HIT, BOND_LENGTH, RING_SIZE, SINGLE, SNAP_ATOM, SNAP_CHAIN } from "../constants.ts"
 import { angleTo, dist, distToSegment, norm, pointFrom, sideOfLine, signedDelta } from "../geometry.ts"
 import type { Bond, BondStyle, Molecule, Point, RingKind } from "../types.ts"
-import { addAtom, addBond, atomById, bondById, bondOrderSum, cloneMolecule, componentOf, neighbors, setElement, subMolecule } from "./graph.ts"
+import { addAtom, addBond, atomById, bondById, bondOrderSum, cloneMolecule, componentOf, cycleAround, neighbors, setElement, subMolecule } from "./graph.ts"
 import { kekulizeAromaticReport } from "./kekule.ts"
 import { nearestAtom } from "./snap.ts"
 
@@ -219,38 +219,6 @@ function markAromatic(mol: Molecule, ids: number[]): Molecule {
   return next
 }
 
-/** Other ring around a bond, not using the bond itself. Empty when the bond is a chain. */
-export function cycleAround(mol: Molecule, bond: Bond): number[] | null {
-  const start = bond.a
-  const goal = bond.b
-  const previous = new Map<number, number | null>([[start, null]])
-  const depth = new Map<number, number>([[start, 0]])
-  const queue = [start]
-  while (queue.length > 0) {
-    const current = queue.shift()
-    if (current == null) break
-    const currentDepth = depth.get(current) ?? 0
-    if (currentDepth >= 7) continue
-    for (const neighbor of neighbors(mol, current)) {
-      if (current === start && neighbor.id === goal) continue
-      if (previous.has(neighbor.id)) continue
-      previous.set(neighbor.id, current)
-      depth.set(neighbor.id, currentDepth + 1)
-      if (neighbor.id === goal) {
-        const path: number[] = []
-        let cursor: number | null = goal
-        while (cursor != null) {
-          path.push(cursor)
-          cursor = previous.get(cursor) ?? null
-        }
-        path.reverse()
-        return path.length >= 3 && path.length <= 8 ? path : null
-      }
-      queue.push(neighbor.id)
-    }
-  }
-  return null
-}
 
 export function placeRing(mol: Molecule, center: Point, kind: RingKind): Molecule {
   const points = ringPoints(center, RING_SIZE[kind], bondLengthAt(mol))

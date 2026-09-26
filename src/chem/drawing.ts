@@ -1,4 +1,4 @@
-import { atomById, emptyMolecule } from "./molecule.ts"
+import { atomById, emptyMolecule } from "./molecule/graph.ts"
 import type { Drawing } from "./types.ts"
 
 export function emptyDrawing(): Drawing {

@@ -1,6 +1,6 @@
 import { elementColor } from "../elements/index.ts"
 import { dist } from "../geometry.ts"
-import { atomById, neighbors } from "../molecule.ts"
+import { atomById, neighbors } from "../molecule/graph.ts"
 import type { Atom, Molecule } from "../types.ts"
 import { bondFigures, chainDoubleFlank, type DoubleFlank } from "./bonds/index.ts"
 import { labelFor, type AtomLabel } from "./labels.ts"

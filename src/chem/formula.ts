@@ -1,5 +1,5 @@
 import { elementByNumber, elementMass, elementOf } from "./elements/index.ts"
-import { atomById, bondOrderSum } from "./molecule.ts"
+import { atomById, bondOrderSum } from "./molecule/graph.ts"
 import type { Atom, Molecule } from "./types.ts"
 
 const SUBSCRIPT = "₀₁₂₃₄₅₆₇₈₉"

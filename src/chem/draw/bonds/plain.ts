@@ -1,4 +1,4 @@
-import { neighbors } from "../../molecule.ts"
+import { neighbors } from "../../molecule/graph.ts"
 import type { Atom, Molecule } from "../../types.ts"
 import { coloredStroke } from "../primitives.ts"
 import type { Figure } from "../primitives.ts"

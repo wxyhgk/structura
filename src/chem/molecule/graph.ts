@@ -428,3 +428,36 @@ export function tumbleAtoms(
   }
   return { mol: next, depth: nextDepth }
 }
+
+/** Other ring around a bond, not using the bond itself. Empty when the bond is a chain. */
+export function cycleAround(mol: Molecule, bond: Bond): number[] | null {
+  const start = bond.a
+  const goal = bond.b
+  const previous = new Map<number, number | null>([[start, null]])
+  const depth = new Map<number, number>([[start, 0]])
+  const queue = [start]
+  while (queue.length > 0) {
+    const current = queue.shift()
+    if (current == null) break
+    const currentDepth = depth.get(current) ?? 0
+    if (currentDepth >= 7) continue
+    for (const neighbor of neighbors(mol, current)) {
+      if (current === start && neighbor.id === goal) continue
+      if (previous.has(neighbor.id)) continue
+      previous.set(neighbor.id, current)
+      depth.set(neighbor.id, currentDepth + 1)
+      if (neighbor.id === goal) {
+        const path: number[] = []
+        let cursor: number | null = goal
+        while (cursor != null) {
+          path.push(cursor)
+          cursor = previous.get(cursor) ?? null
+        }
+        path.reverse()
+        return path.length >= 3 && path.length <= 8 ? path : null
+      }
+      queue.push(neighbor.id)
+    }
+  }
+  return null
+}

@@ -100,3 +100,28 @@ test("a bond squeezed between two labels is still drawn", () => {
   mol = addBond(mol, n.id, o.id, { order: 1, stereo: "none" })!.mol
   assert.ok(buildScene(mol, false).figures.length > 0)
 })
+
+test("a double bond to an end atom is two lines centred on the bond", () => {
+  let mol = emptyMolecule()
+  const left = addAtom(mol, "C", 0, 0)
+  mol = left.mol
+  const carbonyl = addAtom(mol, "C", 34.641, -20)
+  mol = carbonyl.mol
+  const oxygen = addAtom(mol, "O", 34.641, -60)
+  mol = oxygen.mol
+  const right = addAtom(mol, "C", 69.282, 0)
+  mol = right.mol
+  mol = addBond(mol, left.id, carbonyl.id, { order: 1, stereo: "none" })!.mol
+  mol = addBond(mol, carbonyl.id, oxygen.id, { order: 2, stereo: "none" })!.mol
+  mol = addBond(mol, carbonyl.id, right.id, { order: 1, stereo: "none" })!.mol
+
+  const start = { x: 34.641, y: -20 }
+  const end = { x: 34.641, y: -60 }
+  const vertical = buildScene(mol, false).figures.filter(
+    (figure): figure is DrawLine => figure.kind === "line" && Math.abs(figure.x1 - figure.x2) < 0.01,
+  )
+  const offsets = vertical.map((line) => lineDistance({ x: line.x1, y: line.y1 }, start, end)).sort((a, b) => a - b)
+  assert.equal(offsets.length, 2)
+  assert.ok(Math.abs(offsets[0] + offsets[1]) < 0.01, "the two lines sit symmetrically")
+  assert.ok(offsets[1] > 1)
+})

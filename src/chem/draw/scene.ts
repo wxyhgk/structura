@@ -1,8 +1,8 @@
 import { elementColor } from "../elements/index.ts"
 import { dist } from "../geometry.ts"
-import { atomById } from "../molecule.ts"
-import type { Molecule } from "../types.ts"
-import { bondFigures, chainDoubleFlank } from "./bonds/index.ts"
+import { atomById, neighbors } from "../molecule.ts"
+import type { Atom, Molecule } from "../types.ts"
+import { bondFigures, chainDoubleFlank, type DoubleFlank } from "./bonds/index.ts"
 import { labelFor, type AtomLabel } from "./labels.ts"
 import type { Figure } from "./primitives.ts"
 import { inwardPoint } from "./rings.ts"
@@ -10,6 +10,15 @@ import { inwardPoint } from "./rings.ts"
 export type Scene = {
   figures: Figure[]
   labels: AtomLabel[]
+}
+
+/**
+ * A double bond with an end atom (C=O, S=O, =CH2) is drawn as two centred lines; one
+ * between two substituted atoms keeps a line on the backbone and puts the other inside.
+ */
+function doubleFlank(mol: Molecule, a: Atom, b: Atom): DoubleFlank {
+  if (neighbors(mol, a.id).length === 1 || neighbors(mol, b.id).length === 1) return { side: 0, trimA: 0, trimB: 0 }
+  return chainDoubleFlank(mol, a, b)
 }
 
 export function buildScene(mol: Molecule, colorHetero: boolean): Scene {
@@ -34,7 +43,7 @@ export function buildScene(mol: Molecule, colorHetero: boolean): Scene {
         toward,
         boxes.get(a.id) ?? null,
         boxes.get(b.id) ?? null,
-        bond.order === 2 && !toward ? chainDoubleFlank(mol, a, b) : null,
+        bond.order === 2 && !toward ? doubleFlank(mol, a, b) : null,
       ),
     )
   }

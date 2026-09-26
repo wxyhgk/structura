@@ -86,6 +86,10 @@ export function doubleBond(context: BondContext): Figure[] {
         : -1
     return emphasizeFlank(offsetLines(context, [0, 5 * sign], [[0, 0], [5, 5]], BOND_WIDTH), context.emphasis)
   }
+  if (context.flank?.side === 0) {
+    const half = DOUBLE_GAP / 2
+    return emphasizeFlank(offsetLines(context, [-half, half], [[0, 0], [0, 0]], BOND_WIDTH), context.emphasis)
+  }
   const side = context.flank?.side ?? 1
   const trimA = context.flank?.trimA ?? 8
   const trimB = context.flank?.trimB ?? 8

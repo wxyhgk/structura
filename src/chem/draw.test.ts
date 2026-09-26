@@ -90,3 +90,13 @@ test("a drawing look and chemical stereo never sit on the same bond", () => {
   assert.equal(looked.bonds[0].stereo, "down")
   assert.equal(looked.bonds[0].look, undefined)
 })
+
+test("a bond squeezed between two labels is still drawn", () => {
+  let mol = emptyMolecule()
+  const n = addAtom(mol, "N", 0, 0, 1)
+  mol = n.mol
+  const o = addAtom(mol, "O", 14, 0, -1)
+  mol = o.mol
+  mol = addBond(mol, n.id, o.id, { order: 1, stereo: "none" })!.mol
+  assert.ok(buildScene(mol, false).figures.length > 0)
+})

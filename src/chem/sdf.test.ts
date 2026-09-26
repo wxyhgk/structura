@@ -1,9 +1,10 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
+import { BOND_LENGTH } from "./constants.ts"
 import { plainFormula } from "./formula.ts"
 import { setAtomLabel } from "./hotkeys.ts"
-import { addAtom, addBond, bumpCharge, createBondAt, emptyMolecule, fuseRing, placeRing, sprout } from "./molecule.ts"
+import { addAtom, addBond, bondLengthAt, bumpCharge, createBondAt, emptyMolecule, fuseRing, placeRing, sprout } from "./molecule.ts"
 import { kekulizeAromaticReport } from "./molecule/kekule.ts"
 import { toMolfile } from "./molfile.ts"
 import { placeBeside, readMolfile, readSdf, sideBySide } from "./sdf.ts"
@@ -178,4 +179,14 @@ test("adding a ring elsewhere leaves an existing aromatic ring alone", () => {
   const withBenzene = placeRing(pyridinium.mol, { x: 400, y: 0 }, "benzene")
   const ids = new Set(pyridinium.mol.atoms.map((atom) => atom.id))
   assert.equal(plainFormula(withBenzene, [...ids]), before)
+})
+
+test("imported structures are scaled to the editor's bond length", () => {
+  for (const record of readSdf(fixture("rdkit-molecules.sdf"))) {
+    if (record.mol.bonds.length === 0) continue
+    assert.ok(Math.abs(bondLengthAt(record.mol) - BOND_LENGTH) < 0.01, record.title)
+  }
+  const ours = toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE))
+  const doubled = ours.replace(/^( +)(-?\d+\.\d+)( +)(-?\d+\.\d+)/gm, (_, s1, x, s2, y) => `${s1}${(Number(x) * 2).toFixed(4)}${s2}${(Number(y) * 2).toFixed(4)}`)
+  assert.ok(Math.abs(bondLengthAt(readMolfile(doubled).mol) - BOND_LENGTH) < 0.01)
 })

@@ -28,6 +28,28 @@ function float(text: string | undefined): number {
   return Number.isNaN(value) ? 0 : value
 }
 
+/**
+ * Programs disagree on bond length (RDKit's CoordGen uses 1.0 Å, older depictions 1.5 Å),
+ * so each record is scaled until its median bond is one editor bond.
+ */
+function normaliseScale(atoms: Atom[], bonds: Bond[]): void {
+  const lengths = bonds
+    .map((bond) => {
+      const a = atoms[bond.a - 1]
+      const b = atoms[bond.b - 1]
+      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0
+    })
+    .filter((length) => length > 1e-3)
+    .sort((a, b) => a - b)
+  if (lengths.length === 0) return
+  const factor = BOND_LENGTH / lengths[Math.floor(lengths.length / 2)]
+  if (Math.abs(factor - 1) < 0.01) return
+  for (const atom of atoms) {
+    atom.x *= factor
+    atom.y *= factor
+  }
+}
+
 /** Pairs of (atom number, value) on an `M  CHG`-style line. */
 function propertyPairs(line: string): Array<[number, number]> {
   const count = int(line.slice(6, 9))
@@ -176,6 +198,7 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
     note("missing-coordinates", "the file has no coordinates, so every atom sits on the same spot")
   }
 
+  normaliseScale(atoms, bonds)
   let mol: Molecule = { ...emptyMolecule(), atoms, bonds, nextAtomId: atomCount + 1, nextBondId: bondCount + 1 }
   if (aromatic) {
     const kekulized = kekulizeAromaticReport(mol)

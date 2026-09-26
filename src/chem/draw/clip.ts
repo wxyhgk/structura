@@ -27,9 +27,11 @@ export function trimSegment(
   const start = boxA ? exitDistance(a.x, a.y, ux, uy, boxA) : 0
   const end = boxB ? exitDistance(b.x, b.y, -ux, -uy, boxB) : 0
   if (start + end >= length - 1) {
+    // Labels this close would swallow the bond; keep a short stub so it is still seen.
+    const half = Math.min(length * 0.25, 3)
     const midX = (a.x + b.x) / 2
     const midY = (a.y + b.y) / 2
-    return { x1: midX, y1: midY, x2: midX, y2: midY }
+    return { x1: midX - ux * half, y1: midY - uy * half, x2: midX + ux * half, y2: midY + uy * half }
   }
   return {
     x1: a.x + ux * start,

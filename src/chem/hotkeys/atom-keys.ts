@@ -4,6 +4,7 @@ import type { AtomAction } from "./actions.ts"
 /** The keys pressed over an atom. Upper case is Shift. */
 export const ATOM_KEYS: Record<string, AtomAction> = {
   "1": { do: "extend", style: SINGLE },
+  x: { do: "extend", style: SINGLE },
   "0": { do: "sprout-up" },
   "2": { do: "recipe", name: "carbonyl" },
   "8": { do: "extend", style: DOUBLE },

@@ -9,15 +9,21 @@ import type { EditorState } from "@/editor/useEditor"
 
 /**
  * The one keyboard router. Each key goes to the first of these that uses it:
- * 1. the canvas's hover hotkeys (the atom or bond under the pointer),
- * 2. a command bound to the key,
- * 3. a tool key,
- * 4. an element key.
+ * 1. the selection: a hover key acts on every selected atom (or bond),
+ * 2. the canvas's hover hotkeys (the atom or bond under the pointer),
+ * 3. a command bound to the key,
+ * 4. a tool key,
+ * 5. an element key.
  */
 export function useShortcuts(editor: EditorState, canvas: RefObject<CanvasHandle | null>, commands: Commands) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (editorKeysBlocked(event)) return
+      const plain = !event.metaKey && !event.ctrlKey && !event.altKey
+      if (plain && !canvas.current?.hasGesture() && editor.hotkeySelection(event.key)) {
+        event.preventDefault()
+        return
+      }
       if (canvas.current?.handleKey(event)) {
         event.preventDefault()
         return

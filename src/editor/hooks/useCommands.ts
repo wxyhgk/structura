@@ -1,5 +1,6 @@
 import type { RefObject } from "react"
 import { sceneToSvg } from "@/chem/draw"
+import { emptySelection } from "@/chem/molecule"
 import { toMolfile } from "@/chem/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
@@ -62,7 +63,6 @@ export function useCommands({
   openSmilesDialog: () => void
 }) {
   const selected = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
-  const atomsSelected = editor.selection.atoms.length > 0
   const perArrow = (make: (direction: Arrow, key: string) => Command) =>
     Object.fromEntries(arrows.map((name) => [name.toLowerCase(), make(name.toLowerCase() as Arrow, `Arrow${name}`)])) as Record<Arrow, Command>
 
@@ -105,12 +105,11 @@ export function useCommands({
     arrow: perArrow((direction, key) =>
       command("反应箭头", () => editor.addArrow(direction), { keys: [{ key, meta: true }], enabled: selected }),
     ),
-    chargeUp: command("加正电荷", () => editor.applyCharge(1), { keys: [{ key: "+" }, { key: "=" }], enabled: atomsSelected }),
-    chargeDown: command("加负电荷", () => editor.applyCharge(-1), { keys: [{ key: "-" }], enabled: atomsSelected }),
     cancel: command(
-      "取消 / 套索",
+      "取消 / 取消选中 / 套索",
       () => {
         if (canvas.current?.hasGesture()) canvas.current.cancelGesture()
+        else if (selected) editor.setSelection(emptySelection())
         else editor.setTool("lasso")
       },
       { keys: [{ key: "Escape" }] },

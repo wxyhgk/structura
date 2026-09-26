@@ -1,7 +1,9 @@
 import { memo, useMemo } from "react"
 import { bondFigures, buildScene, type AtomLabel, type Figure } from "@/chem/draw"
-import { atomById, atomIdsOfSelection } from "@/chem/molecule"
+import { atomById } from "@/chem/molecule"
 import type { Arrow, Molecule, Selection, ToolId } from "@/chem/types"
+import { atomCircle } from "./rings.ts"
+import { SelectionMarks } from "./SelectionMarks.tsx"
 import { selectionFrame } from "./targeting.ts"
 import type { HoverTarget, Preview } from "./types.ts"
 
@@ -34,13 +36,14 @@ export function SceneView({
     <>
       <Figures figures={scene.figures} />
       <Arrows arrows={arrows} />
+      <SelectionMarks mol={mol} selection={selection} labels={scene.labels} zoom={zoom} />
       <Labels labels={scene.labels} />
       <HoverCue mol={mol} hover={hover} labels={scene.labels} zoom={zoom} />
       {hotspotId != null && !(hover?.type === "atom" && hover.id === hotspotId) && (
         <Hotspot mol={mol} id={hotspotId} labels={scene.labels} zoom={zoom} />
       )}
       {showFrame && (tool === "lasso" || tool === "marquee") && (
-        <SelectionChrome mol={mol} selection={selection} labels={scene.labels} zoom={zoom} />
+        <SelectionChrome mol={mol} selection={selection} zoom={zoom} />
       )}
       {preview && <PreviewLayer preview={preview} />}
     </>
@@ -167,16 +170,11 @@ function HoverCue({
   }
   const atom = atomById(mol, hover.id)
   if (!atom) return null
-  const label = labels.find((item) => item.atomId === atom.id)
-  const cx = label ? (label.box.left + label.box.right) / 2 : atom.x
-  const cy = label ? (label.box.top + label.box.bottom) / 2 : atom.y
-  const radius = label ? Math.hypot(label.box.right - cx, label.box.bottom - cy) + 3 / zoom : 12 / zoom
+  const circle = atomCircle(atom, labels.find((item) => item.atomId === atom.id), zoom, 12)
   return (
     <circle
       data-testid="hover-atom"
-      cx={cx}
-      cy={cy}
-      r={radius}
+      {...circle}
       fill="rgba(26, 115, 232, 0.08)"
       stroke="#1a73e8"
       strokeWidth={stroke}
@@ -197,16 +195,11 @@ function Hotspot({
 }) {
   const atom = atomById(mol, id)
   if (!atom || zoom <= 0) return null
-  const label = labels.find((item) => item.atomId === atom.id)
-  const cx = label ? (label.box.left + label.box.right) / 2 : atom.x
-  const cy = label ? (label.box.top + label.box.bottom) / 2 : atom.y
-  const radius = label ? Math.hypot(label.box.right - cx, label.box.bottom - cy) + 3 / zoom : 7 / zoom
+  const circle = atomCircle(atom, labels.find((item) => item.atomId === atom.id), zoom, 7)
   return (
     <circle
       data-testid="hotspot-atom"
-      cx={cx}
-      cy={cy}
-      r={radius}
+      {...circle}
       fill="rgba(22, 140, 72, 0.14)"
       stroke="#168c48"
       strokeWidth={1.6 / zoom}
@@ -214,38 +207,10 @@ function Hotspot({
   )
 }
 
-function SelectionChrome({
-  mol,
-  selection,
-  labels,
-  zoom,
-}: {
-  mol: Molecule
-  selection: Selection
-  labels: AtomLabel[]
-  zoom: number
-}) {
+/** The frame with rotate and scale handles around a selection of two or more atoms. */
+function SelectionChrome({ mol, selection, zoom }: { mol: Molecule; selection: Selection; zoom: number }) {
   const frame = selectionFrame(mol, selection)
-  if (!frame) {
-    const ids = atomIdsOfSelection(mol, selection)
-    const atom = ids.length === 1 ? atomById(mol, ids[0]) : undefined
-    if (!atom) return null
-    const label = labels.find((item) => item.atomId === atom.id)
-    if (label) {
-      return (
-        <rect
-          x={label.box.left - 3}
-          y={label.box.top - 3}
-          width={label.box.right - label.box.left + 6}
-          height={label.box.bottom - label.box.top + 6}
-          fill="none"
-          stroke="#8ebef2"
-          strokeWidth={1.2 / zoom}
-        />
-      )
-    }
-    return <circle cx={atom.x} cy={atom.y} r={12 / zoom} fill="none" stroke="#8ebef2" strokeWidth={1.2 / zoom} />
-  }
+  if (!frame) return null
   const knob = frame.handles.find((handle) => handle.kind === "rotate")
   const size = 7 / zoom
   return (

@@ -8,6 +8,7 @@ import {
 import { addReactionArrow, emptyDrawing } from "@/chem/drawing"
 import { emptyHistory, historyReducer } from "@/chem/history"
 import { toMolfile } from "@/chem/molfile"
+import { hasHotkey } from "@/chem/hotkeys"
 import type { Op } from "@/chem/ops"
 import { ROTATE_STEP } from "@/editor/canvas/view"
 import { runOps } from "@/editor/ops"
@@ -15,7 +16,6 @@ import {
   atomIdsOfSelection,
   subMolecule,
   boundsCenter,
-  componentOf,
   emptySelection,
   neighbors,
   selectAll,
@@ -151,25 +151,33 @@ export function useEditor() {
     [commitDrawing, drawing, mol, selection],
   )
 
-  const grabHit = useCallback(
-    (hit: { type: "atom" | "bond"; id: number }) => {
-      if (hit.type === "atom") setSelection({ atoms: [hit.id], bonds: [] })
-      else setSelection({ atoms: [], bonds: [hit.id] })
+  /**
+   * A hover key pressed with a selection acts on every selected atom, or on every selected
+   * bond when no atoms are selected, as one edit. The selection then follows the new tips,
+   * so pressing 1 again grows every chain once more. False if the key means nothing there.
+   */
+  const hotkeySelection = useCallback(
+    (key: string): boolean => {
+      const onAtoms = selection.atoms.length > 0
+      const ids = onAtoms ? selection.atoms : selection.bonds
+      if (ids.length === 0 || !hasHotkey(onAtoms ? "atom" : "bond", key)) return false
+      const ops: Op[] = ids.map((id, index) =>
+        onAtoms ? { op: "hotkey", atom: id, key, as: `tip${index}` } : { op: "hotkey", bond: id, key },
+      )
+      const result = runOps(mol, ops, commit, { keepSelection: true })
+      if (!result || !onAtoms) return true
+      const tips = ids.map((_, index) => result.names[`tip${index}`])
+      // Keys that change an atom in place (O, +, Me…) keep the selection as it was.
+      if (tips.some((tip, index) => tip !== ids[index])) setSelection(selectionFromAtoms(result.mol, [...new Set(tips)]))
+      return true
     },
-    [],
+    [commit, mol, selection],
   )
 
   const selectionHotspot = useCallback(() => {
     const ids = atomIdsOfSelection(mol, selection)
     return ids.find((id) => neighbors(mol, id).length <= 1) ?? ids[0] ?? null
   }, [mol, selection])
-
-  const selectComponent = useCallback(
-    (atomId: number) => {
-      setSelection(selectionFromAtoms(mol, componentOf(mol, atomId)))
-    },
-    [mol],
-  )
 
   const flipSelection = useCallback(
     (axis: "horizontal" | "vertical") => {
@@ -178,18 +186,6 @@ export function useEditor() {
       runOps(mol, [{ op: "flip", atoms: ids, axis }], commit, { keepSelection: true })
     },
     [commit, mol, selection],
-  )
-
-  const applyCharge = useCallback(
-    (delta: number) => {
-      if (selection.atoms.length === 0) return
-      const ops = selection.atoms.flatMap((id): Op[] => {
-        const atom = mol.atoms.find((item) => item.id === id)
-        return atom ? [{ op: "set_charge", atom: id, charge: Math.max(-3, Math.min(3, atom.charge + delta)) }] : []
-      })
-      runOps(mol, ops, commit, { keepSelection: true })
-    },
-    [commit, mol, selection.atoms],
   )
 
   /** Replaces the drawing with an opened file's molecules, as one undoable step. */
@@ -250,14 +246,12 @@ export function useEditor() {
     selectEverything,
     applyElement,
     applyBondOrder,
-    applyCharge,
     rotateSelection,
     nudgeSelection,
     tumbleSelection,
     addArrow,
-    grabHit,
-    selectComponent,
     selectionHotspot,
+    hotkeySelection,
     flipSelection,
     newDocument,
     openMolecules,

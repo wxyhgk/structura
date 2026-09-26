@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { plainFormula } from "../../src/chem/formula.ts"
 import { dist } from "../../src/chem/geometry.ts"
-import { applyHotkey } from "../../src/chem/hotkeys.ts"
+import { applyHotkey, hasHotkey } from "../../src/chem/hotkeys.ts"
 import { setAtomLabel } from "../../src/chem/label.ts"
 import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors } from "../../src/chem/molecule.ts"
 
@@ -227,4 +227,13 @@ test("Enter label accepts an element or a nickname", () => {
   assert.equal(atomById(methyl, start.end)?.alias, undefined)
   assert.deepEqual(methyl.groups.map((group) => group.label), ["Me"])
   assert.equal(plainFormula(methyl), "C2H6")
+})
+
+test("hasHotkey knows which keys mean something on atoms and bonds", () => {
+  assert.ok(hasHotkey("atom", "x"))
+  assert.ok(hasHotkey("atom", "1"))
+  assert.ok(!hasHotkey("atom", "g"))
+  assert.ok(hasHotkey("bond", "6"))
+  assert.ok(!hasHotkey("bond", "x"))
+  assert.ok(!hasHotkey("atom", "toString"))
 })

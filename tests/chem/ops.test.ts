@@ -243,3 +243,17 @@ test("named recipes build the same groups as their hover keys", () => {
   assert.equal(bad.ok, false)
   if (!bad.ok) assert.match(bad.error, /not a known recipe.*nitro/)
 })
+
+test("one key on several atoms is one edit and names every new tip", () => {
+  const mol = createBondAt(emptyMolecule(), { x: 0, y: 0 }, { order: 1, stereo: "none" })
+  const [a, b] = mol.atoms.map((atom) => atom.id)
+  const result = applyOps(mol, [
+    { op: "hotkey", atom: a, key: "x", as: "tip0" },
+    { op: "hotkey", atom: b, key: "x", as: "tip1" },
+  ])
+  assert.ok(result.ok)
+  assert.equal(plainFormula(result.mol), "C4H10")
+  assert.notEqual(result.names.tip0, a)
+  assert.notEqual(result.names.tip1, b)
+  assert.ok(atomById(result.mol, result.names.tip0) && atomById(result.mol, result.names.tip1))
+})

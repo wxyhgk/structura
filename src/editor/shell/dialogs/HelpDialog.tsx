@@ -67,12 +67,12 @@ export function HelpDialog({
         <DialogHeader>
           <DialogTitle>快捷键</DialogTitle>
           <DialogDescription>
-            悬停在原子上（蓝圈）再按键，会直接接上结构。绿圈是下一次按键的位置，鼠标先别动可以连按。鼠标挪到别的原子上之后，按键就作用在那里。没悬停时，按键切换工具。
+            悬停在原子上（蓝圈）再按键，会直接接上结构。绿圈是下一次按键的位置，鼠标先别动可以连按。鼠标挪到别的原子上之后，按键就作用在那里。选中原子后按这些键，每个选中的原子都会接上；Esc 取消选中。没悬停也没选中时，按键切换工具。
           </DialogDescription>
         </DialogHeader>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
-          <Section title="悬停在原子上" rows={[...hotkeyRows(ATOM_KEYS, describeAtomAction), ...HOVER_EXTRAS]} />
-          <Section title="悬停在键上" rows={hotkeyRows(BOND_KEYS, describeBondAction)} />
+          <Section title="悬停在原子上，或选中原子后" rows={[...hotkeyRows(ATOM_KEYS, describeAtomAction), ...HOVER_EXTRAS]} />
+          <Section title="悬停在键上，或只选中键时" rows={hotkeyRows(BOND_KEYS, describeBondAction)} />
           <Section title="没悬停时：工具" rows={toolRows} />
           <Section title="编辑" rows={commandRows} />
           <Section title="鼠标" rows={[["单击空白", "画一条水平键"], ["选中后", "拖外框的点：顶上旋转，四角缩放，四边拉伸"]]} />

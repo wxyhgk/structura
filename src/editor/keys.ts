@@ -3,10 +3,15 @@
  * dialog or menu that is open. Editor and canvas shortcuts both check this first.
  */
 export function editorKeysBlocked(event: Event): boolean {
+  if (inTextField(event)) return true
+  return document.querySelector("[data-slot=dialog-content], [data-slot=dropdown-menu-content]") != null
+}
+
+/** True when the key goes to a text field, where the browser's own editing keys belong. */
+export function inTextField(event: Event): boolean {
   const target = event.target
   if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return true
-  if (target instanceof HTMLElement && target.isContentEditable) return true
-  return document.querySelector("[data-slot=dialog-content], [data-slot=dropdown-menu-content]") != null
+  return target instanceof HTMLElement && target.isContentEditable
 }
 
 /**

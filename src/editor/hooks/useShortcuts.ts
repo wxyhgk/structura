@@ -3,7 +3,7 @@ import { shortcutToElement } from "@/chem/elements/index"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { allCommands, type Commands } from "@/editor/hooks/useCommands"
 import { matches } from "@/editor/keymap"
-import { editorKeysBlocked } from "@/editor/keys"
+import { editorKeysBlocked, inTextField } from "@/editor/keys"
 import { toolForKey } from "@/editor/tools/keys"
 import type { EditorState } from "@/editor/useEditor"
 
@@ -18,6 +18,8 @@ import type { EditorState } from "@/editor/useEditor"
 export function useShortcuts(editor: EditorState, canvas: RefObject<CanvasHandle | null>, commands: Commands) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      // ⌘A outside a text field never selects the page's text, even while a menu is open.
+      if (matches(event, { key: "a", meta: true }) && !inTextField(event)) event.preventDefault()
       if (editorKeysBlocked(event)) return
       const plain = !event.metaKey && !event.ctrlKey && !event.altKey
       if (plain && !canvas.current?.hasGesture() && editor.hotkeySelection(event.key)) {

@@ -154,6 +154,7 @@ button {
 .chem-app {
   color: #1c1c1c;
   background: #e6e6e6;
+  -webkit-user-select: none;
   user-select: none;
 }
 

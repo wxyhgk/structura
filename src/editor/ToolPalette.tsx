@@ -16,7 +16,7 @@ import {
   RingIcon,
 } from "@/editor/icons"
 import { PeriodicTable } from "@/editor/PeriodicTable"
-import { BOND_STYLES, RING_KINDS, sameStyle } from "@/editor/tools"
+import { BOND_STYLES, keysFor, RING_KINDS, sameStyle } from "@/editor/tools"
 
 type PaletteProps = {
   tool: ToolId
@@ -38,6 +38,11 @@ function Hint({ label, children }: { label: string; children: ReactElement }) {
       </TooltipContent>
     </Tooltip>
   )
+}
+
+/** "苯 (J / A)", or just the label when no key picks it. */
+function withKeys(label: string, keys: string): string {
+  return keys ? `${label} (${keys})` : label
 }
 
 function ToolButton({
@@ -104,6 +109,7 @@ export function ToolPalette(props: PaletteProps) {
                       className="tool-button"
                       data-active={sameStyle(item.style, props.bondStyle) ? "true" : "false"}
                       aria-label={item.label}
+                      title={withKeys(item.label, keysFor((entry) => entry.tool === "bond" && sameStyle(entry.style, item.style)))}
                       onClick={() => {
                         props.onBondStyle(item.style)
                         props.onTool("bond")
@@ -139,6 +145,7 @@ export function ToolPalette(props: PaletteProps) {
                       className="tool-button"
                       data-active={item.kind === props.ringKind ? "true" : "false"}
                       aria-label={item.label}
+                      title={withKeys(item.label, keysFor((entry) => entry.tool === "ring" && entry.ring === item.kind))}
                       onClick={() => {
                         props.onRingKind(item.kind)
                         props.onTool("ring")

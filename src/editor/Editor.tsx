@@ -41,7 +41,7 @@ import { Separator } from "@/components/ui/separator"
 import { Canvas, type CanvasHandle } from "@/editor/Canvas"
 import { LogoMark } from "@/editor/icons"
 import { ToolPalette } from "@/editor/ToolPalette"
-import { toolLabel } from "@/editor/tools"
+import { toolForKey, toolLabel } from "@/editor/tools"
 import { editorKeysBlocked, keepFocusOffToolbar } from "@/editor/keys"
 import { loadRDKit } from "@/editor/rdkit"
 import { useEditor } from "@/editor/useEditor"
@@ -309,16 +309,19 @@ export function Editor() {
         }
       }
       if (meta || event.altKey) return
-      if (key === "v") editor.setTool("lasso")
-      else if (key === "m") editor.setTool("marquee")
-      else if (key === "b") {
-        editor.setBondStyle({ order: 1, stereo: "none" })
-        editor.setTool("bond")
-      } else if (key === "k") editor.setTool("chain")
-      else if (key === "r") editor.setTool("ring")
-      else if (key === "e") editor.setTool("eraser")
-      else if (key === "1" || key === "2" || key === "3") editor.applyBondOrder(Number(key) as 1 | 2 | 3)
-      else if ((event.key === "+" || event.key === "=") && editor.selection.atoms.length > 0) editor.applyCharge(1)
+      const toolKey = toolForKey(event.key)
+      if (toolKey) {
+        // 1/2/3 also set the order of selected bonds, as before.
+        if (/^[123]$/.test(toolKey.key)) editor.applyBondOrder(Number(toolKey.key) as 1 | 2 | 3)
+        else if (toolKey.tool === "bond") {
+          editor.setBondStyle(toolKey.style)
+          editor.setTool("bond")
+        } else if (toolKey.tool === "ring") {
+          editor.setRingKind(toolKey.ring)
+          editor.setTool("ring")
+        } else if (toolKey.tool === "ring-current") editor.setTool("ring")
+        else editor.setTool(toolKey.tool)
+      } else if ((event.key === "+" || event.key === "=") && editor.selection.atoms.length > 0) editor.applyCharge(1)
       else if (event.key === "-" && editor.selection.atoms.length > 0) editor.applyCharge(-1)
       else {
         const symbol = shortcutToElement(key)
@@ -634,6 +637,10 @@ export function Editor() {
             <Shortcut keys="单击空白" action="画一条水平键" />
             <Shortcut keys="V / M" action="没悬停时：套索 / 框选" />
             <Shortcut keys="B / K / R / E" action="没悬停时：单键 / 碳链 / 环 / 橡皮" />
+            <Shortcut keys="X / 1 / 2 / 3 / Z" action="没悬停时：单键 / 单键 / 双键 / 三键 / 三键" />
+            <Shortcut keys="W / ⇧W / Y" action="没悬停时：实楔键 / 虚楔键 / 波浪键" />
+            <Shortcut keys="J / A" action="没悬停时：苯环工具" />
+            <Shortcut keys="T / 4 – 8" action="没悬停时：三元环 / 四元到八元饱和环" />
             <Shortcut keys="选中后" action="拖外框的点：顶上旋转，四角缩放，四边拉伸" />
             <Shortcut keys={`${mod}Z / ⇧${mod}Z`} action="撤销 / 重做" />
           </dl>

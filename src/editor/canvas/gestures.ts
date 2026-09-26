@@ -1,5 +1,5 @@
 import { RING_SIZE, SNAP_ATOM } from "@/chem/constants"
-import { paintOps, ringShape, runOps } from "@/editor/ops"
+import { paintOps, runOps } from "@/editor/ops"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@/chem/geometry"
 import {
   atomById,
@@ -9,14 +9,11 @@ import {
   dragIds,
   emptySelection,
   fuseReach,
-  fuseRing,
   fusionSide,
   fusionTarget,
-  growRing,
   growRingPreview,
   moveAtoms,
   nearestAtom,
-  placeRing,
   ringOnBond,
   ringPoints,
   rotateAtoms,
@@ -116,21 +113,17 @@ export function pointerDown(host: PointerHost, event: { button: number; clientX:
     return
   }
   if (tool === "ring") {
-    const shape = ringShape(ringKind)
     if (hit?.type === "atom") {
-      if (shape) runOps(mol, [{ op: "add_ring", atom: hit.id, ...shape }], commit)
-      else commit(growRing(mol, hit.id, ringKind).mol)
+      runOps(mol, [{ op: "add_ring", atom: hit.id, kind: ringKind }], commit)
       host.setPreview(null)
       return
     }
     const target = fusionTarget(mol, world, ringKind, fuseReach(RING_SIZE[ringKind], bondLengthAt(mol)) / zoom)
     if (target) {
       const side = fusionSide(mol, target, world)
-      if (shape) runOps(mol, [{ op: "add_ring", bond: target.id, side, ...shape }], commit)
-      else commit(fuseRing(mol, target.id, ringKind, side))
+      runOps(mol, [{ op: "add_ring", bond: target.id, side, kind: ringKind }], commit)
     } else if (!hit) {
-      if (shape) runOps(mol, [{ op: "add_ring", at: world, ...shape }], commit)
-      else commit(placeRing(mol, world, ringKind))
+      runOps(mol, [{ op: "add_ring", at: world, kind: ringKind }], commit)
     }
     host.setPreview(null)
     return

@@ -220,3 +220,13 @@ test("scaling and duplicating report what they did", () => {
   assert.equal(copy.added.atoms.length, 2)
   assert.equal(copy.added.bonds.length, 1)
 })
+
+test("a ring can be named by kind, which also reaches cyclopentene", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const fused = ok(start, [{ op: "add_ring", bond: 1, kind: "cyclopentene" }])
+  assert.equal(plainFormula(fused.mol), "C5H8")
+  assert.equal(plainFormula(ok(emptyMolecule(), [{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).mol), "C6H6")
+  const bad = applyOps(start, [{ op: "add_ring", bond: 1, kind: "cyclodecane" as never }])
+  assert.equal(bad.ok, false)
+  assert.equal(applyOps(start, [{ op: "add_ring", bond: 1 }]).ok, false, "size or kind is required")
+})

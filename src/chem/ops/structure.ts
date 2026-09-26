@@ -1,4 +1,4 @@
-import { BOND_LENGTH } from "../constants.ts"
+import { BOND_LENGTH, RING_SHAPES, ringKindFor } from "../constants.ts"
 import { applyHotkey, setAtomLabel, type HotTarget } from "../hotkeys.ts"
 import {
   addAtom,
@@ -20,18 +20,9 @@ import {
   sproutAt,
 } from "../molecule.ts"
 import { templateFor } from "../templates.ts"
-import type { Molecule, Point, RingKind } from "../types.ts"
+import type { Molecule, Point } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"
 import type { Op } from "./types.ts"
-
-const RINGS: Record<number, RingKind> = {
-  3: "cyclopropane",
-  4: "cyclobutane",
-  5: "cyclopentane",
-  6: "cyclohexane",
-  7: "cycloheptane",
-  8: "cyclooctane",
-}
 
 /** Somewhere clear for an atom that is not attached to anything yet. */
 function freeSpot(mol: Molecule): Point {
@@ -104,8 +95,12 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
         next: null,
       }
     case "add_ring": {
-      const kind = op.aromatic ? (op.size === 6 ? "benzene" : null) : RINGS[op.size]
-      if (!kind) throw new OpError(op.aromatic ? "only a six-membered ring can be aromatic" : `no ring of size ${op.size}`)
+      if (op.kind != null && !(op.kind in RING_SHAPES)) throw new OpError(`unknown ring kind "${op.kind}"`)
+      const kind = op.kind ?? (op.size != null ? ringKindFor(op.size, op.aromatic ?? false) : undefined)
+      if (!kind) {
+        if (op.size == null) throw new OpError("give the ring's size or kind")
+        throw new OpError(op.aromatic ? "only a six-membered ring can be aromatic" : `no ring of size ${op.size}`)
+      }
       const targets = [op.atom, op.bond, op.at].filter((target) => target != null).length
       if (targets !== 1) throw new OpError("give exactly one of atom, bond or at for the ring")
       if (op.at) return { mol: placeRing(mol, op.at, kind), next: null }

@@ -1,6 +1,6 @@
 import { bondById } from "@/chem/molecule"
 import { applyOps, type Op, type OpsResult } from "@/chem/ops"
-import type { BondStyle, Molecule, RingKind } from "@/chem/types"
+import type { BondStyle, Molecule } from "@/chem/types"
 
 /**
  * The one way the editor changes the drawing: run the ops, commit what they produce, and
@@ -23,20 +23,6 @@ export function runOps(
   }
   commit(result.mol, options.keepSelection)
   return result
-}
-
-/** The ring tool's kinds as add_ring sizes. Cyclopentene has no op form. */
-export function ringShape(kind: RingKind): { size: number; aromatic?: boolean } | null {
-  const shapes: Partial<Record<RingKind, { size: number; aromatic?: boolean }>> = {
-    benzene: { size: 6, aromatic: true },
-    cyclohexane: { size: 6 },
-    cyclopentane: { size: 5 },
-    cyclobutane: { size: 4 },
-    cyclopropane: { size: 3 },
-    cycloheptane: { size: 7 },
-    cyclooctane: { size: 8 },
-  }
-  return shapes[kind] ?? null
 }
 
 /** Clicking a bond with the bond tool: a plain single tool cycles the order, others restyle it. */

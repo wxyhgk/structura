@@ -1,5 +1,5 @@
 import type { HotTarget } from "../hotkeys.ts"
-import type { BondLook, BondOrder, BondStereo, Molecule, Point } from "../types.ts"
+import type { BondLook, BondOrder, BondStereo, Molecule, Point, RingKind } from "../types.ts"
 import type { Problem } from "../validate.ts"
 
 /** An atom: its id, or a name given with `as` earlier in the same batch. */
@@ -21,8 +21,21 @@ export type Op =
   | { op: "set_bond"; bond: BondRef; order?: BondOrder; stereo?: BondStereo; look?: BondLook | null }
   | { op: "remove"; atoms?: Ref[]; bonds?: BondRef[] }
   /** On a bond, `side` picks which side the new ring grows on; leave it out to let the layout choose. */
-  /** Give one of atom, bond or at (a free spot on the canvas). */
-  | { op: "add_ring"; atom?: Ref; bond?: BondRef; at?: Point; size: number; aromatic?: boolean; side?: 1 | -1; as?: string }
+  /**
+   * Give one of atom, bond or at (a free spot on the canvas), and either size (plus aromatic
+   * for benzene) or kind, which also covers cyclopentene.
+   */
+  | {
+      op: "add_ring"
+      atom?: Ref
+      bond?: BondRef
+      at?: Point
+      size?: number
+      aromatic?: boolean
+      kind?: RingKind
+      side?: 1 | -1
+      as?: string
+    }
   | { op: "add_group"; to: Ref; name: string; as?: string }
   | { op: "label"; atom: Ref; text: string }
   | { op: "hotkey"; atom?: Ref; bond?: BondRef; key: string; as?: string }

@@ -1,5 +1,5 @@
 import { emptyDrawing } from "./drawing.ts"
-import { placeBeside, sideBySide } from "./sdf.ts"
+import { placeBeside, sideBySide } from "./molecule/arrange.ts"
 import type { Drawing, Molecule } from "./types.ts"
 
 export type History = {

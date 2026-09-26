@@ -26,6 +26,7 @@ export {
   selectAll,
   tumbleAtoms,
   selectionFromAtoms,
+  spliceIn,
   subMolecule,
   setAlias,
   setBondLook,
@@ -67,3 +68,4 @@ export {
   sproutAt,
 } from "./molecule/place.ts"
 export { insertGroup } from "./molecule/abbreviate.ts"
+export { placeBeside, sideBySide } from "./molecule/arrange.ts"

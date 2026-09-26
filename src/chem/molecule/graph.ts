@@ -461,3 +461,24 @@ export function cycleAround(mol: Molecule, bond: Bond): number[] | null {
   }
   return null
 }
+
+/**
+ * Copies `piece` into `target`, moved by (dx, dy), with fresh ids from target's counters,
+ * so nothing already handed out is reused. Returns the copy's atom ids.
+ */
+export function spliceIn(target: Molecule, piece: Molecule, dx: number, dy: number): { mol: Molecule; ids: number[] } {
+  const next = cloneMolecule(target)
+  const ids = new Map<number, number>()
+  for (const atom of piece.atoms) {
+    const id = next.nextAtomId++
+    ids.set(atom.id, id)
+    next.atoms.push({ ...atom, id, x: atom.x + dx, y: atom.y + dy })
+  }
+  for (const bond of piece.bonds) {
+    next.bonds.push({ ...bond, id: next.nextBondId++, a: ids.get(bond.a) ?? 0, b: ids.get(bond.b) ?? 0 })
+  }
+  for (const group of piece.groups) {
+    next.groups.push({ ...group, id: next.nextGroupId++, atoms: group.atoms.map((id) => ids.get(id) ?? 0) })
+  }
+  return { mol: next, ids: [...ids.values()] }
+}

@@ -2,7 +2,7 @@ import { ATOM_HIT, BOND_LENGTH, RING_SIZE, SINGLE, SNAP_ATOM, SNAP_CHAIN } from 
 import { angleTo, dist, distToSegment, norm, pointFrom, sideOfLine, signedDelta } from "../geometry.ts"
 import type { Bond, BondStyle, Molecule, Point, RingKind } from "../types.ts"
 import { addAtom, addBond, atomById, bondById, bondOrderSum, cloneMolecule, componentOf, neighbors, setElement } from "./graph.ts"
-import { kekulizeAromatic } from "./kekule.ts"
+import { kekulizeAromaticReport } from "./kekule.ts"
 import { nearestAtom } from "./snap.ts"
 
 function median(values: number[]): number | null {
@@ -201,7 +201,7 @@ function buildRing(
   }
   if (kind === "benzene") {
     next = markAromatic(next, ids)
-    next = kekulizeAromatic(next)
+    next = kekulizeAromaticReport(next, new Set(ids)).mol
   }
   return { mol: next, ids }
 }

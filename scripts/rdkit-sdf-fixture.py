@@ -39,7 +39,8 @@ for name, smiles, mode in MOLECULES:
         # Aromatic bond types lose which ring N carries the H (pyrrole vs pyridine), so
         # files written this way draw that H out; without it even RDKit cannot read them.
         nh = [a.GetIdx() for a in mol.GetAtoms() if a.GetIsAromatic() and a.GetSymbol() == "N" and a.GetTotalNumHs()]
-        mol = Chem.AddHs(mol, onlyOnAtoms=tuple(nh))
+        if nh:  # an empty onlyOnAtoms would add every hydrogen
+            mol = Chem.AddHs(mol, onlyOnAtoms=tuple(nh))
     if mode == "3d":
         mol = Chem.AddHs(mol)
         AllChem.EmbedMolecule(mol, randomSeed=7)
@@ -67,3 +68,37 @@ for name, smiles, mode in MOLECULES:
 (root / "rdkit-molecules.sdf").write_text("".join(sdf))
 (root / "rdkit-molecules.json").write_text(json.dumps({"rdkit": rdkit.__version__, "records": expected}, indent=1) + "\n")
 print(f"wrote {len(expected)} records")
+
+# Aromatic bond types (type 4) for rings whose kekulization depends on charges.
+AROMATIC = [
+    ("N-methylpyridinium", "C[n+]1ccccc1"),
+    ("pyrylium", "c1cc[o+]cc1"),
+    ("pyridine N-oxide", "[O-][n+]1ccccc1"),
+    ("thiopyrylium", "c1cc[s+]cc1"),
+    ("tropylium", "c1cc[cH+]ccc1"),
+    ("cyclopentadienide", "[cH-]1cccc1"),
+    ("thiophene", "c1ccsc1"),
+    ("furan", "c1ccoc1"),
+    ("N-methylpyrrole", "Cn1cccc1"),
+    ("pyridine", "c1ccncc1"),
+    ("indole", "c1ccc2[nH]ccc2c1"),
+    ("quinolinium", "C[n+]1cccc2ccccc21"),
+]
+aromatic_sdf, aromatic_expected = [], []
+for name, smiles in AROMATIC:
+    mol = Chem.MolFromSmiles(smiles)
+    nh = [a.GetIdx() for a in mol.GetAtoms() if a.GetIsAromatic() and a.GetSymbol() == "N" and a.GetTotalNumHs()]
+    if nh:  # an empty onlyOnAtoms would add every hydrogen
+        mol = Chem.AddHs(mol, onlyOnAtoms=tuple(nh))
+    rdDepictor.Compute2DCoords(mol)
+    mol.SetProp("_Name", name)
+    block = Chem.MolToMolBlock(mol, kekulize=False)
+    back = Chem.MolFromMolBlock(block, removeHs=False)
+    if back is None:
+        print(f"skipped {name}: RDKit cannot read its own aromatic molblock")
+        continue
+    aromatic_sdf.append(block + "$$$$\n")
+    aromatic_expected.append({"name": name, "formula": rdMolDescriptors.CalcMolFormula(back), "smiles": Chem.MolToSmiles(back)})
+(root / "rdkit-aromatic.sdf").write_text("".join(aromatic_sdf))
+(root / "rdkit-aromatic.json").write_text(json.dumps({"rdkit": rdkit.__version__, "records": aromatic_expected}, indent=1) + "\n")
+print(f"wrote {len(aromatic_expected)} aromatic records")

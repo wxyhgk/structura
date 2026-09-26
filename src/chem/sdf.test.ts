@@ -4,6 +4,7 @@ import test from "node:test"
 import { plainFormula } from "./formula.ts"
 import { setAtomLabel } from "./hotkeys.ts"
 import { addAtom, addBond, bumpCharge, createBondAt, emptyMolecule, fuseRing, placeRing, sprout } from "./molecule.ts"
+import { kekulizeAromaticReport } from "./molecule/kekule.ts"
 import { toMolfile } from "./molfile.ts"
 import { placeBeside, readMolfile, readSdf, sideBySide } from "./sdf.ts"
 import type { Molecule } from "./types.ts"
@@ -138,4 +139,43 @@ test("pasted molecules go to the right of the drawing without moving it", () => 
   assert.ok(merged.atoms.slice(2).every((atom) => atom.id >= drawn.nextAtomId))
   assert.deepEqual(validate(merged).filter((problem) => problem.severity === "error"), [])
   assert.equal(placeBeside(emptyMolecule(), [pasted.mol]).atoms.length, pasted.mol.atoms.length)
+})
+
+test("charged aromatic rings read the way RDKit reads them", () => {
+  const want: { records: Array<{ name: string; formula: string }> } = JSON.parse(fixture("rdkit-aromatic.json"))
+  const records = readSdf(fixture("rdkit-aromatic.sdf"))
+  assert.equal(records.length, want.records.length)
+  records.forEach((record, index) => {
+    const expected = want.records[index]
+    assert.equal(record.title, expected.name)
+    assert.deepEqual(counts(plainFormula(record.mol)), counts(expected.formula), expected.name)
+    const charge = record.mol.atoms.reduce((sum, atom) => sum + atom.charge, 0)
+    assert.equal(charge, /\+$/.test(expected.formula) ? 1 : /-$/.test(expected.formula) ? -1 : 0, expected.name)
+    assert.deepEqual(record.problems, [], expected.name)
+  })
+})
+
+/** A ring of `size` carbons with aromatic bonds and one charged carbon. */
+function chargedRing(size: number, charge: number): Molecule {
+  let mol = placeRing(emptyMolecule(), { x: 0, y: 0 }, size === 7 ? "cycloheptane" : "cyclopentane")
+  mol = bumpCharge(mol, [mol.atoms[0].id], charge)
+  return { ...mol, bonds: mol.bonds.map((bond) => ({ ...bond, order: 1 as const, aromatic: true })) }
+}
+
+test("charged ring carbons keep their double bonds to themselves", () => {
+  const tropylium = kekulizeAromaticReport(chargedRing(7, 1))
+  assert.equal(tropylium.unresolved, 0)
+  assert.equal(plainFormula(tropylium.mol), "C7H7")
+  assert.equal(tropylium.mol.bonds.filter((bond) => bond.order === 2).length, 3)
+  const anion = kekulizeAromaticReport(chargedRing(5, -1))
+  assert.equal(anion.unresolved, 0)
+  assert.equal(plainFormula(anion.mol), "C5H5")
+})
+
+test("adding a ring elsewhere leaves an existing aromatic ring alone", () => {
+  const [pyridinium] = readSdf(fixture("rdkit-aromatic.sdf"))
+  const before = plainFormula(pyridinium.mol)
+  const withBenzene = placeRing(pyridinium.mol, { x: 400, y: 0 }, "benzene")
+  const ids = new Set(pyridinium.mol.atoms.map((atom) => atom.id))
+  assert.equal(plainFormula(withBenzene, [...ids]), before)
 })

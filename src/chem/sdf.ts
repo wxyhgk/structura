@@ -1,6 +1,6 @@
 import { BOND_LENGTH } from "./constants.ts"
 import { elementMass, elementOf } from "./elements/index.ts"
-import { kekulizeAromatic } from "./molecule/kekule.ts"
+import { kekulizeAromaticReport } from "./molecule/kekule.ts"
 import { emptyMolecule } from "./molecule/graph.ts"
 import type { Atom, Bond, BondStereo, Molecule } from "./types.ts"
 import { validate, type Problem, type ProblemCode } from "./validate.ts"
@@ -178,8 +178,9 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
 
   let mol: Molecule = { ...emptyMolecule(), atoms, bonds, nextAtomId: atomCount + 1, nextBondId: bondCount + 1 }
   if (aromatic) {
-    mol = kekulizeAromatic(mol)
-    if (mol.bonds.some((bond) => bond.aromatic && bond.order === 1) && validate(mol).some((problem) => problem.code === "valence")) {
+    const kekulized = kekulizeAromaticReport(mol)
+    mol = kekulized.mol
+    if (kekulized.unresolved > 0) {
       note("aromatic-unresolved", "some aromatic bonds could not be given alternating single and double bonds")
     }
   }

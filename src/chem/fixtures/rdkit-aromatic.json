@@ -1,0 +1,55 @@
+{
+ "rdkit": "2025.09.2",
+ "records": [
+  {
+   "name": "N-methylpyridinium",
+   "formula": "C6H8N+",
+   "smiles": "C[n+]1ccccc1"
+  },
+  {
+   "name": "pyrylium",
+   "formula": "C5H5O+",
+   "smiles": "c1cc[o+]cc1"
+  },
+  {
+   "name": "pyridine N-oxide",
+   "formula": "C5H5NO",
+   "smiles": "[O-][n+]1ccccc1"
+  },
+  {
+   "name": "thiopyrylium",
+   "formula": "C5H5S+",
+   "smiles": "c1cc[s+]cc1"
+  },
+  {
+   "name": "thiophene",
+   "formula": "C4H4S",
+   "smiles": "c1ccsc1"
+  },
+  {
+   "name": "furan",
+   "formula": "C4H4O",
+   "smiles": "c1ccoc1"
+  },
+  {
+   "name": "N-methylpyrrole",
+   "formula": "C5H7N",
+   "smiles": "Cn1cccc1"
+  },
+  {
+   "name": "pyridine",
+   "formula": "C5H5N",
+   "smiles": "c1ccncc1"
+  },
+  {
+   "name": "indole",
+   "formula": "C8H7N",
+   "smiles": "[H]n1ccc2ccccc21"
+  },
+  {
+   "name": "quinolinium",
+   "formula": "C10H10N+",
+   "smiles": "C[n+]1cccc2ccccc21"
+  }
+ ]
+}

@@ -266,3 +266,6 @@ export function useEditor() {
     appendMolecules,
   }
 }
+
+/** Everything the editor state hook exposes; shell components and hooks take this. */
+export type EditorState = ReturnType<typeof useEditor>

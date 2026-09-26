@@ -19,12 +19,12 @@ function stereoCode(stereo: BondStereo): number {
   return 0
 }
 
-/** Charges go in `M  CHG` lines, eight to a line, which also covers values beyond ±3. */
-function chargeLines(entries: Array<[number, number]>): string[] {
+/** Property lines such as `M  CHG` and `M  ISO`, eight atoms to a line. */
+function propertyLines(tag: string, entries: Array<[number, number]>): string[] {
   const lines: string[] = []
   for (let start = 0; start < entries.length; start += 8) {
     const chunk = entries.slice(start, start + 8)
-    lines.push(`M  CHG${pad3(chunk.length)}${chunk.map(([index, charge]) => ` ${pad3(index)} ${pad3(charge)}`).join("")}`)
+    lines.push(`M  ${tag}${pad3(chunk.length)}${chunk.map(([index, value]) => ` ${pad3(index)} ${pad3(value)}`).join("")}`)
   }
   return lines
 }
@@ -46,6 +46,9 @@ export function toMolfile(mol: Molecule, title = "Structura"): string {
   const charged = mol.atoms
     .filter((atom) => atom.charge !== 0)
     .map((atom): [number, number] => [index.get(atom.id) ?? 0, atom.charge])
+  const isotopes = mol.atoms
+    .filter((atom) => atom.isotope != null)
+    .map((atom): [number, number] => [index.get(atom.id) ?? 0, atom.isotope ?? 0])
   const lines = [
     title,
     // Initials (2), program (8), date (10, left blank so output is reproducible), dimension code.
@@ -55,6 +58,6 @@ export function toMolfile(mol: Molecule, title = "Structura"): string {
     ...atomLines,
     ...bondLines,
   ]
-  lines.push(...chargeLines(charged), "M  END", "")
+  lines.push(...propertyLines("CHG", charged), ...propertyLines("ISO", isotopes), "M  END", "")
   return lines.join("\n")
 }

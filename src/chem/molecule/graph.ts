@@ -254,6 +254,16 @@ export function setElement(mol: Molecule, ids: number[], el: string): Molecule {
     if (!wanted.has(atom.id)) continue
     atom.el = el
     atom.alias = undefined
+    atom.isotope = undefined
+  }
+  return next
+}
+
+export function setIsotope(mol: Molecule, ids: number[], isotope: number | undefined): Molecule {
+  const wanted = new Set(ids)
+  const next = cloneMolecule(mol)
+  for (const atom of next.atoms) {
+    if (wanted.has(atom.id)) atom.isotope = isotope
   }
   return next
 }

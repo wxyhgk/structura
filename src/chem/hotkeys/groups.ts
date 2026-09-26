@@ -7,6 +7,7 @@ import {
   neighbors,
   setAlias,
   setElement,
+  setIsotope,
   sproutAngle,
   sproutAt,
 } from "../molecule.ts"
@@ -120,6 +121,10 @@ export function addMagnesiumBromide(mol: Molecule, id: number): HotResult {
 
 export function become(mol: Molecule, id: number, el: string): HotResult {
   return atomNext(setElement(mol, [id], el), id)
+}
+
+export function isotopeOf(mol: Molecule, id: number, el: string, isotope: number): HotResult {
+  return atomNext(setIsotope(setElement(mol, [id], el), [id], isotope), id)
 }
 
 export function nick(mol: Molecule, id: number, alias: string, el = "C"): HotResult {

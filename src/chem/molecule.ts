@@ -28,6 +28,7 @@ export {
   setBondLook,
   setBondOrder,
   setElement,
+  setIsotope,
 } from "./molecule/graph.ts"
 export { nearestAtom, nearestBond } from "./molecule/snap.ts"
 export {

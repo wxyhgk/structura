@@ -14,6 +14,8 @@ export type Atom = {
   x: number
   y: number
   charge: number
+  /** Mass number, such as 13 for ¹³C. Deuterium is H with 2, tritium H with 3. */
+  isotope?: number
   /** Nickname drawn instead of the element, such as Me, Boc, Ph. */
   alias?: string
 }

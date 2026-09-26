@@ -16,6 +16,7 @@ import {
   addTrifluoromethyl,
   become,
   extend,
+  isotopeOf,
   nick,
 } from "./groups.ts"
 import { atomNext, degree, DOUBLE, HASH, SINGLE, TRIPLE, WEDGE, type HotResult } from "./shared.ts"
@@ -93,7 +94,7 @@ export function atomHotkey(mol: Molecule, id: number, key: string): HotResult | 
     case "h":
       return become(mol, id, "H")
     case "d":
-      return nick(mol, id, "D", "H")
+      return isotopeOf(mol, id, "H", 2)
     case "L":
       return become(mol, id, "Li")
     case "m":

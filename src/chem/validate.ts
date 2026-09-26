@@ -5,6 +5,7 @@ export type ProblemCode =
   | "duplicate-id"
   | "id-not-below-counter"
   | "bad-coordinate"
+  | "bad-isotope"
   | "dangling-bond"
   | "self-bond"
   | "duplicate-bond"
@@ -42,6 +43,9 @@ export function validate(mol: Molecule): Problem[] {
         atoms: [atom.id],
         message: `atom #${atom.id} is not below nextAtomId ${mol.nextAtomId}`,
       })
+    }
+    if (atom.isotope != null && !(Number.isInteger(atom.isotope) && atom.isotope >= 1 && atom.isotope <= 999)) {
+      problems.push({ code: "bad-isotope", severity: "error", atoms: [atom.id], message: `atom #${atom.id} has mass number ${atom.isotope}` })
     }
     if (!Number.isFinite(atom.x) || !Number.isFinite(atom.y)) {
       problems.push({ code: "bad-coordinate", severity: "error", atoms: [atom.id], message: `atom #${atom.id} has a non-finite coordinate` })

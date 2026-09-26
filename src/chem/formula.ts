@@ -1,6 +1,6 @@
 import { elementByNumber, elementMass, elementOf } from "./elements/index.ts"
 import { atomById, bondOrderSum } from "./molecule.ts"
-import type { Molecule } from "./types.ts"
+import type { Atom, Molecule } from "./types.ts"
 
 const SUBSCRIPT = "₀₁₂₃₄₅₆₇₈₉"
 
@@ -78,6 +78,36 @@ export function hydrogenCount(
   return { h: 0, error: true }
 }
 
+/** Exact masses of the isotopes people draw; others fall back to their mass number. */
+const ISOTOPE_MASS: Record<string, number> = {
+  H2: 2.014102,
+  H3: 3.016049,
+  C13: 13.003355,
+  C14: 14.003242,
+  N15: 15.000109,
+  O17: 16.999132,
+  O18: 17.99916,
+  F18: 18.000938,
+  P32: 31.973907,
+  S34: 33.967867,
+  Cl37: 36.965903,
+  Br81: 80.916291,
+  I125: 124.90463,
+  I131: 130.906125,
+}
+
+/** Deuterium and tritium keep their own letters in formulas, as in CH3D. */
+function formulaSymbol(atom: Atom): string {
+  if (atom.el === "H" && atom.isotope === 2) return "D"
+  if (atom.el === "H" && atom.isotope === 3) return "T"
+  return atom.el
+}
+
+function atomMass(atom: Atom): number {
+  if (atom.isotope == null) return elementMass(atom.el)
+  return ISOTOPE_MASS[`${atom.el}${atom.isotope}`] ?? atom.isotope
+}
+
 const ALIAS_FORMULA: Record<string, Record<string, number>> = {
   Me: { C: 1, H: 3 },
   CH3: { C: 1, H: 3 },
@@ -88,7 +118,6 @@ const ALIAS_FORMULA: Record<string, Record<string, number>> = {
   Cbz: { C: 8, H: 7, O: 2 },
   Fmoc: { C: 15, H: 11, O: 2 },
   CO2Me: { C: 2, H: 3, O: 2 },
-  D: { H: 1 },
 }
 
 export function atomHydrogens(mol: Molecule, atomId: number): { h: number; error: boolean } {
@@ -98,22 +127,26 @@ export function atomHydrogens(mol: Molecule, atomId: number): { h: number; error
   return hydrogenCount(atom.el, atom.charge, bondOrderSum(mol, atomId))
 }
 
-function countsFor(mol: Molecule, atomIds?: number[]): Map<string, number> {
+/** Walks the atoms once, handing each piece of the formula to `add` with its mass. */
+function eachPiece(mol: Molecule, atomIds: number[] | undefined, add: (symbol: string, count: number, mass: number) => void) {
   const ids = atomIds ?? mol.atoms.map((atom) => atom.id)
-  const counts = new Map<string, number>()
-  const add = (el: string, amount: number) => counts.set(el, (counts.get(el) ?? 0) + amount)
   for (const id of ids) {
     const atom = atomById(mol, id)
     if (!atom) continue
     const alias = atom.alias ? ALIAS_FORMULA[atom.alias] : undefined
     if (alias) {
-      for (const [el, count] of Object.entries(alias)) add(el, count)
+      for (const [el, count] of Object.entries(alias)) add(el, count, elementMass(el))
       continue
     }
-    add(atom.el, 1)
+    add(formulaSymbol(atom), 1, atomMass(atom))
     const { h, error } = atomHydrogens(mol, id)
-    if (!error && h > 0) add("H", h)
+    if (!error && h > 0) add("H", h, elementMass("H"))
   }
+}
+
+function countsFor(mol: Molecule, atomIds?: number[]): Map<string, number> {
+  const counts = new Map<string, number>()
+  eachPiece(mol, atomIds, (symbol, count) => counts.set(symbol, (counts.get(symbol) ?? 0) + count))
   return counts
 }
 
@@ -140,9 +173,10 @@ export function displayFormula(formula: string): string {
 }
 
 export function molecularWeight(mol: Molecule, atomIds?: number[]): number {
-  const counts = countsFor(mol, atomIds)
   let total = 0
-  for (const [el, count] of counts) total += elementMass(el) * count
+  eachPiece(mol, atomIds, (_symbol, count, mass) => {
+    total += mass * count
+  })
   return total
 }
 

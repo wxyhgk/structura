@@ -16,7 +16,8 @@ import {
   RingIcon,
 } from "@/editor/icons"
 import { PeriodicTable } from "@/editor/PeriodicTable"
-import { BOND_STYLES, keysFor, RING_KINDS, sameStyle } from "@/editor/tools"
+import { BOND_STYLES, RING_KINDS, sameStyle } from "@/editor/tools/catalog"
+import { keysFor } from "@/editor/tools/keys"
 
 type PaletteProps = {
   tool: ToolId

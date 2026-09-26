@@ -46,3 +46,8 @@ export function keysFor(match: (entry: ToolKey) => boolean): string {
     .map((entry) => (entry.key.length === 1 && entry.key !== entry.key.toLowerCase() ? `⇧${entry.key}` : entry.key.toUpperCase()))
     .join(" / ")
 }
+
+/** "苯 (J / A)", or just the label when no key picks it. */
+export function withKeys(label: string, keys: string): string {
+  return keys ? `${label} (${keys})` : label
+}

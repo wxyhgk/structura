@@ -40,7 +40,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Canvas, type CanvasHandle } from "@/editor/Canvas"
 import { LogoMark } from "@/editor/icons"
-import { ToolPalette } from "@/editor/ToolPalette"
+import { ToolPalette } from "@/editor/palette/ToolPalette"
 import { toolLabel } from "@/editor/tools/catalog"
 import { toolForKey } from "@/editor/tools/keys"
 import { editorKeysBlocked, keepFocusOffToolbar } from "@/editor/keys"

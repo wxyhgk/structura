@@ -1,7 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { addAtom, addBond, bondById, bumpCharge, createBondAt, emptyMolecule, sprout } from "./molecule.ts"
+import { plainFormula } from "./formula.ts"
+import { setAtomLabel } from "./hotkeys.ts"
 import { toMolfile } from "./molfile.ts"
+import { readMolfile } from "./sdf.ts"
 import type { Molecule } from "./types.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
@@ -85,4 +88,32 @@ test("redrawing a bond as a wedge starts it where the drag started", () => {
 
   const cleared = addBond(mol, first.id, second.id, SINGLE)
   assert.equal(bondById(cleared!.mol, plain.id)?.a, second.id)
+})
+
+test("labels are written as placeholders, never as the carbon they sit on", () => {
+  let mol = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  mol = sprout(mol, mol.atoms[1].id, SINGLE)
+  mol = setAtomLabel(mol, mol.atoms[2].id, "R2")
+  mol = sprout(mol, mol.atoms[0].id, SINGLE)
+  mol = setAtomLabel(mol, mol.atoms[3].id, "Xyz")
+  assert.equal(plainFormula(mol), "C2H4", "placeholders are not counted as atoms")
+
+  const text = toMolfile(mol)
+  const atomLines = text.split("\n").slice(4, 8)
+  assert.match(atomLines[2], / R# /)
+  assert.match(atomLines[3], / \* /)
+  assert.match(text, /^A {4}3\nR2$/m)
+  assert.match(text, /^A {4}4\nXyz$/m)
+  assert.match(text, /^M {2}RGP {2}1 {3}3 {3}2$/m)
+
+  const read = readMolfile(text)
+  assert.deepEqual(read.mol.atoms.map((atom) => atom.alias ?? null), [null, null, "R2", "Xyz"])
+  assert.equal(toMolfile(read.mol), text)
+})
+
+test("an R# atom from another program gets its group number as the label", () => {
+  const text = toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE))
+    .replace(/ C   0(.*)\n(\s+\S+\s+\S+\s+\S+) C   0/, " C   0$1\n$2 R#  0")
+    .replace("M  END", "M  RGP  1   2   5\nM  END")
+  assert.equal(readMolfile(text).mol.atoms[1].alias, "R5")
 })

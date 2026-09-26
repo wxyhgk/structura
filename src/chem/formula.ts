@@ -121,6 +121,8 @@ function eachPiece(mol: Molecule, atomIds: number[] | undefined, add: (symbol: s
   for (const id of ids) {
     const atom = atomById(mol, id)
     if (!atom) continue
+    // A labelled placeholder (R, X, anything typed that is not a known group) is not an atom.
+    if (atom.alias) continue
     add(formulaSymbol(atom), 1, atomMass(atom))
     const { h, error } = atomHydrogens(mol, id)
     if (!error && h > 0) add("H", h, elementMass("H"))

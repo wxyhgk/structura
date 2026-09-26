@@ -138,6 +138,11 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
         const atom = atoms[number - 1]
         if (atom) atom.isotope = mass
       }
+    } else if (line.startsWith("M  RGP")) {
+      for (const [number, group] of propertyPairs(line)) {
+        const atom = atoms[number - 1]
+        if (atom && (!atom.alias || atom.alias === "R#")) atom.alias = `R${group}`
+      }
     } else if (line.startsWith("M  RAD")) {
       charges ??= []
       note("unsupported-mol-feature", "radicals (M  RAD) are not supported yet and were dropped")

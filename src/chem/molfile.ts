@@ -29,12 +29,27 @@ function propertyLines(tag: string, entries: Array<[number, number]>): string[] 
   return lines
 }
 
+/** R, R1, R12…: an R-group, written as R# with its number in an `M  RGP` line. */
+function rGroupNumber(label: string): number | null {
+  const match = /^R(\d{0,2})$/.exec(label)
+  return match ? Number(match[1] || 1) : null
+}
+
+/**
+ * The atom block symbol. A labelled placeholder is R# for an R-group and * (any atom)
+ * otherwise, never the carbon it sits on, so other programs do not read it as carbon.
+ */
+function symbolOf(atom: Molecule["atoms"][number]): string {
+  if (!atom.alias) return atom.el
+  return rGroupNumber(atom.alias) != null ? "R#" : "*"
+}
+
 export function toMolfile(mol: Molecule, title = "Structura"): string {
   const index = new Map(mol.atoms.map((atom, position) => [atom.id, position + 1]))
   const atomLines = mol.atoms.map((atom) => {
     const x = atom.x * ANGSTROM_PER_PX
     const y = -atom.y * ANGSTROM_PER_PX
-    return `${fixed10(x)}${fixed10(y)}${fixed10(0)} ${atom.el.padEnd(3, " ")} 0${"  0".repeat(11)}`
+    return `${fixed10(x)}${fixed10(y)}${fixed10(0)} ${symbolOf(atom).padEnd(3, " ")} 0${"  0".repeat(11)}`
   })
   const bondLines = mol.bonds.flatMap((bond) => {
     const a = index.get(bond.a)
@@ -49,6 +64,12 @@ export function toMolfile(mol: Molecule, title = "Structura"): string {
   const isotopes = mol.atoms
     .filter((atom) => atom.isotope != null)
     .map((atom): [number, number] => [index.get(atom.id) ?? 0, atom.isotope ?? 0])
+  const rGroups = mol.atoms.flatMap((atom): Array<[number, number]> => {
+    const number = atom.alias ? rGroupNumber(atom.alias) : null
+    return number != null ? [[index.get(atom.id) ?? 0, number]] : []
+  })
+  // `A  ` lines keep the label text itself, one atom per two lines.
+  const aliases = mol.atoms.flatMap((atom) => (atom.alias ? [`A  ${pad3(index.get(atom.id) ?? 0)}`, atom.alias] : []))
   const lines = [
     title,
     // Initials (2), program (8), date (10, left blank so output is reproducible), dimension code.
@@ -58,6 +79,6 @@ export function toMolfile(mol: Molecule, title = "Structura"): string {
     ...atomLines,
     ...bondLines,
   ]
-  lines.push(...propertyLines("CHG", charged), ...propertyLines("ISO", isotopes), "M  END", "")
+  lines.push(...aliases, ...propertyLines("CHG", charged), ...propertyLines("ISO", isotopes), ...propertyLines("RGP", rGroups), "M  END", "")
   return lines.join("\n")
 }

@@ -206,6 +206,7 @@ export function applyOps(start: Molecule, ops: Op[]): OpsResult {
           break
         }
         case "label": {
+          if (/[\r\n]/.test(op.text) || op.text.trim().length > 32) throw new OpError("a label is one line of at most 32 characters")
           const id = atom(op.atom)
           mol = setAtomLabel(mol, id, op.text)
           next = atomById(mol, id) ? { type: "atom", id } : null

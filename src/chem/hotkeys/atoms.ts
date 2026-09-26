@@ -18,8 +18,8 @@ import {
   extend,
   isotopeOf,
   nick,
-} from "./groups.ts"
-import { atomNext, degree, DOUBLE, HASH, SINGLE, TRIPLE, WEDGE, type HotResult } from "./shared.ts"
+} from "../molecule/recipes.ts"
+import { atomNext, degree, DOUBLE, HASH, SINGLE, TRIPLE, WEDGE, type HotResult } from "../molecule/grow.ts"
 
 export function atomHotkey(mol: Molecule, id: number, key: string): HotResult | null {
   switch (key) {

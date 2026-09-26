@@ -1,5 +1,6 @@
 import { BOND_LENGTH, RING_SHAPES, ringKindFor } from "../constants.ts"
-import { applyHotkey, setAtomLabel, type HotTarget } from "../hotkeys.ts"
+import { applyHotkey, type HotTarget } from "../hotkeys.ts"
+import { setAtomLabel } from "../label.ts"
 import {
   addAtom,
   addBond,
@@ -19,6 +20,7 @@ import {
   sproutAngle,
   sproutAt,
 } from "../molecule.ts"
+import { RECIPES } from "../molecule/recipes.ts"
 import { templateFor } from "../templates.ts"
 import type { Molecule, Point } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"
@@ -116,6 +118,15 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       if (!placed) throw new OpError(`"${op.name}" does not fit on atom #${ctx.atom(op.to)}`)
       ctx.name(op.as, placed.id)
       return { mol: placed.mol, next: { type: "atom", id: placed.id } }
+    }
+    case "add_recipe": {
+      if (!Object.hasOwn(RECIPES, op.name)) {
+        throw new OpError(`"${op.name}" is not a known recipe (${Object.keys(RECIPES).join(", ")})`)
+      }
+      const result = RECIPES[op.name](mol, ctx.atom(op.to))
+      if (result.mol === mol) throw new OpError(`"${op.name}" could not be built on atom #${ctx.atom(op.to)}`)
+      if (result.next.type === "atom") ctx.name(op.as, result.next.id)
+      return { mol: result.mol, next: result.next }
     }
     case "label": {
       if (/[\r\n]/.test(op.text) || op.text.trim().length > 32) throw new OpError("a label is one line of at most 32 characters")

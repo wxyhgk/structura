@@ -1,6 +1,6 @@
 import { fuseChairAt, fuseRingAt, setBondLook } from "../molecule.ts"
 import type { BondStyle, Molecule, RingKind } from "../types.ts"
-import type { HotResult } from "./shared.ts"
+import type { HotResult } from "../molecule/grow.ts"
 
 const FUSED: Record<string, RingKind> = {
   a: "benzene",

@@ -3,7 +3,7 @@ import test from "node:test"
 import { BOND_LENGTH } from "./constants.ts"
 import { dist } from "./geometry.ts"
 import { plainFormula } from "./formula.ts"
-import { setAtomLabel } from "./hotkeys.ts"
+import { setAtomLabel } from "./label.ts"
 import {
   atomById,
   createBondAt,

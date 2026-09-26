@@ -1,5 +1,6 @@
 import { angleTo } from "../geometry.ts"
-import { atomById, neighbors, sproutAngle, sproutAt } from "../molecule.ts"
+import { atomById, neighbors } from "./graph.ts"
+import { sproutAngle, sproutAt } from "./place.ts"
 import type { BondStyle, Molecule } from "../types.ts"
 
 export const SINGLE: BondStyle = { order: 1, stereo: "none" }

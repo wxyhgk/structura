@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { addReactionArrow, emptyDrawing } from "./drawing.ts"
-import { applyHotkey, setAtomLabel } from "./hotkeys.ts"
+import { applyHotkey } from "./hotkeys.ts"
+import { setAtomLabel } from "./label.ts"
 import {
   attachRing,
   bumpCharge,

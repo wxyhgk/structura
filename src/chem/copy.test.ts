@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { plainFormula } from "./formula.ts"
-import { setAtomLabel } from "./hotkeys.ts"
+import { setAtomLabel } from "./label.ts"
 import { createBondAt, duplicateAtoms, emptyMolecule, sprout, subMolecule } from "./molecule.ts"
 import { toMolfile } from "./molfile.ts"
 import { readMolfile } from "./sdf.ts"

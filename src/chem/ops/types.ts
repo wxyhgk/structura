@@ -1,5 +1,6 @@
 import type { HotTarget } from "../hotkeys.ts"
 import type { BondLook, BondOrder, BondStereo, Molecule, Point, RingKind } from "../types.ts"
+import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
 /** An atom: its id, or a name given with `as` earlier in the same batch. */
@@ -37,6 +38,8 @@ export type Op =
       as?: string
     }
   | { op: "add_group"; to: Ref; name: string; as?: string }
+  /** A named group built from an atom: nitro, tert-butyl, carbonyl… (see molecule/recipes.ts). */
+  | { op: "add_recipe"; to: Ref; name: RecipeName; as?: string }
   | { op: "label"; atom: Ref; text: string }
   | { op: "hotkey"; atom?: Ref; bond?: BondRef; key: string; as?: string }
   | { op: "duplicate"; atoms: Ref[] }

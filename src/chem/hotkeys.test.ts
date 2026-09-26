@@ -2,7 +2,8 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { plainFormula } from "./formula.ts"
 import { dist } from "./geometry.ts"
-import { applyHotkey, setAtomLabel } from "./hotkeys.ts"
+import { applyHotkey } from "./hotkeys.ts"
+import { setAtomLabel } from "./label.ts"
 import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors } from "./molecule.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }

@@ -31,13 +31,13 @@ function violations(from: (file: string) => boolean, banned: (target: string) =>
 }
 
 const isLayout = (path: string) =>
-  path.startsWith("molecule/place") || path.startsWith("molecule/snap") || path.startsWith("molecule/abbreviate")
+  ["molecule/place", "molecule/snap", "molecule/abbreviate", "molecule/recipes", "molecule/grow"].some((prefix) => path.startsWith(prefix))
 const isDraw = (path: string) => path === "draw.ts" || path.startsWith("draw/")
 const isHotkeys = (path: string) => path === "hotkeys.ts" || path.startsWith("hotkeys/")
 
 test("the import scan actually sees imports", () => {
-  const groups = imports.find(({ file }) => file === "hotkeys/groups.ts")
-  assert.ok(groups?.targets.includes("molecule.ts"))
+  const structure = imports.find(({ file }) => file === "ops/structure.ts")
+  assert.ok(structure?.targets.includes("molecule.ts"))
 })
 
 test("chem only imports its own files and node builtins", () => {

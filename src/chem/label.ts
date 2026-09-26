@@ -1,7 +1,8 @@
-import { elementOf } from "../elements/index.ts"
-import { insertGroup, setAlias, setElement, setIsotope } from "../molecule.ts"
-import { GROUP_FIRST, templateFor } from "../templates.ts"
-import type { Molecule } from "../types.ts"
+import { elementOf } from "./elements/index.ts"
+import { insertGroup } from "./molecule/abbreviate.ts"
+import { setAlias, setElement, setIsotope } from "./molecule/graph.ts"
+import { GROUP_FIRST, templateFor } from "./templates.ts"
+import type { Molecule } from "./types.ts"
 
 const HYDROGEN_ISOTOPES: Record<string, { el: string; isotope: number }> = {
   D: { el: "H", isotope: 2 },

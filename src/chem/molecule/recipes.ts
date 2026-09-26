@@ -1,20 +1,10 @@
 import { angleTo } from "../geometry.ts"
-import {
-  atomById,
-  attachChairAt,
-  bumpCharge,
-  growRing,
-  insertGroup,
-  neighbors,
-  setAlias,
-  setElement,
-  setIsotope,
-  sproutAngle,
-  sproutAt,
-} from "../molecule.ts"
+import { insertGroup } from "./abbreviate.ts"
+import { atomById, bumpCharge, neighbors, setAlias, setElement, setIsotope } from "./graph.ts"
+import { attachChairAt, growRing, sproutAngle, sproutAt } from "./place.ts"
 import { templateFor } from "../templates.ts"
 import type { Molecule, RingKind } from "../types.ts"
-import { atomNext, branchAngles, degree, extend, HASH, inRing, SINGLE, DOUBLE, WEDGE, type HotResult } from "./shared.ts"
+import { atomNext, branchAngles, degree, extend, HASH, inRing, SINGLE, DOUBLE, WEDGE, type HotResult } from "./grow.ts"
 
 export function addCarbonyl(mol: Molecule, id: number): HotResult {
   if (degree(mol, id) >= 2 && inRing(mol, id)) {
@@ -138,3 +128,24 @@ export function nick(mol: Molecule, id: number, label: string): HotResult {
 }
 
 export { extend }
+
+/**
+ * Groups built from an atom that no other op expresses, by name, so an agent can ask for
+ * "nitro" instead of knowing that Shift+N builds one. The hover keys map onto these.
+ */
+export const RECIPES = {
+  carbonyl: addCarbonyl,
+  fork: addFork,
+  "stereo-pair": addStereoPair,
+  sulfonyl: addSulfonyl,
+  nitro: addNitro,
+  azide: addAzide,
+  trifluoromethyl: addTrifluoromethyl,
+  "tert-butyl": addTertButyl,
+  methoxy: addMethoxy,
+  "magnesium-bromide": addMagnesiumBromide,
+  chair: (mol: Molecule, id: number) => addChair(mol, id, 1),
+  "chair-flipped": (mol: Molecule, id: number) => addChair(mol, id, -1),
+} satisfies Record<string, (mol: Molecule, id: number) => HotResult>
+
+export type RecipeName = keyof typeof RECIPES

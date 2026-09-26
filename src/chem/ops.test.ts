@@ -230,3 +230,16 @@ test("a ring can be named by kind, which also reaches cyclopentene", () => {
   assert.equal(bad.ok, false)
   assert.equal(applyOps(start, [{ op: "add_ring", bond: 1 }]).ok, false, "size or kind is required")
 })
+
+test("named recipes build the same groups as their hover keys", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const pairs: Array<[string, string]> = [["nitro", "N"], ["tert-butyl", "K"], ["carbonyl", "2"], ["trifluoromethyl", "F"], ["chair", "j"]]
+  for (const [name, key] of pairs) {
+    const byName = ok(start, [{ op: "add_recipe", to: 2, name: name as never }])
+    const byKey = ok(start, [{ op: "hotkey", atom: 2, key }])
+    assert.equal(plainFormula(byName.mol), plainFormula(byKey.mol), name)
+  }
+  const bad = applyOps(start, [{ op: "add_recipe", to: 2, name: "unobtainium" as never }])
+  assert.equal(bad.ok, false)
+  if (!bad.ok) assert.match(bad.error, /not a known recipe.*nitro/)
+})

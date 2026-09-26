@@ -1,6 +1,8 @@
 import type { Arrow, BondStyle, Molecule, Point, RingKind, Selection, ToolId } from "@/chem/types"
 
 export type CanvasHandle = {
+  /** Hover hotkeys; returns whether the key was used. */
+  handleKey: (event: KeyboardEvent) => boolean
   zoomBy: (factor: number) => void
   resetView: () => void
   /** Zooms and pans so the whole drawing fits in view; pass a molecule not yet rendered. */

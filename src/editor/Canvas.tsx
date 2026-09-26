@@ -1,3 +1,4 @@
+import { ZOOM_STEP } from "@/editor/canvas/view"
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 import type { HotTarget } from "@/chem/hotkeys"
 import { runOps } from "@/editor/ops"
@@ -128,7 +129,48 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     setRotating,
   }
 
+  /**
+   * Hover hotkeys: g, Tab, Enter and chemistry keys on the atom or bond under the pointer.
+   * Returns whether the key was used; the editor's key router asks here first.
+   */
+  function handleKey(event: KeyboardEvent): boolean {
+    if (event.metaKey || event.ctrlKey || event.altKey) return false
+    if (editorKeysBlocked(event)) return false
+    if (gesture.current.kind !== "idle") return false
+    const mol = molRef.current
+    const hot = activeHotspot(mol)
+    if (!hot) return false
+    if (event.key === "g") {
+      propsRef.current.setSelection(
+        hot.type === "atom" ? { atoms: [hot.id], bonds: [] } : { atoms: [], bonds: [hot.id] },
+      )
+      return true
+    }
+    if (event.key === "Tab" && hot.type === "atom") {
+      propsRef.current.setSelection(selectionFromAtoms(mol, componentOf(mol, hot.id)))
+      pinRef.current = null
+      setHotspotId(null)
+      return true
+    }
+    if (event.key === "Enter" && hot.type === "atom") {
+      const atom = atomById(mol, hot.id)
+      if (!atom) return false
+      const value = atom.alias ?? (atom.el === "C" ? "" : atom.el)
+      labelOpen.current = true
+      setLabelEdit({ id: atom.id, value, initial: value })
+      return true
+    }
+    const on = hot.type === "atom" ? { atom: hot.id } : { bond: hot.id }
+    // A key that does nothing here is not an edit; let it fall through to the tool keys.
+    const result = runOps(mol, [{ op: "hotkey", ...on, key: event.key }], propsRef.current.commit, { quiet: true })
+    if (!result) return false
+    molRef.current = result.mol
+    if (result.next) rememberHotspot(result.next)
+    return true
+  }
+
   useImperativeHandle(ref, () => ({
+    handleKey,
     zoomBy(factor: number) {
       const rect = svgRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -187,7 +229,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
       if (event.ctrlKey || event.metaKey) {
-        zoomAt(event.clientX, event.clientY, event.deltaY > 0 ? 0.9 : 1.1)
+        zoomAt(event.clientX, event.clientY, event.deltaY > 0 ? 1 / ZOOM_STEP : ZOOM_STEP)
         return
       }
       setView(zoomRef.current, {
@@ -227,52 +269,6 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     }
   }, [])
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.metaKey || event.ctrlKey || event.altKey) return
-      if (editorKeysBlocked(event)) return
-      if (gesture.current.kind !== "idle") return
-      const mol = molRef.current
-      const hot = activeHotspot(mol)
-      if (!hot) return
-      if (event.key === "g") {
-        event.preventDefault()
-        event.stopPropagation()
-        propsRef.current.setSelection(
-          hot.type === "atom" ? { atoms: [hot.id], bonds: [] } : { atoms: [], bonds: [hot.id] },
-        )
-        return
-      }
-      if (event.key === "Tab" && hot.type === "atom") {
-        event.preventDefault()
-        event.stopPropagation()
-        propsRef.current.setSelection(selectionFromAtoms(mol, componentOf(mol, hot.id)))
-        pinRef.current = null
-        setHotspotId(null)
-        return
-      }
-      if (event.key === "Enter" && hot.type === "atom") {
-        const atom = atomById(mol, hot.id)
-        if (!atom) return
-        event.preventDefault()
-        event.stopPropagation()
-        const value = atom.alias ?? (atom.el === "C" ? "" : atom.el)
-        labelOpen.current = true
-        setLabelEdit({ id: atom.id, value, initial: value })
-        return
-      }
-      const on = hot.type === "atom" ? { atom: hot.id } : { bond: hot.id }
-      // A key that does nothing here is not an edit; let it fall through to the tool keys.
-      const result = runOps(mol, [{ op: "hotkey", ...on, key: event.key }], propsRef.current.commit, { quiet: true })
-      if (!result) return
-      event.preventDefault()
-      event.stopPropagation()
-      molRef.current = result.mol
-      if (result.next) rememberHotspot(result.next)
-    }
-    window.addEventListener("keydown", onKey, true)
-    return () => window.removeEventListener("keydown", onKey, true)
-  }, [])
 
   const shown = draft ?? props.mol
   const cursor = panning ? "grab" : handleCursor ?? (props.tool === "lasso" || props.tool === "marquee" ? "default" : "crosshair")

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
-import { Canvas, type CanvasHandle } from "@/editor/Canvas"
+import { Canvas } from "@/editor/Canvas"
+import type { CanvasHandle } from "@/editor/canvas/types"
 import { useClipboard } from "@/editor/hooks/useClipboard"
 import { useCommands } from "@/editor/hooks/useCommands"
 import { useImports } from "@/editor/hooks/useImports"
@@ -109,7 +110,7 @@ export function Editor() {
         onNotes={(lines) => imports.showNotes({ opened: true, lines })}
         loadFailed={imports.rdkitFailed}
       />
-      <HelpDialog open={editor.helpOpen} onOpenChange={editor.setHelpOpen} />
+      <HelpDialog open={editor.helpOpen} onOpenChange={editor.setHelpOpen} commands={commands} />
     </div>
   )
 }

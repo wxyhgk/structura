@@ -9,6 +9,7 @@ import { addReactionArrow, emptyDrawing } from "@/chem/drawing"
 import { emptyHistory, historyReducer } from "@/chem/history"
 import { toMolfile } from "@/chem/molfile"
 import type { Op } from "@/chem/ops"
+import { ROTATE_STEP } from "@/editor/canvas/view"
 import { runOps } from "@/editor/ops"
 import {
   atomIdsOfSelection,
@@ -131,11 +132,10 @@ export function useEditor() {
       const ids = atomIdsOfSelection(mol, selection)
       const center = boundsCenter(mol, ids)
       if (!center || ids.length < 2) return
-      const angle = Math.PI / 12
       const axis = direction === "left" || direction === "right" ? "y" : "x"
       const sign = direction === "left" || direction === "up" ? 1 : -1
       const depth = tumbleDepth.current?.mol === mol ? tumbleDepth.current.depth : undefined
-      const tumbled = tumbleAtoms(mol, ids, center, axis, sign * angle, depth)
+      const tumbled = tumbleAtoms(mol, ids, center, axis, sign * ROTATE_STEP, depth)
       tumbleDepth.current = tumbled
       commit(tumbled.mol, true)
     },

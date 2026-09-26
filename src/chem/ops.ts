@@ -63,6 +63,8 @@ export type OpsResult =
       problems: Problem[]
       /** Where the last hotkey-style op leaves the cursor, for chained key presses. */
       next: HotTarget | null
+      /** Atoms and bonds this batch created (ids are never reused, so this is exact). */
+      added: { atoms: number[]; bonds: number[] }
     }
   | { ok: false; mol: Molecule; index: number; error: string }
 
@@ -119,7 +121,8 @@ export function applyOps(start: Molecule, ops: Op[]): OpsResult {
           const style = { order: op.order ?? 1, stereo: "none" as const }
           if (op.to != null) {
             const from = atom(op.to)
-            const grown = sproutAt(mol, from, sproutAngle(mol, from), style, op.el)
+            // An agent asking for a new atom gets one; joining a nearby atom is a drawing convenience.
+            const grown = sproutAt(mol, from, sproutAngle(mol, from), style, op.el, 0, 0)
             if (grown.id === from) throw new OpError(`could not grow from atom #${from}`)
             mol = grown.mol
             name(op.as, grown.id)
@@ -246,7 +249,11 @@ export function applyOps(start: Molecule, ops: Op[]): OpsResult {
   const problems = validate(mol)
   const broken = problems.find((problem) => problem.severity === "error")
   if (broken) return { ok: false, mol: start, index: ops.length - 1, error: `the edit would break the molecule: ${broken.message}` }
-  return { ok: true, mol, names, problems, next }
+  const added = {
+    atoms: mol.atoms.filter((item) => item.id >= start.nextAtomId).map((item) => item.id),
+    bonds: mol.bonds.filter((item) => item.id >= start.nextBondId).map((item) => item.id),
+  }
+  return { ok: true, mol, names, problems, next, added }
 }
 
 /** Somewhere clear for an atom that is not attached to anything yet. */

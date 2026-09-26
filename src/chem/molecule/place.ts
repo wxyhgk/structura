@@ -90,11 +90,13 @@ export function sproutAt(
   style: BondStyle,
   el = "C",
   charge = 0,
+  /** How close an existing atom must be to be joined instead of adding a new one; 0 always adds. */
+  snap = ATOM_HIT,
 ): { mol: Molecule; id: number } {
   const atom = atomById(mol, atomId)
   if (!atom) return { mol, id: atomId }
   const point = pointFrom(atom, angle, bondLengthAt(mol, atomId))
-  const near = nearestAtom(mol, point, ATOM_HIT, atomId)
+  const near = snap > 0 ? nearestAtom(mol, point, snap, atomId) : null
   if (near) {
     const bonded = addBond(mol, atomId, near.id, style)
     return { mol: bonded?.mol ?? mol, id: near.id }

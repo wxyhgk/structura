@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { plainFormula } from "./formula.ts"
 import { applyHotkey } from "./hotkeys.ts"
-import { atomById, bondById, createBondAt, emptyMolecule } from "./molecule.ts"
+import { addAtom, atomById, bondById, createBondAt, emptyMolecule } from "./molecule.ts"
 import { applyOps, type Op } from "./ops.ts"
 import type { Molecule } from "./types.ts"
 import { validate } from "./validate.ts"
@@ -160,4 +160,31 @@ test("random batches either apply cleanly or change nothing", () => {
       if (mol.atoms.length === 0) mol = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
     }
   }
+})
+
+test("add_atom always adds the atom it was asked for, even next to another atom", () => {
+  // Put an O exactly where the next chain atom would go.
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const spot = applyOps(start, [{ op: "add_atom", el: "C", to: 2, as: "probe" }])
+  assert.ok(spot.ok)
+  const probe = atomById(spot.mol, spot.names.probe)!
+  const crowded = addAtom(start, "O", probe.x + 3, probe.y + 3).mol
+  const result = ok(crowded, [{ op: "add_atom", el: "N", to: 2, as: "n" }])
+  assert.equal(atomById(result.mol, result.names.n)?.el, "N")
+  assert.ok(result.names.n >= crowded.nextAtomId, "a new atom, not the O that was already there")
+  assert.deepEqual(result.added.atoms, [result.names.n])
+})
+
+test("the result lists exactly the atoms and bonds a batch created", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const ring = ok(start, [{ op: "add_ring", atom: 2, size: 6, aromatic: true }])
+  assert.equal(ring.added.atoms.length, 5, "the end carbon joins the ring; five new atoms")
+  assert.equal(ring.added.bonds.length, 6)
+  assert.ok(ring.added.atoms.every((id) => id >= start.nextAtomId))
+
+  const removed = ok(ring.mol, [{ op: "remove", atoms: [ring.added.atoms[0]] }])
+  assert.deepEqual(removed.added, { atoms: [], bonds: [] })
+
+  const relabelled = ok(start, [{ op: "set_element", atom: 2, el: "N" }])
+  assert.deepEqual(relabelled.added, { atoms: [], bonds: [] })
 })

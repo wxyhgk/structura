@@ -1,5 +1,5 @@
 import { angleTo, norm } from "../geometry.ts"
-import type { GroupTemplate } from "../templates.ts"
+import { keptAsLabel, type GroupTemplate } from "../templates.ts"
 import type { Molecule, Point } from "../types.ts"
 import {
   addAtom,
@@ -35,7 +35,8 @@ function bodyAngle(template: GroupTemplate): number {
  * Puts an abbreviation on an atom. A group with one attachment replaces an end atom, or
  * hangs off a new bond when the atom already has two or more neighbours. A group whose
  * attachments all sit on one atom (CO, SO2, NMe) replaces a chain atom with exactly that
- * many bonds. The atom keeps its id and becomes the group's anchor.
+ * many bonds. The atom keeps its id. Only abbreviations kept as labels are remembered as a
+ * group, with the atom as its anchor; the rest are left as plain atoms.
  */
 export function insertGroup(
   mol: Molecule,
@@ -89,6 +90,7 @@ export function insertGroup(
     next = addBond(next, ids[a], ids[b], { order, stereo: "none" })?.mol ?? next
   }
 
+  if (!keptAsLabel(template)) return { mol: next, id: host }
   const grouped = cloneMolecule(next)
   grouped.groups.push({ id: grouped.nextGroupId++, label, atoms: ids, collapsed: true })
   return { mol: grouped, id: host }

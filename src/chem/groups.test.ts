@@ -16,7 +16,7 @@ import {
   setElement,
   sprout,
 } from "./molecule.ts"
-import { allTemplates, templateFor } from "./templates.ts"
+import { allTemplates, keptAsLabel, templateFor } from "./templates.ts"
 import type { Molecule } from "./types.ts"
 import { validate } from "./validate.ts"
 
@@ -111,7 +111,9 @@ test("typing a label makes the group; Ac, Ts and Pr mean groups, other symbols s
   assert.equal(plainFormula(acetyl), "C3H6O")
   assert.equal(setAtomLabel(mol, end, "Co").groups.length, 0)
   assert.equal(atomById(setAtomLabel(mol, end, "Co"), end)?.el, "Co")
-  assert.equal(setAtomLabel(mol, end, "CO2Me").groups[0]?.label, "CO2Me")
+  const ester = setAtomLabel(mol, end, "CO2Me")
+  assert.equal(plainFormula(ester), "C3H6O2")
+  assert.equal(ester.groups.length, 0, "a rarer abbreviation is drawn out as plain atoms")
   assert.equal(setAtomLabel(mol, end, "t-Bu").groups[0]?.label, "t-Bu")
   assert.equal(plainFormula(setAtomLabel(mol, end, "t-Bu")), "C5H12")
   assert.equal(atomById(setAtomLabel(mol, end, "Xyz"), end)?.alias, "Xyz")
@@ -141,4 +143,13 @@ test("editing a member turns the group back into plain atoms; moving keeps it", 
   const ids = phenyl.atoms.map((atom) => atom.id)
   assert.equal(moveAtoms(phenyl, ids, 10, 5).groups.length, 1)
   assert.equal(rotateAtoms(phenyl, ids, { x: 0, y: 0 }, 1).groups.length, 1)
+})
+
+test("only the common abbreviations stay as labels", () => {
+  const kept = allTemplates().filter(keptAsLabel).map((template) => template.label)
+  assert.deepEqual(kept.sort(), ["Ac", "Bn", "Boc", "Bz", "Cbz", "Et", "Fmoc", "Me", "Ph", "TBS", "TMS", "Ts", "iPr", "tBu"].sort())
+  const { mol, end } = ethane()
+  assert.equal(setAtomLabel(mol, end, "CH3").groups[0]?.label, "CH3")
+  assert.equal(setAtomLabel(mol, end, "NO2").groups.length, 0)
+  assert.equal(setAtomLabel(mol, end, "TIPS").groups.length, 0)
 })

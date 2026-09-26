@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
-import { applyHotkey, setAtomLabel, type HotTarget } from "@/chem/hotkeys"
+import type { HotTarget } from "@/chem/hotkeys"
+import { applyOps } from "@/chem/ops"
 import { atomById, componentOf, selectionFromAtoms } from "@/chem/molecule"
 import type { Molecule, Point } from "@/chem/types"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
@@ -260,13 +261,14 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
         setLabelEdit({ id: atom.id, value, initial: value })
         return
       }
-      const result = applyHotkey(mol, hot, event.key)
-      if (!result) return
+      const on = hot.type === "atom" ? { atom: hot.id } : { bond: hot.id }
+      const result = applyOps(mol, [{ op: "hotkey", ...on, key: event.key }])
+      if (!result.ok) return
       event.preventDefault()
       event.stopPropagation()
       molRef.current = result.mol
       propsRef.current.commit(result.mol)
-      rememberHotspot(result.next)
+      if (result.next) rememberHotspot(result.next)
     }
     window.addEventListener("keydown", onKey, true)
     return () => window.removeEventListener("keydown", onKey, true)
@@ -366,9 +368,10 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
                 const current = labelEdit
                 setLabelEdit(null)
                 if (!current || current.value.trim() === current.initial) return
-                const next = setAtomLabel(molRef.current, current.id, current.value)
-                molRef.current = next
-                propsRef.current.commit(next, true)
+                const result = applyOps(molRef.current, [{ op: "label", atom: current.id, text: current.value }])
+                if (!result.ok) return
+                molRef.current = result.mol
+                propsRef.current.commit(result.mol, true)
               }}
             />
           )

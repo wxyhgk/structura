@@ -44,7 +44,8 @@ export type Op =
   | { op: "set_isotope"; atom: Ref; isotope: number | null }
   | { op: "set_bond"; bond: BondRef; order?: BondOrder; stereo?: BondStereo; look?: BondLook | null }
   | { op: "remove"; atoms?: Ref[]; bonds?: BondRef[] }
-  | { op: "add_ring"; atom?: Ref; bond?: BondRef; size: number; aromatic?: boolean; as?: string }
+  /** On a bond, `side` picks which side the new ring grows on; leave it out to let the layout choose. */
+  | { op: "add_ring"; atom?: Ref; bond?: BondRef; size: number; aromatic?: boolean; side?: 1 | -1; as?: string }
   | { op: "add_group"; to: Ref; name: string; as?: string }
   | { op: "label"; atom: Ref; text: string }
   | { op: "hotkey"; atom?: Ref; bond?: BondRef; key: string; as?: string }
@@ -187,7 +188,7 @@ export function applyOps(start: Molecule, ops: Op[]): OpsResult {
           const kind = op.aromatic ? (op.size === 6 ? "benzene" : null) : RINGS[op.size]
           if (!kind) throw new OpError(op.aromatic ? "only a six-membered ring can be aromatic" : `no ring of size ${op.size}`)
           if ((op.atom == null) === (op.bond == null)) throw new OpError("give either an atom or a bond for the ring")
-          const ring = op.atom != null ? growRing(mol, atom(op.atom), kind) : fuseRingAt(mol, bond(op.bond!), kind, 1)
+          const ring = op.atom != null ? growRing(mol, atom(op.atom), kind) : fuseRingAt(mol, bond(op.bond!), kind, op.side ?? 1)
           if (ring.mol === mol) throw new OpError("the ring could not be placed there")
           mol = ring.mol
           name(op.as, ring.far)

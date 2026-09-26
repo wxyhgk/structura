@@ -7,21 +7,16 @@ import {
 } from "@/chem/formula"
 import { addReactionArrow, emptyDrawing } from "@/chem/drawing"
 import { emptyHistory, historyReducer } from "@/chem/history"
+import type { Op } from "@/chem/ops"
+import { runOps } from "@/editor/ops"
 import {
   atomIdsOfSelection,
-  bumpCharge,
   boundsCenter,
   componentOf,
-  deleteSelection,
   emptySelection,
-  flipAtoms,
-  moveAtoms,
   neighbors,
-  rotateAtoms,
   selectAll,
   selectionFromAtoms,
-  setBondOrder,
-  setElement,
   tumbleAtoms,
 } from "@/chem/molecule"
 import type { BondStyle, Drawing, Molecule, RingKind, Selection, ToolId } from "@/chem/types"
@@ -62,7 +57,7 @@ export function useEditor() {
 
   const removeSelection = useCallback(() => {
     if (selection.atoms.length === 0 && selection.bonds.length === 0) return
-    commit(deleteSelection(mol, selection))
+    runOps(mol, [{ op: "remove", atoms: selection.atoms, bonds: selection.bonds }], commit)
   }, [commit, mol, selection])
 
   const selectEverything = useCallback(() => {
@@ -72,7 +67,7 @@ export function useEditor() {
   const applyElement = useCallback(
     (el: string) => {
       if (selection.atoms.length > 0) {
-        commit(setElement(mol, selection.atoms, el), true)
+        runOps(mol, selection.atoms.map((atom) => ({ op: "set_element", atom, el })), commit, true)
         return
       }
       setAtomEl(el)
@@ -86,7 +81,7 @@ export function useEditor() {
       const style: BondStyle = { order, stereo: "none" }
       setBondStyle(style)
       setTool("bond")
-      if (selection.bonds.length > 0) commit(setBondOrder(mol, selection.bonds, order), true)
+      if (selection.bonds.length > 0) runOps(mol, selection.bonds.map((bond) => ({ op: "set_bond", bond, order })), commit, true)
     },
     [commit, mol, selection.bonds],
   )
@@ -99,7 +94,7 @@ export function useEditor() {
       const ids = atomIdsOfSelection(mol, selection)
       const center = boundsCenter(mol, ids)
       if (!center || ids.length < 2) return
-      commit(rotateAtoms(mol, ids, center, angle), true)
+      runOps(mol, [{ op: "rotate", atoms: ids, angle, center }], commit, true)
     },
     [commit, mol, selection],
   )
@@ -110,7 +105,7 @@ export function useEditor() {
       if (ids.length === 0) return
       const dx = direction === "left" ? -10 : direction === "right" ? 10 : 0
       const dy = direction === "up" ? -10 : direction === "down" ? 10 : 0
-      commit(moveAtoms(mol, ids, dx, dy), true)
+      runOps(mol, [{ op: "move", atoms: ids, dx, dy }], commit, true)
     },
     [commit, mol, selection],
   )
@@ -164,7 +159,7 @@ export function useEditor() {
     (axis: "horizontal" | "vertical") => {
       const ids = atomIdsOfSelection(mol, selection)
       if (ids.length < 2) return
-      commit(flipAtoms(mol, ids, axis), true)
+      runOps(mol, [{ op: "flip", atoms: ids, axis }], commit, true)
     },
     [commit, mol, selection],
   )
@@ -172,7 +167,11 @@ export function useEditor() {
   const applyCharge = useCallback(
     (delta: number) => {
       if (selection.atoms.length === 0) return
-      commit(bumpCharge(mol, selection.atoms, delta), true)
+      const ops = selection.atoms.flatMap((id): Op[] => {
+        const atom = mol.atoms.find((item) => item.id === id)
+        return atom ? [{ op: "set_charge", atom: id, charge: Math.max(-3, Math.min(3, atom.charge + delta)) }] : []
+      })
+      runOps(mol, ops, commit, true)
     },
     [commit, mol, selection.atoms],
   )

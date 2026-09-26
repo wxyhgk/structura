@@ -1,14 +1,13 @@
 import { RING_SIZE, SNAP_ATOM } from "@/chem/constants"
+import { paintOps, ringShape, runOps } from "@/editor/ops"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@/chem/geometry"
 import {
   atomById,
-  bumpCharge,
   chainCount,
   chainPoints,
   commitChain,
   connectPoints,
   createBondAt,
-  deleteHit,
   dragIds,
   emptySelection,
   fuseReach,
@@ -19,7 +18,6 @@ import {
   growRingPreview,
   moveAtoms,
   nearestAtom,
-  paintBond,
   placeAtom,
   placeRing,
   ringOnBond,
@@ -27,7 +25,6 @@ import {
   rotateAtoms,
   scaleAtoms,
   selectionFromAtoms,
-  setElement,
   sprout,
 } from "@/chem/molecule"
 import { bondEnd, clampScale, frameAt, handleCursor, hitOf, hoverOf, selectionFrame } from "./targeting.ts"
@@ -105,33 +102,43 @@ export function pointerDown(host: PointerHost, event: { button: number; clientX:
   }
 
   if (tool === "eraser") {
-    if (hit) commit(deleteHit(mol, hit))
+    if (hit?.type === "atom") runOps(mol, [{ op: "remove", atoms: [hit.id] }], commit)
+    else if (hit) runOps(mol, [{ op: "remove", bonds: [hit.id] }], commit)
     return
   }
   if (tool === "charge-plus" || tool === "charge-minus") {
-    if (hit?.type === "atom") commit(bumpCharge(mol, [hit.id], tool === "charge-plus" ? 1 : -1), true)
+    const atom = hit?.type === "atom" ? atomById(mol, hit.id) : undefined
+    if (atom) {
+      const charge = Math.max(-3, Math.min(3, atom.charge + (tool === "charge-plus" ? 1 : -1)))
+      runOps(mol, [{ op: "set_charge", atom: atom.id, charge }], commit, true)
+    }
     return
   }
   if (tool === "atom") {
-    if (hit?.type === "atom") commit(setElement(mol, [hit.id], atomEl), true)
+    if (hit?.type === "atom") runOps(mol, [{ op: "set_element", atom: hit.id, el: atomEl }], commit, true)
     else if (!hit) commit(placeAtom(mol, atomEl, world))
     return
   }
   if (tool === "ring") {
+    const shape = ringShape(ringKind)
     if (hit?.type === "atom") {
-      commit(growRing(mol, hit.id, ringKind).mol)
+      if (shape) runOps(mol, [{ op: "add_ring", atom: hit.id, ...shape }], commit)
+      else commit(growRing(mol, hit.id, ringKind).mol)
       host.setPreview(null)
       return
     }
     const target = fusionTarget(mol, world, ringKind, fuseReach(RING_SIZE[ringKind]) / zoom)
-    if (target) commit(fuseRing(mol, target.id, ringKind, fusionSide(mol, target, world)))
-    else if (!hit) commit(placeRing(mol, world, ringKind))
+    if (target) {
+      const side = fusionSide(mol, target, world)
+      if (shape) runOps(mol, [{ op: "add_ring", bond: target.id, side, ...shape }], commit)
+      else commit(fuseRing(mol, target.id, ringKind, side))
+    } else if (!hit) commit(placeRing(mol, world, ringKind))
     host.setPreview(null)
     return
   }
   if (tool === "bond") {
     if (hit?.type === "bond") {
-      commit(paintBond(mol, hit.id, bondStyle))
+      runOps(mol, paintOps(mol, hit.id, bondStyle), commit)
       return
     }
     const origin = hit?.type === "atom" ? atomById(mol, hit.id) ?? world : world

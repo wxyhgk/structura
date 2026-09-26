@@ -121,7 +121,8 @@ test("letter case changes the group", () => {
   assert.equal(plainFormula(alcohol.mol), "CH4O")
   const methoxy = applyHotkey(start.mol, { type: "atom", id: start.end }, "O")
   assert.ok(methoxy)
-  assert.equal(plainFormula(methoxy.mol), "C3H8O")
+  assert.equal(atomById(methoxy.mol, start.end)?.el, "O")
+  assert.equal(plainFormula(methoxy.mol), "C2H6O")
   const phenyl = applyHotkey(start.mol, { type: "atom", id: start.end }, "P")
   assert.ok(phenyl)
   assert.equal(phenyl.mol.atoms.length, 2)
@@ -132,8 +133,12 @@ test("letter case changes the group", () => {
 test("K is tert-butyl on a primary carbon and a stereo pair midway", () => {
   const start = ethane()
   const butyl = applyHotkey(start.mol, { type: "atom", id: start.end }, "K")
-  assert.ok(butyl)
-  assert.equal(plainFormula(butyl.mol), "C6H14")
+  assert.ok(butyl && butyl.next.type === "atom")
+  assert.equal(plainFormula(butyl.mol), "C5H12")
+  assert.equal(butyl.mol.atoms.length, 5)
+  assert.equal(butyl.mol.bonds.length, 4)
+  assert.equal(butyl.next.id, start.end)
+  assert.equal(neighbors(butyl.mol, start.end).length, 4)
   const grown = applyHotkey(start.mol, { type: "atom", id: start.end }, "1")
   assert.ok(grown)
   const pair = applyHotkey(grown.mol, { type: "atom", id: start.end }, "K")
@@ -141,6 +146,47 @@ test("K is tert-butyl on a primary carbon and a stereo pair midway", () => {
   assert.equal(pair.mol.atoms.length, 5)
   const stereos = pair.mol.bonds.map((bond) => bond.stereo).sort()
   assert.deepEqual(stereos.filter((stereo) => stereo === "up" || stereo === "down"), ["down", "up"])
+})
+
+test("K on a longer chain end makes that atom the quaternary carbon", () => {
+  const start = ethane()
+  const grown = applyHotkey(start.mol, { type: "atom", id: start.end }, "1")
+  assert.ok(grown && grown.next.type === "atom")
+  const butyl = applyHotkey(grown.mol, grown.next, "K")
+  assert.ok(butyl)
+  assert.equal(plainFormula(butyl.mol), "C6H14")
+  assert.equal(butyl.mol.atoms.length, 6)
+  assert.equal(neighbors(butyl.mol, grown.next.id).length, 4)
+  const hub = atomById(butyl.mol, grown.next.id)
+  assert.ok(hub)
+  for (const methyl of neighbors(butyl.mol, grown.next.id)) assert.ok(Math.abs(dist(hub, methyl) - 40) < 1)
+  const lone = addAtom(emptyMolecule(), "C", 0, 0)
+  const isobutane = applyHotkey(lone.mol, { type: "atom", id: lone.id }, "K")
+  assert.ok(isobutane)
+  assert.equal(plainFormula(isobutane.mol), "C4H10")
+})
+
+test("shifted label keys turn the hovered end atom into the group", () => {
+  const start = ethane()
+  const cases: Array<[string, string, string]> = [
+    ["F", "C", "C2H3F3"],
+    ["N", "N", "CH3NO2"],
+    ["M", "Mg", "CH3BrMg"],
+  ]
+  for (const [key, el, formula] of cases) {
+    const step = applyHotkey(start.mol, { type: "atom", id: start.end }, key)
+    assert.ok(step)
+    assert.equal(atomById(step.mol, start.end)?.el, el)
+    assert.equal(plainFormula(step.mol), formula)
+  }
+  const nitro = applyHotkey(start.mol, { type: "atom", id: start.end }, "N")
+  assert.equal(nitro && atomById(nitro.mol, start.end)?.charge, 1)
+  const grown = applyHotkey(start.mol, { type: "atom", id: start.end }, "1")
+  assert.ok(grown)
+  const ether = applyHotkey(grown.mol, { type: "atom", id: start.end }, "O")
+  assert.ok(ether)
+  assert.equal(atomById(ether.mol, start.end)?.el, "C")
+  assert.equal(plainFormula(ether.mol), "C4H10O")
 })
 
 test("9 forks two substituents and 6 on a substituted atom is spiro", () => {

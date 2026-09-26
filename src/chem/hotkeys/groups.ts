@@ -2,6 +2,7 @@ import { angleTo } from "../geometry.ts"
 import {
   atomById,
   attachChairAt,
+  bumpCharge,
   growRing,
   neighbors,
   setAlias,
@@ -67,12 +68,19 @@ export function addSulfonyl(mol: Molecule, id: number): HotResult {
   return atomNext(next, sulfur.id)
 }
 
+function headAt(mol: Molecule, id: number, el: string, charge = 0): { mol: Molecule; id: number } {
+  if (degree(mol, id) >= 2) return sproutAt(mol, id, sproutAngle(mol, id), SINGLE, el, charge)
+  const next = setElement(mol, [id], el)
+  return { mol: bumpCharge(next, [id], charge - (atomById(next, id)?.charge ?? 0)), id }
+}
+
 export function addNitro(mol: Molecule, id: number): HotResult {
-  const nitrogen = sproutAt(mol, id, sproutAngle(mol, id), SINGLE, "N", 1)
+  const nitrogen = headAt(mol, id, "N", 1)
   let next = setHydrogens(nitrogen.mol, nitrogen.id, 0)
-  const oxo = sproutAt(next, nitrogen.id, Math.PI / 2, DOUBLE, "O")
+  const [left, right] = branchAngles(next, nitrogen.id)
+  const oxo = sproutAt(next, nitrogen.id, left, DOUBLE, "O")
   next = setHydrogens(oxo.mol, oxo.id, 0)
-  const oxy = sproutAt(next, nitrogen.id, -Math.PI / 2, SINGLE, "O", -1)
+  const oxy = sproutAt(next, nitrogen.id, right, SINGLE, "O", -1)
   next = setHydrogens(oxy.mol, oxy.id, 0)
   return atomNext(next, nitrogen.id)
 }
@@ -89,7 +97,7 @@ export function addAzide(mol: Molecule, id: number): HotResult {
 }
 
 function sproutTrio(mol: Molecule, id: number, el: string): HotResult {
-  const carbon = sproutAt(mol, id, sproutAngle(mol, id), SINGLE, "C")
+  const carbon = headAt(mol, id, "C")
   const atom = atomById(carbon.mol, carbon.id)
   const parent = atom ? neighbors(carbon.mol, carbon.id)[0] : undefined
   const base = atom && parent ? angleTo(atom, parent) : 0
@@ -109,13 +117,13 @@ export function addTertButyl(mol: Molecule, id: number): HotResult {
 }
 
 export function addMethoxy(mol: Molecule, id: number): HotResult {
-  const oxygen = sproutAt(mol, id, sproutAngle(mol, id), SINGLE, "O")
+  const oxygen = headAt(mol, id, "O")
   const methyl = sproutAt(oxygen.mol, oxygen.id, sproutAngle(oxygen.mol, oxygen.id), SINGLE, "C")
   return atomNext(methyl.mol, methyl.id)
 }
 
 export function addMagnesiumBromide(mol: Molecule, id: number): HotResult {
-  const metal = sproutAt(mol, id, sproutAngle(mol, id), SINGLE, "Mg")
+  const metal = headAt(mol, id, "Mg")
   const bromine = sproutAt(metal.mol, metal.id, sproutAngle(metal.mol, metal.id), SINGLE, "Br")
   return atomNext(bromine.mol, metal.id)
 }

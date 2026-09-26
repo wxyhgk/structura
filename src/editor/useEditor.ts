@@ -177,6 +177,14 @@ export function useEditor() {
     [commit, mol, selection.atoms],
   )
 
+  /** Replaces the drawing with an opened file, as one step that undo can take back. */
+  const openMolecule = useCallback(
+    (molecule: Molecule) => {
+      commitDrawing({ molecule, arrows: [], nextArrowId: drawing.nextArrowId })
+    },
+    [commitDrawing, drawing.nextArrowId],
+  )
+
   const newDocument = useCallback(() => {
     if (mol.atoms.length === 0 && drawing.arrows.length === 0) return
     commitDrawing(emptyDrawing())
@@ -225,5 +233,6 @@ export function useEditor() {
     selectionHotspot,
     flipSelection,
     newDocument,
+    openMolecule,
   }
 }

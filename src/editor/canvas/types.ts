@@ -3,6 +3,8 @@ import type { Arrow, BondStyle, Molecule, Point, RingKind, Selection, ToolId } f
 export type CanvasHandle = {
   zoomBy: (factor: number) => void
   resetView: () => void
+  /** Zooms and pans so the whole drawing fits in view; pass a molecule not yet rendered. */
+  fitContent: (mol?: Molecule) => void
   cancelGesture: () => void
   hasGesture: () => boolean
   hotspot: () => { type: "atom" | "bond"; id: number } | null

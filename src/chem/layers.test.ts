@@ -51,7 +51,7 @@ test("nothing below the renderer imports it", () => {
 
 test("chemistry and file exchange never reach for layout, rendering or hotkeys", () => {
   const pure = (file: string) =>
-    ["formula.ts", "validate.ts", "molfile.ts", "molecule/kekule.ts", "molecule/graph.ts"].includes(file)
+    ["formula.ts", "validate.ts", "molfile.ts", "sdf.ts", "molecule/kekule.ts", "molecule/graph.ts"].includes(file)
   assert.deepEqual(violations(pure, (target) => isLayout(target) || isDraw(target) || isHotkeys(target)), [])
 })
 

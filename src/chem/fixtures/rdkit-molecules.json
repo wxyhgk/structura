@@ -1,0 +1,118 @@
+{
+ "rdkit": "2025.09.2",
+ "records": [
+  {
+   "name": "aspirin",
+   "atoms": 13,
+   "bonds": 13,
+   "formula": "C9H8O4",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "CC(=O)Oc1ccccc1C(=O)O",
+   "mode": "2d"
+  },
+  {
+   "name": "caffeine",
+   "atoms": 14,
+   "bonds": 15,
+   "formula": "C8H10N4O2",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "Cn1c(=O)c2c(ncn2C)n(C)c1=O",
+   "mode": "2d"
+  },
+  {
+   "name": "(S)-ibuprofen",
+   "atoms": 15,
+   "bonds": 15,
+   "formula": "C13H18O2",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "CC(C)Cc1ccc([C@H](C)C(=O)O)cc1",
+   "mode": "2d"
+  },
+  {
+   "name": "sodium acetate",
+   "atoms": 5,
+   "bonds": 3,
+   "formula": "C2H3NaO2",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "CC(=O)[O-].[Na+]",
+   "mode": "2d"
+  },
+  {
+   "name": "N-methylpyridinium chloride",
+   "atoms": 8,
+   "bonds": 7,
+   "formula": "C6H8ClN",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "C[n+]1ccccc1.[Cl-]",
+   "mode": "2d"
+  },
+  {
+   "name": "ammonium tetrafluoroborate",
+   "atoms": 6,
+   "bonds": 4,
+   "formula": "H4BF4N",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "F[B-](F)(F)F.[NH4+]",
+   "mode": "2d"
+  },
+  {
+   "name": "labelled methane",
+   "atoms": 2,
+   "bonds": 1,
+   "formula": "CH4",
+   "charge": 0,
+   "isotopes": [
+    2,
+    13
+   ],
+   "smiles": "[2H][13CH3]",
+   "mode": "2d"
+  },
+  {
+   "name": "DABNA-1",
+   "atoms": 33,
+   "bonds": 39,
+   "formula": "C30H21BN2",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "c1ccc(N2c3ccccc3B3c4ccccc4N(c4ccccc4)c4cccc2c43)cc1",
+   "mode": "2d"
+  },
+  {
+   "name": "aromatic bonds: pyridine, pyrrole, imidazole",
+   "atoms": 18,
+   "bonds": 18,
+   "formula": "C12H14N4",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "[H]n1cccc1.[H]n1ccnc1.c1ccncc1",
+   "mode": "aromatic"
+  },
+  {
+   "name": "methanol with hydrogens drawn",
+   "atoms": 6,
+   "bonds": 5,
+   "formula": "CH4O",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "[H]OC([H])([H])[H]",
+   "mode": "explicit-h"
+  },
+  {
+   "name": "ethanol in 3D",
+   "atoms": 3,
+   "bonds": 2,
+   "formula": "C2H6O",
+   "charge": 0,
+   "isotopes": [],
+   "smiles": "CCO",
+   "mode": "3d"
+  }
+ ]
+}

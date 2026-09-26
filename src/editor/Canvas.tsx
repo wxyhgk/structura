@@ -135,6 +135,26 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     resetView() {
       setView(1, { x: 0, y: 0 })
     },
+    fitContent(mol?: Molecule) {
+      const rect = svgRef.current?.getBoundingClientRect()
+      const points = [
+        ...(mol ?? molRef.current).atoms,
+        ...propsRef.current.arrows.flatMap((arrow) => [
+          { x: arrow.x1, y: arrow.y1 },
+          { x: arrow.x2, y: arrow.y2 },
+        ]),
+      ]
+      if (!rect || points.length === 0) return
+      const xs = points.map((point) => point.x)
+      const ys = points.map((point) => point.y)
+      const margin = 60
+      const width = Math.max(...xs) - Math.min(...xs) + margin * 2
+      const height = Math.max(...ys) - Math.min(...ys) + margin * 2
+      const nextZoom = Math.min(1.5, Math.max(0.1, Math.min(rect.width / width, rect.height / height)))
+      const cx = (Math.max(...xs) + Math.min(...xs)) / 2
+      const cy = (Math.max(...ys) + Math.min(...ys)) / 2
+      setView(nextZoom, { x: rect.width / 2 - cx * nextZoom, y: rect.height / 2 - cy * nextZoom })
+    },
     cancelGesture,
     hasGesture: () => gesture.current.kind !== "idle",
     hotspot: () => activeHotspot(molRef.current),

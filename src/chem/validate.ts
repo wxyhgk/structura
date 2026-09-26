@@ -15,6 +15,11 @@ export type ProblemCode =
   | "group-unknown-atom"
   | "group-overlap"
   | "valence"
+  | "bad-molfile"
+  | "unsupported-mol-feature"
+  | "missing-coordinates"
+  | "flattened-3d"
+  | "aromatic-unresolved"
 
 /**
  * Errors break an invariant the rest of the code relies on.
@@ -27,6 +32,8 @@ export type Problem = {
   bonds?: number[]
   arrows?: number[]
   groups?: number[]
+  /** Which SDF record, counting from 1, when the problem comes from a file. */
+  record?: number
   message: string
 }
 

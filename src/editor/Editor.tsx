@@ -15,6 +15,8 @@ import {
 import { sceneToSvg } from "@/chem/draw"
 import { shortcutToElement } from "@/chem/elements/index"
 import { toMolfile } from "@/chem/molfile"
+import { readSdf, sideBySide } from "@/chem/sdf"
+import type { Problem } from "@/chem/validate"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -49,6 +51,25 @@ function download(filename: string, contents: string, type: string) {
   URL.revokeObjectURL(url)
 }
 
+const PROBLEM_TEXT: Partial<Record<Problem["code"], string>> = {
+  "bad-molfile": "无法读取",
+  "unsupported-mol-feature": "含有暂不支持的内容",
+  "missing-coordinates": "文件没有坐标，原子会重叠在一起",
+  "flattened-3d": "三维坐标已投影到平面",
+  "aromatic-unresolved": "部分芳香键无法确定单双键",
+  valence: "有原子超价",
+}
+
+/** One line per problem, in Chinese, with the record it came from. */
+function importNotes(records: ReturnType<typeof readSdf>): string[] {
+  return records.flatMap((record, index) =>
+    record.problems.map((problem) => {
+      const where = records.length > 1 ? `第 ${index + 1} 条${record.title ? `（${record.title}）` : ""}：` : ""
+      return `${where}${PROBLEM_TEXT[problem.code] ?? problem.code}。${problem.message}`
+    }),
+  )
+}
+
 function isMac() {
   return /Mac|iPhone|iPad/.test(navigator.userAgent)
 }
@@ -57,7 +78,23 @@ export function Editor() {
   const editor = useEditor()
   const canvasRef = useRef<CanvasHandle>(null)
   const [zoom, setZoom] = useState(1)
+  const [notes, setNotes] = useState<{ opened: boolean; lines: string[] } | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const mod = isMac() ? "⌘" : "Ctrl"
+
+  async function openFile(file: File) {
+    const records = readSdf(await file.text())
+    const readable = records.filter((record) => record.mol.atoms.length > 0)
+    const found = importNotes(records)
+    if (readable.length === 0) {
+      setNotes({ opened: false, lines: found.length > 0 ? found : ["文件里没有可以读取的分子。"] })
+      return
+    }
+    const merged = sideBySide(readable.map((record) => record.mol), editor.mol)
+    editor.openMolecule(merged)
+    canvasRef.current?.fitContent(merged)
+    if (found.length > 0) setNotes({ opened: true, lines: found })
+  }
 
   useEffect(() => {
     document.title = "Structura"
@@ -89,6 +126,11 @@ export function Editor() {
       if (meta && key === "n") {
         event.preventDefault()
         editor.newDocument()
+        return
+      }
+      if (meta && key === "o") {
+        event.preventDefault()
+        fileRef.current?.click()
         return
       }
       if (meta && (event.key === "=" || event.key === "+")) {
@@ -157,7 +199,27 @@ export function Editor() {
   const label = toolLabel(editor.tool, editor.bondStyle, editor.ringKind, editor.atomEl)
 
   return (
-    <div className="chem-app flex h-full flex-col">
+    <div
+      className="chem-app flex h-full flex-col"
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault()
+        const file = event.dataTransfer.files[0]
+        if (file) void openFile(file)
+      }}
+    >
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".mol,.sdf,.sd,.mdl"
+        className="hidden"
+        data-testid="open-file"
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          event.target.value = ""
+          if (file) void openFile(file)
+        }}
+      />
       <header className="flex h-8 shrink-0 items-center gap-1 border-b border-[#d0d0d0] bg-[#f2f2f2] pr-3 pl-2">
         <div className="mr-1 flex items-center gap-1.5 px-1.5 font-medium">
           <LogoMark />
@@ -167,6 +229,10 @@ export function Editor() {
           <DropdownMenuItem onClick={editor.newDocument}>
             新建
             <DropdownMenuShortcut>{mod}N</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => fileRef.current?.click()}>
+            打开 MOL/SDF…
+            <DropdownMenuShortcut>{mod}O</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -344,6 +410,18 @@ export function Editor() {
           {editor.mol.atoms.length} 原子 · {Math.round(zoom * 100)}%
         </span>
       </footer>
+
+      <Dialog open={notes != null} onOpenChange={(open) => !open && setNotes(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>导入提示</DialogTitle>
+            <DialogDescription>{notes?.opened ? "文件已打开，但有些内容需要注意：" : "文件没有打开："}</DialogDescription>
+          </DialogHeader>
+          <ul className="max-h-72 list-disc space-y-1 overflow-y-auto pl-5 text-[13px]" data-testid="import-notes">
+            {notes?.lines.map((line, index) => <li key={index}>{line}</li>)}
+          </ul>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={editor.helpOpen} onOpenChange={editor.setHelpOpen}>
         <DialogContent className="sm:max-w-lg">

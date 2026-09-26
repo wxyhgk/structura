@@ -17,7 +17,7 @@ import { shortcutToElement } from "@/chem/elements/index"
 import { toMolfile } from "@/chem/molfile"
 import { usableRecords } from "@/chem/import"
 import { emptyMolecule } from "@/chem/molecule"
-import { placeBeside, readMolfile, readSdf, sideBySide, type MolRecord } from "@/chem/sdf"
+import { readMolfile, readSdf, type MolRecord } from "@/chem/sdf"
 import type { Molecule } from "@/chem/types"
 import type { Problem } from "@/chem/validate"
 import { Button } from "@/components/ui/button"
@@ -93,12 +93,14 @@ export function Editor() {
   const [smilesStatus, setSmilesStatus] = useState<{ busy: boolean; errors: string[] }>({ busy: false, errors: [] })
   const mod = isMac() ? "⌘" : "Ctrl"
 
+  /** Set when an import lands, so the view fits the drawing once it has rendered. */
+  const fitAfterImport = useRef(false)
+
   /** Adds molecules to the right of the drawing, as one undoable step, and shows them all. */
   function addBeside(molecules: Molecule[]) {
     if (molecules.length === 0) return
-    const merged = placeBeside(editor.mol, molecules)
-    editor.commit(merged)
-    canvasRef.current?.fitContent(merged)
+    fitAfterImport.current = true
+    editor.appendMolecules(molecules)
   }
 
   /**
@@ -146,9 +148,8 @@ export function Editor() {
         setNotes({ opened: false, lines: found.length > 0 ? found : ["文件里没有可以读取的分子。"] })
         return
       }
-      const merged = sideBySide(imported.molecules, editor.mol)
-      editor.openMolecule(merged)
-      canvasRef.current?.fitContent(merged)
+      fitAfterImport.current = true
+      editor.openMolecules(imported.molecules)
       if (found.length > 0) setNotes({ opened: true, lines: found })
     } catch (error) {
       setNotes({ opened: false, lines: [`读取文件失败：${failure(error)}`] })
@@ -158,6 +159,12 @@ export function Editor() {
   useEffect(() => {
     document.title = "Structura"
   }, [])
+
+  useEffect(() => {
+    if (!fitAfterImport.current) return
+    fitAfterImport.current = false
+    canvasRef.current?.fitContent(editor.mol)
+  }, [editor.mol])
 
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {

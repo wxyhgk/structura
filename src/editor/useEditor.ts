@@ -176,13 +176,17 @@ export function useEditor() {
     [commit, mol, selection.atoms],
   )
 
-  /** Replaces the drawing with an opened file, as one step that undo can take back. */
-  const openMolecule = useCallback(
-    (molecule: Molecule) => {
-      commitDrawing({ molecule, arrows: [], nextArrowId: drawing.nextArrowId })
-    },
-    [commitDrawing, drawing.nextArrowId],
-  )
+  /** Replaces the drawing with an opened file's molecules, as one undoable step. */
+  const openMolecules = useCallback((molecules: Molecule[]) => {
+    dispatch({ type: "open", molecules })
+    setSelection(emptySelection())
+  }, [])
+
+  /** Adds imported molecules beside the drawing as it is when they arrive. */
+  const appendMolecules = useCallback((molecules: Molecule[]) => {
+    dispatch({ type: "append", molecules })
+    setSelection(emptySelection())
+  }, [])
 
   const newDocument = useCallback(() => {
     if (mol.atoms.length === 0 && drawing.arrows.length === 0) return
@@ -232,6 +236,7 @@ export function useEditor() {
     selectionHotspot,
     flipSelection,
     newDocument,
-    openMolecule,
+    openMolecules,
+    appendMolecules,
   }
 }

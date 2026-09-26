@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { addReactionArrow, emptyDrawing } from "./drawing.ts"
 import { emptyHistory, historyReducer, type History } from "./history.ts"
-import { addAtom, createBondAt } from "./molecule.ts"
+import { addAtom, createBondAt, emptyMolecule, placeRing } from "./molecule.ts"
 import { validateDrawing } from "./validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
@@ -69,4 +69,21 @@ test("history keeps at most 100 steps", () => {
   let history = emptyHistory()
   for (let index = 0; index < 120; index++) history = addCarbon(history).history
   assert.equal(history.past.length, 100)
+})
+
+test("imports merge into the drawing as it is when they land", () => {
+  const ethanol = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const benzene = placeRing(emptyMolecule(), { x: 0, y: 0 }, "benzene")
+  let history = emptyHistory()
+  // Both imports started from the empty drawing; the second must not erase the first.
+  history = historyReducer(history, { type: "append", molecules: [ethanol] })
+  history = historyReducer(history, { type: "append", molecules: [benzene] })
+  assert.equal(history.present.molecule.atoms.length, 8)
+  assert.deepEqual(validateDrawing(history.present), [])
+  history = historyReducer(history, { type: "undo" })
+  assert.equal(history.present.molecule.atoms.length, 2)
+
+  const opened = historyReducer(history, { type: "open", molecules: [benzene] })
+  assert.equal(opened.present.molecule.atoms.length, 6)
+  assert.ok(opened.present.molecule.atoms.every((atom) => atom.id > 2), "ids continue after those already used")
 })

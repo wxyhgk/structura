@@ -1,4 +1,5 @@
 import { emptyDrawing } from "./drawing.ts"
+import { placeBeside, sideBySide } from "./sdf.ts"
 import type { Drawing, Molecule } from "./types.ts"
 
 export type History = {
@@ -10,6 +11,10 @@ export type History = {
 export type HistoryAction =
   | { type: "commit"; drawing: Drawing }
   | { type: "commit-molecule"; mol: Molecule }
+  /** Replaces the drawing with these molecules side by side (opening a file). */
+  | { type: "open"; molecules: Molecule[] }
+  /** Adds these molecules beside whatever is drawn when the action lands (paste, SMILES). */
+  | { type: "append"; molecules: Molecule[] }
   | { type: "undo" }
   | { type: "redo" }
 
@@ -41,6 +46,17 @@ export function keepCounters(drawing: Drawing, current: Drawing): Drawing {
 }
 
 export function historyReducer(state: History, action: HistoryAction): History {
+  // Imports finish asynchronously, so they merge into the drawing as it is now, not as
+  // it was when they started; otherwise edits made meanwhile would be overwritten.
+  if (action.type === "open" || action.type === "append") {
+    if (action.molecules.length === 0) return state
+    const current = state.present
+    const drawing =
+      action.type === "open"
+        ? { molecule: sideBySide(action.molecules, current.molecule), arrows: [], nextArrowId: current.nextArrowId }
+        : { ...current, molecule: placeBeside(current.molecule, action.molecules) }
+    return historyReducer(state, { type: "commit", drawing })
+  }
   if (action.type === "commit" || action.type === "commit-molecule") {
     const drawing = action.type === "commit" ? action.drawing : { ...state.present, molecule: action.mol }
     return {

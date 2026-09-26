@@ -188,3 +188,35 @@ test("the result lists exactly the atoms and bonds a batch created", () => {
   const relabelled = ok(start, [{ op: "set_element", atom: 2, el: "N" }])
   assert.deepEqual(relabelled.added, { atoms: [], bonds: [] })
 })
+
+test("drawing ops do what the mouse tools do", () => {
+  const empty = emptyMolecule()
+  const clicked = ok(empty, [{ op: "draw_bond", start: { x: 0, y: 0 } }])
+  assert.equal(plainFormula(clicked.mol), "C2H6")
+  assert.equal(clicked.added.atoms.length, 2)
+
+  const dragged = ok(clicked.mol, [{ op: "draw_bond", from: 2, start: { x: 40, y: 0 }, end: { x: 60, y: -34.6 }, order: 2 }])
+  assert.equal(dragged.mol.bonds.at(-1)?.order, 2)
+  const joined = ok(dragged.mol, [{ op: "draw_bond", from: dragged.added.atoms[0], start: { x: 60, y: -34.6 }, end: { x: 0, y: 0 } }])
+  assert.equal(joined.added.atoms.length, 0, "ending on an existing atom joins it")
+
+  const chain = ok(empty, [{ op: "draw_chain", points: [{ x: 0, y: 0 }, { x: 34.6, y: -20 }, { x: 69.3, y: 0 }, { x: 103.9, y: -20 }] }])
+  assert.equal(plainFormula(chain.mol), "C4H10")
+
+  const placed = ok(empty, [{ op: "place_atom", el: "N", at: { x: 5, y: 5 } }])
+  assert.equal(plainFormula(placed.mol), "H3N")
+  const ring = ok(empty, [{ op: "add_ring", at: { x: 0, y: 0 }, size: 6, aromatic: true }])
+  assert.equal(plainFormula(ring.mol), "C6H6")
+  assert.equal(applyOps(empty, [{ op: "add_ring", at: { x: 0, y: 0 }, atom: 1, size: 6 }]).ok, false)
+})
+
+test("scaling and duplicating report what they did", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const scaled = ok(start, [{ op: "scale", atoms: [1, 2], sx: 2, sy: 2, center: { x: 0, y: 0 } }])
+  assert.equal(atomById(scaled.mol, 2)?.x, 80)
+  assert.equal(applyOps(start, [{ op: "scale", atoms: [1, 2], sx: 0, sy: 1 }]).ok, false)
+
+  const copy = ok(start, [{ op: "duplicate", atoms: [1, 2] }])
+  assert.equal(copy.added.atoms.length, 2)
+  assert.equal(copy.added.bonds.length, 1)
+})

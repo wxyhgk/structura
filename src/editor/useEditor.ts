@@ -12,7 +12,6 @@ import type { Op } from "@/chem/ops"
 import { runOps } from "@/editor/ops"
 import {
   atomIdsOfSelection,
-  duplicateAtoms,
   subMolecule,
   boundsCenter,
   componentOf,
@@ -67,9 +66,8 @@ export function useEditor() {
   const duplicateSelection = useCallback(() => {
     const ids = atomIdsOfSelection(mol, selection)
     if (ids.length === 0) return
-    const copy = duplicateAtoms(mol, ids)
-    commit(copy.mol, true)
-    setSelection(selectionFromAtoms(copy.mol, copy.ids))
+    const copy = runOps(mol, [{ op: "duplicate", atoms: ids }], commit, { keepSelection: true })
+    if (copy) setSelection(selectionFromAtoms(copy.mol, copy.added.atoms))
   }, [commit, mol, selection])
 
   /** The selection as molfile text for the clipboard, or null when nothing is selected. */

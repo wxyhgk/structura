@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { emptyMolecule } from "../../chem/molecule.ts"
-import { importNotes } from "./notes.ts"
+import { emptyMolecule } from "../../../src/chem/molecule.ts"
+import { importNotes } from "../../../src/editor/imports/notes.ts"
 
 test("import notes are in Chinese and name the record when there are several", () => {
   const record = (title: string) => ({ mol: emptyMolecule(), title, properties: {}, problems: [] })

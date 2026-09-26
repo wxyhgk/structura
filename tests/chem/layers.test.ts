@@ -4,7 +4,7 @@ import { dirname, join, relative, resolve } from "node:path"
 import test from "node:test"
 import { fileURLToPath } from "node:url"
 
-const CHEM = dirname(fileURLToPath(import.meta.url))
+const CHEM = resolve(dirname(fileURLToPath(import.meta.url)), "../../src/chem")
 
 function sources(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

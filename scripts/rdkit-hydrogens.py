@@ -1,11 +1,11 @@
-"""Regenerates src/chem/fixtures/rdkit-hydrogens.json, the reference for formula.ts.
+"""Regenerates tests/chem/fixtures/rdkit-hydrogens.json, the reference for formula.ts.
 
 For each element, formal charge and sum of bond orders, builds the atom with that many
 single bonds to carbon and records how many implicit hydrogens RDKit gives it, or null
 when RDKit rejects the valence.
 
     python3 -m venv .venv && .venv/bin/pip install rdkit
-    .venv/bin/python scripts/rdkit-hydrogens.py > src/chem/fixtures/rdkit-hydrogens.json
+    .venv/bin/python scripts/rdkit-hydrogens.py > tests/chem/fixtures/rdkit-hydrogens.json
 """
 import json
 import rdkit

@@ -43,7 +43,7 @@ function valencesOf(z: number): ValenceList | undefined {
 }
 
 /**
- * The valences a charged atom may fill up to, reproducing RDKit (see valence.test.ts).
+ * The valences a charged atom may fill up to, reproducing RDKit (see tests/chem/valence.test.ts).
  * A cation, a boron-group anion, or an ion whose electron count reaches the next period
  * behaves like its isoelectronic element: N+ like C, B- like C, I2- like Cs. Other anions
  * may also keep their own valences lowered by the charge, so S- takes 1, 3 or 5.

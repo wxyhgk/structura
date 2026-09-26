@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
-import { hydrogenCount } from "./formula.ts"
+import { hydrogenCount } from "../../src/chem/formula.ts"
 
 type Case = { el: string; charge: number; bonds: number; h: number | null }
 

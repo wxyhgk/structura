@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import initRDKitModule from "@rdkit/rdkit"
-import { plainFormula } from "../chem/formula.ts"
-import { usableRecords } from "../chem/import.ts"
-import { toMolfile } from "../chem/molfile.ts"
-import { readMolfile } from "../chem/sdf.ts"
-import { looksLikeSmiles, smilesLines, smilesToMolfile } from "./smiles.ts"
+import { plainFormula } from "../../src/chem/formula.ts"
+import { usableRecords } from "../../src/chem/import.ts"
+import { toMolfile } from "../../src/chem/molfile.ts"
+import { readMolfile } from "../../src/chem/sdf.ts"
+import { looksLikeSmiles, smilesLines, smilesToMolfile } from "../../src/rdkit/smiles.ts"
 
 const rdkit = await initRDKitModule()
 rdkit.prefer_coordgen(true)

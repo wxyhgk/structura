@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { addReactionArrow, emptyDrawing } from "./drawing.ts"
-import { emptyHistory, historyReducer, type History } from "./history.ts"
-import { addAtom, createBondAt, emptyMolecule, placeRing } from "./molecule.ts"
-import { validateDrawing } from "./validate.ts"
+import { addReactionArrow, emptyDrawing } from "../../src/chem/drawing.ts"
+import { emptyHistory, historyReducer, type History } from "../../src/chem/history.ts"
+import { addAtom, createBondAt, emptyMolecule, placeRing } from "../../src/chem/molecule.ts"
+import { validateDrawing } from "../../src/chem/validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 

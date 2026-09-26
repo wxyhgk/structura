@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { keyLabel, matches } from "./keymap.ts"
+import { keyLabel, matches } from "../../src/editor/keymap.ts"
 
 const press = (key: string, mods: { meta?: boolean; shift?: boolean; alt?: boolean } = {}) => ({
   key,

@@ -1,4 +1,4 @@
-"""Regenerates src/chem/fixtures/rdkit-molecules.sdf and rdkit-molecules.json.
+"""Regenerates tests/chem/fixtures/rdkit-molecules.sdf and rdkit-molecules.json.
 
 The SDF is written by RDKit, the way files arrive from other tools; the JSON records how
 RDKit itself reads each record, so sdf.test.ts can check our reader against it.
@@ -12,7 +12,7 @@ import rdkit
 from rdkit import Chem
 from rdkit.Chem import AllChem, rdDepictor, rdMolDescriptors
 
-root = Path(__file__).resolve().parent.parent / "src" / "chem" / "fixtures"
+root = Path(__file__).resolve().parent.parent / "tests" / "chem" / "fixtures"
 
 # name, SMILES, how to write it
 MOLECULES = [

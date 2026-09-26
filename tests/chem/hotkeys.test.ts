@@ -1,10 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { plainFormula } from "./formula.ts"
-import { dist } from "./geometry.ts"
-import { applyHotkey } from "./hotkeys.ts"
-import { setAtomLabel } from "./label.ts"
-import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors } from "./molecule.ts"
+import { plainFormula } from "../../src/chem/formula.ts"
+import { dist } from "../../src/chem/geometry.ts"
+import { applyHotkey } from "../../src/chem/hotkeys.ts"
+import { setAtomLabel } from "../../src/chem/label.ts"
+import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors } from "../../src/chem/molecule.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 

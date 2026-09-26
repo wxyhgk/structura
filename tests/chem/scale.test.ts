@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { BOND_LENGTH } from "./constants.ts"
-import { dist } from "./geometry.ts"
-import { applyHotkey } from "./hotkeys.ts"
+import { BOND_LENGTH } from "../../src/chem/constants.ts"
+import { dist } from "../../src/chem/geometry.ts"
+import { applyHotkey } from "../../src/chem/hotkeys.ts"
 import {
   addAtom,
   addBond,
@@ -17,9 +17,9 @@ import {
   insertGroup,
   scaleAtoms,
   sprout,
-} from "./molecule.ts"
-import { templateFor } from "./templates.ts"
-import type { Molecule } from "./types.ts"
+} from "../../src/chem/molecule.ts"
+import { templateFor } from "../../src/chem/templates.ts"
+import type { Molecule } from "../../src/chem/types.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 

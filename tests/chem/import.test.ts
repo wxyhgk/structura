@@ -1,10 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { usableRecords } from "./import.ts"
-import { createBondAt, emptyMolecule } from "./molecule.ts"
-import { toMolfile } from "./molfile.ts"
-import { readMolfile, readSdf } from "./sdf.ts"
-import { validate } from "./validate.ts"
+import { usableRecords } from "../../src/chem/import.ts"
+import { createBondAt, emptyMolecule } from "../../src/chem/molecule.ts"
+import { toMolfile } from "../../src/chem/molfile.ts"
+import { readMolfile, readSdf } from "../../src/chem/sdf.ts"
+import { validate } from "../../src/chem/validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 const ethane = () => toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE), "ethane")

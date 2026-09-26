@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { addReactionArrow, emptyDrawing } from "./drawing.ts"
-import { applyHotkey } from "./hotkeys.ts"
-import { setAtomLabel } from "./label.ts"
+import { addReactionArrow, emptyDrawing } from "../../src/chem/drawing.ts"
+import { applyHotkey } from "../../src/chem/hotkeys.ts"
+import { setAtomLabel } from "../../src/chem/label.ts"
 import {
   attachRing,
   bumpCharge,
@@ -19,9 +19,9 @@ import {
   spiroRing,
   sprout,
   tumbleAtoms,
-} from "./molecule.ts"
-import type { Molecule, RingKind } from "./types.ts"
-import { errorsOf, validate, validateDrawing, type Problem } from "./validate.ts"
+} from "../../src/chem/molecule.ts"
+import type { Molecule, RingKind } from "../../src/chem/types.ts"
+import { errorsOf, validate, validateDrawing, type Problem } from "../../src/chem/validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 

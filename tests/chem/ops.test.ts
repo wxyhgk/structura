@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { plainFormula } from "./formula.ts"
-import { applyHotkey } from "./hotkeys.ts"
-import { addAtom, atomById, bondById, createBondAt, emptyMolecule } from "./molecule.ts"
-import { applyOps, type Op } from "./ops.ts"
-import type { Molecule } from "./types.ts"
-import { validate } from "./validate.ts"
+import { plainFormula } from "../../src/chem/formula.ts"
+import { applyHotkey } from "../../src/chem/hotkeys.ts"
+import { addAtom, atomById, bondById, createBondAt, emptyMolecule } from "../../src/chem/molecule.ts"
+import { applyOps, type Op } from "../../src/chem/ops.ts"
+import type { Molecule } from "../../src/chem/types.ts"
+import { validate } from "../../src/chem/validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 

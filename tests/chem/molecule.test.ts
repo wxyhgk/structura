@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { BOND_LENGTH } from "./constants.ts"
-import { plainFormula, molecularWeight, valenceErrorCount } from "./formula.ts"
-import { angleTo, dist } from "./geometry.ts"
-import { toMolfile } from "./molfile.ts"
+import { BOND_LENGTH } from "../../src/chem/constants.ts"
+import { plainFormula, molecularWeight, valenceErrorCount } from "../../src/chem/formula.ts"
+import { angleTo, dist } from "../../src/chem/geometry.ts"
+import { toMolfile } from "../../src/chem/molfile.ts"
 import {
   atomById,
   attachRing,
@@ -19,7 +19,7 @@ import {
   rotateAtoms,
   sprout,
   tumbleAtoms,
-} from "./molecule.ts"
+} from "../../src/chem/molecule.ts"
 
 function bondAngle(mol: ReturnType<typeof createBondAt>, atomId: number): number[] {
   const atom = atomById(mol, atomId)

@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { plainFormula } from "./formula.ts"
-import { setAtomLabel } from "./label.ts"
-import { createBondAt, duplicateAtoms, emptyMolecule, sprout, subMolecule } from "./molecule.ts"
-import { toMolfile } from "./molfile.ts"
-import { readMolfile } from "./sdf.ts"
-import { validate } from "./validate.ts"
+import { plainFormula } from "../../src/chem/formula.ts"
+import { setAtomLabel } from "../../src/chem/label.ts"
+import { createBondAt, duplicateAtoms, emptyMolecule, sprout, subMolecule } from "../../src/chem/molecule.ts"
+import { toMolfile } from "../../src/chem/molfile.ts"
+import { readMolfile } from "../../src/chem/sdf.ts"
+import { validate } from "../../src/chem/validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { BOND_LENGTH } from "./constants.ts"
-import { dist } from "./geometry.ts"
-import { plainFormula } from "./formula.ts"
-import { setAtomLabel } from "./label.ts"
+import { BOND_LENGTH } from "../../src/chem/constants.ts"
+import { dist } from "../../src/chem/geometry.ts"
+import { plainFormula } from "../../src/chem/formula.ts"
+import { setAtomLabel } from "../../src/chem/label.ts"
 import {
   atomById,
   createBondAt,
@@ -15,10 +15,10 @@ import {
   rotateAtoms,
   setElement,
   sprout,
-} from "./molecule.ts"
-import { allTemplates, keptAsLabel, templateFor } from "./templates.ts"
-import type { Molecule } from "./types.ts"
-import { validate } from "./validate.ts"
+} from "../../src/chem/molecule.ts"
+import { allTemplates, keptAsLabel, templateFor } from "../../src/chem/templates.ts"
+import type { Molecule } from "../../src/chem/types.ts"
+import { validate } from "../../src/chem/validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 

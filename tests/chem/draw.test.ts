@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { buildScene, type DrawLine } from "./draw.ts"
-import { addAtom, addBond, emptyMolecule, paintBond, setBondLook, setBondOrder } from "./molecule.ts"
+import { buildScene, type DrawLine } from "../../src/chem/draw.ts"
+import { addAtom, addBond, emptyMolecule, paintBond, setBondLook, setBondOrder } from "../../src/chem/molecule.ts"
 
 function lineDistance(point: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }) {
   const dx = b.x - a.x

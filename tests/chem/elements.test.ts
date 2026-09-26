@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { ELEMENTS, elementAt, elementMass, paletteElements, shortcutToElement } from "./elements/index.ts"
+import { ELEMENTS, elementAt, elementMass, paletteElements, shortcutToElement } from "../../src/chem/elements/index.ts"
 
 test("the table contains each element once", () => {
   assert.equal(ELEMENTS.length, 118)

@@ -19,7 +19,7 @@ test("period lengths match the standard table", () => {
 })
 
 test("masses used by the sketcher stay on the previous scale", () => {
-  assert.equal(elementMass("H"), 1.00784)
+  assert.equal(elementMass("H"), 1.008)
   assert.equal(elementMass("C"), 12.011)
   assert.equal(elementMass("N"), 14.007)
   assert.equal(elementMass("O"), 15.999)

@@ -111,12 +111,12 @@ export function pointerDown(host: PointerHost, event: { button: number; clientX:
     const atom = hit?.type === "atom" ? atomById(mol, hit.id) : undefined
     if (atom) {
       const charge = Math.max(-3, Math.min(3, atom.charge + (tool === "charge-plus" ? 1 : -1)))
-      runOps(mol, [{ op: "set_charge", atom: atom.id, charge }], commit, true)
+      runOps(mol, [{ op: "set_charge", atom: atom.id, charge }], commit, { keepSelection: true })
     }
     return
   }
   if (tool === "atom") {
-    if (hit?.type === "atom") runOps(mol, [{ op: "set_element", atom: hit.id, el: atomEl }], commit, true)
+    if (hit?.type === "atom") runOps(mol, [{ op: "set_element", atom: hit.id, el: atomEl }], commit, { keepSelection: true })
     else if (!hit) commit(placeAtom(mol, atomEl, world))
     return
   }

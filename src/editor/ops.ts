@@ -1,21 +1,28 @@
 import { bondById } from "@/chem/molecule"
-import { applyOps, type Op } from "@/chem/ops"
+import { applyOps, type Op, type OpsResult } from "@/chem/ops"
 import type { BondStyle, Molecule, RingKind } from "@/chem/types"
 
-/** Runs edits through the op layer and commits the result. Returns false if rejected. */
+/**
+ * The one way the editor changes the drawing: run the ops, commit what they produce, and
+ * hand back the full result (names, problems, added atoms, next hotspot). Null if rejected.
+ */
 export function runOps(
   mol: Molecule,
   ops: Op[],
   commit: (mol: Molecule, keepSelection?: boolean) => void,
-  keepSelection = false,
-): boolean {
+  options: {
+    keepSelection?: boolean
+    /** A rejection is expected (a key that does nothing here), so do not log it. */
+    quiet?: boolean
+  } = {},
+): Extract<OpsResult, { ok: true }> | null {
   const result = applyOps(mol, ops)
   if (!result.ok) {
-    console.warn(`edit rejected at op ${result.index}: ${result.error}`)
-    return false
+    if (!options.quiet) console.warn(`edit rejected at op ${result.index}: ${result.error}`)
+    return null
   }
-  commit(result.mol, keepSelection)
-  return true
+  commit(result.mol, options.keepSelection)
+  return result
 }
 
 /** The ring tool's kinds as add_ring sizes. Cyclopentene has no op form. */

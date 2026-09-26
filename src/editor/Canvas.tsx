@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 import type { HotTarget } from "@/chem/hotkeys"
-import { applyOps } from "@/chem/ops"
+import { runOps } from "@/editor/ops"
 import { editorKeysBlocked } from "@/editor/keys"
 import { atomById, componentOf, selectionFromAtoms } from "@/chem/molecule"
 import type { Molecule, Point } from "@/chem/types"
@@ -262,12 +262,12 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
         return
       }
       const on = hot.type === "atom" ? { atom: hot.id } : { bond: hot.id }
-      const result = applyOps(mol, [{ op: "hotkey", ...on, key: event.key }])
-      if (!result.ok) return
+      // A key that does nothing here is not an edit; let it fall through to the tool keys.
+      const result = runOps(mol, [{ op: "hotkey", ...on, key: event.key }], propsRef.current.commit, { quiet: true })
+      if (!result) return
       event.preventDefault()
       event.stopPropagation()
       molRef.current = result.mol
-      propsRef.current.commit(result.mol)
       if (result.next) rememberHotspot(result.next)
     }
     window.addEventListener("keydown", onKey, true)
@@ -368,10 +368,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
                 const current = labelEdit
                 setLabelEdit(null)
                 if (!current || current.value.trim() === current.initial) return
-                const result = applyOps(molRef.current, [{ op: "label", atom: current.id, text: current.value }])
-                if (!result.ok) return
-                molRef.current = result.mol
-                propsRef.current.commit(result.mol, true)
+                const result = runOps(molRef.current, [{ op: "label", atom: current.id, text: current.value }], propsRef.current.commit, { keepSelection: true })
+                if (result) molRef.current = result.mol
               }}
             />
           )

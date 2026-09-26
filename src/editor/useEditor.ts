@@ -6,6 +6,7 @@ import {
   valenceErrorCount,
 } from "@/chem/formula"
 import { addReactionArrow, emptyDrawing } from "@/chem/drawing"
+import { emptyHistory, historyReducer } from "@/chem/history"
 import {
   atomIdsOfSelection,
   bumpCharge,
@@ -25,53 +26,8 @@ import {
 } from "@/chem/molecule"
 import type { BondStyle, Drawing, Molecule, RingKind, Selection, ToolId } from "@/chem/types"
 
-type History = {
-  past: Drawing[]
-  present: Drawing
-  future: Drawing[]
-}
-
-type HistoryAction =
-  | { type: "commit"; drawing: Drawing }
-  | { type: "commit-molecule"; mol: Molecule }
-  | { type: "undo" }
-  | { type: "redo" }
-
-function historyReducer(state: History, action: HistoryAction): History {
-  if (action.type === "commit" || action.type === "commit-molecule") {
-    const present = action.type === "commit" ? action.drawing : { ...state.present, molecule: action.mol }
-    return {
-      past: [...state.past, state.present].slice(-100),
-      present,
-      future: [],
-    }
-  }
-  if (action.type === "undo") {
-    const previous = state.past.at(-1)
-    if (!previous) return state
-    return {
-      past: state.past.slice(0, -1),
-      present: previous,
-      future: [state.present, ...state.future],
-    }
-  }
-  const next = state.future[0]
-  if (!next) return state
-  return {
-    past: [...state.past, state.present],
-    present: next,
-    future: state.future.slice(1),
-  }
-}
-
-const initialHistory: History = {
-  past: [],
-  present: emptyDrawing(),
-  future: [],
-}
-
 export function useEditor() {
-  const [history, dispatch] = useReducer(historyReducer, initialHistory)
+  const [history, dispatch] = useReducer(historyReducer, undefined, emptyHistory)
   const [tool, setTool] = useState<ToolId>("bond")
   const [bondStyle, setBondStyle] = useState<BondStyle>({ order: 1, stereo: "none" })
   const [ringKind, setRingKind] = useState<RingKind>("benzene")

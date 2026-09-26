@@ -7,7 +7,9 @@ import { atomById, bondOrderSum, cloneMolecule } from "./graph.ts"
  * Same idea as OpenBabel's kekulizer and RDKit's Kekulize: every aromatic
  * carbon that still has room for one more bond order must be incident to
  * exactly one double bond. That is a perfect matching, found by backtracking
- * and trying the most constrained atom first.
+ * and trying the most constrained atom first. A neutral two-bonded N, P or As
+ * may take a double bond but does not have to: pyridine's N does, pyrrole's
+ * stays single and keeps its hydrogen.
  */
 export function kekulizeAromatic(mol: Molecule): Molecule {
   if (!mol.bonds.some((bond) => bond.aromatic)) return mol
@@ -61,6 +63,13 @@ function needsDouble(mol: Molecule, atomId: number): boolean {
   return bondOrderSum(mol, atomId) < target
 }
 
+/** Ring N, P or As that can take a double bond without being forced to. */
+function mayDouble(mol: Molecule, atomId: number): boolean {
+  const atom = atomById(mol, atomId)
+  if (!atom || atom.charge !== 0 || !["N", "P", "As"].includes(atom.el)) return false
+  return bondOrderSum(mol, atomId) < 3
+}
+
 function matchDoubles(mol: Molecule, bonds: Bond[]): Array<[number, number]> {
   const degree = new Map<number, number>()
   for (const bond of bonds) {
@@ -68,13 +77,16 @@ function matchDoubles(mol: Molecule, bonds: Bond[]): Array<[number, number]> {
     degree.set(bond.b, (degree.get(bond.b) ?? 0) + 1)
   }
   const needy = new Set<number>()
+  const willing = new Set<number>()
   for (const id of degree.keys()) {
     if (needsDouble(mol, id)) needy.add(id)
+    else if (mayDouble(mol, id)) willing.add(id)
   }
+  const partner = (id: number) => needy.has(id) || willing.has(id)
   const adj = new Map<number, number[]>()
   for (const id of needy) adj.set(id, [])
   for (const bond of bonds) {
-    if (!needy.has(bond.a) || !needy.has(bond.b)) continue
+    if (!partner(bond.a) || !partner(bond.b) || (!needy.has(bond.a) && !needy.has(bond.b))) continue
     adj.get(bond.a)?.push(bond.b)
     adj.get(bond.b)?.push(bond.a)
   }
@@ -116,7 +128,7 @@ function matchDoubles(mol: Molecule, bonds: Bond[]): Array<[number, number]> {
   }
 
   const everyone = [...needy]
-  if (everyone.length % 2 === 0 && search(everyone)) return chosen
+  if ((willing.size > 0 || everyone.length % 2 === 0) && search(everyone)) return chosen
   chosen.length = 0
   used.clear()
   // Phenalene has an odd number of aromatic carbons. One outer carbon stays

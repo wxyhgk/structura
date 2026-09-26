@@ -15,7 +15,9 @@ import {
 import { sceneToSvg } from "@/chem/draw"
 import { shortcutToElement } from "@/chem/elements/index"
 import { toMolfile } from "@/chem/molfile"
-import { placeBeside, readMolfile, readSdf, sideBySide } from "@/chem/sdf"
+import { usableRecords } from "@/chem/import"
+import { emptyMolecule } from "@/chem/molecule"
+import { placeBeside, readMolfile, readSdf, sideBySide, type MolRecord } from "@/chem/sdf"
 import type { Molecule } from "@/chem/types"
 import type { Problem } from "@/chem/validate"
 import { Button } from "@/components/ui/button"
@@ -64,13 +66,16 @@ const PROBLEM_TEXT: Partial<Record<Problem["code"], string>> = {
 }
 
 /** One line per problem, in Chinese, with the record it came from. */
-function importNotes(records: ReturnType<typeof readSdf>): string[] {
-  return records.flatMap((record, index) =>
-    record.problems.map((problem) => {
-      const where = records.length > 1 ? `第 ${index + 1} 条${record.title ? `（${record.title}）` : ""}：` : ""
-      return `${where}${PROBLEM_TEXT[problem.code] ?? problem.code}。${problem.message}`
-    }),
-  )
+function importNotes(records: MolRecord[], problems: Problem[]): string[] {
+  return problems.map((problem) => {
+    const record = problem.record != null ? records[problem.record - 1] : undefined
+    const where = records.length > 1 && record ? `第 ${problem.record} 条${record.title ? `（${record.title}）` : ""}：` : ""
+    return `${where}${PROBLEM_TEXT[problem.code] ?? problem.code}。${problem.message}`
+  })
+}
+
+function failure(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
 }
 
 function isMac() {
@@ -96,33 +101,36 @@ export function Editor() {
     canvasRef.current?.fitContent(merged)
   }
 
-  /** Converts SMILES with RDKit, loading it on first use. Returns the lines that failed. */
-  async function importSmiles(text: string): Promise<string[]> {
-    const lines = smilesLines(text)
-    if (lines.length === 0) return ["没有找到 SMILES。"]
+  /**
+   * Converts SMILES with RDKit, loading it on first use, and adds what worked. Returns
+   * what to tell the user and how many lines were left out.
+   */
+  async function importSmiles(text: string): Promise<{ lines: string[]; skipped: number }> {
+    const entries = smilesLines(text)
+    if (entries.length === 0) return { lines: ["没有找到 SMILES。"], skipped: 0 }
     const rdkit = await loadRDKit()
-    const molecules: Molecule[] = []
-    const errors: string[] = []
-    for (const { smiles } of lines) {
+    const records: MolRecord[] = entries.map(({ smiles, name }) => {
       const result = smilesToMolfile(rdkit, smiles)
       if ("error" in result) {
-        errors.push(`无法解析：${smiles}`)
-        continue
+        return { mol: emptyMolecule(), title: smiles, properties: {}, problems: [{ code: "bad-molfile", severity: "error", message: result.error }] }
       }
-      molecules.push(readMolfile(result.molfile).mol)
-    }
-    addBeside(molecules)
-    return errors
+      const read = readMolfile(result.molfile)
+      return { mol: read.mol, title: name || smiles, properties: {}, problems: read.problems }
+    })
+    const imported = usableRecords(records)
+    addBeside(imported.molecules)
+    return { lines: importNotes(records, imported.problems), skipped: imported.skipped }
   }
 
   async function submitSmiles() {
     setSmilesStatus({ busy: true, errors: [] })
     try {
-      const errors = await importSmiles(smilesText)
-      setSmilesStatus({ busy: false, errors })
-      if (errors.length === 0) {
+      const { lines, skipped } = await importSmiles(smilesText)
+      setSmilesStatus({ busy: false, errors: skipped > 0 ? lines : [] })
+      if (skipped === 0) {
         setSmilesOpen(false)
         setSmilesText("")
+        if (lines.length > 0) setNotes({ opened: true, lines })
       }
     } catch {
       setSmilesStatus({ busy: false, errors: ["RDKit 加载失败，请检查网络后重试。"] })
@@ -130,17 +138,21 @@ export function Editor() {
   }
 
   async function openFile(file: File) {
-    const records = readSdf(await file.text())
-    const readable = records.filter((record) => record.mol.atoms.length > 0)
-    const found = importNotes(records)
-    if (readable.length === 0) {
-      setNotes({ opened: false, lines: found.length > 0 ? found : ["文件里没有可以读取的分子。"] })
-      return
+    try {
+      const records = readSdf(await file.text())
+      const imported = usableRecords(records)
+      const found = importNotes(records, imported.problems)
+      if (imported.molecules.length === 0) {
+        setNotes({ opened: false, lines: found.length > 0 ? found : ["文件里没有可以读取的分子。"] })
+        return
+      }
+      const merged = sideBySide(imported.molecules, editor.mol)
+      editor.openMolecule(merged)
+      canvasRef.current?.fitContent(merged)
+      if (found.length > 0) setNotes({ opened: true, lines: found })
+    } catch (error) {
+      setNotes({ opened: false, lines: [`读取文件失败：${failure(error)}`] })
     }
-    const merged = sideBySide(readable.map((record) => record.mol), editor.mol)
-    editor.openMolecule(merged)
-    canvasRef.current?.fitContent(merged)
-    if (found.length > 0) setNotes({ opened: true, lines: found })
   }
 
   useEffect(() => {
@@ -155,14 +167,19 @@ export function Editor() {
       const text = event.clipboardData?.getData("text/plain") ?? ""
       if (/^\s*M {2}END/m.test(text)) {
         event.preventDefault()
-        const records = readSdf(text)
-        addBeside(records.filter((record) => record.mol.atoms.length > 0).map((record) => record.mol))
-        const found = importNotes(records)
-        if (found.length > 0) setNotes({ opened: true, lines: found })
+        try {
+          const records = readSdf(text)
+          const imported = usableRecords(records)
+          addBeside(imported.molecules)
+          const found = importNotes(records, imported.problems)
+          if (found.length > 0) setNotes({ opened: imported.molecules.length > 0, lines: found })
+        } catch (error) {
+          setNotes({ opened: false, lines: [`粘贴的内容无法读取：${failure(error)}`] })
+        }
       } else if (looksLikeSmiles(text)) {
         event.preventDefault()
         void importSmiles(text)
-          .then((errors) => errors.length > 0 && setNotes({ opened: true, lines: errors }))
+          .then(({ lines, skipped }) => lines.length > 0 && setNotes({ opened: skipped < smilesLines(text).length, lines }))
           .catch(() => setNotes({ opened: false, lines: ["RDKit 加载失败，请检查网络后重试。"] }))
       }
     }

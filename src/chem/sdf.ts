@@ -25,7 +25,7 @@ function int(text: string | undefined): number {
 
 function float(text: string | undefined): number {
   const value = Number.parseFloat((text ?? "").trim())
-  return Number.isNaN(value) ? 0 : value
+  return Number.isFinite(value) ? value : 0
 }
 
 /**
@@ -85,6 +85,10 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
   }
   const atomCount = int(counts.slice(0, 3))
   const bondCount = int(counts.slice(3, 6))
+  if (atomCount < 0 || bondCount < 0) {
+    note("bad-molfile", `the counts line says ${atomCount} atoms and ${bondCount} bonds`, "error")
+    return { mol: emptyMolecule(), title, problems }
+  }
   if (lines.length < 4 + atomCount + bondCount) {
     note("bad-molfile", `expected ${atomCount} atoms and ${bondCount} bonds but the file ends early`, "error")
     return { mol: emptyMolecule(), title, problems }
@@ -93,7 +97,7 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
   const atoms: Atom[] = []
   let depth = false
   for (let index = 0; index < atomCount; index++) {
-    const line = lines[4 + index]
+    const line = lines[4 + index] ?? ""
     const symbol = line.slice(31, 34).trim()
     const atom: Atom = {
       id: index + 1,
@@ -112,8 +116,10 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
       note("unsupported-mol-feature", `atom ${index + 1} is "${symbol}", not an element; kept as a label on carbon`)
     }
     const massDifference = int(line.slice(34, 36))
-    if (massDifference !== 0 && atom.isotope == null) {
-      atom.isotope = Math.round(elementMass(atom.el)) + massDifference
+    if (massDifference !== 0 && atom.isotope == null && !atom.alias) {
+      const mass = Math.round(elementMass(atom.el)) + massDifference
+      if (mass >= 1 && mass <= 999) atom.isotope = mass
+      else note("bad-molfile", `atom ${index + 1} has a mass difference of ${massDifference}; ignored`)
     }
     const chargeCode = int(line.slice(36, 39))
     if (chargeCode === 4) note("unsupported-mol-feature", `atom ${index + 1} is a radical; radicals are not supported yet`)
@@ -124,13 +130,17 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
   const bonds: Bond[] = []
   let aromatic = false
   for (let index = 0; index < bondCount; index++) {
-    const line = lines[4 + atomCount + index]
+    const line = lines[4 + atomCount + index] ?? ""
     const a = int(line.slice(0, 3))
     const b = int(line.slice(3, 6))
     const type = int(line.slice(6, 9))
     const stereo = int(line.slice(9, 12))
     if (a < 1 || b < 1 || a > atomCount || b > atomCount || a === b) {
       note("bad-molfile", `bond ${index + 1} joins atoms ${a} and ${b}, which do not exist`, "error")
+      continue
+    }
+    if (bonds.some((other) => (other.a === a && other.b === b) || (other.a === b && other.b === a))) {
+      note("bad-molfile", `bond ${index + 1} repeats the bond between atoms ${a} and ${b}; kept the first`)
       continue
     }
     const bond: Bond = { id: index + 1, a, b, order: 1, stereo: "none" }
@@ -152,13 +162,15 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
   let charges: Array<[number, number]> | null = null
   const sgroups = new Set<string>()
   for (let index = 4 + atomCount + bondCount; index < lines.length; index++) {
-    const line = lines[index]
+    const line = lines[index] ?? ""
     if (line.startsWith("M  END")) break
     if (line.startsWith("M  CHG")) charges = [...(charges ?? []), ...propertyPairs(line)]
     else if (line.startsWith("M  ISO")) {
       for (const [number, mass] of propertyPairs(line)) {
         const atom = atoms[number - 1]
-        if (atom) atom.isotope = mass
+        if (!atom) continue
+        if (mass >= 1 && mass <= 999) atom.isotope = mass
+        else note("bad-molfile", `atom ${number} has mass number ${mass}; ignored`)
       }
     } else if (line.startsWith("M  RGP")) {
       for (const [number, group] of propertyPairs(line)) {
@@ -199,7 +211,10 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
   }
 
   normaliseScale(atoms, bonds)
-  let mol: Molecule = { ...emptyMolecule(), atoms, bonds, nextAtomId: atomCount + 1, nextBondId: bondCount + 1 }
+  bonds.forEach((bond, position) => {
+    bond.id = position + 1
+  })
+  let mol: Molecule = { ...emptyMolecule(), atoms, bonds, nextAtomId: atomCount + 1, nextBondId: bonds.length + 1 }
   if (aromatic) {
     const kekulized = kekulizeAromaticReport(mol)
     mol = kekulized.mol
@@ -223,7 +238,13 @@ export function readSdf(text: string): MolRecord[] {
     if (chunk.every((line) => line.trim() === "")) continue
     const end = chunk.findIndex((line) => line.startsWith("M  END"))
     const molLines = end === -1 ? chunk : chunk.slice(0, end + 1)
-    const read = readMolfile(molLines.join("\n"))
+    let read: ReturnType<typeof readMolfile>
+    try {
+      read = readMolfile(molLines.join("\n"))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      read = { mol: emptyMolecule(), title: (chunk[0] ?? "").trim(), problems: [{ code: "bad-molfile", severity: "error", message: `could not read this record: ${message}` }] }
+    }
     const properties: Record<string, string> = {}
     if (end !== -1) {
       let name: string | null = null

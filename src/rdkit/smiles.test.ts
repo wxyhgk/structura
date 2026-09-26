@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import initRDKitModule from "@rdkit/rdkit"
 import { plainFormula } from "../chem/formula.ts"
+import { usableRecords } from "../chem/import.ts"
 import { toMolfile } from "../chem/molfile.ts"
 import { readMolfile } from "../chem/sdf.ts"
 import { looksLikeSmiles, smilesLines, smilesToMolfile } from "./smiles.ts"
@@ -61,4 +62,18 @@ test("SMILES text is split into lines with optional names", () => {
   assert.equal(looksLikeSmiles("hello, world"), false)
   assert.equal(looksLikeSmiles("  M  END"), false)
   assert.equal(looksLikeSmiles("1234"), false)
+})
+
+test("what RDKit writes but the editor cannot hold is reported, not dropped silently", () => {
+  const dative = smilesToMolfile(rdkit, "N->[Pt](Cl)(Cl)<-N")
+  assert.ok("molfile" in dative)
+  const skipped = usableRecords([{ ...readMolfile(dative.molfile), properties: {} }])
+  assert.equal(skipped.molecules.length, 0)
+  assert.equal(skipped.problems[0]?.code, "bad-molfile")
+
+  const radical = smilesToMolfile(rdkit, "[CH3]")
+  assert.ok("molfile" in radical)
+  const kept = usableRecords([{ ...readMolfile(radical.molfile), properties: {} }])
+  assert.equal(kept.molecules.length, 1)
+  assert.ok(kept.problems.some((problem) => problem.message.includes("radical")))
 })

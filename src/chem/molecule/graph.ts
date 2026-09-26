@@ -71,6 +71,11 @@ export function addBond(
     if (!bond) return null
     bond.order = style.order
     bond.stereo = style.order === 1 ? style.stereo : "none"
+    // A wedge starts at `a`, so redrawing one follows the direction it was drawn in.
+    if (bond.stereo !== "none") {
+      bond.a = a
+      bond.b = b
+    }
     return { mol: next, id: existing.id }
   }
   const next = cloneMolecule(mol)

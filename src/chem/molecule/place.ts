@@ -1,7 +1,7 @@
 import { ATOM_HIT, BOND_LENGTH, RING_SIZE, SINGLE, SNAP_ATOM, SNAP_CHAIN } from "../constants.ts"
 import { angleTo, dist, distToSegment, norm, pointFrom, sideOfLine, signedDelta } from "../geometry.ts"
 import type { Bond, BondStyle, Molecule, Point, RingKind } from "../types.ts"
-import { addAtom, addBond, atomById, bondById, bondOrderSum, cloneMolecule, componentOf, neighbors, setElement } from "./graph.ts"
+import { addAtom, addBond, atomById, bondById, bondOrderSum, cloneMolecule, componentOf, neighbors, setElement, subMolecule } from "./graph.ts"
 import { kekulizeAromaticReport } from "./kekule.ts"
 import { nearestAtom } from "./snap.ts"
 
@@ -623,4 +623,29 @@ function openSide(mol: Molecule, bond: Bond, preferred: 1 | -1): 1 | -1 {
 
 export function fusionSide(mol: Molecule, bond: Bond, point: Point): 1 | -1 {
   return openSide(mol, bond, fuseSide(mol, bond, point))
+}
+
+/**
+ * Copies the given atoms (and the bonds and groups among them) to the right of where
+ * they are, two bond lengths clear, with fresh ids. Returns the copy's atom ids.
+ */
+export function duplicateAtoms(mol: Molecule, atomIds: number[]): { mol: Molecule; ids: number[] } {
+  const piece = subMolecule(mol, atomIds)
+  if (piece.atoms.length === 0) return { mol, ids: [] }
+  const xs = piece.atoms.map((atom) => atom.x)
+  const dx = Math.max(...xs) - Math.min(...xs) + bondLengthAt(mol, piece.atoms[0].id) * 2
+  const next = cloneMolecule(mol)
+  const ids = new Map<number, number>()
+  for (const atom of piece.atoms) {
+    const id = next.nextAtomId++
+    ids.set(atom.id, id)
+    next.atoms.push({ ...atom, id, x: atom.x + dx })
+  }
+  for (const bond of piece.bonds) {
+    next.bonds.push({ ...bond, id: next.nextBondId++, a: ids.get(bond.a) ?? 0, b: ids.get(bond.b) ?? 0 })
+  }
+  for (const group of piece.groups) {
+    next.groups.push({ ...group, id: next.nextGroupId++, atoms: group.atoms.map((id) => ids.get(id) ?? 0) })
+  }
+  return { mol: next, ids: [...ids.values()] }
 }

@@ -322,6 +322,24 @@ export function emptySelection(): Selection {
   return { atoms: [], bonds: [] }
 }
 
+/**
+ * The atoms given, the bonds between them and the groups wholly inside them, with their
+ * ids unchanged: what copying a selection puts on the clipboard.
+ */
+export function subMolecule(mol: Molecule, atomIds: number[]): Molecule {
+  const wanted = new Set(atomIds)
+  return {
+    atoms: mol.atoms.filter((atom) => wanted.has(atom.id)).map((atom) => ({ ...atom })),
+    bonds: mol.bonds.filter((bond) => wanted.has(bond.a) && wanted.has(bond.b)).map((bond) => ({ ...bond })),
+    groups: mol.groups
+      .filter((group) => group.atoms.every((id) => wanted.has(id)))
+      .map((group) => ({ ...group, atoms: [...group.atoms] })),
+    nextAtomId: mol.nextAtomId,
+    nextBondId: mol.nextBondId,
+    nextGroupId: mol.nextGroupId,
+  }
+}
+
 export function selectionFromAtoms(mol: Molecule, atomIds: number[]): Selection {
   const set = new Set(atomIds)
   return {

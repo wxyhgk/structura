@@ -7,10 +7,13 @@ import {
 } from "@/chem/formula"
 import { addReactionArrow, emptyDrawing } from "@/chem/drawing"
 import { emptyHistory, historyReducer } from "@/chem/history"
+import { toMolfile } from "@/chem/molfile"
 import type { Op } from "@/chem/ops"
 import { runOps } from "@/editor/ops"
 import {
   atomIdsOfSelection,
+  duplicateAtoms,
+  subMolecule,
   boundsCenter,
   componentOf,
   emptySelection,
@@ -59,6 +62,21 @@ export function useEditor() {
     if (selection.atoms.length === 0 && selection.bonds.length === 0) return
     runOps(mol, [{ op: "remove", atoms: selection.atoms, bonds: selection.bonds }], commit)
   }, [commit, mol, selection])
+
+  /** Copies the selection beside itself and selects the copy, ready to drag. */
+  const duplicateSelection = useCallback(() => {
+    const ids = atomIdsOfSelection(mol, selection)
+    if (ids.length === 0) return
+    const copy = duplicateAtoms(mol, ids)
+    commit(copy.mol, true)
+    setSelection(selectionFromAtoms(copy.mol, copy.ids))
+  }, [commit, mol, selection])
+
+  /** The selection as molfile text for the clipboard, or null when nothing is selected. */
+  const selectionMolfile = useCallback((): string | null => {
+    const ids = atomIdsOfSelection(mol, selection)
+    return ids.length > 0 ? toMolfile(subMolecule(mol, ids), "Structura") : null
+  }, [mol, selection])
 
   const selectEverything = useCallback(() => {
     setSelection(selectAll(mol))
@@ -229,6 +247,8 @@ export function useEditor() {
     undo,
     redo,
     removeSelection,
+    duplicateSelection,
+    selectionMolfile,
     selectEverything,
     applyElement,
     applyBondOrder,

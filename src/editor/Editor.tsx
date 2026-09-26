@@ -79,6 +79,22 @@ function failure(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
+/** Writes text to the clipboard, also where the async clipboard API is unavailable (plain http). */
+function writeClipboard(text: string) {
+  if (window.isSecureContext && navigator.clipboard?.writeText) {
+    void navigator.clipboard.writeText(text)
+    return
+  }
+  const area = document.createElement("textarea")
+  area.value = text
+  area.style.position = "fixed"
+  area.style.opacity = "0"
+  document.body.appendChild(area)
+  area.select()
+  document.execCommand("copy")
+  area.remove()
+}
+
 function isMac() {
   return /Mac|iPhone|iPad/.test(navigator.userAgent)
 }
@@ -93,6 +109,7 @@ export function Editor() {
   const [smilesText, setSmilesText] = useState("")
   const [smilesStatus, setSmilesStatus] = useState<{ busy: boolean; errors: string[] }>({ busy: false, errors: [] })
   const mod = isMac() ? "⌘" : "Ctrl"
+  const hasSelection = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
 
   /** Set when an import lands, so the view fits the drawing once it has rendered. */
   const fitAfterImport = useRef(false)
@@ -170,6 +187,24 @@ export function Editor() {
   }, [editor.mol])
 
   useEffect(() => {
+    // ⌘C / ⌘X put the selection on the clipboard as molfile text.
+    const onCopy = (event: ClipboardEvent) => {
+      if (editorKeysBlocked(event)) return
+      const text = editor.selectionMolfile()
+      if (!text) return
+      event.preventDefault()
+      event.clipboardData?.setData("text/plain", text)
+      if (event.type === "cut") editor.removeSelection()
+    }
+    document.addEventListener("copy", onCopy)
+    document.addEventListener("cut", onCopy)
+    return () => {
+      document.removeEventListener("copy", onCopy)
+      document.removeEventListener("cut", onCopy)
+    }
+  })
+
+  useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
       if (editorKeysBlocked(event)) return
       const text = event.clipboardData?.getData("text/plain") ?? ""
@@ -219,6 +254,11 @@ export function Editor() {
       if (meta && key === "n") {
         event.preventDefault()
         editor.newDocument()
+        return
+      }
+      if (meta && key === "d") {
+        event.preventDefault()
+        editor.duplicateSelection()
         return
       }
       if (meta && key === "o") {
@@ -353,6 +393,32 @@ export function Editor() {
             <DropdownMenuShortcut>⇧{mod}Z</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
+          <DropdownMenuItem
+            disabled={!hasSelection}
+            onClick={() => {
+              const text = editor.selectionMolfile()
+              if (text) writeClipboard(text)
+            }}
+          >
+            复制
+            <DropdownMenuShortcut>{mod}C</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!hasSelection}
+            onClick={() => {
+              const text = editor.selectionMolfile()
+              if (!text) return
+              writeClipboard(text)
+              editor.removeSelection()
+            }}
+          >
+            剪切
+            <DropdownMenuShortcut>{mod}X</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={!hasSelection} onClick={editor.duplicateSelection}>
+            重复
+            <DropdownMenuShortcut>{mod}D</DropdownMenuShortcut>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={editor.removeSelection}>
             删除
             <DropdownMenuShortcut>⌫</DropdownMenuShortcut>

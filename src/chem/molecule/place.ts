@@ -574,12 +574,12 @@ export function fusionTarget(mol: Molecule, point: Point, kind: RingKind, radius
   let best: Bond | null = null
   let bestDistance = radius
   for (const bond of mol.bonds) {
-    if (!canFuse(mol, bond, kind)) continue
     const a = atomById(mol, bond.a)
     const b = atomById(mol, bond.b)
     if (!a || !b) continue
     const distance = distToSegment(point, a, b)
-    if (distance <= bestDistance) {
+    // Distance is cheap and rules out almost every bond; only then ask whether it can fuse.
+    if (distance <= bestDistance && canFuse(mol, bond, kind)) {
       best = bond
       bestDistance = distance
     }

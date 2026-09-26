@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useRef, useState } from "react"
+import { useCallback, useMemo, useReducer, useRef, useState } from "react"
 import {
   displayFormula,
   molecularWeight,
@@ -193,8 +193,16 @@ export function useEditor() {
     commitDrawing(emptyDrawing())
   }, [commitDrawing, drawing.arrows.length, mol.atoms.length])
 
-  const formulaSource = selection.atoms.length > 0 ? selection.atoms : undefined
-  const formula = plainFormula(mol, formulaSource)
+  // The status bar only changes with the molecule or the selected atoms, not on zoom or hover.
+  const status = useMemo(() => {
+    const source = selection.atoms.length > 0 ? selection.atoms : undefined
+    const formula = plainFormula(mol, source)
+    return {
+      formula: displayFormula(formula),
+      weight: formula ? molecularWeight(mol, source) : 0,
+      valenceErrors: valenceErrorCount(mol),
+    }
+  }, [mol, selection.atoms])
 
   return {
     mol,
@@ -209,9 +217,7 @@ export function useEditor() {
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
     canTransform,
-    formula: displayFormula(formula),
-    weight: formula ? molecularWeight(mol, formulaSource) : 0,
-    valenceErrors: valenceErrorCount(mol),
+    ...status,
     setTool,
     setBondStyle,
     setRingKind,

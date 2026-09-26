@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react"
 import { bondFigures, buildScene, type AtomLabel, type Figure } from "@/chem/draw"
 import { atomById, atomIdsOfSelection } from "@/chem/molecule"
 import type { Arrow, Molecule, Selection, ToolId } from "@/chem/types"
@@ -27,7 +28,8 @@ export function SceneView({
   colorHetero: boolean
   showFrame: boolean
 }) {
-  const scene = buildScene(mol, colorHetero)
+  // Hover, previews and panning re-render often; the scene only changes with the molecule.
+  const scene = useMemo(() => buildScene(mol, colorHetero), [mol, colorHetero])
   return (
     <>
       <Figures figures={scene.figures} />
@@ -45,7 +47,7 @@ export function SceneView({
   )
 }
 
-function Arrows({ arrows }: { arrows: Arrow[] }) {
+const Arrows = memo(function Arrows({ arrows }: { arrows: Arrow[] }) {
   return (
     <>
       {arrows.map((arrow) => {
@@ -67,9 +69,9 @@ function Arrows({ arrows }: { arrows: Arrow[] }) {
       })}
     </>
   )
-}
+})
 
-function Figures({ figures }: { figures: Figure[] }) {
+const Figures = memo(function Figures({ figures }: { figures: Figure[] }) {
   return (
     <>
       {figures.map((figure, index) => {
@@ -105,9 +107,9 @@ function Figures({ figures }: { figures: Figure[] }) {
       })}
     </>
   )
-}
+})
 
-function Labels({ labels }: { labels: AtomLabel[] }) {
+const Labels = memo(function Labels({ labels }: { labels: AtomLabel[] }) {
   return (
     <>
       {labels.map((label) =>
@@ -128,7 +130,7 @@ function Labels({ labels }: { labels: AtomLabel[] }) {
       )}
     </>
   )
-}
+})
 
 function HoverCue({
   mol,

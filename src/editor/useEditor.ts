@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useState } from "react"
+import { useCallback, useReducer, useRef, useState } from "react"
 import {
   displayFormula,
   molecularWeight,
@@ -35,6 +35,8 @@ export function useEditor() {
   const [selection, setSelection] = useState<Selection>(emptySelection())
   const [colorHetero, setColorHetero] = useState(true)
   const [helpOpen, setHelpOpen] = useState(false)
+  /** Depth from the last tumble, valid only while the molecule is still the one it produced. */
+  const tumbleDepth = useRef<{ mol: Molecule; depth: Map<number, number> } | null>(null)
   const drawing = history.present
   const mol = drawing.molecule
 
@@ -121,7 +123,10 @@ export function useEditor() {
       const angle = Math.PI / 12
       const axis = direction === "left" || direction === "right" ? "y" : "x"
       const sign = direction === "left" || direction === "up" ? 1 : -1
-      commit(tumbleAtoms(mol, ids, center, axis, sign * angle), true)
+      const depth = tumbleDepth.current?.mol === mol ? tumbleDepth.current.depth : undefined
+      const tumbled = tumbleAtoms(mol, ids, center, axis, sign * angle, depth)
+      tumbleDepth.current = tumbled
+      commit(tumbled.mol, true)
     },
     [commit, mol, selection],
   )

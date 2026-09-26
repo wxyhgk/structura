@@ -13,8 +13,6 @@ export type Atom = {
   el: string
   x: number
   y: number
-  /** Depth used by the 3D tumble shortcut. Drawing is the orthographic projection. */
-  z?: number
   charge: number
   /** Nickname drawn instead of the element, such as Me, Boc, Ph. */
   alias?: string

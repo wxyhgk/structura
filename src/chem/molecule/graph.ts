@@ -348,31 +348,38 @@ export function componentOf(mol: Molecule, atomId: number): number[] {
   return [...seen]
 }
 
+/**
+ * Rotates atoms out of the page and projects them back. The depth each atom gains is
+ * returned separately: it only matters to the next tumble, so the editor keeps it
+ * next to the molecule instead of storing it on the atoms.
+ */
 export function tumbleAtoms(
   mol: Molecule,
   ids: number[],
   center: Point,
   axis: "x" | "y",
   angle: number,
-): Molecule {
-  if (angle === 0 || ids.length === 0) return mol
+  depth: ReadonlyMap<number, number> = new Map(),
+): { mol: Molecule; depth: Map<number, number> } {
+  const nextDepth = new Map(depth)
+  if (angle === 0 || ids.length === 0) return { mol, depth: nextDepth }
   const wanted = new Set(ids)
   const cos = Math.cos(angle)
   const sin = Math.sin(angle)
   const next = cloneMolecule(mol)
   for (const atom of next.atoms) {
     if (!wanted.has(atom.id)) continue
-    const z = atom.z ?? 0
+    const z = depth.get(atom.id) ?? 0
     if (axis === "x") {
       const yUp = -(atom.y - center.y)
       const yNext = yUp * cos - z * sin
-      atom.z = yUp * sin + z * cos
+      nextDepth.set(atom.id, yUp * sin + z * cos)
       atom.y = center.y - yNext
     } else {
       const x = atom.x - center.x
       atom.x = center.x + x * cos - z * sin
-      atom.z = x * sin + z * cos
+      nextDepth.set(atom.id, x * sin + z * cos)
     }
   }
-  return next
+  return { mol: next, depth: nextDepth }
 }

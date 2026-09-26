@@ -159,7 +159,7 @@ test("random edits never break an invariant", () => {
         const choice = next()
         if (choice < 0.33) mol = rotateAtoms(mol, ids, { x: 0, y: 0 }, next() * Math.PI)
         else if (choice < 0.66) mol = flipAtoms(mol, ids, next() < 0.5 ? "horizontal" : "vertical")
-        else mol = tumbleAtoms(mol, ids, { x: 0, y: 0 }, next() < 0.5 ? "x" : "y", Math.PI / 12)
+        else mol = tumbleAtoms(mol, ids, { x: 0, y: 0 }, next() < 0.5 ? "x" : "y", Math.PI / 12).mol
         label = "transform all"
       }
       log.push(label)

@@ -18,6 +18,7 @@ import {
   ringOnBond,
   rotateAtoms,
   sprout,
+  tumbleAtoms,
 } from "./molecule.ts"
 
 function bondAngle(mol: ReturnType<typeof createBondAt>, atomId: number): number[] {
@@ -256,4 +257,20 @@ test("a fused ring keeps equal side lengths", () => {
     const next = points[(index + 1) % points.length]
     assert.ok(Math.abs(dist(points[index], next) - BOND_LENGTH) < 0.05)
   }
+})
+
+test("two quarter tumbles carry depth and mirror the structure", () => {
+  const mol = createBondAt(emptyMolecule(), { x: -20, y: 0 }, { order: 1, stereo: "none" })
+  const ids = mol.atoms.map((atom) => atom.id)
+  const quarter = tumbleAtoms(mol, ids, { x: 0, y: 0 }, "y", Math.PI / 2)
+  for (const atom of quarter.mol.atoms) assert.ok(Math.abs(atom.x) < 1e-9)
+  assert.equal("z" in quarter.mol.atoms[0], false)
+
+  const half = tumbleAtoms(quarter.mol, ids, { x: 0, y: 0 }, "y", Math.PI / 2, quarter.depth)
+  const before = mol.atoms.map((atom) => atom.x)
+  const after = half.mol.atoms.map((atom) => atom.x)
+  after.forEach((x, index) => assert.ok(Math.abs(x + before[index]) < 1e-9))
+
+  const lost = tumbleAtoms(quarter.mol, ids, { x: 0, y: 0 }, "y", Math.PI / 2)
+  for (const atom of lost.mol.atoms) assert.ok(Math.abs(atom.x) < 1e-9)
 })

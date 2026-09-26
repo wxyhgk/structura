@@ -117,3 +117,15 @@ test("an R# atom from another program gets its group number as the label", () =>
     .replace("M  END", "M  RGP  1   2   5\nM  END")
   assert.equal(readMolfile(text).mol.atoms[1].alias, "R5")
 })
+
+test("metals state their valence so readers add no hydrogens we did not draw", () => {
+  const tin = addAtom(emptyMolecule(), "Sn", 0, 0)
+  let mol = tin.mol
+  for (let index = 0; index < 3; index++) mol = sprout(mol, tin.id, SINGLE)
+  mol = addAtom(mol, "Na", 200, 0).mol
+  const lines = toMolfile(mol).split("\n").slice(4, 4 + mol.atoms.length)
+  const valence = (line: string) => line.slice(48, 51).trim()
+  assert.equal(valence(lines[0]), "3", "Sn with three bonds")
+  assert.equal(valence(lines[1]), "0", "carbon is left to the reader")
+  assert.equal(valence(lines[4]), "15", "lone Na has zero valence")
+})

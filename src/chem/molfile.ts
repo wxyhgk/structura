@@ -1,4 +1,6 @@
 import { BOND_LENGTH } from "./constants.ts"
+import { elementOf } from "./elements/index.ts"
+import { bondOrderSum } from "./molecule/graph.ts"
 import type { BondStereo, Molecule } from "./types.ts"
 
 /** MOL files use ångströms with y pointing up; a C–C bond is about 1.5 Å. */
@@ -44,12 +46,24 @@ function symbolOf(atom: Molecule["atoms"][number]): string {
   return rGroupNumber(atom.alias) != null ? "R#" : "*"
 }
 
+/**
+ * The atom block's valence field. Elements we give no implicit hydrogens to (metals, Sn…)
+ * state their valence outright, 15 meaning zero, so readers do not add hydrogens we never
+ * drew. Everything else is left to the reader's own rules (0).
+ */
+function valenceField(mol: Molecule, atom: Molecule["atoms"][number]): number {
+  if (atom.alias || elementOf(atom.el)?.valences || atom.el === "H") return 0
+  const bonds = bondOrderSum(mol, atom.id)
+  return bonds === 0 ? 15 : Math.min(bonds, 14)
+}
+
 export function toMolfile(mol: Molecule, title = "Structura"): string {
   const index = new Map(mol.atoms.map((atom, position) => [atom.id, position + 1]))
   const atomLines = mol.atoms.map((atom) => {
     const x = atom.x * ANGSTROM_PER_PX
     const y = -atom.y * ANGSTROM_PER_PX
-    return `${fixed10(x)}${fixed10(y)}${fixed10(0)} ${symbolOf(atom).padEnd(3, " ")} 0${"  0".repeat(11)}`
+    // dd ccc sss hhh bbb vvv, then six unused fields.
+    return `${fixed10(x)}${fixed10(y)}${fixed10(0)} ${symbolOf(atom).padEnd(3, " ")} 0${"  0".repeat(4)}${pad3(valenceField(mol, atom))}${"  0".repeat(6)}`
   })
   const bondLines = mol.bonds.flatMap((bond) => {
     const a = index.get(bond.a)

@@ -44,7 +44,6 @@ export function atomHydrogens(mol: Molecule, atomId: number): { h: number; error
   const atom = atomById(mol, atomId)
   if (!atom) return { h: 0, error: false }
   if (atom.alias) return { h: 0, error: false }
-  if (atom.hydrogens != null) return { h: atom.hydrogens, error: false }
   return hydrogenCount(atom.el, atom.charge, bondOrderSum(mol, atomId))
 }
 

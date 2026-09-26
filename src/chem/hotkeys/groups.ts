@@ -7,7 +7,6 @@ import {
   neighbors,
   setAlias,
   setElement,
-  setHydrogens,
   sproutAngle,
   sproutAt,
 } from "../molecule.ts"
@@ -60,12 +59,9 @@ export function addStereoPair(mol: Molecule, id: number): HotResult {
 
 export function addSulfonyl(mol: Molecule, id: number): HotResult {
   const sulfur = sproutAt(mol, id, sproutAngle(mol, id), SINGLE, "S")
-  let next = setHydrogens(sulfur.mol, sulfur.id, 0)
-  const up = sproutAt(next, sulfur.id, Math.PI / 2, DOUBLE, "O")
-  next = setHydrogens(up.mol, up.id, 0)
-  const down = sproutAt(next, sulfur.id, -Math.PI / 2, DOUBLE, "O")
-  next = setHydrogens(down.mol, down.id, 0)
-  return atomNext(next, sulfur.id)
+  const up = sproutAt(sulfur.mol, sulfur.id, Math.PI / 2, DOUBLE, "O")
+  const down = sproutAt(up.mol, sulfur.id, -Math.PI / 2, DOUBLE, "O")
+  return atomNext(down.mol, sulfur.id)
 }
 
 function headAt(mol: Molecule, id: number, el: string, charge = 0): { mol: Molecule; id: number } {
@@ -76,24 +72,18 @@ function headAt(mol: Molecule, id: number, el: string, charge = 0): { mol: Molec
 
 export function addNitro(mol: Molecule, id: number): HotResult {
   const nitrogen = headAt(mol, id, "N", 1)
-  let next = setHydrogens(nitrogen.mol, nitrogen.id, 0)
-  const [left, right] = branchAngles(next, nitrogen.id)
-  const oxo = sproutAt(next, nitrogen.id, left, DOUBLE, "O")
-  next = setHydrogens(oxo.mol, oxo.id, 0)
-  const oxy = sproutAt(next, nitrogen.id, right, SINGLE, "O", -1)
-  next = setHydrogens(oxy.mol, oxy.id, 0)
-  return atomNext(next, nitrogen.id)
+  const [left, right] = branchAngles(nitrogen.mol, nitrogen.id)
+  const oxo = sproutAt(nitrogen.mol, nitrogen.id, left, DOUBLE, "O")
+  const oxy = sproutAt(oxo.mol, nitrogen.id, right, SINGLE, "O", -1)
+  return atomNext(oxy.mol, nitrogen.id)
 }
 
 export function addAzide(mol: Molecule, id: number): HotResult {
   const angle = sproutAngle(mol, id)
   const first = sproutAt(mol, id, angle, SINGLE, "N")
-  let next = setHydrogens(first.mol, first.id, 0)
-  const second = sproutAt(next, first.id, angle, DOUBLE, "N", 1)
-  next = setHydrogens(second.mol, second.id, 0)
-  const third = sproutAt(next, second.id, angle, DOUBLE, "N", -1)
-  next = setHydrogens(third.mol, third.id, 0)
-  return atomNext(next, first.id)
+  const second = sproutAt(first.mol, first.id, angle, DOUBLE, "N", 1)
+  const third = sproutAt(second.mol, second.id, angle, DOUBLE, "N", -1)
+  return atomNext(third.mol, first.id)
 }
 
 function sproutTrio(mol: Molecule, id: number, el: string): HotResult {

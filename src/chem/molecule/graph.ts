@@ -254,7 +254,6 @@ export function setElement(mol: Molecule, ids: number[], el: string): Molecule {
     if (!wanted.has(atom.id)) continue
     atom.el = el
     atom.alias = undefined
-    atom.hydrogens = undefined
   }
   return next
 }
@@ -264,14 +263,6 @@ export function setAlias(mol: Molecule, id: number, alias: string | undefined): 
   const atom = next.atoms.find((item) => item.id === id)
   if (!atom) return mol
   atom.alias = alias
-  return next
-}
-
-export function setHydrogens(mol: Molecule, id: number, hydrogens: number): Molecule {
-  const next = cloneMolecule(mol)
-  const atom = next.atoms.find((item) => item.id === id)
-  if (!atom) return mol
-  atom.hydrogens = hydrogens
   return next
 }
 

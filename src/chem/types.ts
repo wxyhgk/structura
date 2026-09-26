@@ -16,8 +16,6 @@ export type Atom = {
   charge: number
   /** Nickname drawn instead of the element, such as Me, Boc, Ph. */
   alias?: string
-  /** When set, replaces the calculated implicit hydrogen count. */
-  hydrogens?: number
 }
 
 export type Bond = {

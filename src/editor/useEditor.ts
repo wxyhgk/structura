@@ -5,14 +5,13 @@ import {
   plainFormula,
   valenceErrorCount,
 } from "@/chem/formula"
+import { addReactionArrow, emptyDrawing } from "@/chem/drawing"
 import {
-  addReactionArrow,
   atomIdsOfSelection,
   bumpCharge,
   boundsCenter,
   componentOf,
   deleteSelection,
-  emptyMolecule,
   emptySelection,
   flipAtoms,
   moveAtoms,
@@ -24,24 +23,26 @@ import {
   setElement,
   tumbleAtoms,
 } from "@/chem/molecule"
-import type { BondStyle, Molecule, RingKind, Selection, ToolId } from "@/chem/types"
+import type { BondStyle, Drawing, Molecule, RingKind, Selection, ToolId } from "@/chem/types"
 
 type History = {
-  past: Molecule[]
-  present: Molecule
-  future: Molecule[]
+  past: Drawing[]
+  present: Drawing
+  future: Drawing[]
 }
 
 type HistoryAction =
-  | { type: "commit"; mol: Molecule }
+  | { type: "commit"; drawing: Drawing }
+  | { type: "commit-molecule"; mol: Molecule }
   | { type: "undo" }
   | { type: "redo" }
 
 function historyReducer(state: History, action: HistoryAction): History {
-  if (action.type === "commit") {
+  if (action.type === "commit" || action.type === "commit-molecule") {
+    const present = action.type === "commit" ? action.drawing : { ...state.present, molecule: action.mol }
     return {
       past: [...state.past, state.present].slice(-100),
-      present: action.mol,
+      present,
       future: [],
     }
   }
@@ -65,7 +66,7 @@ function historyReducer(state: History, action: HistoryAction): History {
 
 const initialHistory: History = {
   past: [],
-  present: emptyMolecule(),
+  present: emptyDrawing(),
   future: [],
 }
 
@@ -78,10 +79,16 @@ export function useEditor() {
   const [selection, setSelection] = useState<Selection>(emptySelection())
   const [colorHetero, setColorHetero] = useState(true)
   const [helpOpen, setHelpOpen] = useState(false)
-  const mol = history.present
+  const drawing = history.present
+  const mol = drawing.molecule
 
   const commit = useCallback((next: Molecule, keepSelection = false) => {
-    dispatch({ type: "commit", mol: next })
+    dispatch({ type: "commit-molecule", mol: next })
+    if (!keepSelection) setSelection(emptySelection())
+  }, [])
+
+  const commitDrawing = useCallback((next: Drawing, keepSelection = false) => {
+    dispatch({ type: "commit", drawing: next })
     if (!keepSelection) setSelection(emptySelection())
   }, [])
 
@@ -167,9 +174,9 @@ export function useEditor() {
     (direction: "left" | "right" | "up" | "down") => {
       const ids = atomIdsOfSelection(mol, selection)
       if (ids.length === 0) return
-      commit(addReactionArrow(mol, ids, direction), true)
+      commitDrawing(addReactionArrow(drawing, ids, direction), true)
     },
-    [commit, mol, selection],
+    [commitDrawing, drawing, mol, selection],
   )
 
   const grabHit = useCallback(
@@ -210,15 +217,16 @@ export function useEditor() {
   )
 
   const newDocument = useCallback(() => {
-    if (mol.atoms.length === 0) return
-    commit(emptyMolecule())
-  }, [commit, mol.atoms.length])
+    if (mol.atoms.length === 0 && drawing.arrows.length === 0) return
+    commitDrawing(emptyDrawing())
+  }, [commitDrawing, drawing.arrows.length, mol.atoms.length])
 
   const formulaSource = selection.atoms.length > 0 ? selection.atoms : undefined
   const formula = plainFormula(mol, formulaSource)
 
   return {
     mol,
+    arrows: drawing.arrows,
     tool,
     bondStyle,
     ringKind,

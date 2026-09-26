@@ -300,6 +300,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
         <g transform={`translate(${pan.x} ${pan.y}) scale(${zoom})`}>
           <SceneView
             mol={shown}
+            arrows={props.arrows}
             selection={props.selection}
             tool={props.tool}
             zoom={zoom}

@@ -171,7 +171,7 @@ export function Editor() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => {
-              const svg = sceneToSvg(editor.mol, editor.colorHetero)
+              const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows)
               if (svg) download("未命名.svg", svg, "image/svg+xml")
             }}
           >
@@ -254,7 +254,7 @@ export function Editor() {
         <IconButton
           label="导出 SVG"
           onClick={() => {
-            const svg = sceneToSvg(editor.mol, editor.colorHetero)
+            const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows)
             if (svg) download("未命名.svg", svg, "image/svg+xml")
           }}
         >
@@ -314,6 +314,7 @@ export function Editor() {
         <Canvas
           ref={canvasRef}
           mol={editor.mol}
+          arrows={editor.arrows}
           tool={editor.tool}
           bondStyle={editor.bondStyle}
           ringKind={editor.ringKind}

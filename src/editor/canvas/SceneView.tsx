@@ -1,11 +1,12 @@
 import { bondFigures, buildScene, type AtomLabel, type Figure } from "@/chem/draw"
 import { atomById, atomIdsOfSelection } from "@/chem/molecule"
-import type { Molecule, Selection, ToolId } from "@/chem/types"
+import type { Arrow, Molecule, Selection, ToolId } from "@/chem/types"
 import { selectionFrame } from "./targeting.ts"
 import type { HoverTarget, Preview } from "./types.ts"
 
 export function SceneView({
   mol,
+  arrows,
   selection,
   tool,
   zoom,
@@ -16,6 +17,7 @@ export function SceneView({
   showFrame,
 }: {
   mol: Molecule
+  arrows: Arrow[]
   selection: Selection
   tool: ToolId
   zoom: number
@@ -29,7 +31,7 @@ export function SceneView({
   return (
     <>
       <Figures figures={scene.figures} />
-      <Arrows arrows={mol.arrows ?? []} />
+      <Arrows arrows={arrows} />
       <Labels labels={scene.labels} />
       <HoverCue mol={mol} hover={hover} labels={scene.labels} zoom={zoom} />
       {hotspotId != null && !(hover?.type === "atom" && hover.id === hotspotId) && (
@@ -43,7 +45,7 @@ export function SceneView({
   )
 }
 
-function Arrows({ arrows }: { arrows: NonNullable<Molecule["arrows"]> }) {
+function Arrows({ arrows }: { arrows: Arrow[] }) {
   return (
     <>
       {arrows.map((arrow) => {

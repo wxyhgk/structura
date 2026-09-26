@@ -43,8 +43,13 @@ export type Molecule = {
   bonds: Bond[]
   nextAtomId: number
   nextBondId: number
-  arrows?: Arrow[]
-  nextArrowId?: number
+}
+
+/** The whole canvas: the molecule plus the non-chemical marks drawn around it. */
+export type Drawing = {
+  molecule: Molecule
+  arrows: Arrow[]
+  nextArrowId: number
 }
 
 export type Point = { x: number; y: number }

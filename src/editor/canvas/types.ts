@@ -1,4 +1,4 @@
-import type { BondStyle, Molecule, Point, RingKind, Selection, ToolId } from "@/chem/types"
+import type { Arrow, BondStyle, Molecule, Point, RingKind, Selection, ToolId } from "@/chem/types"
 
 export type CanvasHandle = {
   zoomBy: (factor: number) => void
@@ -11,6 +11,7 @@ export type CanvasHandle = {
 
 export type EditorSlice = {
   mol: Molecule
+  arrows: Arrow[]
   tool: ToolId
   bondStyle: BondStyle
   ringKind: RingKind

@@ -1,4 +1,4 @@
-import type { Molecule } from "../types.ts"
+import type { Arrow, Molecule } from "../types.ts"
 import type { AtomLabel } from "./labels.ts"
 import type { Figure } from "./primitives.ts"
 import { buildScene } from "./scene.ts"
@@ -29,7 +29,7 @@ function labelSvg(label: AtomLabel): string {
     .join("")
 }
 
-export function sceneToSvg(mol: Molecule, colorHetero: boolean): string {
+export function sceneToSvg(mol: Molecule, colorHetero: boolean, arrowList: Arrow[] = []): string {
   if (mol.atoms.length === 0) return ""
   const scene = buildScene(mol, colorHetero)
   let minX = Infinity
@@ -48,12 +48,18 @@ export function sceneToSvg(mol: Molecule, colorHetero: boolean): string {
     maxX = Math.max(maxX, label.box.right)
     maxY = Math.max(maxY, label.box.bottom)
   }
+  for (const arrow of arrowList) {
+    minX = Math.min(minX, arrow.x1, arrow.x2)
+    minY = Math.min(minY, arrow.y1, arrow.y2)
+    maxX = Math.max(maxX, arrow.x1, arrow.x2)
+    maxY = Math.max(maxY, arrow.y1, arrow.y2)
+  }
   const pad = 18
   const x = minX - pad
   const y = minY - pad
   const width = Math.max(1, maxX - minX + pad * 2)
   const height = Math.max(1, maxY - minY + pad * 2)
-  const arrows = (mol.arrows ?? [])
+  const arrows = arrowList
     .map((arrow) => {
       const dx = arrow.x2 - arrow.x1
       const dy = arrow.y2 - arrow.y1

@@ -8,7 +8,6 @@ export {
   boundsCenter,
   bumpCharge,
   centroidOf,
-  addReactionArrow,
   cloneMolecule,
   componentOf,
   deleteHit,

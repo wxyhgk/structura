@@ -93,3 +93,7 @@ test("rendering does not reach layout or hotkeys even through a barrel", () => {
     )
   assert.deepEqual(leaks, [])
 })
+
+test("only the hotkey op reaches the hotkey tables", () => {
+  assert.deepEqual(violations((file) => !isHotkeys(file) && file !== "ops/structure.ts", isHotkeys), [])
+})

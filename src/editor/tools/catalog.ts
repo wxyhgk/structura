@@ -10,15 +10,21 @@ export const BOND_STYLES: { style: BondStyle; label: string }[] = [
   { style: { order: 1, stereo: "either" }, label: "波浪键" },
 ]
 
-export const RING_KINDS: { kind: RingKind; label: string }[] = [
-  { kind: "benzene", label: "苯" },
-  { kind: "cyclohexane", label: "环己烷" },
-  { kind: "cyclopentane", label: "环戊烷" },
-  { kind: "cyclobutane", label: "环丁烷" },
-  { kind: "cyclopropane", label: "环丙烷" },
-  { kind: "cycloheptane", label: "环庚烷" },
-  { kind: "cyclooctane", label: "环辛烷" },
-]
+/** Every ring's name; the palette offers all but cyclopentene, which only a bond hotkey makes. */
+export const RING_NAMES: Record<RingKind, string> = {
+  benzene: "苯",
+  cyclohexane: "环己烷",
+  cyclopentane: "环戊烷",
+  cyclopentene: "环戊烯",
+  cyclobutane: "环丁烷",
+  cyclopropane: "环丙烷",
+  cycloheptane: "环庚烷",
+  cyclooctane: "环辛烷",
+}
+
+export const RING_KINDS: { kind: RingKind; label: string }[] = (
+  ["benzene", "cyclohexane", "cyclopentane", "cyclobutane", "cyclopropane", "cycloheptane", "cyclooctane"] as const
+).map((kind) => ({ kind, label: RING_NAMES[kind] }))
 
 export function toolLabel(tool: ToolId, bond: BondStyle, ring: RingKind, el: string): string {
   if (tool === "lasso") return "套索"

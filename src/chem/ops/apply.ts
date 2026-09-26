@@ -1,5 +1,4 @@
-import type { HotTarget } from "../hotkeys.ts"
-import type { Molecule } from "../types.ts"
+import type { HotTarget, Molecule } from "../types.ts"
 import { validate } from "../validate.ts"
 import { makeContext, OpError } from "./context.ts"
 import { drawingOp } from "./drawing.ts"

@@ -1,8 +1,10 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ATOM_KEYS, BOND_KEYS } from "@/chem/hotkeys"
 import { MOD } from "@/editor/browser"
 import { allCommands, type Commands } from "@/editor/hooks/useCommands"
 import { keyLabel } from "@/editor/keymap"
 import { TOOL_KEYS } from "@/editor/tools/keys"
+import { describeAtomAction, describeBondAction, hotkeyLabel } from "@/editor/hotkeys/describe"
 
 function Shortcut({ keys, action }: { keys: string; action: string }) {
   return (
@@ -31,20 +33,15 @@ function Section({ title, rows }: { title: string; rows: [string, string][] }) {
   )
 }
 
-// Hover hotkeys are chemistry, not commands: they depend on what is under the pointer.
-const HOVER_KEYS: [string, string][] = [
-  ["1 / 0", "延长碳链 / 向上加一根键"],
-  ["2 / 8 / z", "羰基 / 双键 / 三键"],
-  ["3 / a", "原子上接苯环。键上 3 改三键，a 才并苯环"],
-  ["键上 2 w y", "改成双键、实楔、波浪键"],
-  ["4 / 5", "实楔 / 虚楔"],
-  ["6 7 v u", "环己、环戊、环丙、环丁；已有两根键时变成螺环"],
-  ["j / J", "两种朝向的椅式环己烷"],
-  ["9 / K", "分叉；链中间的 K 是一实一虚，末端的 K 是叔丁基"],
-  ["o n s f …", "换成 OH、NH₂、SH、F。大写 O N F 是 OMe、NO₂、CF₃"],
-  ["Enter / + −", "编辑这个原子的标签 / 加减电荷"],
+// Keys the canvas handles itself, besides the chemistry in the key tables.
+const HOVER_EXTRAS: [string, string][] = [
+  ["Enter", "编辑这个原子的标签"],
   ["g / Tab / 空格", "选中这个原子 / 选中整个分子"],
 ]
+
+function hotkeyRows<A>(table: Record<string, A>, describe: (action: A) => string): [string, string][] {
+  return byAction(Object.entries(table).map(([key, action]) => ({ key: hotkeyLabel(key), action: describe(action) })))
+}
 
 export function HelpDialog({
   open,
@@ -74,7 +71,8 @@ export function HelpDialog({
           </DialogDescription>
         </DialogHeader>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
-          <Section title="悬停时" rows={HOVER_KEYS} />
+          <Section title="悬停在原子上" rows={[...hotkeyRows(ATOM_KEYS, describeAtomAction), ...HOVER_EXTRAS]} />
+          <Section title="悬停在键上" rows={hotkeyRows(BOND_KEYS, describeBondAction)} />
           <Section title="没悬停时：工具" rows={toolRows} />
           <Section title="编辑" rows={commandRows} />
           <Section title="鼠标" rows={[["单击空白", "画一条水平键"], ["选中后", "拖外框的点：顶上旋转，四角缩放，四边拉伸"]]} />

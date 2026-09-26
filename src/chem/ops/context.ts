@@ -1,7 +1,6 @@
 import { elementOf } from "../elements/index.ts"
-import type { HotTarget } from "../hotkeys.ts"
 import { atomById, bondById } from "../molecule/graph.ts"
-import type { Molecule } from "../types.ts"
+import type { HotTarget, Molecule } from "../types.ts"
 import type { BondRef, Ref } from "./types.ts"
 
 /** A mistake in the ops themselves; the batch is rejected with this message. */

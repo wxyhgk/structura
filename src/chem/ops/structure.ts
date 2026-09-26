@@ -1,5 +1,5 @@
 import { BOND_LENGTH, RING_SHAPES, ringKindFor } from "../constants.ts"
-import { applyHotkey, type HotTarget } from "../hotkeys.ts"
+import { applyHotkey } from "../hotkeys.ts"
 import { setAtomLabel } from "../label.ts"
 import {
   addAtom,
@@ -22,7 +22,7 @@ import {
 } from "../molecule.ts"
 import { RECIPES } from "../molecule/recipes.ts"
 import { templateFor } from "../templates.ts"
-import type { Molecule, Point } from "../types.ts"
+import type { HotTarget, Molecule, Point } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"
 import type { Op } from "./types.ts"
 

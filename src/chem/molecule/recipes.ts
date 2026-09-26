@@ -4,9 +4,9 @@ import { atomById, bumpCharge, neighbors, setAlias, setElement, setIsotope } fro
 import { attachChairAt, growRing, sproutAngle, sproutAt } from "./place.ts"
 import { templateFor } from "../templates.ts"
 import type { Molecule, RingKind } from "../types.ts"
-import { atomNext, branchAngles, degree, extend, HASH, inRing, SINGLE, DOUBLE, WEDGE, type HotResult } from "./grow.ts"
+import { atomNext, branchAngles, degree, HASH, inRing, SINGLE, DOUBLE, WEDGE, type HotResult } from "./grow.ts"
 
-export function addCarbonyl(mol: Molecule, id: number): HotResult {
+function addCarbonyl(mol: Molecule, id: number): HotResult {
   if (degree(mol, id) >= 2 && inRing(mol, id)) {
     const acyl = sproutAt(mol, id, sproutAngle(mol, id), SINGLE, "C")
     return addCarbonyl(acyl.mol, acyl.id)
@@ -31,26 +31,26 @@ export function addRing(mol: Molecule, id: number, kind: RingKind): HotResult {
   return atomNext(ring.mol, ring.far)
 }
 
-export function addChair(mol: Molecule, id: number, turn: 1 | -1): HotResult {
+function addChair(mol: Molecule, id: number, turn: 1 | -1): HotResult {
   const ring = attachChairAt(mol, id, turn)
   return atomNext(ring.mol, ring.far)
 }
 
-export function addFork(mol: Molecule, id: number): HotResult {
+function addFork(mol: Molecule, id: number): HotResult {
   const [left, right] = branchAngles(mol, id)
   const first = sproutAt(mol, id, left, SINGLE, "C")
   const second = sproutAt(first.mol, id, right, SINGLE, "C")
   return atomNext(second.mol, first.id)
 }
 
-export function addStereoPair(mol: Molecule, id: number): HotResult {
+function addStereoPair(mol: Molecule, id: number): HotResult {
   const [left, right] = branchAngles(mol, id)
   const up = sproutAt(mol, id, left, WEDGE, "C")
   const down = sproutAt(up.mol, id, right, HASH, "C")
   return atomNext(down.mol, up.id)
 }
 
-export function addSulfonyl(mol: Molecule, id: number): HotResult {
+function addSulfonyl(mol: Molecule, id: number): HotResult {
   const sulfur = sproutAt(mol, id, sproutAngle(mol, id), SINGLE, "S")
   const up = sproutAt(sulfur.mol, sulfur.id, Math.PI / 2, DOUBLE, "O")
   const down = sproutAt(up.mol, sulfur.id, -Math.PI / 2, DOUBLE, "O")
@@ -63,7 +63,7 @@ function headAt(mol: Molecule, id: number, el: string, charge = 0): { mol: Molec
   return { mol: bumpCharge(next, [id], charge - (atomById(next, id)?.charge ?? 0)), id }
 }
 
-export function addNitro(mol: Molecule, id: number): HotResult {
+function addNitro(mol: Molecule, id: number): HotResult {
   const nitrogen = headAt(mol, id, "N", 1)
   const [left, right] = branchAngles(nitrogen.mol, nitrogen.id)
   const oxo = sproutAt(nitrogen.mol, nitrogen.id, left, DOUBLE, "O")
@@ -71,7 +71,7 @@ export function addNitro(mol: Molecule, id: number): HotResult {
   return atomNext(oxy.mol, nitrogen.id)
 }
 
-export function addAzide(mol: Molecule, id: number): HotResult {
+function addAzide(mol: Molecule, id: number): HotResult {
   const angle = sproutAngle(mol, id)
   const first = sproutAt(mol, id, angle, SINGLE, "N")
   const second = sproutAt(first.mol, first.id, angle, DOUBLE, "N", 1)
@@ -91,21 +91,21 @@ function sproutTrio(mol: Molecule, id: number, el: string): HotResult {
   return atomNext(next, carbon.id)
 }
 
-export function addTrifluoromethyl(mol: Molecule, id: number): HotResult {
+function addTrifluoromethyl(mol: Molecule, id: number): HotResult {
   return sproutTrio(mol, id, "F")
 }
 
-export function addTertButyl(mol: Molecule, id: number): HotResult {
+function addTertButyl(mol: Molecule, id: number): HotResult {
   return sproutTrio(mol, id, "C")
 }
 
-export function addMethoxy(mol: Molecule, id: number): HotResult {
+function addMethoxy(mol: Molecule, id: number): HotResult {
   const oxygen = headAt(mol, id, "O")
   const methyl = sproutAt(oxygen.mol, oxygen.id, sproutAngle(oxygen.mol, oxygen.id), SINGLE, "C")
   return atomNext(methyl.mol, methyl.id)
 }
 
-export function addMagnesiumBromide(mol: Molecule, id: number): HotResult {
+function addMagnesiumBromide(mol: Molecule, id: number): HotResult {
   const metal = headAt(mol, id, "Mg")
   const bromine = sproutAt(metal.mol, metal.id, sproutAngle(metal.mol, metal.id), SINGLE, "Br")
   return atomNext(bromine.mol, metal.id)
@@ -126,8 +126,6 @@ export function nick(mol: Molecule, id: number, label: string): HotResult {
   if (placed) return atomNext(placed.mol, placed.id)
   return atomNext(setAlias(setElement(mol, [id], "C"), id, label), id)
 }
-
-export { extend }
 
 /**
  * Groups built from an atom that no other op expresses, by name, so an agent can ask for

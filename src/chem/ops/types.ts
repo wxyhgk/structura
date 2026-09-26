@@ -1,5 +1,4 @@
-import type { HotTarget } from "../hotkeys.ts"
-import type { BondLook, BondOrder, BondStereo, Molecule, Point, RingKind } from "../types.ts"
+import type { BondLook, BondOrder, BondStereo, HotTarget, Molecule, Point, RingKind } from "../types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 

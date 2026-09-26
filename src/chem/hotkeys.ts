@@ -1,10 +1,18 @@
-import { atomHotkey } from "./hotkeys/atoms.ts"
-import { bondHotkey } from "./hotkeys/bonds.ts"
-export type { HotTarget } from "./molecule/grow.ts"
-import type { HotResult, HotTarget } from "./molecule/grow.ts"
-import type { Molecule } from "./types.ts"
+// Keys pressed over an atom or bond. The tables say what each key means; actions.ts does it.
+import { runAtomAction, runBondAction } from "./hotkeys/actions.ts"
+import { ATOM_KEYS } from "./hotkeys/atom-keys.ts"
+import { BOND_KEYS } from "./hotkeys/bond-keys.ts"
+import type { HotResult } from "./molecule/grow.ts"
+import type { HotTarget, Molecule } from "./types.ts"
+
+export type { AtomAction, BondAction } from "./hotkeys/actions.ts"
+export { ATOM_KEYS, BOND_KEYS }
 
 export function applyHotkey(mol: Molecule, target: HotTarget, key: string): HotResult | null {
-  if (target.type === "bond") return bondHotkey(mol, target.id, key)
-  return atomHotkey(mol, target.id, key)
+  if (target.type === "bond") {
+    const action = Object.hasOwn(BOND_KEYS, key) ? BOND_KEYS[key] : undefined
+    return action ? runBondAction(mol, target.id, action) : null
+  }
+  const action = Object.hasOwn(ATOM_KEYS, key) ? ATOM_KEYS[key] : undefined
+  return action ? runAtomAction(mol, target.id, action) : null
 }

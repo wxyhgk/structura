@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 import type { HotTarget } from "@/chem/hotkeys"
 import { applyOps } from "@/chem/ops"
+import { editorKeysBlocked } from "@/editor/keys"
 import { atomById, componentOf, selectionFromAtoms } from "@/chem/molecule"
 import type { Molecule, Point } from "@/chem/types"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
@@ -200,6 +201,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
+      if (editorKeysBlocked(event)) return
       if (event.code === "Space" && !event.repeat) {
         space.current = true
         spaceDragged.current = false
@@ -228,9 +230,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return
-      const target = event.target
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
-      if (document.querySelector("[data-slot=dialog-content], [data-slot=dropdown-menu-content]")) return
+      if (editorKeysBlocked(event)) return
       if (gesture.current.kind !== "idle") return
       const mol = molRef.current
       const hot = activeHotspot(mol)

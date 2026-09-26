@@ -42,6 +42,7 @@ import { Canvas, type CanvasHandle } from "@/editor/Canvas"
 import { LogoMark } from "@/editor/icons"
 import { ToolPalette } from "@/editor/ToolPalette"
 import { toolLabel } from "@/editor/tools"
+import { editorKeysBlocked, keepFocusOffToolbar } from "@/editor/keys"
 import { loadRDKit } from "@/editor/rdkit"
 import { useEditor } from "@/editor/useEditor"
 import { looksLikeSmiles, smilesLines, smilesToMolfile } from "@/rdkit/smiles"
@@ -158,6 +159,8 @@ export function Editor() {
 
   useEffect(() => {
     document.title = "Structura"
+    document.addEventListener("mousedown", keepFocusOffToolbar, true)
+    return () => document.removeEventListener("mousedown", keepFocusOffToolbar, true)
   }, [])
 
   useEffect(() => {
@@ -168,9 +171,7 @@ export function Editor() {
 
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
-      const target = event.target
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
-      if (document.querySelector("[data-slot=dialog-content]")) return
+      if (editorKeysBlocked(event)) return
       const text = event.clipboardData?.getData("text/plain") ?? ""
       if (/^\s*M {2}END/m.test(text)) {
         event.preventDefault()
@@ -196,9 +197,7 @@ export function Editor() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
-      if (document.querySelector("[data-slot=dialog-content]")) return
+      if (editorKeysBlocked(event)) return
       const meta = event.metaKey || event.ctrlKey
       const key = event.key.toLowerCase()
       if (meta && key === "z") {

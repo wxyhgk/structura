@@ -7,6 +7,7 @@ import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
 import { SceneView } from "@/editor/canvas/SceneView"
 import { clampZoom, hoverOf, sameHover } from "@/editor/canvas/targeting"
 import { ZOOM_STEP } from "@/editor/canvas/view"
+import { keyOf } from "@/editor/keymap"
 import type { CanvasHandle, EditorSlice, Gesture, HoverTarget, PointerHost, Preview } from "@/editor/canvas/types"
 
 export type { CanvasHandle } from "@/editor/canvas/types"
@@ -139,7 +140,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     const mol = molRef.current
     const hot = activeHotspot(mol)
     if (!hot) return false
-    if (event.key === "g") {
+    const key = keyOf(event)
+    if (key === "g") {
       propsRef.current.setSelection(
         hot.type === "atom" ? { atoms: [hot.id], bonds: [] } : { atoms: [], bonds: [hot.id] },
       )
@@ -161,7 +163,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     }
     const on = hot.type === "atom" ? { atom: hot.id } : { bond: hot.id }
     // A key that does nothing here is not an edit; let it fall through to the tool keys.
-    const result = runOps(mol, [{ op: "hotkey", ...on, key: event.key }], propsRef.current.commit, { quiet: true })
+    const result = runOps(mol, [{ op: "hotkey", ...on, key }], propsRef.current.commit, { quiet: true })
     if (!result) return false
     molRef.current = result.mol
     if (result.next) rememberHotspot(result.next)

@@ -2,7 +2,7 @@ import { useEffect, type RefObject } from "react"
 import { shortcutToElement } from "@/chem/elements/index"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { allCommands, type Commands } from "@/editor/hooks/useCommands"
-import { matches } from "@/editor/keymap"
+import { keyOf, matches } from "@/editor/keymap"
 import { editorKeysBlocked, inTextField } from "@/editor/keys"
 import { toolForKey } from "@/editor/tools/keys"
 import type { EditorState } from "@/editor/useEditor"
@@ -18,11 +18,10 @@ import type { EditorState } from "@/editor/useEditor"
 export function useShortcuts(editor: EditorState, canvas: RefObject<CanvasHandle | null>, commands: Commands) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      // ⌘A outside a text field never selects the page's text, even while a menu is open.
-      if (matches(event, { key: "a", meta: true }) && !inTextField(event)) event.preventDefault()
       if (editorKeysBlocked(event)) return
+      const key = keyOf(event)
       const plain = !event.metaKey && !event.ctrlKey && !event.altKey
-      if (plain && !canvas.current?.hasGesture() && editor.hotkeySelection(event.key)) {
+      if (plain && !canvas.current?.hasGesture() && editor.hotkeySelection(key)) {
         event.preventDefault()
         return
       }
@@ -44,7 +43,7 @@ export function useShortcuts(editor: EditorState, canvas: RefObject<CanvasHandle
         return
       }
       if (event.metaKey || event.ctrlKey || event.altKey) return
-      const toolKey = toolForKey(event.key)
+      const toolKey = toolForKey(key)
       if (toolKey) {
         // 1/2/3 also set the order of selected bonds.
         if (/^[123]$/.test(toolKey.key)) editor.applyBondOrder(Number(toolKey.key) as 1 | 2 | 3)
@@ -58,10 +57,31 @@ export function useShortcuts(editor: EditorState, canvas: RefObject<CanvasHandle
         else editor.setTool(toolKey.tool)
         return
       }
-      const symbol = shortcutToElement(event.key.toLowerCase())
+      const symbol = shortcutToElement(key.toLowerCase())
       if (symbol) editor.applyElement(symbol)
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
+  }, [editor, canvas, commands])
+
+  useEffect(() => {
+    // The page itself is never text to select. ⌘A is stopped before anything else sees
+    // it, even while a menu is open, and any page selection that slips through is dropped.
+    const stopSelectAll = (event: KeyboardEvent) => {
+      if (matches(event, { key: "a", meta: true }) && !inTextField(event)) event.preventDefault()
+    }
+    const dropPageSelection = () => {
+      const selection = document.getSelection()
+      if (!selection || selection.isCollapsed) return
+      const anchor = selection.anchorNode instanceof Element ? selection.anchorNode : selection.anchorNode?.parentElement
+      if (anchor?.closest("input, textarea, [contenteditable=true], [data-slot=dialog-content]")) return
+      selection.removeAllRanges()
+    }
+    window.addEventListener("keydown", stopSelectAll, true)
+    document.addEventListener("selectionchange", dropPageSelection)
+    return () => {
+      window.removeEventListener("keydown", stopSelectAll, true)
+      document.removeEventListener("selectionchange", dropPageSelection)
+    }
   }, [editor, canvas, commands])
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { keyLabel, matches } from "../../src/editor/keymap.ts"
+import { keyLabel, keyOf, matches } from "../../src/editor/keymap.ts"
 
 const press = (key: string, mods: { meta?: boolean; shift?: boolean; alt?: boolean } = {}) => ({
   key,
@@ -24,4 +24,15 @@ test("combinations are labelled for menus", () => {
   assert.equal(keyLabel({ key: "z", meta: true, shift: true }, "⌘"), "⇧⌘Z")
   assert.equal(keyLabel({ key: "ArrowLeft", alt: true }, "⌘"), "⌥←")
   assert.equal(keyLabel({ key: "-", meta: true }, "Ctrl"), "Ctrl−")
+})
+
+test("the physical key stands in when an input method or layout hides the character", () => {
+  const ime = (code: string, mods: { meta?: boolean; shift?: boolean } = {}) => ({ ...press("Process", mods), code })
+  assert.equal(matches(ime("KeyA", { meta: true }), { key: "a", meta: true }), true, "⌘A with a Chinese input method on")
+  assert.equal(keyOf(ime("Digit1")), "1")
+  assert.equal(keyOf(ime("KeyK", { shift: true })), "K")
+  assert.equal(keyOf(ime("Equal", { shift: true })), "+")
+  assert.equal(keyOf({ ...press("ф"), code: "KeyA" }), "a", "Russian layout")
+  assert.equal(keyOf({ ...press("a"), code: "KeyQ" }), "a", "AZERTY keeps the printed letter")
+  assert.equal(keyOf({ ...press("Enter"), code: "Enter" }), "Enter")
 })

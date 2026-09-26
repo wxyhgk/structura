@@ -3,6 +3,7 @@ import { paintOps, ringShape, runOps } from "@/editor/ops"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@/chem/geometry"
 import {
   atomById,
+  bondLengthAt,
   chainCount,
   chainPoints,
   commitChain,
@@ -127,7 +128,7 @@ export function pointerDown(host: PointerHost, event: { button: number; clientX:
       host.setPreview(null)
       return
     }
-    const target = fusionTarget(mol, world, ringKind, fuseReach(RING_SIZE[ringKind]) / zoom)
+    const target = fusionTarget(mol, world, ringKind, fuseReach(RING_SIZE[ringKind], bondLengthAt(mol)) / zoom)
     if (target) {
       const side = fusionSide(mol, target, world)
       if (shape) runOps(mol, [{ op: "add_ring", bond: target.id, side, ...shape }], commit)
@@ -158,7 +159,7 @@ export function pointerDown(host: PointerHost, event: { button: number; clientX:
     const fromId = hit?.type === "atom" ? hit.id : null
     const origin = fromId != null ? atomById(mol, fromId) ?? world : world
     host.gesture.current = { kind: "chain", mol, fromId, origin }
-    host.setPreview({ kind: "chain", points: chainPoints(origin, 0, 1) })
+    host.setPreview({ kind: "chain", points: chainPoints(origin, 0, 1, bondLengthAt(mol, fromId ?? undefined)) })
     return
   }
 
@@ -239,7 +240,7 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
     const target =
       aimed?.type === "atom"
         ? null
-        : fusionTarget(host.props.mol, world, host.props.ringKind, fuseReach(RING_SIZE[host.props.ringKind]) / zoom)
+        : fusionTarget(host.props.mol, world, host.props.ringKind, fuseReach(RING_SIZE[host.props.ringKind], bondLengthAt(host.props.mol)) / zoom)
     if (target) {
       const a = atomById(host.props.mol, target.a)
       const b = atomById(host.props.mol, target.b)
@@ -258,7 +259,7 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
     }
     host.setPreview({
       kind: "ring",
-      points: ringPoints(world, RING_SIZE[host.props.ringKind]),
+      points: ringPoints(world, RING_SIZE[host.props.ringKind], bondLengthAt(host.props.mol)),
       doubles: host.props.ringKind === "benzene",
     })
     return
@@ -290,7 +291,8 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
   if (current.kind === "chain") {
     const distance = Math.hypot(world.x - current.origin.x, world.y - current.origin.y)
     const axis = event.altKey ? angleTo(current.origin, world) : snapAngle(angleTo(current.origin, world))
-    host.setPreview({ kind: "chain", points: chainPoints(current.origin, axis, chainCount(distance)) })
+    const length = bondLengthAt(current.mol, current.fromId ?? undefined)
+    host.setPreview({ kind: "chain", points: chainPoints(current.origin, axis, chainCount(distance, length), length) })
     return
   }
   if (current.kind === "rotate") {
@@ -344,7 +346,8 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
   if (current.kind === "chain") {
     const distance = Math.hypot(world.x - current.origin.x, world.y - current.origin.y)
     const axis = event.altKey ? angleTo(current.origin, world) : snapAngle(angleTo(current.origin, world))
-    const points = chainPoints(current.origin, axis, chainCount(distance))
+    const length = bondLengthAt(current.mol, current.fromId ?? undefined)
+    const points = chainPoints(current.origin, axis, chainCount(distance, length), length)
     host.setPreview(null)
     host.props.commit(commitChain(current.mol, points, current.fromId))
     return

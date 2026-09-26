@@ -13,8 +13,8 @@ import {
   setElement,
   setIsotope,
 } from "./graph.ts"
-import { sproutAngle, sproutAt } from "./place.ts"
-import { SINGLE } from "../constants.ts"
+import { bondLengthAt, sproutAngle, sproutAt } from "./place.ts"
+import { BOND_LENGTH, SINGLE } from "../constants.ts"
 
 function rotate(point: Point, angle: number): Point {
   const cos = Math.cos(angle)
@@ -79,9 +79,11 @@ export function insertGroup(
     turn = norm(sproutAngle(mol, atomId) - bodyAngle(template))
   }
 
+  // Templates are drawn at the default bond length; match the structure they join.
+  const scale = bondLengthAt(next, host) / BOND_LENGTH
   const ids = [host]
   for (const atom of template.atoms.slice(1)) {
-    const offset = rotate(atom, turn)
+    const offset = rotate({ x: atom.x * scale, y: atom.y * scale }, turn)
     const added = addAtom(next, atom.el, hostAtom.x + offset.x, hostAtom.y + offset.y, atom.charge ?? 0)
     next = atom.isotope != null ? setIsotope(added.mol, [added.id], atom.isotope) : added.mol
     ids.push(added.id)

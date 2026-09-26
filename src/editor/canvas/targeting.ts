@@ -1,6 +1,6 @@
-import { ATOM_HIT, BOND_HIT, BOND_LENGTH, HOVER_ATOM, HOVER_BOND, SNAP_ATOM } from "@/chem/constants"
+import { ATOM_HIT, BOND_HIT, HOVER_ATOM, HOVER_BOND, SNAP_ATOM } from "@/chem/constants"
 import { angleTo, snapAngle } from "@/chem/geometry"
-import { atomById, atomIdsOfSelection, nearestAtom, nearestBond } from "@/chem/molecule"
+import { atomById, atomIdsOfSelection, bondLengthAt, nearestAtom, nearestBond } from "@/chem/molecule"
 import type { Molecule, Point, Selection } from "@/chem/types"
 import type { HoverTarget } from "./types.ts"
 
@@ -42,7 +42,8 @@ export function bondEnd(
   if (near) return near
   const raw = angleTo(origin, pointer)
   const angle = alt ? raw : snapAngle(raw)
-  return { x: origin.x + BOND_LENGTH * Math.cos(angle), y: origin.y - BOND_LENGTH * Math.sin(angle) }
+  const length = bondLengthAt(mol, ignore ?? undefined)
+  return { x: origin.x + length * Math.cos(angle), y: origin.y - length * Math.sin(angle) }
 }
 
 export type FrameHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "rotate"

@@ -1,9 +1,39 @@
 import { ATOM_HIT, BOND_LENGTH, RING_SIZE, SINGLE, SNAP_ATOM, SNAP_CHAIN } from "../constants.ts"
 import { angleTo, dist, distToSegment, norm, pointFrom, sideOfLine, signedDelta } from "../geometry.ts"
 import type { Bond, BondStyle, Molecule, Point, RingKind } from "../types.ts"
-import { addAtom, addBond, atomById, bondById, bondOrderSum, cloneMolecule, neighbors, setElement } from "./graph.ts"
+import { addAtom, addBond, atomById, bondById, bondOrderSum, cloneMolecule, componentOf, neighbors, setElement } from "./graph.ts"
 import { kekulizeAromatic } from "./kekule.ts"
 import { nearestAtom } from "./snap.ts"
+
+function median(values: number[]): number | null {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  return sorted[Math.floor(sorted.length / 2)]
+}
+
+function bondLengths(mol: Molecule, atoms?: Set<number>): number[] {
+  const lengths: number[] = []
+  for (const bond of mol.bonds) {
+    if (atoms && !atoms.has(bond.a)) continue
+    const a = atomById(mol, bond.a)
+    const b = atomById(mol, bond.b)
+    if (a && b) lengths.push(dist(a, b))
+  }
+  return lengths.filter((length) => length > 1)
+}
+
+/**
+ * The bond length for new atoms next to `atomId`: the median bond of its piece of the
+ * drawing, so bonds, rings and groups added to a scaled structure match it. Without an
+ * atom it is the median of the whole drawing; with no bonds at all, the default.
+ */
+export function bondLengthAt(mol: Molecule, atomId?: number): number {
+  if (atomId != null) {
+    const local = median(bondLengths(mol, new Set(componentOf(mol, atomId))))
+    if (local != null) return local
+  }
+  return median(bondLengths(mol)) ?? BOND_LENGTH
+}
 
 export function sproutAngle(mol: Molecule, atomId: number): number {
   const atom = atomById(mol, atomId)
@@ -43,7 +73,7 @@ export function outwardAngle(mol: Molecule, atomId: number): number {
 }
 
 export function createBondAt(mol: Molecule, origin: Point, style: BondStyle, el = "C"): Molecule {
-  const end = pointFrom(origin, 0, BOND_LENGTH)
+  const end = pointFrom(origin, 0, bondLengthAt(mol))
   const first = addAtom(mol, el, origin.x, origin.y)
   const second = addAtom(first.mol, el, end.x, end.y)
   return addBond(second.mol, first.id, second.id, style)?.mol ?? second.mol
@@ -63,7 +93,7 @@ export function sproutAt(
 ): { mol: Molecule; id: number } {
   const atom = atomById(mol, atomId)
   if (!atom) return { mol, id: atomId }
-  const point = pointFrom(atom, angle, BOND_LENGTH)
+  const point = pointFrom(atom, angle, bondLengthAt(mol, atomId))
   const near = nearestAtom(mol, point, ATOM_HIT, atomId)
   if (near) {
     const bonded = addBond(mol, atomId, near.id, style)
@@ -103,8 +133,8 @@ export function placeAtom(mol: Molecule, el: string, point: Point): Molecule {
   return addAtom(mol, el, point.x, point.y).mol
 }
 
-export function ringPoints(center: Point, size: number): Point[] {
-  const radius = BOND_LENGTH / (2 * Math.sin(Math.PI / size))
+export function ringPoints(center: Point, size: number, length = BOND_LENGTH): Point[] {
+  const radius = length / (2 * Math.sin(Math.PI / size))
   const points: Point[] = []
   for (let index = 0; index < size; index++) {
     points.push(pointFrom(center, (index * 2 * Math.PI) / size, radius))
@@ -223,7 +253,7 @@ export function cycleAround(mol: Molecule, bond: Bond): number[] | null {
 }
 
 export function placeRing(mol: Molecule, center: Point, kind: RingKind): Molecule {
-  const points = ringPoints(center, RING_SIZE[kind])
+  const points = ringPoints(center, RING_SIZE[kind], bondLengthAt(mol))
   return buildRing(
     mol,
     points,
@@ -255,9 +285,9 @@ export function fuseRingAt(
 }
 
 /** Ring hung off an atom by one extra single bond. */
-export function ringAttachedPoints(origin: Point, angle: number, size: number): Point[] {
-  const radius = BOND_LENGTH / (2 * Math.sin(Math.PI / size))
-  const ipso = pointFrom(origin, angle, BOND_LENGTH)
+export function ringAttachedPoints(origin: Point, angle: number, size: number, length = BOND_LENGTH): Point[] {
+  const radius = length / (2 * Math.sin(Math.PI / size))
+  const ipso = pointFrom(origin, angle, length)
   const center = pointFrom(ipso, angle, radius)
   const points: Point[] = []
   for (let index = 0; index < size; index++) {
@@ -280,7 +310,7 @@ export function attachRingAt(
   const atom = atomById(mol, atomId)
   if (!atom) return { mol, ipso: atomId, far: atomId }
   const size = RING_SIZE[kind]
-  const points = ringAttachedPoints(atom, angle, size)
+  const points = ringAttachedPoints(atom, angle, size, bondLengthAt(mol, atomId))
   const built = buildRing(
     mol,
     points,
@@ -296,8 +326,8 @@ export function attachRingAt(
 }
 
 /** The given atom is vertex 0. The ring center lies further along `angle`. */
-export function ringThroughPoints(origin: Point, angle: number, size: number): Point[] {
-  const radius = BOND_LENGTH / (2 * Math.sin(Math.PI / size))
+export function ringThroughPoints(origin: Point, angle: number, size: number, length = BOND_LENGTH): Point[] {
+  const radius = length / (2 * Math.sin(Math.PI / size))
   const center = pointFrom(origin, angle, radius)
   const points: Point[] = []
   for (let index = 0; index < size; index++) {
@@ -316,7 +346,7 @@ export function spiroRing(
   const atom = atomById(mol, atomId)
   if (!atom) return { mol, far: atomId }
   const size = RING_SIZE[kind]
-  const points = ringThroughPoints(atom, angle, size)
+  const points = ringThroughPoints(atom, angle, size, bondLengthAt(mol, atomId))
   const built = buildRing(
     mol,
     points,
@@ -351,13 +381,14 @@ export function growRingPreview(
   if (!atom) return { points: [] }
   const size = RING_SIZE[kind]
   const count = neighbors(mol, atomId).length
+  const length = bondLengthAt(mol, atomId)
   if (count >= 2 && kind === "benzene") {
     const angle = sproutAngle(mol, atomId)
-    const link = pointFrom(atom, angle, BOND_LENGTH)
-    return { points: ringThroughPoints(link, angle, size), anchor: atom }
+    const link = pointFrom(atom, angle, length)
+    return { points: ringThroughPoints(link, angle, size, length), anchor: atom }
   }
-  if (count >= 2) return { points: ringThroughPoints(atom, sproutAngle(mol, atomId), size) }
-  return { points: ringThroughPoints(atom, outwardAngle(mol, atomId), size) }
+  if (count >= 2) return { points: ringThroughPoints(atom, sproutAngle(mol, atomId), size, length) }
+  return { points: ringThroughPoints(atom, outwardAngle(mol, atomId), size, length) }
 }
 
 const CHAIR: Array<[number, number]> = [
@@ -379,12 +410,15 @@ export function attachChairAt(
   const angle = sproutAngle(mol, atomId)
   const cos = Math.cos(angle)
   const sin = Math.sin(angle)
-  const ipso = pointFrom(atom, angle, BOND_LENGTH)
+  const length = bondLengthAt(mol, atomId)
+  const scale = length / BOND_LENGTH
+  const ipso = pointFrom(atom, angle, length)
   const points = CHAIR.map(([lx, ly]) => {
-    const localY = ly * turn
+    const localY = ly * turn * scale
+    const localX = lx * scale
     return {
-      x: ipso.x + lx * cos + localY * sin,
-      y: ipso.y - lx * sin + localY * cos,
+      x: ipso.x + localX * cos + localY * sin,
+      y: ipso.y - localX * sin + localY * cos,
     }
   })
   const built = buildRing(
@@ -434,20 +468,20 @@ export function fuseChairAt(
   return { mol: built.mol, far: built.ids[3] ?? a.id }
 }
 
-export function chainPoints(origin: Point, axis: number, count: number): Point[] {
+export function chainPoints(origin: Point, axis: number, count: number, length = BOND_LENGTH): Point[] {
   const points = [origin]
   let cursor = origin
   for (let index = 0; index < count; index++) {
     const angle = axis + (index % 2 === 0 ? 1 : -1) * (Math.PI / 6)
-    cursor = pointFrom(cursor, angle, BOND_LENGTH)
+    cursor = pointFrom(cursor, angle, length)
     points.push(cursor)
   }
   return points
 }
 
-export function chainCount(distance: number): number {
-  const step = BOND_LENGTH * Math.cos(Math.PI / 6)
-  if (distance < BOND_LENGTH * 0.45) return 1
+export function chainCount(distance: number, length = BOND_LENGTH): number {
+  const step = length * Math.cos(Math.PI / 6)
+  if (distance < length * 0.45) return 1
   return Math.max(1, Math.round(distance / step))
 }
 
@@ -554,8 +588,8 @@ export function fusionTarget(mol: Molecule, point: Point, kind: RingKind, radius
 }
 
 /** How far from a bond the pointer still counts as fusing a ring of this size. */
-export function fuseReach(size: number): number {
-  const apothem = BOND_LENGTH / (2 * Math.tan(Math.PI / size))
+export function fuseReach(size: number, length = BOND_LENGTH): number {
+  const apothem = length / (2 * Math.tan(Math.PI / size))
   return apothem + 4
 }
 

@@ -34,6 +34,7 @@ export {
 export { nearestAtom, nearestBond } from "./molecule/snap.ts"
 export {
   attachChairAt,
+  bondLengthAt,
   attachRing,
   attachRingAt,
   chainCount,

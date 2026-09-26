@@ -1,6 +1,10 @@
 export type BondOrder = 1 | 2 | 3
 
-export type BondStereo = "none" | "up" | "down" | "either" | "dashed" | "bold" | "shadow"
+/** Chemical stereo, written to MOL files. A wedge starts at `a`. */
+export type BondStereo = "none" | "up" | "down" | "either"
+
+/** How a plain single bond is drawn. Carries no chemistry and is never exported. */
+export type BondLook = "bold" | "dashed" | "shadow"
 
 export type BondEmphasis = "bold" | "dashed"
 
@@ -24,6 +28,8 @@ export type Bond = {
   b: number
   order: BondOrder
   stereo: BondStereo
+  /** Only on a single bond with no stereo. */
+  look?: BondLook
   /** Belongs to a benzene ring. Double bonds are assigned across the whole aromatic piece. */
   aromatic?: boolean
   /** Second stroke of a double bond: thicker, or dashed. */
@@ -54,7 +60,7 @@ export type Drawing = {
 
 export type Point = { x: number; y: number }
 
-export type BondStyle = { order: BondOrder; stereo: BondStereo; emphasis?: BondEmphasis }
+export type BondStyle = { order: BondOrder; stereo: BondStereo; look?: BondLook; emphasis?: BondEmphasis }
 
 export type RingKind =
   | "benzene"

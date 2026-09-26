@@ -16,6 +16,7 @@ export function kekulizeAromatic(mol: Molecule): Molecule {
     if (!bond.aromatic) continue
     bond.order = 1
     bond.stereo = "none"
+    bond.look = undefined
   }
   for (const bonds of aromaticComponents(next)) {
     const doubles = matchDoubles(next, bonds)

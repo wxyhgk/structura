@@ -1,4 +1,9 @@
-import type { Atom, Bond, BondStyle, Molecule, Point, Selection } from "../types.ts"
+import type { Atom, Bond, BondLook, BondStyle, Molecule, Point, Selection } from "../types.ts"
+
+/** A look only survives on a plain single bond. */
+function lookFor(style: BondStyle): BondLook | undefined {
+  return style.order === 1 && style.stereo === "none" ? style.look : undefined
+}
 
 export function emptyMolecule(): Molecule {
   return { atoms: [], bonds: [], nextAtomId: 1, nextBondId: 1 }
@@ -71,6 +76,7 @@ export function addBond(
     if (!bond) return null
     bond.order = style.order
     bond.stereo = style.order === 1 ? style.stereo : "none"
+    bond.look = lookFor(style)
     // A wedge starts at `a`, so redrawing one follows the direction it was drawn in.
     if (bond.stereo !== "none") {
       bond.a = a
@@ -86,6 +92,7 @@ export function addBond(
     b,
     order: style.order,
     stereo: style.order === 1 ? style.stereo : "none",
+    ...(lookFor(style) ? { look: lookFor(style) } : {}),
   })
   return { mol: next, id }
 }
@@ -93,7 +100,7 @@ export function addBond(
 export function paintBond(mol: Molecule, bondId: number, style: BondStyle): Molecule {
   const bond = bondById(mol, bondId)
   if (!bond) return mol
-  if (style.order === 1 && style.stereo === "none" && bond.stereo === "none") {
+  if (style.order === 1 && style.stereo === "none" && !style.look && bond.stereo === "none" && !bond.look) {
     const order = bond.order === 1 ? 2 : bond.order === 2 ? 3 : 1
     return addBond(mol, bond.a, bond.b, { order, stereo: "none" })?.mol ?? mol
   }
@@ -106,7 +113,10 @@ export function setBondOrder(mol: Molecule, bondIds: number[], order: 1 | 2 | 3)
   for (const bond of next.bonds) {
     if (!wanted.has(bond.id)) continue
     bond.order = order
-    if (order !== 1) bond.stereo = "none"
+    if (order !== 1) {
+      bond.stereo = "none"
+      bond.look = undefined
+    }
     if (order !== 2) bond.emphasis = undefined
   }
   return next
@@ -317,6 +327,7 @@ export function setBondLook(mol: Molecule, bondId: number, style: BondStyle): Mo
   if (!bond) return mol
   bond.order = style.order
   bond.stereo = style.order === 1 ? style.stereo : "none"
+  bond.look = lookFor(style)
   bond.emphasis = style.order === 2 ? style.emphasis : undefined
   bond.aromatic = undefined
   return next

@@ -63,7 +63,7 @@ test("wedges are written with their MDL stereo codes and start at a", () => {
   const center = mol.atoms[0].id
   mol = sprout(mol, center, { order: 1, stereo: "down" })
   mol = sprout(mol, center, { order: 1, stereo: "either" })
-  mol = sprout(mol, center, { order: 1, stereo: "bold" })
+  mol = sprout(mol, center, { order: 1, stereo: "none", look: "bold" })
   const bonds = toMolfile(mol)
     .split("\n")
     .filter((line) => /^\s+\d+\s+\d+\s+\d\s+\d+  0  0  0$/.test(line))

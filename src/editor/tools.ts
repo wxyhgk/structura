@@ -26,9 +26,9 @@ export function toolLabel(tool: ToolId, bond: BondStyle, ring: RingKind, el: str
   if (tool === "charge-minus") return "负电荷"
   if (tool === "atom") return el
   if (tool === "ring") return RING_KINDS.find((item) => item.kind === ring)?.label ?? "环"
-  return BOND_STYLES.find((item) => item.style.order === bond.order && item.style.stereo === bond.stereo)?.label ?? "单键"
+  return BOND_STYLES.find((item) => sameStyle(item.style, bond))?.label ?? "单键"
 }
 
 export function sameStyle(a: BondStyle, b: BondStyle): boolean {
-  return a.order === b.order && a.stereo === b.stereo && a.emphasis === b.emphasis
+  return a.order === b.order && a.stereo === b.stereo && a.look === b.look && a.emphasis === b.emphasis
 }

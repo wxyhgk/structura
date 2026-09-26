@@ -40,13 +40,13 @@ function bondStyleFor(key: string): BondStyle | null {
     case "W":
       return { order: 1, stereo: "down" }
     case "H":
-      return { order: 1, stereo: "shadow" }
+      return { order: 1, stereo: "none", look: "shadow" }
     case "b":
-      return { order: 1, stereo: "bold" }
+      return { order: 1, stereo: "none", look: "bold" }
     case "B":
       return { order: 2, stereo: "none", emphasis: "bold" }
     case "d":
-      return { order: 1, stereo: "dashed" }
+      return { order: 1, stereo: "none", look: "dashed" }
     case "D":
       return { order: 2, stereo: "none", emphasis: "dashed" }
     case "y":

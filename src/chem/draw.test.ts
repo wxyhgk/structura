@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { buildScene, type DrawLine } from "./draw.ts"
-import { addAtom, addBond, emptyMolecule } from "./molecule.ts"
+import { addAtom, addBond, emptyMolecule, paintBond, setBondLook, setBondOrder } from "./molecule.ts"
 
 function lineDistance(point: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }) {
   const dx = b.x - a.x
@@ -58,10 +58,35 @@ test("bold, dashed, and shadow bonds produce their strokes", () => {
   mol = first.mol
   const second = addAtom(mol, "C", 40, 0)
   mol = second.mol
-  mol = addBond(mol, first.id, second.id, { order: 1, stereo: "bold" })!.mol
+  mol = addBond(mol, first.id, second.id, { order: 1, stereo: "none", look: "bold" })!.mol
   assert.ok(buildScene(mol, false).figures.some((figure) => figure.kind === "line" && figure.width > 3))
-  mol = addBond(mol, first.id, second.id, { order: 1, stereo: "dashed" })!.mol
+  mol = addBond(mol, first.id, second.id, { order: 1, stereo: "none", look: "dashed" })!.mol
   assert.ok(buildScene(mol, false).figures.some((figure) => figure.kind === "line" && figure.dash === "5 4"))
-  mol = addBond(mol, first.id, second.id, { order: 1, stereo: "shadow" })!.mol
+  mol = addBond(mol, first.id, second.id, { order: 1, stereo: "none", look: "shadow" })!.mol
   assert.ok(buildScene(mol, false).figures.filter((figure) => figure.kind === "line").length >= 5)
+})
+
+test("a drawing look and chemical stereo never sit on the same bond", () => {
+  let mol = emptyMolecule()
+  const first = addAtom(mol, "C", 0, 0)
+  mol = first.mol
+  const second = addAtom(mol, "C", 40, 0)
+  mol = second.mol
+  mol = addBond(mol, first.id, second.id, { order: 1, stereo: "none", look: "bold" })!.mol
+  assert.equal(mol.bonds[0].look, "bold")
+
+  const wedged = addBond(mol, first.id, second.id, { order: 1, stereo: "up" })!.mol
+  assert.equal(wedged.bonds[0].stereo, "up")
+  assert.equal(wedged.bonds[0].look, undefined)
+
+  const doubled = setBondOrder(mol, [mol.bonds[0].id], 2)
+  assert.equal(doubled.bonds[0].look, undefined)
+
+  const plain = paintBond(mol, mol.bonds[0].id, { order: 1, stereo: "none" })
+  assert.equal(plain.bonds[0].order, 1)
+  assert.equal(plain.bonds[0].look, undefined)
+
+  const looked = setBondLook(mol, mol.bonds[0].id, { order: 1, stereo: "down", look: "dashed" })
+  assert.equal(looked.bonds[0].stereo, "down")
+  assert.equal(looked.bonds[0].look, undefined)
 })

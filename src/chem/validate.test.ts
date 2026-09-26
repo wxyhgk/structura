@@ -63,6 +63,9 @@ test("broken invariants are reported as errors with the ids involved", () => {
 
   const wedged = { ...mol, bonds: [{ ...bond, order: 2 as const, stereo: "up" as const }] }
   assert.deepEqual(codes(validate(wedged)), ["stereo-on-multiple-bond"])
+
+  const boldWedge = { ...mol, bonds: [{ ...bond, stereo: "up" as const, look: "bold" as const }] }
+  assert.deepEqual(codes(validate(boldWedge)), ["look-on-special-bond"])
 })
 
 test("an overfilled atom is only a warning", () => {

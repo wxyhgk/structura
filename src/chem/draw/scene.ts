@@ -28,7 +28,7 @@ export function buildScene(mol: Molecule, colorHetero: boolean): Scene {
       ...bondFigures(
         a,
         b,
-        { order: bond.order, stereo: bond.stereo, emphasis: bond.emphasis },
+        { order: bond.order, stereo: bond.stereo, look: bond.look, emphasis: bond.emphasis },
         elementColor(a.el, colorHetero),
         elementColor(b.el, colorHetero),
         toward,

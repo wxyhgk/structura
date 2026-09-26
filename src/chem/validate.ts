@@ -9,6 +9,7 @@ export type ProblemCode =
   | "self-bond"
   | "duplicate-bond"
   | "stereo-on-multiple-bond"
+  | "look-on-special-bond"
   | "valence"
 
 /**
@@ -95,6 +96,14 @@ export function validate(mol: Molecule): Problem[] {
         severity: "error",
         bonds: [bond.id],
         message: `bond #${bond.id} has order ${bond.order} and stereo "${bond.stereo}"`,
+      })
+    }
+    if (bond.look && (bond.order !== 1 || bond.stereo !== "none")) {
+      problems.push({
+        code: "look-on-special-bond",
+        severity: "error",
+        bonds: [bond.id],
+        message: `bond #${bond.id} has look "${bond.look}" but is not a plain single bond`,
       })
     }
   }

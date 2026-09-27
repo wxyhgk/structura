@@ -65,23 +65,21 @@ export function useShortcuts(editor: EditorState, canvas: RefObject<CanvasHandle
   }, [editor, canvas, commands])
 
   useEffect(() => {
-    // The page itself is never text to select. ⌘A is stopped before anything else sees
-    // it, even while a menu is open, and any page selection that slips through is dropped.
+    // The page itself is never text to select. ⌘A is stopped before anything else sees it,
+    // even while a menu is open, and a select-all from anywhere else (the Edit menu, an
+    // extension) is cancelled at selectstart. Text fields and dialog text stay selectable.
     const stopSelectAll = (event: KeyboardEvent) => {
       if (matches(event, { key: "a", meta: true }) && !inTextField(event)) event.preventDefault()
     }
-    const dropPageSelection = () => {
-      const selection = document.getSelection()
-      if (!selection || selection.isCollapsed) return
-      const anchor = selection.anchorNode instanceof Element ? selection.anchorNode : selection.anchorNode?.parentElement
-      if (anchor?.closest("input, textarea, [contenteditable=true], [data-slot=dialog-content]")) return
-      selection.removeAllRanges()
+    const stopPageSelection = (event: Event) => {
+      const target = event.target instanceof Element ? event.target : (event.target as Node | null)?.parentElement
+      if (!target?.closest("input, textarea, [contenteditable=true], [data-slot=dialog-content]")) event.preventDefault()
     }
     window.addEventListener("keydown", stopSelectAll, true)
-    document.addEventListener("selectionchange", dropPageSelection)
+    document.addEventListener("selectstart", stopPageSelection)
     return () => {
       window.removeEventListener("keydown", stopSelectAll, true)
-      document.removeEventListener("selectionchange", dropPageSelection)
+      document.removeEventListener("selectstart", stopPageSelection)
     }
-  }, [editor, canvas, commands])
+  }, [])
 }

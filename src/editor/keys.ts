@@ -1,10 +1,13 @@
+const OPEN_OVERLAY = "[data-slot=dialog-content][data-state=open], [data-slot=dropdown-menu-content][data-state=open]"
+
 /**
  * True when a key belongs to something other than the drawing: typing in a field, or a
  * dialog or menu that is open. Editor and canvas shortcuts both check this first.
  */
 export function editorKeysBlocked(event: Event): boolean {
   if (inTextField(event)) return true
-  return document.querySelector("[data-slot=dialog-content], [data-slot=dropdown-menu-content]") != null
+  // A menu still fading out after it closed no longer owns the keys.
+  return document.querySelector(OPEN_OVERLAY) != null
 }
 
 /** True when the key goes to a text field, where the browser's own editing keys belong. */

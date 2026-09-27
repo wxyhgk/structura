@@ -1,3 +1,4 @@
+const OVERLAY = "[data-slot=dialog-content], [data-slot=dropdown-menu-content]"
 const OPEN_OVERLAY = "[data-slot=dialog-content][data-state=open], [data-slot=dropdown-menu-content][data-state=open]"
 
 /**
@@ -6,6 +7,10 @@ const OPEN_OVERLAY = "[data-slot=dialog-content][data-state=open], [data-slot=dr
  */
 export function editorKeysBlocked(event: Event): boolean {
   if (inTextField(event)) return true
+  // A key pressed inside an open menu or dialog is its own, and so is the Escape that
+  // closes one (by the time it bubbles here the menu already reads as closed).
+  const overlay = event.target instanceof Element ? event.target.closest(OVERLAY) : null
+  if (overlay && (overlay.getAttribute("data-state") === "open" || (event as KeyboardEvent).key === "Escape")) return true
   // A menu still fading out after it closed no longer owns the keys.
   return document.querySelector(OPEN_OVERLAY) != null
 }

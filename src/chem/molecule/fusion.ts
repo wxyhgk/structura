@@ -1,4 +1,5 @@
 import { RING_SIZE } from "../constants.ts"
+import { hydrogenCount } from "../formula.ts"
 import { dist, sideOfLine } from "../geometry.ts"
 import type { Bond, Molecule, Point, RingKind } from "../types.ts"
 import { atomById, bondBetween, bondById, bondOrderSum, cycleAround } from "./graph.ts"
@@ -51,8 +52,8 @@ function planFusion(
   for (const [id, count] of extra) {
     const atom = atomById(mol, id)
     if (!atom) return null
-    const room = atom.el === "C" ? 4 - Math.abs(atom.charge) : 8
-    if (bondOrderSum(mol, id) + count > room) return null
+    // The same valence rules as the formula, so a fused ring never overfills an atom.
+    if (hydrogenCount(atom.el, atom.charge, bondOrderSum(mol, id) + count).error) return null
   }
   return { points, reuse }
 }

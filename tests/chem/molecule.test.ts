@@ -10,6 +10,8 @@ import {
   atomById,
   attachRingAt,
   bondBetween,
+  bumpCharge,
+  setElement,
   neighbors,
   bondOrderSum,
   growRing,
@@ -298,4 +300,20 @@ test("lookups by id and between atoms follow every edit", () => {
   assert.equal(atomById(filling, 99), undefined)
   filling.atoms.push({ id: 99, el: "N", x: 0, y: 40, charge: 0 })
   assert.equal(atomById(filling, 99)?.el, "N")
+})
+
+test("a fused ring never overfills a heteroatom at the ring junction", () => {
+  const ring = placeRing(emptyMolecule(), { x: 0, y: 0 }, "cyclohexane")
+  const decalin = fuseRingAt(ring, ring.bonds[0].id, "cyclohexane", 1).mol
+  const degreeOf = (mol: typeof decalin, id: number) => neighbors(mol, id).length
+  const junction = decalin.atoms.find((atom) => degreeOf(decalin, atom.id) === 3)!
+  const edge = decalin.bonds.find(
+    (bond) => (bond.a === junction.id || bond.b === junction.id) && degreeOf(decalin, bond.a === junction.id ? bond.b : bond.a) === 2,
+  )!
+  assert.ok(edge)
+  assert.notEqual(fuseRingAt(decalin, edge.id, "cyclopropane", 1).mol, decalin, "a carbon takes a fourth bond")
+  const amine = setElement(decalin, [junction.id], "N")
+  assert.equal(fuseRingAt(amine, edge.id, "cyclopropane", 1).mol, amine, "a neutral nitrogen does not")
+  const ammonium = bumpCharge(amine, [junction.id], 1)
+  assert.notEqual(fuseRingAt(ammonium, edge.id, "cyclopropane", 1).mol, ammonium, "an ammonium nitrogen does")
 })

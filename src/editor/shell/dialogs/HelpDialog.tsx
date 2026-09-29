@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ATOM_KEYS, BOND_KEYS } from "@/chem/hotkeys"
+import { ATOM_KEYS, BOND_KEYS } from "@/editor/hotkeys/lookup"
 import { MOD } from "@/editor/browser"
 import { allCommands, type Commands } from "@/editor/hooks/useCommands"
 import { keyLabel } from "@/editor/input/keymap"

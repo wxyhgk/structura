@@ -8,6 +8,7 @@ import { hoverOf } from "@/editor/canvas/targeting"
 import type { CanvasHandle, EditorSlice, Gesture, PointerHost, Preview } from "@/editor/canvas/types"
 import { useHotspot } from "@/editor/canvas/useHotspot"
 import { useViewport } from "@/editor/canvas/useViewport"
+import { hotkeyOps } from "@/editor/hotkeys/lookup"
 import { keyOf } from "@/editor/input/keymap"
 import { runOps } from "@/editor/ops"
 
@@ -82,10 +83,12 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
       setLabelEdit({ id: atom.id, initial: atom.alias ?? (atom.el === "C" ? "" : atom.el) })
       return true
     }
-    const on = hot.type === "atom" ? { atom: hot.id } : { bond: hot.id }
-    // A key that does nothing here is not an edit; let it fall through to the tool keys.
-    const result = runOps(mol, [{ op: "hotkey", ...on, key }], props.commit, { quiet: true })
-    if (!result) return false
+    // A key that means nothing here falls through to the tool keys. One that means something
+    // but cannot apply (no room for the ring) is still used up, so it never switches tools.
+    const ops = hotkeyOps(mol, hot, key)
+    if (!ops) return false
+    const result = runOps(mol, ops, props.commit, { quiet: true })
+    if (!result) return true
     molRef.current = result.mol
     if (result.next) hotspot.remember(result.next, result.mol)
     return true

@@ -1,11 +1,9 @@
 import { angleTo } from "../geometry.ts"
-import { groupOrAlias } from "./abbreviate.ts"
-import { atomById, bumpCharge, neighbors, setElement, setIsotope } from "./graph.ts"
+import { atomById, bumpCharge, neighbors, setElement } from "./graph.ts"
 import { branchAngles, sproutAngle } from "./angles.ts"
 import { attachChairAt } from "./chair.ts"
 import { sproutAt } from "./place.ts"
-import { growRing } from "./rings.ts"
-import type { Molecule, RingKind } from "../types.ts"
+import type { Molecule } from "../types.ts"
 import { DOUBLE, HASH, SINGLE, WEDGE } from "../constants.ts"
 import { atomNext, degree, inRing, type HotResult } from "./grow.ts"
 
@@ -22,16 +20,6 @@ function addCarbonyl(mol: Molecule, id: number): HotResult {
   const oxo = sproutAt(mol, id, Math.PI / 2, DOUBLE, "O")
   const methyl = sproutAt(oxo.mol, id, angle, SINGLE, "C")
   return atomNext(methyl.mol, methyl.id)
-}
-
-export function addPhenyl(mol: Molecule, id: number): HotResult {
-  const ring = growRing(mol, id, "benzene")
-  return atomNext(ring.mol, ring.far)
-}
-
-export function addRing(mol: Molecule, id: number, kind: RingKind): HotResult {
-  const ring = growRing(mol, id, kind)
-  return atomNext(ring.mol, ring.far)
 }
 
 function addChair(mol: Molecule, id: number, turn: 1 | -1): HotResult {
@@ -112,20 +100,6 @@ function addMagnesiumBromide(mol: Molecule, id: number): HotResult {
   const metal = headAt(mol, id, "Mg")
   const bromine = sproutAt(metal.mol, metal.id, sproutAngle(metal.mol, metal.id), SINGLE, "Br")
   return atomNext(bromine.mol, metal.id)
-}
-
-export function become(mol: Molecule, id: number, el: string): HotResult {
-  return atomNext(setElement(mol, [id], el), id)
-}
-
-export function isotopeOf(mol: Molecule, id: number, el: string, isotope: number): HotResult {
-  return atomNext(setIsotope(setElement(mol, [id], el), [id], isotope), id)
-}
-
-/** Puts the named abbreviation on the atom, or just its label when there is no template. */
-export function nick(mol: Molecule, id: number, label: string): HotResult {
-  const placed = groupOrAlias(mol, id, label)
-  return atomNext(placed.mol, placed.id)
 }
 
 /**

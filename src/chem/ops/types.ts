@@ -55,7 +55,6 @@ export type Op =
   /** A named group built from an atom: nitro, tert-butyl, carbonyl… (see molecule/recipes.ts). */
   | { op: "add_recipe"; to: Ref; name: RecipeName; as?: string }
   | { op: "label"; atom: Ref; text: string }
-  | { op: "hotkey"; atom?: Ref; bond?: BondRef; key: string; as?: string }
   | { op: "duplicate"; atoms: Ref[] }
   | { op: "move"; atoms: Ref[]; dx: number; dy: number }
   | { op: "rotate"; atoms: Ref[]; angle: number; center?: Point }

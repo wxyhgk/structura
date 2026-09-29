@@ -1,5 +1,4 @@
 import { RING_SHAPES, ringKindFor } from "../constants.ts"
-import { applyHotkey } from "../hotkeys.ts"
 import { setAtomLabel } from "../label.ts"
 import {
   addAtom,
@@ -150,14 +149,6 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       const id = ctx.atom(op.atom)
       const next = setAtomLabel(mol, id, op.text)
       return { mol: next, next: atomById(next, id) ? { type: "atom", id } : null }
-    }
-    case "hotkey": {
-      if ((op.atom == null) === (op.bond == null)) throw new OpError("give either an atom or a bond for the key")
-      const target: HotTarget = op.atom != null ? { type: "atom", id: ctx.atom(op.atom) } : { type: "bond", id: ctx.bond(op.bond!) }
-      const result = applyHotkey(mol, target, op.key)
-      if (!result) throw new OpError(`the key "${op.key}" does nothing on this ${target.type}`)
-      if (result.next.type === "atom") ctx.name(op.as, result.next.id)
-      return { mol: result.mol, next: result.next }
     }
     case "duplicate": {
       const copy = duplicateAtoms(mol, op.atoms.map(ctx.atom))

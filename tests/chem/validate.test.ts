@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { addReactionArrow, emptyDrawing } from "../../src/chem/drawing.ts"
-import { applyHotkey } from "../../src/chem/hotkeys.ts"
 import { setAtomLabel } from "../../src/chem/label.ts"
 import {
   attachRingAt,
@@ -10,17 +9,20 @@ import {
   deleteSelection,
   emptyMolecule,
   flipAtoms,
+  fuseChairAt,
   fuseRingAt,
   growRing,
   placeRing,
   rotateAtoms,
+  setBondLook,
   setBondOrder,
   setElement,
   spiroRing,
   sprout,
   tumbleAtoms,
 } from "../../src/chem/molecule.ts"
-import type { Molecule, RingKind } from "../../src/chem/types.ts"
+import { RECIPES, type RecipeName } from "../../src/chem/molecule/recipes.ts"
+import type { BondStyle, Molecule, RingKind } from "../../src/chem/types.ts"
 import { errorsOf, validate, validateDrawing, type Problem } from "../../src/chem/validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
@@ -98,8 +100,16 @@ function random(seed: number) {
   }
 }
 
-const ATOM_KEYS = ["0", "1", "2", "3", "a", "4", "5", "6", "7", "8", "9", "z", "Z", "v", "u", "k", "K", "j", "J", "o", "q", "O", "n", "N", "s", "S", "f", "F", "l", "C", "b", "i", "h", "d", "L", "m", "M", "H", "y", "Q", "+", "-"]
-const BOND_KEYS = ["2", "3", "4", "5", "6", "7", "8", "9", "0", "w", "W", "h", "H", "b", "B", "d", "D", "y"]
+const RECIPE_NAMES = Object.keys(RECIPES) as RecipeName[]
+const LOOKS: BondStyle[] = [
+  { order: 2, stereo: "none" },
+  { order: 3, stereo: "none" },
+  { order: 1, stereo: "up" },
+  { order: 1, stereo: "either" },
+  { order: 1, stereo: "none", look: "bold" },
+  { order: 1, stereo: "none", look: "shadow" },
+  { order: 2, stereo: "none", emphasis: "dashed" },
+]
 const RINGS: RingKind[] = ["benzene", "cyclohexane", "cyclopentane", "cyclobutane", "cyclopropane", "cycloheptane"]
 const LABELS = ["N", "O", "Cl", "Me", "Ph", "Boc", "D", "Xyz", "", "Ac", "Ts", "TBS", "CO2Me", "NO2", "SO2", "CF3", "13C"]
 
@@ -118,13 +128,13 @@ test("random edits never break an invariant", () => {
         mol = ethane()
         label = "restart"
       } else if (roll < 0.35) {
-        const key = pick(ATOM_KEYS)
-        mol = applyHotkey(mol, { type: "atom", id: atom.id }, key)?.mol ?? mol
-        label = `atom #${atom.id} key ${key}`
+        const name = pick(RECIPE_NAMES)
+        mol = RECIPES[name](mol, atom.id).mol
+        label = `atom #${atom.id} recipe ${name}`
       } else if (roll < 0.5 && bond) {
-        const key = pick(BOND_KEYS)
-        mol = applyHotkey(mol, { type: "bond", id: bond.id }, key)?.mol ?? mol
-        label = `bond #${bond.id} key ${key}`
+        const chair = next() < 0.3
+        mol = chair ? fuseChairAt(mol, bond.id, next() < 0.5 ? 1 : -1).mol : setBondLook(mol, bond.id, pick(LOOKS))
+        label = `bond #${bond.id} ${chair ? "chair" : "look"}`
       } else if (roll < 0.58) {
         mol = sprout(mol, atom.id, SINGLE, pick(["C", "N", "O"]))
         label = `sprout #${atom.id}`

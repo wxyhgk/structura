@@ -44,7 +44,6 @@ const isLayout = (path: string) =>
     "molecule/grow",
   ].some((prefix) => path.startsWith(prefix))
 const isDraw = (path: string) => path === "draw.ts" || path.startsWith("draw/")
-const isHotkeys = (path: string) => path === "hotkeys.ts" || path.startsWith("hotkeys/")
 
 test("the import scan actually sees imports", () => {
   const structure = imports.find(({ file }) => file === "ops/structure.ts")
@@ -60,14 +59,10 @@ test("nothing below the renderer imports it", () => {
   assert.deepEqual(violations((file) => !isDraw(file), isDraw), [])
 })
 
-test("chemistry and file exchange never reach for layout, rendering or hotkeys", () => {
+test("chemistry and file exchange never reach for layout or rendering", () => {
   const pure = (file: string) =>
     ["formula.ts", "validate.ts", "molfile.ts", "sdf.ts", "import.ts", "molecule/kekule.ts", "molecule/graph.ts"].includes(file)
-  assert.deepEqual(violations(pure, (target) => isLayout(target) || isDraw(target) || isHotkeys(target)), [])
-})
-
-test("layout does not depend on hotkeys", () => {
-  assert.deepEqual(violations(isLayout, isHotkeys), [])
+  assert.deepEqual(violations(pure, (target) => isLayout(target) || isDraw(target)), [])
 })
 
 /** Every file reachable from `file` through imports, not counting `file` itself. */
@@ -90,23 +85,19 @@ test("chemistry, file exchange and history do not reach layout even through a ba
   const pure = ["formula.ts", "validate.ts", "molfile.ts", "sdf.ts", "import.ts", "drawing.ts", "history.ts", "molecule/kekule.ts", "molecule/graph.ts"]
   const leaks = pure.flatMap((file) =>
     [...reachable(file)]
-      .filter((target) => isLayout(target) || isDraw(target) || isHotkeys(target) || isTemplates(target))
+      .filter((target) => isLayout(target) || isDraw(target) || isTemplates(target))
       .map((target) => `${file} ⇒ ${target}`),
   )
   assert.deepEqual(leaks, [])
 })
 
-test("rendering does not reach layout or hotkeys even through a barrel", () => {
+test("rendering does not reach layout even through a barrel", () => {
   const leaks = imports
     .filter(({ file }) => isDraw(file))
     .flatMap(({ file }) =>
-      [...reachable(file)].filter((target) => isLayout(target) || isHotkeys(target) || isTemplates(target)).map((target) => `${file} ⇒ ${target}`),
+      [...reachable(file)].filter((target) => isLayout(target) || isTemplates(target)).map((target) => `${file} ⇒ ${target}`),
     )
   assert.deepEqual(leaks, [])
-})
-
-test("only the hotkey op reaches the hotkey tables", () => {
-  assert.deepEqual(violations((file) => !isHotkeys(file) && file !== "ops/structure.ts", isHotkeys), [])
 })
 
 test("no two chem files import each other, even through others or only for types", () => {

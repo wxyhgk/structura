@@ -8,9 +8,8 @@ import {
 import { addReactionArrow, emptyDrawing } from "@/chem/drawing"
 import { emptyHistory, historyReducer, type History } from "@/chem/history"
 import { toMolfile } from "@/chem/molfile"
-import { hasHotkey } from "@/chem/hotkeys"
-import type { Op } from "@/chem/ops"
 import { ROTATE_STEP } from "@/editor/canvas/view"
+import { selectionHotkeyOps, selectionTips } from "@/editor/hotkeys/lookup"
 import { runOps } from "@/editor/ops"
 import {
   atomIdsOfSelection,
@@ -157,23 +156,19 @@ export function useEditor(initial: Molecule[] = []) {
   )
 
   /**
-   * A hover key pressed with a selection acts on every selected atom, or on every selected
-   * bond when no atoms are selected, as one edit. The selection then follows the new tips,
-   * so pressing 1 again grows every chain once more. False if the key means nothing there.
+   * A hover key pressed with a selection acts on the whole selection as one edit. The
+   * selection then follows the new tips, so pressing 1 again grows every chain once more.
+   * False if the key means nothing there.
    */
   const hotkeySelection = useCallback(
     (key: string): boolean => {
-      const onAtoms = selection.atoms.length > 0
-      const ids = onAtoms ? selection.atoms : selection.bonds
-      if (ids.length === 0 || !hasHotkey(onAtoms ? "atom" : "bond", key)) return false
-      const ops: Op[] = ids.map((id, index) =>
-        onAtoms ? { op: "hotkey", atom: id, key, as: `tip${index}` } : { op: "hotkey", bond: id, key },
-      )
+      const ops = selectionHotkeyOps(mol, selection, key)
+      if (!ops) return false
       const result = runOps(mol, ops, commit, { keepSelection: true })
-      if (!result || !onAtoms) return true
-      const tips = ids.map((_, index) => result.names[`tip${index}`])
+      if (!result || selection.atoms.length === 0) return true
+      const tips = selectionTips(selection.atoms, result.names)
       // Keys that change an atom in place (O, +, Me…) keep the selection as it was.
-      if (tips.some((tip, index) => tip !== ids[index])) setSelection(selectionFromAtoms(result.mol, [...new Set(tips)]))
+      if (tips.some((tip, index) => tip !== selection.atoms[index])) setSelection(selectionFromAtoms(result.mol, [...new Set(tips)]))
       return true
     },
     [commit, mol, selection],

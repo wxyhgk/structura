@@ -1,7 +1,5 @@
-import { sproutAngle } from "./angles.ts"
 import { neighbors } from "./graph.ts"
-import { sproutAt } from "./place.ts"
-import type { BondStyle, HotTarget, Molecule } from "../types.ts"
+import type { HotTarget, Molecule } from "../types.ts"
 
 export type HotResult = { mol: Molecule; next: HotTarget }
 
@@ -30,9 +28,4 @@ export function inRing(mol: Molecule, id: number): boolean {
     }
   }
   return false
-}
-
-export function extend(mol: Molecule, id: number, style: BondStyle, el = "C"): HotResult {
-  const grown = sproutAt(mol, id, sproutAngle(mol, id), style, el)
-  return atomNext(grown.mol, grown.id)
 }

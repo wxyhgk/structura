@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { ATOM_KEYS, BOND_KEYS } from "../../../src/chem/hotkeys.ts"
+import { ATOM_KEYS, BOND_KEYS } from "../../../src/editor/hotkeys/lookup.ts"
 import { describeAtomAction, describeBondAction, hotkeyLabel } from "../../../src/editor/tools/describe.ts"
 
 test("every hover key has a description", () => {

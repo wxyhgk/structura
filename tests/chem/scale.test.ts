@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { BOND_LENGTH } from "../../src/chem/constants.ts"
 import { dist } from "../../src/chem/geometry.ts"
-import { applyHotkey } from "../../src/chem/hotkeys.ts"
 import {
   addAtom,
   addBond,
@@ -18,6 +17,7 @@ import {
   scaleAtoms,
   sprout,
 } from "../../src/chem/molecule.ts"
+import { RECIPES } from "../../src/chem/molecule/recipes.ts"
 import { templateFor } from "../../src/chem/templates.ts"
 import type { Molecule } from "../../src/chem/types.ts"
 
@@ -63,7 +63,7 @@ test("everything added to a scaled structure matches its bonds", () => {
   const chairNormal = newBonds(normal, attachChairAt(normal, normal.atoms[2].id, 1).mol).sort((a, b) => a - b)
   chairBig.forEach((length, index) => assert.ok(Math.abs(length - 2 * chairNormal[index]) < 0.5, `chair bond ${index}`))
   allNear(newBonds(big, insertGroup(big, end, templateFor("Ph")!)!.mol), 80, "phenyl group")
-  allNear(newBonds(big, applyHotkey(big, { type: "atom", id: end }, "K")!.mol), 80, "tert-butyl key")
+  allNear(newBonds(big, RECIPES["tert-butyl"](big, end).mol), 80, "tert-butyl")
   const chain = chainPoints({ x: 0, y: 0 }, 0, 3, 80)
   for (let index = 1; index < chain.length; index++) assert.ok(Math.abs(dist(chain[index - 1], chain[index]) - 80) < 0.01)
 })

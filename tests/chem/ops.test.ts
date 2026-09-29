@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { plainFormula } from "../../src/chem/formula.ts"
-import { applyHotkey } from "../../src/chem/hotkeys.ts"
 import { addAtom, atomById, bondById, createBondAt, emptyMolecule, neighbors } from "../../src/chem/molecule.ts"
 import { applyOps, type Op } from "../../src/chem/ops.ts"
 import type { Molecule } from "../../src/chem/types.ts"
@@ -55,7 +54,6 @@ test("mistakes are reported instead of guessed at", () => {
     [[{ op: "add_ring", atom: 1, size: 9 }], /no ring of size 9/],
     [[{ op: "add_ring", atom: 1, size: 5, aromatic: true }], /six-membered/],
     [[{ op: "add_group", to: 1, name: "Zzz" }], /not a known abbreviation/],
-    [[{ op: "hotkey", atom: 1, key: "§" }], /does nothing/],
   ]
   for (const [ops, message] of cases) {
     const result = applyOps(start, ops)
@@ -78,16 +76,6 @@ test("rings, groups and labels go through the same code as the editor", () => {
 
   const labelled = ok(start, [{ op: "label", atom: 2, text: "OMe" }])
   assert.equal(plainFormula(labelled.mol), "C2H6O")
-})
-
-test("a hotkey op gives exactly what pressing the key gives", () => {
-  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
-  for (const key of ["1", "2", "6", "K", "N", "a"]) {
-    const direct = applyHotkey(start, { type: "atom", id: 2 }, key)
-    const viaOps = ok(start, [{ op: "hotkey", atom: 2, key }])
-    assert.deepEqual(viaOps.mol, direct?.mol, key)
-    assert.deepEqual(viaOps.next, direct?.next, key)
-  }
 })
 
 test("a wedge named by its atoms starts at the first one", () => {
@@ -145,7 +133,7 @@ test("random batches either apply cleanly or change nothing", () => {
           case 7:
             return { op: "add_group", to: ref(), name: pick(["Me", "Ph", "Boc", "OMe", "NO2", "SO2"]) }
           case 8:
-            return { op: "hotkey", atom: ref(), key: pick(["1", "2", "9", "K", "o", "N", "6"]) }
+            return { op: "add_recipe", to: ref(), name: pick(["carbonyl", "fork", "tert-butyl", "nitro", "chair"] as const) }
           default:
             return { op: "rotate", atoms: mol.atoms.map((atom) => atom.id), angle: next() }
         }
@@ -254,31 +242,11 @@ test("a ring can be named by kind, which also reaches cyclopentene", () => {
   assert.equal(applyOps(start, [{ op: "add_ring", bond: 1 }]).ok, false, "size or kind is required")
 })
 
-test("named recipes build the same groups as their hover keys", () => {
+test("an unknown recipe is named with the ones there are", () => {
   const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
-  const pairs: Array<[string, string]> = [["nitro", "N"], ["tert-butyl", "K"], ["carbonyl", "2"], ["trifluoromethyl", "F"], ["chair", "j"]]
-  for (const [name, key] of pairs) {
-    const byName = ok(start, [{ op: "add_recipe", to: 2, name: name as never }])
-    const byKey = ok(start, [{ op: "hotkey", atom: 2, key }])
-    assert.equal(plainFormula(byName.mol), plainFormula(byKey.mol), name)
-  }
   const bad = applyOps(start, [{ op: "add_recipe", to: 2, name: "unobtainium" as never }])
   assert.equal(bad.ok, false)
   if (!bad.ok) assert.match(bad.error, /not a known recipe.*nitro/)
-})
-
-test("one key on several atoms is one edit and names every new tip", () => {
-  const mol = createBondAt(emptyMolecule(), { x: 0, y: 0 }, { order: 1, stereo: "none" })
-  const [a, b] = mol.atoms.map((atom) => atom.id)
-  const result = applyOps(mol, [
-    { op: "hotkey", atom: a, key: "x", as: "tip0" },
-    { op: "hotkey", atom: b, key: "x", as: "tip1" },
-  ])
-  assert.ok(result.ok)
-  assert.equal(plainFormula(result.mol), "C4H10")
-  assert.notEqual(result.names.tip0, a)
-  assert.notEqual(result.names.tip1, b)
-  assert.ok(atomById(result.mol, result.names.tip0) && atomById(result.mol, result.names.tip1))
 })
 
 test("add_atom can wedge its bond and aim it", () => {

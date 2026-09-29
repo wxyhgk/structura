@@ -1,4 +1,4 @@
-import type { AtomAction, BondAction } from "@/chem/hotkeys"
+import type { AtomAction, BondAction } from "@/editor/hotkeys/lookup"
 import type { BondStyle } from "@/chem/types"
 import { BOND_STYLES, RING_NAMES, sameStyle } from "@/editor/tools/catalog"
 

@@ -3,7 +3,6 @@ import test from "node:test"
 import { buildScene } from "../../src/chem/draw.ts"
 import { elementMass } from "../../src/chem/elements/index.ts"
 import { molecularWeight, plainFormula } from "../../src/chem/formula.ts"
-import { applyHotkey } from "../../src/chem/hotkeys.ts"
 import { setAtomLabel } from "../../src/chem/label.ts"
 import { addAtom, atomById, createBondAt, emptyMolecule, setElement, sprout } from "../../src/chem/molecule.ts"
 import { toMolfile } from "../../src/chem/molfile.ts"
@@ -30,14 +29,6 @@ test("D is hydrogen with mass number 2, written CH3D and weighed exactly", () =>
   assert.equal(plainFormula(deuterated), "CH3D")
   const extra = molecularWeight(deuterated) - molecularWeight(mol)
   assert.ok(Math.abs(extra - (2.014102 - elementMass("H"))) < 1e-9)
-})
-
-test("the d hotkey makes deuterium instead of a label", () => {
-  const { mol, hydrogen } = methaneWithH()
-  const step = applyHotkey(mol, { type: "atom", id: hydrogen }, "d")
-  assert.ok(step)
-  assert.equal(atomById(step.mol, hydrogen)?.isotope, 2)
-  assert.equal(plainFormula(step.mol), "CH3D")
 })
 
 test("a mass number in front of a symbol sets the isotope", () => {

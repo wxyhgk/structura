@@ -1,6 +1,7 @@
 import { BOND_LENGTH } from "../constants.ts"
 import type { Molecule } from "../types.ts"
-import { emptyMolecule, spliceIn } from "./graph.ts"
+import { emptyMolecule, spliceIn, subMolecule } from "./graph.ts"
+import { bondLengthAt } from "./measure.ts"
 
 /** Offsets that put each molecule left to right, two bond lengths apart, centred on y = 0. */
 function rowOffsets(molecules: Molecule[]): Array<{ dx: number; dy: number } | null> {
@@ -42,4 +43,16 @@ export function placeBeside(existing: Molecule, molecules: Molecule[]): Molecule
     if (offset) merged = spliceIn(merged, molecules[index], offset.dx + right + BOND_LENGTH * 2, offset.dy + middle).mol
   })
   return merged
+}
+
+/**
+ * Copies the given atoms (and the bonds and groups among them) to the right of where
+ * they are, two bond lengths clear, with fresh ids. Returns the copy's atom ids.
+ */
+export function duplicateAtoms(mol: Molecule, atomIds: number[]): { mol: Molecule; ids: number[] } {
+  const piece = subMolecule(mol, atomIds)
+  if (piece.atoms.length === 0) return { mol, ids: [] }
+  const xs = piece.atoms.map((atom) => atom.x)
+  const dx = Math.max(...xs) - Math.min(...xs) + bondLengthAt(mol, piece.atoms[0].id) * 2
+  return spliceIn(mol, piece, dx, 0)
 }

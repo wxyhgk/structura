@@ -31,7 +31,18 @@ function violations(from: (file: string) => boolean, banned: (target: string) =>
 }
 
 const isLayout = (path: string) =>
-  ["molecule/place", "molecule/snap", "molecule/abbreviate", "molecule/recipes", "molecule/grow"].some((prefix) => path.startsWith(prefix))
+  [
+    "molecule/angles",
+    "molecule/place",
+    "molecule/rings",
+    "molecule/fusion",
+    "molecule/chair",
+    "molecule/pointer",
+    "molecule/snap",
+    "molecule/abbreviate",
+    "molecule/recipes",
+    "molecule/grow",
+  ].some((prefix) => path.startsWith(prefix))
 const isDraw = (path: string) => path === "draw.ts" || path.startsWith("draw/")
 const isHotkeys = (path: string) => path === "hotkeys.ts" || path.startsWith("hotkeys/")
 

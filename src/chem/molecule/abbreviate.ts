@@ -13,7 +13,9 @@ import {
   setElement,
   setIsotope,
 } from "./graph.ts"
-import { bondLengthAt, sproutAngle, sproutAt } from "./place.ts"
+import { sproutAngle } from "./angles.ts"
+import { bondLengthAt } from "./measure.ts"
+import { sproutAt } from "./place.ts"
 import { BOND_LENGTH, SINGLE } from "../constants.ts"
 
 function rotate(point: Point, angle: number): Point {

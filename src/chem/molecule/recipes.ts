@@ -1,10 +1,13 @@
 import { angleTo } from "../geometry.ts"
 import { insertGroup } from "./abbreviate.ts"
 import { atomById, bumpCharge, neighbors, setAlias, setElement, setIsotope } from "./graph.ts"
-import { attachChairAt, growRing, sproutAngle, sproutAt } from "./place.ts"
+import { branchAngles, sproutAngle } from "./angles.ts"
+import { attachChairAt } from "./chair.ts"
+import { sproutAt } from "./place.ts"
+import { growRing } from "./rings.ts"
 import { templateFor } from "../templates.ts"
 import type { Molecule, RingKind } from "../types.ts"
-import { atomNext, branchAngles, degree, HASH, inRing, SINGLE, DOUBLE, WEDGE, type HotResult } from "./grow.ts"
+import { atomNext, degree, HASH, inRing, SINGLE, DOUBLE, WEDGE, type HotResult } from "./grow.ts"
 
 function addCarbonyl(mol: Molecule, id: number): HotResult {
   if (degree(mol, id) >= 2 && inRing(mol, id)) {

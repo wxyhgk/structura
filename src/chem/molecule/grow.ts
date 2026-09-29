@@ -1,6 +1,6 @@
-import { angleTo } from "../geometry.ts"
-import { atomById, neighbors } from "./graph.ts"
-import { sproutAngle, sproutAt } from "./place.ts"
+import { sproutAngle } from "./angles.ts"
+import { neighbors } from "./graph.ts"
+import { sproutAt } from "./place.ts"
 import type { BondStyle, HotTarget, Molecule } from "../types.ts"
 
 export const SINGLE: BondStyle = { order: 1, stereo: "none" }
@@ -41,29 +41,4 @@ export function inRing(mol: Molecule, id: number): boolean {
 export function extend(mol: Molecule, id: number, style: BondStyle, el = "C"): HotResult {
   const grown = sproutAt(mol, id, sproutAngle(mol, id), style, el)
   return atomNext(grown.mol, grown.id)
-}
-
-export function branchAngles(mol: Molecule, id: number): [number, number] {
-  const atom = atomById(mol, id)
-  const bonded = neighbors(mol, id)
-  if (!atom || bonded.length === 0) return [Math.PI / 3, -Math.PI / 3]
-  if (bonded.length === 1) {
-    const away = angleTo(atom, bonded[0])
-    return [away + (2 * Math.PI) / 3, away - (2 * Math.PI) / 3]
-  }
-  const angles = bonded.map((item) => angleTo(atom, item)).sort((a, b) => a - b)
-  let bestGap = -1
-  let start = 0
-  for (let index = 0; index < angles.length; index++) {
-    const from = angles[index]
-    const to = angles[(index + 1) % angles.length] + (index === angles.length - 1 ? Math.PI * 2 : 0)
-    const gap = to - from
-    if (gap > bestGap) {
-      bestGap = gap
-      start = from
-    }
-  }
-  const spread = Math.min(Math.PI / 3, Math.max(0.35, (bestGap - 0.5) / 2))
-  const mid = start + bestGap / 2
-  return [mid - spread, mid + spread]
 }

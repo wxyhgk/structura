@@ -41,8 +41,7 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       const style = { order: op.order ?? 1, stereo: "none" as const }
       if (op.to != null) {
         const from = ctx.atom(op.to)
-        // An agent asking for a new atom gets one; joining a nearby atom is a drawing convenience.
-        const grown = sproutAt(mol, from, sproutAngle(mol, from), style, op.el, 0, 0)
+        const grown = sproutAt(mol, from, sproutAngle(mol, from), style, op.el)
         if (grown.id === from) throw new OpError(`could not grow from atom #${from}`)
         ctx.name(op.as, grown.id)
         return { mol: grown.mol, next: { type: "atom", id: grown.id } }

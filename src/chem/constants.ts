@@ -2,7 +2,7 @@ import type { RingKind } from "./types.ts"
 
 export const BOND_LENGTH = 40
 
-/** Clicking an atom, and a sprout tip landing on one. */
+/** Clicking an atom, and a clicked bond's tip landing on one (scaled with the drawing). */
 export const ATOM_HIT = 12
 
 /** Clicking a bond. */
@@ -13,10 +13,10 @@ export const HOVER_ATOM = 18
 
 export const HOVER_BOND = 11
 
-/** Dragging a bond end onto an existing atom. */
+/** Dragging a bond end onto an existing atom (scaled with the drawing). */
 export const SNAP_ATOM = 16
 
-/** Chain tool joining a vertex to an existing atom. */
+/** Chain tool joining a vertex to an existing atom (scaled with the drawing). */
 export const SNAP_CHAIN = 10
 
 export const LABEL_SIZE = 15

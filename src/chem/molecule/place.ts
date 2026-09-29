@@ -35,6 +35,14 @@ export function bondLengthAt(mol: Molecule, atomId?: number): number {
   return median(bondLengths(mol)) ?? BOND_LENGTH
 }
 
+/**
+ * A pointer snap radius, given in pixels at the default bond length, scaled to the
+ * drawing so a zoomed-out or scaled-up structure snaps just as readily.
+ */
+export function snapRadius(mol: Molecule, pixels: number, atomId?: number): number {
+  return (pixels * bondLengthAt(mol, atomId)) / BOND_LENGTH
+}
+
 export function sproutAngle(mol: Molecule, atomId: number): number {
   const atom = atomById(mol, atomId)
   if (!atom) return 0
@@ -79,8 +87,9 @@ export function createBondAt(mol: Molecule, origin: Point, style: BondStyle, el 
   return addBond(second.mol, first.id, second.id, style)?.mol ?? second.mol
 }
 
+/** A bond drawn by clicking an atom: the tip joins an atom it lands on, as the pointer tools do. */
 export function sprout(mol: Molecule, atomId: number, style: BondStyle, el = "C"): Molecule {
-  return sproutAt(mol, atomId, sproutAngle(mol, atomId), style, el).mol
+  return sproutAt(mol, atomId, sproutAngle(mol, atomId), style, el, 0, snapRadius(mol, ATOM_HIT, atomId)).mol
 }
 
 export function sproutAt(
@@ -90,8 +99,12 @@ export function sproutAt(
   style: BondStyle,
   el = "C",
   charge = 0,
-  /** How close an existing atom must be to be joined instead of adding a new one; 0 always adds. */
-  snap = ATOM_HIT,
+  /**
+   * How close an existing atom must be to be joined instead of adding a new one. 0, the
+   * default, always adds: only pointer gestures join, so recipes and agents never close a
+   * ring by accident.
+   */
+  snap = 0,
 ): { mol: Molecule; id: number } {
   const atom = atomById(mol, atomId)
   if (!atom) return { mol, id: atomId }
@@ -114,9 +127,9 @@ export function connectPoints(
   style: BondStyle,
   el = "C",
 ): Molecule {
-  const target = nearestAtom(mol, end, SNAP_ATOM, fromId ?? undefined)
+  const target = nearestAtom(mol, end, snapRadius(mol, SNAP_ATOM), fromId ?? undefined)
   if (fromId == null) {
-    const startNear = nearestAtom(mol, origin, ATOM_HIT)
+    const startNear = nearestAtom(mol, origin, snapRadius(mol, ATOM_HIT))
     const start = startNear ? { mol, id: startNear.id } : addAtom(mol, el, origin.x, origin.y)
     if (target && target.id !== start.id) {
       return addBond(start.mol, start.id, target.id, style)?.mol ?? start.mol
@@ -130,7 +143,7 @@ export function connectPoints(
 }
 
 export function placeAtom(mol: Molecule, el: string, point: Point): Molecule {
-  const near = nearestAtom(mol, point, ATOM_HIT)
+  const near = nearestAtom(mol, point, snapRadius(mol, ATOM_HIT))
   if (near) return setElement(mol, [near.id], el)
   return addAtom(mol, el, point.x, point.y).mol
 }
@@ -459,8 +472,9 @@ export function commitChain(mol: Molecule, points: Point[], fromId: number | nul
   let next = mol
   let previous = fromId
   const start = fromId == null ? 0 : 1
+  const radius = snapRadius(mol, SNAP_CHAIN)
   for (let index = start; index < points.length; index++) {
-    const near = nearestAtom(next, points[index], SNAP_CHAIN, previous ?? undefined)
+    const near = nearestAtom(next, points[index], radius, previous ?? undefined)
     let id: number
     if (near && near.id !== previous) {
       id = near.id

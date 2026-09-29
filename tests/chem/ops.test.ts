@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { plainFormula } from "../../src/chem/formula.ts"
 import { applyHotkey } from "../../src/chem/hotkeys.ts"
-import { addAtom, atomById, bondById, createBondAt, emptyMolecule } from "../../src/chem/molecule.ts"
+import { addAtom, atomById, bondById, createBondAt, emptyMolecule, neighbors } from "../../src/chem/molecule.ts"
 import { applyOps, type Op } from "../../src/chem/ops.ts"
 import type { Molecule } from "../../src/chem/types.ts"
 import { validate } from "../../src/chem/validate.ts"
@@ -173,6 +173,29 @@ test("add_atom always adds the atom it was asked for, even next to another atom"
   assert.equal(atomById(result.mol, result.names.n)?.el, "N")
   assert.ok(result.names.n >= crowded.nextAtomId, "a new atom, not the O that was already there")
   assert.deepEqual(result.added.atoms, [result.names.n])
+})
+
+test("a recipe never bonds to an unrelated atom sitting where it builds", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const spot = ok(start, [{ op: "add_atom", el: "C", to: 2, as: "probe" }])
+  const probe = atomById(spot.mol, spot.names.probe)!
+  const stray = addAtom(start, "O", probe.x + 3, probe.y + 3)
+  const result = ok(stray.mol, [{ op: "add_recipe", to: 2, name: "azide" }])
+  assert.equal(neighbors(result.mol, stray.id).length, 0, "the stray O stays unbonded")
+  assert.equal(result.added.atoms.length, 3)
+  assert.equal(plainFormula(result.mol), "C2H7N3O", "ethyl azide next to a lone water")
+})
+
+test("clicking an atom joins the atom its new bond lands on, at any drawing scale", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const big = ok(start, [{ op: "scale", atoms: [1, 2], sx: 2, sy: 2, center: { x: 0, y: 0 } }]).mol
+  const tip = ok(big, [{ op: "add_atom", el: "C", to: 2, as: "tip" }])
+  const where = atomById(tip.mol, tip.names.tip)!
+  // 20 px off is beyond the 12 px click radius, but within it once scaled to 80 px bonds.
+  const near = addAtom(big, "C", where.x + 20, where.y)
+  const clicked = ok(near.mol, [{ op: "draw_bond", from: 2 }])
+  assert.deepEqual(clicked.added.atoms, [])
+  assert.equal(neighbors(clicked.mol, near.id).length, 1)
 })
 
 test("the result lists exactly the atoms and bonds a batch created", () => {

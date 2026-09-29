@@ -190,6 +190,13 @@ export function useEditor(initial: Molecule[] = []) {
     [commit, mol, selection],
   )
 
+  /** Tidies the selected atoms, or the whole drawing when nothing is selected; the selection stays. */
+  const cleanSelection = useCallback(() => {
+    if (mol.atoms.length === 0) return
+    const ids = atomIdsOfSelection(mol, selection)
+    runOps(mol, [ids.length > 0 ? { op: "clean", atoms: ids } : { op: "clean" }], commit, { keepSelection: true })
+  }, [commit, mol, selection])
+
   /** Replaces the drawing with an opened file's molecules, as one undoable step. */
   const openMolecules = useCallback((molecules: Molecule[]) => {
     dispatch({ type: "open", molecules })
@@ -255,6 +262,7 @@ export function useEditor(initial: Molecule[] = []) {
     selectionHotspot,
     hotkeySelection,
     flipSelection,
+    cleanSelection,
     newDocument,
     openMolecules,
     appendMolecules,

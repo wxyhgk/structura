@@ -99,6 +99,11 @@ export function useCommands({
     rotateHalf: command("旋转 180°", () => editor.rotateSelection(Math.PI), { enabled: editor.canTransform }),
     flipHorizontal: command("水平翻转", () => editor.flipSelection("horizontal"), { enabled: editor.canTransform }),
     flipVertical: command("垂直翻转", () => editor.flipSelection("vertical"), { enabled: editor.canTransform }),
+    // ChemDraw's Clean Up Structure key.
+    clean: command(selected ? "整理选中部分" : "整理结构", editor.cleanSelection, {
+      keys: [{ key: "k", meta: true, shift: true }],
+      enabled: editor.mol.atoms.length > 0,
+    }),
     nudge: perArrow((direction, key) =>
       command("移动 10 像素", () => editor.nudgeSelection(direction), { keys: [{ key, shift: true }], enabled: selected }),
     ),

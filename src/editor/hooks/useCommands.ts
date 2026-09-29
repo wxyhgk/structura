@@ -5,6 +5,7 @@ import { toMolfile } from "@/chem/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { ROTATE_STEP, ZOOM_STEP } from "@/editor/canvas/view"
+import type { Viewport } from "@/editor/canvas/viewport"
 import { keyLabel, type KeyMatch } from "@/editor/input/keymap"
 import type { EditorState } from "@/editor/useEditor"
 
@@ -52,12 +53,14 @@ type Arrow = Lowercase<(typeof arrows)[number]>
 export function useCommands({
   editor,
   canvas,
+  viewport,
   clipboard,
   openFileDialog,
   openSmilesDialog,
 }: {
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
+  viewport: Viewport
   clipboard: { copy: () => void; cut: () => void }
   openFileDialog: () => void
   openSmilesDialog: () => void
@@ -122,9 +125,9 @@ export function useCommands({
       },
       { keys: [{ key: "Enter" }], when: () => !canvas.current?.hotspot() && editor.selectionHotspot() != null },
     ),
-    zoomIn: command("放大", () => canvas.current?.zoomBy(ZOOM_STEP), { keys: [{ key: "=", meta: true }, { key: "+", meta: true }] }),
-    zoomOut: command("缩小", () => canvas.current?.zoomBy(1 / ZOOM_STEP), { keys: [{ key: "-", meta: true }] }),
-    actualSize: command("实际大小", () => canvas.current?.resetView(), { keys: [{ key: "0", meta: true }] }),
+    zoomIn: command("放大", () => viewport.zoomBy(ZOOM_STEP), { keys: [{ key: "=", meta: true }, { key: "+", meta: true }] }),
+    zoomOut: command("缩小", () => viewport.zoomBy(1 / ZOOM_STEP), { keys: [{ key: "-", meta: true }] }),
+    actualSize: command("实际大小", () => viewport.reset(), { keys: [{ key: "0", meta: true }] }),
     help: command("快捷键", () => editor.setHelpOpen(true)),
   }
 }

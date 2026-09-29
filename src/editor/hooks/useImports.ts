@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, type RefObject } from "react"
+import { useEffect, useRef, useState } from "react"
 import { usableRecords } from "@/chem/import"
 import { emptyMolecule } from "@/chem/molecule"
 import { readMolfile, readSdf, type MolRecord } from "@/chem/sdf"
 import type { Molecule } from "@/chem/types"
 import { failure } from "@/editor/browser"
-import type { CanvasHandle } from "@/editor/canvas/types"
+import { drawingPoints, type Viewport } from "@/editor/canvas/viewport"
 import { importNotes, type ImportNotes } from "@/editor/imports/notes"
 import { loadRDKit } from "@/editor/rdkit"
 import type { EditorState } from "@/editor/useEditor"
@@ -16,7 +16,7 @@ const RDKIT_FAILED = "RDKit 加载失败，请检查网络后重试。"
  * Opening files, pasting molfile or SMILES text, and importing SMILES: all go through
  * usableRecords, land as one undoable step, and report problems through `notes`.
  */
-export function useImports(editor: EditorState, canvas: RefObject<CanvasHandle | null>) {
+export function useImports(editor: EditorState, viewport: Viewport) {
   const [notes, setNotes] = useState<ImportNotes | null>(null)
   /** Set when an import lands, so the view fits the drawing once it has rendered. */
   const fitAfterImport = useRef(false)
@@ -24,8 +24,8 @@ export function useImports(editor: EditorState, canvas: RefObject<CanvasHandle |
   useEffect(() => {
     if (!fitAfterImport.current) return
     fitAfterImport.current = false
-    canvas.current?.fitContent(editor.mol)
-  }, [canvas, editor.mol])
+    viewport.fit(drawingPoints(editor.mol, editor.arrows))
+  }, [viewport, editor.mol, editor.arrows])
 
   /** Adds molecules to the right of the drawing, as one undoable step. */
   function addBeside(molecules: Molecule[]) {

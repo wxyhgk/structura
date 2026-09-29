@@ -4,10 +4,6 @@ import { atomById, atomIdsOfSelection, bondLengthAt, nearestAtom, nearestBond } 
 import type { Molecule, Point, Selection } from "@/chem/types"
 import type { HoverTarget } from "./types.ts"
 
-export function clampZoom(value: number): number {
-  return Math.min(4, Math.max(0.25, value))
-}
-
 export function hitOf(mol: Molecule, point: Point, zoom: number) {
   const atom = nearestAtom(mol, point, ATOM_HIT / zoom)
   if (atom) return { type: "atom" as const, id: atom.id }

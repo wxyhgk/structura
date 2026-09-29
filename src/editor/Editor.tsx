@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react"
-import { Canvas } from "@/editor/Canvas"
+import { Canvas } from "@/editor/canvas/Canvas"
 import type { CanvasHandle } from "@/editor/canvas/types"
+import { useZoom } from "@/editor/canvas/useViewport"
+import { createViewport } from "@/editor/canvas/viewport"
 import { selectionClipboard } from "@/editor/clipboard"
 import { useCommands } from "@/editor/hooks/useCommands"
 import { useImports } from "@/editor/hooks/useImports"
@@ -21,14 +23,16 @@ export function Editor() {
   const editor = useEditor()
   const canvasRef = useRef<CanvasHandle>(null)
   const fileRef = useRef<HTMLInputElement>(null)
-  const [zoom, setZoom] = useState(1)
+  const [viewport] = useState(createViewport)
+  const zoom = useZoom(viewport)
   const [smilesOpen, setSmilesOpen] = useState(false)
 
-  const imports = useImports(editor, canvasRef)
+  const imports = useImports(editor, viewport)
   const clipboard = selectionClipboard(editor)
   const commands = useCommands({
     editor,
     canvas: canvasRef,
+    viewport,
     clipboard,
     openFileDialog: () => fileRef.current?.click(),
     openSmilesDialog: () => setSmilesOpen(true),
@@ -89,7 +93,7 @@ export function Editor() {
             colorHetero={editor.colorHetero}
             commit={editor.commit}
             setSelection={editor.setSelection}
-            onZoom={setZoom}
+            viewport={viewport}
           />
         </div>
 

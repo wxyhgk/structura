@@ -1,12 +1,9 @@
 import type { Arrow, BondStyle, Molecule, Point, RingKind, Selection, ToolId } from "@/chem/types"
+import type { Viewport } from "@/editor/canvas/viewport"
 
 export type CanvasHandle = {
   /** Hover hotkeys; returns whether the key was used. */
   handleKey: (event: KeyboardEvent) => boolean
-  zoomBy: (factor: number) => void
-  resetView: () => void
-  /** Zooms and pans so the whole drawing fits in view; pass a molecule not yet rendered. */
-  fitContent: (mol?: Molecule) => void
   /** Space went down: pointer drags pan until it is released. */
   holdSpace: () => void
   /** Space came up; a tap that did not pan selects the molecule under the hotspot. */
@@ -28,7 +25,7 @@ export type EditorSlice = {
   colorHetero: boolean
   commit: (mol: Molecule, keepSelection?: boolean) => void
   setSelection: (selection: Selection) => void
-  onZoom: (zoom: number) => void
+  viewport: Viewport
 }
 
 export type Gesture =

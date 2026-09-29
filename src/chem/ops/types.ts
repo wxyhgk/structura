@@ -1,4 +1,4 @@
-import type { BondLook, BondOrder, BondStereo, HotTarget, Molecule, Point, RingKind } from "../types.ts"
+import type { BondEmphasis, BondLook, BondOrder, BondStereo, HotTarget, Molecule, Point, RingKind } from "../types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
@@ -13,17 +13,31 @@ export type BondRef = number | { between: [Ref, Ref] }
  * takes coordinates for new atoms: the layout rules place them.
  */
 export type Op =
-  | { op: "add_atom"; el: string; to?: Ref; order?: BondOrder; as?: string }
+  /**
+   * With `to`, the new atom is bonded to that atom; `stereo` wedges a single bond from it,
+   * and `angle` (radians, counterclockwise from +x as drawn, so π/2 is straight up)
+   * replaces the direction the layout would pick.
+   */
+  | { op: "add_atom"; el: string; to?: Ref; order?: BondOrder; stereo?: BondStereo; angle?: number; as?: string }
   | { op: "add_bond"; a: Ref; b: Ref; order?: BondOrder; stereo?: BondStereo }
   | { op: "set_element"; atom: Ref; el: string }
   | { op: "set_charge"; atom: Ref; charge: number }
   | { op: "set_isotope"; atom: Ref; isotope: number | null }
-  | { op: "set_bond"; bond: BondRef; order?: BondOrder; stereo?: BondStereo; look?: BondLook | null }
+  /** `emphasis` is the bold or dashed second stroke of a double bond; null clears it. */
+  | {
+      op: "set_bond"
+      bond: BondRef
+      order?: BondOrder
+      stereo?: BondStereo
+      look?: BondLook | null
+      emphasis?: BondEmphasis | null
+    }
   | { op: "remove"; atoms?: Ref[]; bonds?: BondRef[] }
   /** On a bond, `side` picks which side the new ring grows on; leave it out to let the layout choose. */
   /**
    * Give one of atom, bond or at (a free spot on the canvas), and either size (plus aromatic
-   * for benzene) or kind, which also covers cyclopentene.
+   * for benzene) or kind, which also covers cyclopentene. `chair` draws cyclohexane as a
+   * chair on an atom or bond instead; -1 mirrors it.
    */
   | {
       op: "add_ring"
@@ -34,6 +48,7 @@ export type Op =
       aromatic?: boolean
       kind?: RingKind
       side?: 1 | -1
+      chair?: 1 | -1
       as?: string
     }
   | { op: "add_group"; to: Ref; name: string; as?: string }
@@ -62,7 +77,10 @@ export type OpsResult =
       names: Record<string, number>
       /** Warnings such as an overfilled atom. The edit still went through. */
       problems: Problem[]
-      /** Where the last hotkey-style op leaves the cursor, for chained key presses. */
+      /**
+       * Where the last op that aims at an atom or bond leaves the cursor, for chained key
+       * presses: the new tip, or the atom or bond it changed.
+       */
       next: HotTarget | null
       /** Atoms and bonds this batch created (ids are never reused, so this is exact). */
       added: { atoms: number[]; bonds: number[] }

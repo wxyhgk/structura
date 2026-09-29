@@ -280,3 +280,57 @@ test("one key on several atoms is one edit and names every new tip", () => {
   assert.notEqual(result.names.tip1, b)
   assert.ok(atomById(result.mol, result.names.tip0) && atomById(result.mol, result.names.tip1))
 })
+
+test("add_atom can wedge its bond and aim it", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const wedged = ok(start, [{ op: "add_atom", el: "C", to: 2, stereo: "up", as: "tip" }])
+  const bond = wedged.mol.bonds.at(-1)!
+  assert.deepEqual([bond.a, bond.b, bond.stereo], [2, wedged.names.tip, "up"], "the wedge starts at `to`")
+
+  const up = ok(start, [{ op: "add_atom", el: "C", to: 2, angle: Math.PI / 2, as: "tip" }])
+  const from = atomById(up.mol, 2)!
+  const tip = atomById(up.mol, up.names.tip)!
+  assert.ok(Math.abs(tip.x - from.x) < 1e-9 && tip.y < from.y - 39, "π/2 grows straight up the page")
+  assert.deepEqual(up.next, { type: "atom", id: up.names.tip })
+
+  assert.equal(applyOps(start, [{ op: "add_atom", el: "C", to: 2, order: 2, stereo: "up" }]).ok, false)
+  assert.equal(applyOps(start, [{ op: "add_atom", el: "C", angle: 1 }]).ok, false, "an angle needs `to`")
+})
+
+test("set_bond sets and clears the emphasised side of a double bond", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const dashed = ok(start, [{ op: "set_bond", bond: 1, order: 2, emphasis: "dashed" }])
+  assert.equal(bondById(dashed.mol, 1)?.emphasis, "dashed")
+  assert.equal(bondById(dashed.mol, 1)?.order, 2)
+  const kept = ok(dashed.mol, [{ op: "set_bond", bond: 1, order: 2 }])
+  assert.equal(bondById(kept.mol, 1)?.emphasis, "dashed", "left out, the emphasis stays")
+  const cleared = ok(dashed.mol, [{ op: "set_bond", bond: 1, emphasis: null }])
+  assert.equal(bondById(cleared.mol, 1)?.emphasis, undefined)
+  assert.equal(applyOps(start, [{ op: "set_bond", bond: 1, emphasis: "bold" }]).ok, false, "a single bond has no second stroke")
+})
+
+test("add_ring with chair folds a cyclohexane chair onto a bond or an atom", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const up = ok(start, [{ op: "add_ring", bond: 1, chair: 1, as: "far" }])
+  const down = ok(start, [{ op: "add_ring", bond: 1, chair: -1 }])
+  assert.equal(plainFormula(up.mol), "C6H12")
+  assert.deepEqual(up.next, { type: "atom", id: up.names.far })
+  const side = (mol: Molecule) => Math.sign(mol.atoms.reduce((sum, atom) => sum + atom.y, 0))
+  assert.equal(side(up.mol), -side(down.mol), "-1 mirrors it across the bond")
+
+  const onAtom = ok(start, [{ op: "add_ring", atom: 2, chair: -1 }])
+  const recipe = ok(start, [{ op: "add_recipe", to: 2, name: "chair-flipped" }])
+  assert.deepEqual(onAtom.mol, recipe.mol)
+  assert.deepEqual(onAtom.next, recipe.next)
+
+  assert.equal(applyOps(start, [{ op: "add_ring", bond: 1, chair: 1, kind: "benzene" }]).ok, false)
+  assert.equal(applyOps(start, [{ op: "add_ring", at: { x: 0, y: 0 }, chair: 1 }]).ok, false)
+})
+
+test("ops that change an atom or bond in place leave the cursor on it", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  assert.deepEqual(ok(start, [{ op: "set_element", atom: 2, el: "O" }]).next, { type: "atom", id: 2 })
+  assert.deepEqual(ok(start, [{ op: "set_charge", atom: 2, charge: 1 }]).next, { type: "atom", id: 2 })
+  assert.deepEqual(ok(start, [{ op: "set_isotope", atom: 2, isotope: 13 }]).next, { type: "atom", id: 2 })
+  assert.deepEqual(ok(start, [{ op: "set_bond", bond: 1, order: 2 }]).next, { type: "bond", id: 1 })
+})

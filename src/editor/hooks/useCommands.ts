@@ -5,7 +5,7 @@ import { toMolfile } from "@/chem/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { ROTATE_STEP, ZOOM_STEP } from "@/editor/canvas/view"
-import { keyLabel, type KeyMatch } from "@/editor/keymap"
+import { keyLabel, type KeyMatch } from "@/editor/input/keymap"
 import type { EditorState } from "@/editor/useEditor"
 
 /** One thing the user can do, however it is reached: menu, toolbar or keyboard. */

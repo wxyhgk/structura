@@ -1,10 +1,12 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { ImportNotes } from "@/editor/imports/notes"
+import { useOverlayMark } from "@/editor/input/overlays"
 
 export function ImportNotesDialog({ notes, onClose }: { notes: ImportNotes | null; onClose: () => void }) {
+  const overlayMark = useOverlayMark()
   return (
     <Dialog open={notes != null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent {...overlayMark} className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>导入提示</DialogTitle>
           <DialogDescription>{notes?.opened ? "文件已打开，但有些内容需要注意：" : "文件没有打开："}</DialogDescription>

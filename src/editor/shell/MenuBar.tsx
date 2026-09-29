@@ -10,14 +10,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { Command, Commands } from "@/editor/hooks/useCommands"
 import { LogoMark } from "@/editor/icons"
+import { useOverlayMark } from "@/editor/input/overlays"
 
 function MenuButton({ label, children }: { label: string; children: ReactNode }) {
+  const overlayMark = useOverlayMark()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="h-6 rounded-sm px-2 text-[13px] hover:bg-black/5 data-open:bg-black/5">
         {label}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-44">
+      <DropdownMenuContent {...overlayMark} align="start" className="min-w-44">
         {children}
       </DropdownMenuContent>
     </DropdownMenu>

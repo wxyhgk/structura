@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useOverlayMark } from "@/editor/input/overlays"
 
 const CATEGORY_BG: Record<ElementCategory, string> = {
   alkali: "#f8d0d4",
@@ -31,9 +32,10 @@ type PeriodicTableProps = {
 }
 
 export function PeriodicTable({ open, current, onOpenChange, onPick }: PeriodicTableProps) {
+  const overlayMark = useOverlayMark()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-auto max-w-[calc(100%-1.5rem)] sm:max-w-[40rem]">
+      <DialogContent {...overlayMark} className="w-auto max-w-[calc(100%-1.5rem)] sm:max-w-[40rem]">
         <DialogHeader>
           <DialogTitle>元素周期表</DialogTitle>
           <DialogDescription>点一个元素，再点原子可以替换，点空白处可以放下它。</DialogDescription>

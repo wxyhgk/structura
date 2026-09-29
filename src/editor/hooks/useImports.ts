@@ -5,7 +5,6 @@ import { readMolfile, readSdf, type MolRecord } from "@/chem/sdf"
 import type { Molecule } from "@/chem/types"
 import { failure } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
-import { editorKeysBlocked } from "@/editor/keys"
 import { importNotes, type ImportNotes } from "@/editor/imports/notes"
 import { loadRDKit } from "@/editor/rdkit"
 import type { EditorState } from "@/editor/useEditor"
@@ -74,37 +73,34 @@ export function useImports(editor: EditorState, canvas: RefObject<CanvasHandle |
     }
   }
 
-  useEffect(() => {
-    const onPaste = (event: ClipboardEvent) => {
-      if (editorKeysBlocked(event)) return
-      const text = event.clipboardData?.getData("text/plain") ?? ""
-      if (/^\s*M {2}END/m.test(text)) {
-        event.preventDefault()
-        try {
-          const records = readSdf(text)
-          const imported = usableRecords(records)
-          addBeside(imported.molecules)
-          const found = importNotes(records, imported.problems)
-          if (found.length > 0) setNotes({ opened: imported.molecules.length > 0, lines: found })
-        } catch (error) {
-          setNotes({ opened: false, lines: [`粘贴的内容无法读取：${failure(error)}`] })
-        }
-      } else if (looksLikeSmiles(text)) {
-        event.preventDefault()
-        void importSmiles(text)
-          .then(({ lines, skipped }) => lines.length > 0 && setNotes({ opened: skipped < smilesLines(text).length, lines }))
-          .catch(() => setNotes({ opened: false, lines: [RDKIT_FAILED] }))
+  /** Pasted molfile or SMILES text lands beside the drawing; other text is left alone. */
+  function paste(event: ClipboardEvent) {
+    const text = event.clipboardData?.getData("text/plain") ?? ""
+    if (/^\s*M {2}END/m.test(text)) {
+      event.preventDefault()
+      try {
+        const records = readSdf(text)
+        const imported = usableRecords(records)
+        addBeside(imported.molecules)
+        const found = importNotes(records, imported.problems)
+        if (found.length > 0) setNotes({ opened: imported.molecules.length > 0, lines: found })
+      } catch (error) {
+        setNotes({ opened: false, lines: [`粘贴的内容无法读取：${failure(error)}`] })
       }
+    } else if (looksLikeSmiles(text)) {
+      event.preventDefault()
+      void importSmiles(text)
+        .then(({ lines, skipped }) => lines.length > 0 && setNotes({ opened: skipped < smilesLines(text).length, lines }))
+        .catch(() => setNotes({ opened: false, lines: [RDKIT_FAILED] }))
     }
-    window.addEventListener("paste", onPaste)
-    return () => window.removeEventListener("paste", onPaste)
-  })
+  }
 
   return {
     notes,
     showNotes: setNotes,
     clearNotes: () => setNotes(null),
     openFile,
+    paste,
     importSmiles,
     rdkitFailed: RDKIT_FAILED,
   }

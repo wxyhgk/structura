@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { ELEMENTS } from "../../../src/chem/elements/index.ts"
-import { TOOL_KEYS, toolForKey } from "../../../src/editor/tools/keys.ts"
+import { TOOL_KEYS, toolForKey } from "../../../src/editor/tools/bindings.ts"
 
 function describe(key: string): string {
   const entry = toolForKey(key)

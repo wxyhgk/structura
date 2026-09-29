@@ -7,6 +7,10 @@ export type CanvasHandle = {
   resetView: () => void
   /** Zooms and pans so the whole drawing fits in view; pass a molecule not yet rendered. */
   fitContent: (mol?: Molecule) => void
+  /** Space went down: pointer drags pan until it is released. */
+  holdSpace: () => void
+  /** Space came up; a tap that did not pan selects the molecule under the hotspot. */
+  releaseSpace: () => void
   cancelGesture: () => void
   hasGesture: () => boolean
   hotspot: () => { type: "atom" | "bond"; id: number } | null

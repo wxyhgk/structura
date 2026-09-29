@@ -1,13 +1,12 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 import { runOps } from "@/editor/ops"
-import { editorKeysBlocked } from "@/editor/keys"
 import { atomById, componentOf, selectionFromAtoms } from "@/chem/molecule"
 import type { HotTarget, Molecule, Point } from "@/chem/types"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
 import { SceneView } from "@/editor/canvas/SceneView"
 import { clampZoom, hoverOf, sameHover } from "@/editor/canvas/targeting"
 import { ZOOM_STEP } from "@/editor/canvas/view"
-import { keyOf } from "@/editor/keymap"
+import { keyOf } from "@/editor/input/keymap"
 import type { CanvasHandle, EditorSlice, Gesture, HoverTarget, PointerHost, Preview } from "@/editor/canvas/types"
 
 export type { CanvasHandle } from "@/editor/canvas/types"
@@ -135,7 +134,6 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
    */
   function handleKey(event: KeyboardEvent): boolean {
     if (event.metaKey || event.ctrlKey || event.altKey) return false
-    if (editorKeysBlocked(event)) return false
     if (gesture.current.kind !== "idle") return false
     const mol = molRef.current
     const hot = activeHotspot(mol)
@@ -200,6 +198,22 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
       const cy = (Math.max(...ys) + Math.min(...ys)) / 2
       setView(nextZoom, { x: rect.width / 2 - cx * nextZoom, y: rect.height / 2 - cy * nextZoom })
     },
+    holdSpace() {
+      space.current = true
+      spaceDragged.current = false
+    },
+    releaseSpace() {
+      // Only a Space this canvas saw go down: a tap without a drag selects the molecule.
+      if (!space.current) return
+      space.current = false
+      setPanning(false)
+      if (spaceDragged.current) return
+      const hot = activeHotspot(molRef.current)
+      if (hot?.type !== "atom") return
+      propsRef.current.setSelection(selectionFromAtoms(molRef.current, componentOf(molRef.current, hot.id)))
+      pinRef.current = null
+      setHotspotId(null)
+    },
     cancelGesture,
     hasGesture: () => gesture.current.kind !== "idle",
     hotspot: () => activeHotspot(molRef.current),
@@ -241,35 +255,6 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     svg.addEventListener("wheel", onWheel, { passive: false })
     return () => svg.removeEventListener("wheel", onWheel)
   }, [])
-
-  useEffect(() => {
-    const down = (event: KeyboardEvent) => {
-      if (editorKeysBlocked(event)) return
-      if (event.code === "Space" && !event.repeat) {
-        space.current = true
-        spaceDragged.current = false
-        event.preventDefault()
-      }
-    }
-    const up = (event: KeyboardEvent) => {
-      if (event.code !== "Space") return
-      space.current = false
-      setPanning(false)
-      if (spaceDragged.current) return
-      const hot = activeHotspot(molRef.current)
-      if (hot?.type !== "atom") return
-      propsRef.current.setSelection(selectionFromAtoms(molRef.current, componentOf(molRef.current, hot.id)))
-      pinRef.current = null
-      setHotspotId(null)
-    }
-    window.addEventListener("keydown", down)
-    window.addEventListener("keyup", up)
-    return () => {
-      window.removeEventListener("keydown", down)
-      window.removeEventListener("keyup", up)
-    }
-  }, [])
-
 
   const shown = draft ?? props.mol
   const cursor = panning ? "grab" : handleCursor ?? (props.tool === "lasso" || props.tool === "marquee" ? "default" : "crosshair")

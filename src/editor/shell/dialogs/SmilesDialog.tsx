@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useOverlayMark } from "@/editor/input/overlays"
 
 /**
  * Typing or pasting SMILES, one per line. Lines that could not be used stay in the
@@ -19,6 +20,7 @@ export function SmilesDialog({
   onNotes: (lines: string[]) => void
   loadFailed: string
 }) {
+  const overlayMark = useOverlayMark()
   const [text, setText] = useState("")
   const [busy, setBusy] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
@@ -44,7 +46,7 @@ export function SmilesDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent {...overlayMark} className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>导入 SMILES</DialogTitle>
           <DialogDescription>每行一个 SMILES，后面可以跟名称。第一次使用会下载 RDKit（约 2.4 MB）。也可以直接在画布上粘贴。</DialogDescription>

@@ -2,9 +2,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ATOM_KEYS, BOND_KEYS } from "@/chem/hotkeys"
 import { MOD } from "@/editor/browser"
 import { allCommands, type Commands } from "@/editor/hooks/useCommands"
-import { keyLabel } from "@/editor/keymap"
-import { TOOL_KEYS } from "@/editor/tools/keys"
+import { keyLabel } from "@/editor/input/keymap"
+import { TOOL_KEYS } from "@/editor/tools/bindings"
 import { describeAtomAction, describeBondAction, hotkeyLabel } from "@/editor/hotkeys/describe"
+import { useOverlayMark } from "@/editor/input/overlays"
 
 function Shortcut({ keys, action }: { keys: string; action: string }) {
   return (
@@ -52,6 +53,7 @@ export function HelpDialog({
   onOpenChange: (open: boolean) => void
   commands: Commands
 }) {
+  const overlayMark = useOverlayMark()
   const toolRows = byAction(
     TOOL_KEYS.map((entry) => ({
       key: entry.key !== entry.key.toLowerCase() ? `⇧${entry.key}` : entry.key.toUpperCase(),
@@ -63,7 +65,7 @@ export function HelpDialog({
   )
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent {...overlayMark} className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>快捷键</DialogTitle>
           <DialogDescription>

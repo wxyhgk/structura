@@ -13,7 +13,7 @@ import {
   RingIcon,
 } from "@/editor/icons"
 import { BOND_STYLES, RING_KINDS, sameStyle } from "@/editor/tools/catalog"
-import { keysFor, withKeys } from "@/editor/tools/keys"
+import { keysFor, withKeys } from "@/editor/tools/bindings"
 import { ElementPalette } from "./ElementPalette.tsx"
 import { ToolButton } from "./ToolButton.tsx"
 import { ToolFlyout } from "./ToolFlyout.tsx"

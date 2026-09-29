@@ -10,4 +10,6 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+  // Agent worktrees live under .claude/; their edits must not reload this app's pages.
+  server: { watch: { ignored: ['**/.claude/**'] } },
 })

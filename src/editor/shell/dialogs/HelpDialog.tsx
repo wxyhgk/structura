@@ -4,7 +4,7 @@ import { MOD } from "@/editor/browser"
 import { allCommands, type Commands } from "@/editor/hooks/useCommands"
 import { keyLabel } from "@/editor/input/keymap"
 import { TOOL_KEYS } from "@/editor/tools/bindings"
-import { describeAtomAction, describeBondAction, hotkeyLabel } from "@/editor/hotkeys/describe"
+import { describeAtomAction, describeBondAction, hotkeyLabel } from "@/editor/tools/describe"
 import { useOverlayMark } from "@/editor/input/overlays"
 
 function Shortcut({ keys, action }: { keys: string; action: string }) {

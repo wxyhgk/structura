@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { elementColor, paletteElements } from "@/chem/elements/index"
 import type { ToolId } from "@/chem/types"
-import { PeriodicTable } from "@/editor/PeriodicTable"
+import { PeriodicTable } from "./PeriodicTable.tsx"
 import { ToolButton } from "./ToolButton.tsx"
 
 /** The common elements as buttons, plus the full periodic table in a dialog. */

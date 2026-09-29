@@ -17,7 +17,7 @@ const RDKIT_FAILED = "RDKit 加载失败，请检查网络后重试。"
  * Opening files, pasting molfile or SMILES text, and importing SMILES: all go through
  * usableRecords, land as one undoable step, and report problems through `notes`.
  */
-export function useImports(editor: EditorState, viewport: Viewport) {
+export function useImports(editor: Pick<EditorState, "mol" | "arrows" | "openMolecules" | "appendMolecules">, viewport: Viewport) {
   const [notes, setNotes] = useState<ImportNotes | null>(null)
   /** Set when an import lands, so the view fits the drawing once it has rendered. */
   const fitAfterImport = useRef(false)

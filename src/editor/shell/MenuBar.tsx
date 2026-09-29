@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { Command, Commands } from "@/editor/hooks/useCommands"
-import { LogoMark } from "@/editor/icons"
+import { LogoMark } from "@/editor/palette/icons"
 import { useOverlayMark } from "@/editor/input/overlays"
 
 function MenuButton({ label, children }: { label: string; children: ReactNode }) {

@@ -2,6 +2,9 @@ import type { ReactNode } from "react"
 import type { BondStyle, RingKind, ToolId } from "@/chem/types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { BOND_STYLES, RING_KINDS, sameStyle } from "@/editor/tools/catalog"
+import { keysFor, withKeys } from "@/editor/tools/bindings"
+import { ElementPalette } from "./ElementPalette.tsx"
 import {
   BondIcon,
   ChainIcon,
@@ -11,10 +14,7 @@ import {
   LassoIcon,
   MarqueeIcon,
   RingIcon,
-} from "@/editor/icons"
-import { BOND_STYLES, RING_KINDS, sameStyle } from "@/editor/tools/catalog"
-import { keysFor, withKeys } from "@/editor/tools/bindings"
-import { ElementPalette } from "./ElementPalette.tsx"
+} from "./icons.tsx"
 import { ToolButton } from "./ToolButton.tsx"
 import { ToolFlyout } from "./ToolFlyout.tsx"
 

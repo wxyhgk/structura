@@ -6,7 +6,7 @@ import {
   valenceErrorCount,
 } from "@/chem/formula"
 import { addReactionArrow, emptyDrawing } from "@/chem/drawing"
-import { emptyHistory, historyReducer } from "@/chem/history"
+import { emptyHistory, historyReducer, type History } from "@/chem/history"
 import { toMolfile } from "@/chem/molfile"
 import { hasHotkey } from "@/chem/hotkeys"
 import type { Op } from "@/chem/ops"
@@ -24,8 +24,13 @@ import {
 } from "@/chem/molecule"
 import type { BondStyle, Drawing, Molecule, RingKind, Selection, ToolId } from "@/chem/types"
 
-export function useEditor() {
-  const [history, dispatch] = useReducer(historyReducer, undefined, emptyHistory)
+/** A document that starts out holding these molecules, with nothing to undo. */
+function startHistory(molecules: Molecule[]): History {
+  return { ...historyReducer(emptyHistory(), { type: "open", molecules }), past: [] }
+}
+
+export function useEditor(initial: Molecule[] = []) {
+  const [history, dispatch] = useReducer(historyReducer, initial, startHistory)
   const [tool, setTool] = useState<ToolId>("bond")
   const [bondStyle, setBondStyle] = useState<BondStyle>({ order: 1, stereo: "none" })
   const [ringKind, setRingKind] = useState<RingKind>("benzene")

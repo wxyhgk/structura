@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react"
 import { usableRecords } from "@/chem/import"
 import { emptyMolecule } from "@/chem/molecule"
-import { readMolfile, readSdf, type MolRecord } from "@/chem/sdf"
+import { readMolfile, type MolRecord } from "@/chem/sdf"
 import type { Molecule } from "@/chem/types"
 import { failure } from "@/editor/browser"
 import { drawingPoints, type Viewport } from "@/editor/canvas/viewport"
 import { importNotes, type ImportNotes } from "@/editor/imports/notes"
+import { readMolText } from "@/editor/imports/read"
 import { loadRDKit } from "@/editor/rdkit"
 import type { EditorState } from "@/editor/useEditor"
 import { looksLikeSmiles, smilesLines, smilesToMolfile } from "@/rdkit/smiles"
@@ -55,19 +56,23 @@ export function useImports(editor: EditorState, viewport: Viewport) {
     return { lines: importNotes(records, imported.problems), skipped: imported.skipped }
   }
 
+  /**
+   * Replaces the drawing with the molecules in molfile or SD text, fitting them in view,
+   * and says what happened. Throws when the text cannot be read at all.
+   */
+  function openText(text: string): ImportNotes {
+    const { molecules, lines } = readMolText(text)
+    if (molecules.length === 0) return { opened: false, lines: lines.length > 0 ? lines : ["文件里没有可以读取的分子。"] }
+    fitAfterImport.current = true
+    editor.openMolecules(molecules)
+    return { opened: true, lines }
+  }
+
   /** Replaces the drawing with a file's molecules. */
   async function openFile(file: File) {
     try {
-      const records = readSdf(await file.text())
-      const imported = usableRecords(records)
-      const found = importNotes(records, imported.problems)
-      if (imported.molecules.length === 0) {
-        setNotes({ opened: false, lines: found.length > 0 ? found : ["文件里没有可以读取的分子。"] })
-        return
-      }
-      fitAfterImport.current = true
-      editor.openMolecules(imported.molecules)
-      if (found.length > 0) setNotes({ opened: true, lines: found })
+      const result = openText(await file.text())
+      if (result.lines.length > 0) setNotes(result)
     } catch (error) {
       setNotes({ opened: false, lines: [`读取文件失败：${failure(error)}`] })
     }
@@ -79,11 +84,9 @@ export function useImports(editor: EditorState, viewport: Viewport) {
     if (/^\s*M {2}END/m.test(text)) {
       event.preventDefault()
       try {
-        const records = readSdf(text)
-        const imported = usableRecords(records)
-        addBeside(imported.molecules)
-        const found = importNotes(records, imported.problems)
-        if (found.length > 0) setNotes({ opened: imported.molecules.length > 0, lines: found })
+        const { molecules, lines } = readMolText(text)
+        addBeside(molecules)
+        if (lines.length > 0) setNotes({ opened: molecules.length > 0, lines })
       } catch (error) {
         setNotes({ opened: false, lines: [`粘贴的内容无法读取：${failure(error)}`] })
       }
@@ -99,6 +102,7 @@ export function useImports(editor: EditorState, viewport: Viewport) {
     notes,
     showNotes: setNotes,
     clearNotes: () => setNotes(null),
+    openText,
     openFile,
     paste,
     importSmiles,

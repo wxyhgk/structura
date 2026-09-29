@@ -1,4 +1,4 @@
-import { useId, type RefObject } from "react"
+import { useId, useRef, type RefObject } from "react"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { editorKeysBlocked, inTextField, keepFocusOffToolbar } from "@/editor/input/guards"
 import { matches } from "@/editor/input/keymap"
@@ -22,6 +22,7 @@ type Input = Omit<KeyRoutes, "canvas"> & {
  */
 export function useEditorInput({ onPaste, onCopy, canvas, ...routes }: Input) {
   const overlayScope = useId()
+  const rootRef = useRef<HTMLDivElement>(null)
   const { owns, mark } = useOwnership()
   const blocked = (event: Event) => !owns(event) || editorKeysBlocked(event, overlayScope)
 
@@ -47,16 +48,18 @@ export function useEditorInput({ onPaste, onCopy, canvas, ...routes }: Input) {
   }
   useWindowListener("copy", copy)
   useWindowListener("cut", copy)
-  // The page itself is never text to select: a select-all from anywhere else (the Edit
-  // menu, an extension) is cancelled here. Text fields and dialog text stay selectable.
+  // The editor is never text to select: a selection starting in it (a select-all from the
+  // Edit menu, an extension, a drag) is cancelled here. Its text fields stay selectable.
   useWindowListener("selectstart", (event) => {
-    const target = event.target instanceof Element ? event.target : (event.target as Node | null)?.parentElement
-    if (!target?.closest("input, textarea, [contenteditable=true], [data-slot=dialog-content]")) event.preventDefault()
+    const node = event.target instanceof Node ? event.target : null
+    const target = node instanceof Element ? node : node?.parentElement
+    if (target && rootRef.current?.contains(target) && !target.closest("input, textarea, [contenteditable=true]")) event.preventDefault()
   })
 
   return {
     overlayScope,
     rootProps: {
+      ref: rootRef,
       onKeyDownCapture: mark,
       onPointerDownCapture: mark,
       onFocusCapture: mark,

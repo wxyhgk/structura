@@ -1,0 +1,29 @@
+/* The standalone app's page: the editor fills the window, and the page is not a document,
+   so nothing on it is selectable text, including menus and tooltips that render outside
+   the editor, except fields and dialog text. A host embedding the editor keeps its own. */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"],
+[data-slot="dialog-content"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+body,
+button {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
+}

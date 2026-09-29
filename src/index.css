@@ -138,37 +138,19 @@
     }
 }
 
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-}
-
-/* The editor is not a document: nothing on the page, including menus and tooltips that
-   render outside .chem-app, is selectable text, except fields and dialog text. */
-body {
+/* The editor is not a document: its own text is not selectable, except its fields. Page-level
+   rules for the standalone app are in page.css. */
+.chem-app {
+  color: #1c1c1c;
+  background: #e6e6e6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
   -webkit-user-select: none;
   user-select: none;
 }
 
-input,
-textarea,
-[contenteditable="true"],
-[data-slot="dialog-content"] {
+.chem-app :is(input, textarea, [contenteditable="true"]) {
   -webkit-user-select: text;
   user-select: text;
-}
-
-body,
-button {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
-}
-
-.chem-app {
-  color: #1c1c1c;
-  background: #e6e6e6;
 }
 
 .tool-button {

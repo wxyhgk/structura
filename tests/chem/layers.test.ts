@@ -108,3 +108,8 @@ test("rendering does not reach layout or hotkeys even through a barrel", () => {
 test("only the hotkey op reaches the hotkey tables", () => {
   assert.deepEqual(violations((file) => !isHotkeys(file) && file !== "ops/structure.ts", isHotkeys), [])
 })
+
+test("no two chem files import each other, even through others or only for types", () => {
+  const cycles = imports.filter(({ file }) => reachable(file).has(file)).map(({ file }) => file)
+  assert.deepEqual(cycles, [])
+})

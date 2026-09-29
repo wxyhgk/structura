@@ -1,10 +1,12 @@
-import { LABEL_SIZE } from "../constants.ts"
 import { elementColor } from "../elements/index.ts"
 import { atomHydrogens } from "../formula.ts"
 import { neighbors } from "../molecule/graph.ts"
 import type { Atom, Molecule } from "../types.ts"
 import type { LabelBox } from "./clip.ts"
 import { measureText } from "./measure.ts"
+
+/** Atom label font size, in drawing units. */
+const LABEL_SIZE = 15
 
 export type LabelRun = {
   text: string

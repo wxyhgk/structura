@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
-import type { BondStyle, RingKind, ToolId } from "@/chem/types"
+import type { BondStyle, RingKind } from "@/chem/types"
+import type { ToolId } from "@/editor/tools/types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { BOND_STYLES, RING_KINDS, sameStyle } from "@/editor/tools/catalog"

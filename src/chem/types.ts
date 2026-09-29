@@ -86,17 +86,6 @@ export type RingKind =
   | "cyclobutane"
   | "cyclopropane"
 
-export type ToolId =
-  | "lasso"
-  | "marquee"
-  | "bond"
-  | "chain"
-  | "ring"
-  | "eraser"
-  | "charge-plus"
-  | "charge-minus"
-  | "atom"
-
 export type Selection = { atoms: number[]; bonds: number[] }
 
 /** Where the next key press lands: the atom or bond under the pointer, or the one a key left behind. */

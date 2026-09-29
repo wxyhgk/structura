@@ -2,29 +2,17 @@ export {
   addAtom,
   addBond,
   atomById,
-  atomIdsOfSelection,
   bondBetween,
   bondById,
   bondOrderSum,
-  boundsCenter,
   bumpCharge,
-  centroidOf,
   cloneMolecule,
   componentOf,
   cycleAround,
   deleteSelection,
-  dragIds,
   emptyMolecule,
-  emptySelection,
-  flipAtoms,
   groupOf,
-  moveAtoms,
   neighbors,
-  rotateAtoms,
-  scaleAtoms,
-  selectAll,
-  tumbleAtoms,
-  selectionFromAtoms,
   spliceIn,
   subMolecule,
   setAlias,
@@ -33,6 +21,8 @@ export {
   setElement,
   setIsotope,
 } from "./molecule/graph.ts"
+export { atomIdsOfSelection, emptySelection, selectAll, selectionFromAtoms } from "./molecule/selection.ts"
+export { boundsCenter, centroidOf, flipAtoms, moveAtoms, rotateAtoms, scaleAtoms, tumbleAtoms } from "./molecule/transform.ts"
 export { nearestAtom, nearestBond } from "./molecule/snap.ts"
 export { bondLengthAt } from "./molecule/measure.ts"
 export { sproutAngle } from "./molecule/angles.ts"
@@ -49,6 +39,8 @@ export {
 export { fuseRingAt } from "./molecule/fusion.ts"
 export { attachChairAt, fuseChairAt } from "./molecule/chair.ts"
 export {
+  ATOM_HIT,
+  SNAP_ATOM,
   chainCount,
   chainPoints,
   commitChain,

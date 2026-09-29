@@ -1,4 +1,5 @@
-import type { BondStyle, RingKind, ToolId } from "@/chem/types"
+import type { BondStyle, RingKind } from "@/chem/types"
+import type { ToolId } from "@/editor/tools/types"
 
 /**
  * What a key does when the pointer is not over an atom or bond: pick a tool, and for the

@@ -1,12 +1,12 @@
-import { RING_SIZE, SNAP_ATOM } from "@/chem/constants"
+import { RING_SIZE } from "@/chem/constants"
 import { paintOps } from "@/editor/ops"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@/chem/geometry"
 import {
+  SNAP_ATOM,
   atomById,
   bondLengthAt,
   chainCount,
   chainPoints,
-  dragIds,
   emptySelection,
   fuseReach,
   fusionSide,
@@ -20,7 +20,7 @@ import {
   scaleAtoms,
   selectionFromAtoms,
 } from "@/chem/molecule"
-import { bondEnd, clampScale, frameAt, handleCursor, hitOf, hoverOf, selectionFrame } from "./targeting.ts"
+import { bondEnd, clampScale, dragIds, frameAt, handleCursor, hitOf, hoverOf, selectionFrame } from "./targeting.ts"
 import type { Gesture, PointerHost } from "./types.ts"
 
 function scaleFactors(gesture: Extract<Gesture, { kind: "scale" }>, pointer: { x: number; y: number }): [number, number] {

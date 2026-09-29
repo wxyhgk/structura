@@ -1,4 +1,5 @@
-import type { BondStyle, RingKind, ToolId } from "@/chem/types"
+import type { BondStyle, RingKind } from "@/chem/types"
+import type { ToolId } from "@/editor/tools/types"
 
 // The tools the palette offers: bond styles, ring kinds and their labels.
 export const BOND_STYLES: { style: BondStyle; label: string }[] = [

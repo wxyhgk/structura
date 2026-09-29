@@ -1,8 +1,14 @@
-import { ATOM_HIT, BOND_HIT, HOVER_ATOM, HOVER_BOND, SNAP_ATOM } from "@/chem/constants"
 import { angleTo, snapAngle } from "@/chem/geometry"
-import { atomById, atomIdsOfSelection, bondLengthAt, nearestAtom, nearestBond } from "@/chem/molecule"
-import type { Molecule, Point, Selection } from "@/chem/types"
+import { ATOM_HIT, SNAP_ATOM, atomById, atomIdsOfSelection, bondById, bondLengthAt, nearestAtom, nearestBond } from "@/chem/molecule"
+import type { HotTarget, Molecule, Point, Selection } from "@/chem/types"
 import type { HoverTarget } from "./types.ts"
+
+/** Clicking a bond, in screen pixels. */
+const BOND_HIT = 7
+
+/** The hover cue reaches wider than a click, so the blue circle shows first. */
+const HOVER_ATOM = 18
+const HOVER_BOND = 11
 
 export function hitOf(mol: Molecule, point: Point, zoom: number) {
   const atom = nearestAtom(mol, point, ATOM_HIT / zoom)
@@ -112,4 +118,22 @@ export function handleCursor(kind: FrameHandle): string {
 export function clampScale(value: number): number {
   const sign = value < 0 ? -1 : 1
   return sign * Math.min(6, Math.max(0.2, Math.abs(value)))
+}
+
+/** The atoms a drag from `hit` carries: the whole selection when it grabs part of it, else just what it grabbed. */
+export function dragIds(
+  mol: Molecule,
+  selection: Selection,
+  hit: HotTarget,
+): number[] {
+  if (hit.type === "atom") {
+    if (selection.atoms.includes(hit.id)) return [...selection.atoms]
+    return [hit.id]
+  }
+  const bond = bondById(mol, hit.id)
+  if (!bond) return []
+  if (selection.bonds.includes(hit.id) || selection.atoms.includes(bond.a) || selection.atoms.includes(bond.b)) {
+    return [...new Set([...selection.atoms, bond.a, bond.b])]
+  }
+  return [bond.a, bond.b]
 }

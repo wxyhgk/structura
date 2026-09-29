@@ -2,25 +2,6 @@ import type { BondStyle, RingKind } from "./types.ts"
 
 export const BOND_LENGTH = 40
 
-/** Clicking an atom, and a clicked bond's tip landing on one (scaled with the drawing). */
-export const ATOM_HIT = 12
-
-/** Clicking a bond. */
-export const BOND_HIT = 7
-
-/** Hover cue. Wider than the click so the blue circle appears first. */
-export const HOVER_ATOM = 18
-
-export const HOVER_BOND = 11
-
-/** Dragging a bond end onto an existing atom (scaled with the drawing). */
-export const SNAP_ATOM = 16
-
-/** Chain tool joining a vertex to an existing atom (scaled with the drawing). */
-export const SNAP_CHAIN = 10
-
-export const LABEL_SIZE = 15
-
 /** Every ring the editor draws, the one table all ring sizes come from. */
 export const RING_SHAPES: Record<RingKind, { size: number; aromatic?: true; double?: true }> = {
   cyclopropane: { size: 3 },

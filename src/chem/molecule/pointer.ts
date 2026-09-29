@@ -1,4 +1,4 @@
-import { ATOM_HIT, BOND_LENGTH, SINGLE, SNAP_ATOM, SNAP_CHAIN } from "../constants.ts"
+import { BOND_LENGTH, SINGLE } from "../constants.ts"
 import { distToSegment, pointFrom, sideOfLine } from "../geometry.ts"
 import type { Bond, BondStyle, Molecule, Point, RingKind } from "../types.ts"
 import { sproutAngle } from "./angles.ts"
@@ -12,6 +12,15 @@ import { nearestAtom } from "./snap.ts"
  * What the drawing tools do with the pointer, also reached by the draw_* ops. These join
  * existing atoms the pointer lands on; nothing else in the layout does.
  */
+
+/** Clicking an atom, and a clicked bond's tip landing on one, in pixels at the default bond length. */
+export const ATOM_HIT = 12
+
+/** Dragging a bond end onto an existing atom. */
+export const SNAP_ATOM = 16
+
+/** The chain tool joining a vertex to an existing atom. */
+export const SNAP_CHAIN = 10
 
 /**
  * A pointer snap radius, given in pixels at the default bond length, scaled to the

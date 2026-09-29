@@ -1,4 +1,5 @@
-import type { Arrow, BondStyle, Drawing, Molecule, Point, RingKind, Selection, ToolId } from "@/chem/types"
+import type { Arrow, BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@/chem/types"
+import type { ToolId } from "@/editor/tools/types"
 import type { Viewport } from "@/editor/canvas/viewport"
 import type { Run } from "@/editor/ops"
 

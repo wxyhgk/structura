@@ -21,7 +21,8 @@ import {
   selectAll,
   selectionFromAtoms,
 } from "@/chem/molecule"
-import type { BondStyle, Molecule, RingKind, Selection, ToolId } from "@/chem/types"
+import type { BondStyle, Molecule, RingKind, Selection } from "@/chem/types"
+import type { ToolId } from "@/editor/tools/types"
 
 export function useEditor(initial: Molecule[] = []) {
   const { history, dispatch, latest } = useHistory(initial)

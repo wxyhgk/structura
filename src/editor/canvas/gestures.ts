@@ -1,5 +1,5 @@
 import { RING_SIZE, SNAP_ATOM } from "@/chem/constants"
-import { paintOps, runOps } from "@/editor/ops"
+import { paintOps } from "@/editor/ops"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@/chem/geometry"
 import {
   atomById,
@@ -55,7 +55,7 @@ export function pointerDown(host: PointerHost, event: { button: number; clientX:
   }
   if (event.button !== 0) return
   const world = host.toWorld(event.clientX, event.clientY)
-  const { mol, tool, bondStyle, ringKind, atomEl, selection, commit, setSelection } = host.props
+  const { mol, tool, bondStyle, ringKind, atomEl, selection, run, setSelection } = host.props
   const zoom = host.zoom()
   const hit = hitOf(mol, world, zoom)
   event.currentTarget.setPointerCapture(event.pointerId)
@@ -95,42 +95,42 @@ export function pointerDown(host: PointerHost, event: { button: number; clientX:
   }
 
   if (tool === "eraser") {
-    if (hit?.type === "atom") runOps(mol, [{ op: "remove", atoms: [hit.id] }], commit)
-    else if (hit) runOps(mol, [{ op: "remove", bonds: [hit.id] }], commit)
+    if (hit?.type === "atom") run([{ op: "remove", atoms: [hit.id] }])
+    else if (hit) run([{ op: "remove", bonds: [hit.id] }])
     return
   }
   if (tool === "charge-plus" || tool === "charge-minus") {
     const atom = hit?.type === "atom" ? atomById(mol, hit.id) : undefined
     if (atom) {
       const charge = Math.max(-3, Math.min(3, atom.charge + (tool === "charge-plus" ? 1 : -1)))
-      runOps(mol, [{ op: "set_charge", atom: atom.id, charge }], commit, { keepSelection: true })
+      run([{ op: "set_charge", atom: atom.id, charge }], { keepSelection: true })
     }
     return
   }
   if (tool === "atom") {
-    if (hit?.type === "atom") runOps(mol, [{ op: "set_element", atom: hit.id, el: atomEl }], commit, { keepSelection: true })
-    else if (!hit) runOps(mol, [{ op: "place_atom", el: atomEl, at: world }], commit)
+    if (hit?.type === "atom") run([{ op: "set_element", atom: hit.id, el: atomEl }], { keepSelection: true })
+    else if (!hit) run([{ op: "place_atom", el: atomEl, at: world }])
     return
   }
   if (tool === "ring") {
     if (hit?.type === "atom") {
-      runOps(mol, [{ op: "add_ring", atom: hit.id, kind: ringKind }], commit)
+      run([{ op: "add_ring", atom: hit.id, kind: ringKind }])
       host.setPreview(null)
       return
     }
     const target = fusionTarget(mol, world, ringKind, fuseReach(RING_SIZE[ringKind], bondLengthAt(mol)) / zoom)
     if (target) {
       const side = fusionSide(mol, target, world)
-      runOps(mol, [{ op: "add_ring", bond: target.id, side, kind: ringKind }], commit)
+      run([{ op: "add_ring", bond: target.id, side, kind: ringKind }])
     } else if (!hit) {
-      runOps(mol, [{ op: "add_ring", at: world, kind: ringKind }], commit)
+      run([{ op: "add_ring", at: world, kind: ringKind }])
     }
     host.setPreview(null)
     return
   }
   if (tool === "bond") {
     if (hit?.type === "bond") {
-      runOps(mol, paintOps(mol, hit.id, bondStyle), commit)
+      run(paintOps(mol, hit.id, bondStyle))
       return
     }
     const origin = hit?.type === "atom" ? atomById(mol, hit.id) ?? world : world
@@ -311,6 +311,7 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
 }
 
 export function pointerUp(host: PointerHost, event: { clientX: number; clientY: number; altKey: boolean }) {
+  const { run } = host.props
   const current = host.gesture.current
   host.gesture.current = { kind: "idle" }
   if (current.kind === "pan") {
@@ -324,12 +325,12 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
     const style = { order: current.style.order, stereo: current.style.stereo, look: current.style.look }
     const from = current.fromId ?? undefined
     if (!current.moved) {
-      runOps(current.mol, [{ op: "draw_bond", from, start: current.origin, ...style }], host.props.commit)
+      run([{ op: "draw_bond", from, start: current.origin, ...style }])
       return
     }
     const origin = current.fromId == null ? current.origin : atomById(current.mol, current.fromId) ?? current.origin
     const end = bondEnd(origin, world, current.mol, current.fromId, event.altKey, zoom)
-    runOps(current.mol, [{ op: "draw_bond", from, start: origin, end, ...style }], host.props.commit)
+    run([{ op: "draw_bond", from, start: origin, end, ...style }])
     return
   }
   if (current.kind === "chain") {
@@ -338,13 +339,13 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
     const length = bondLengthAt(current.mol, current.fromId ?? undefined)
     const points = chainPoints(current.origin, axis, chainCount(distance, length), length)
     host.setPreview(null)
-    runOps(current.mol, [{ op: "draw_chain", from: current.fromId ?? undefined, points }], host.props.commit)
+    run([{ op: "draw_chain", from: current.fromId ?? undefined, points }])
     return
   }
   if (current.kind === "rotate") {
     const raw = signedDelta(current.startAngle, angleTo(current.center, world))
     const angle = event.altKey ? raw : snapAngle(raw)
-    if (angle !== 0) runOps(current.mol, [{ op: "rotate", atoms: current.ids, angle, center: current.center }], host.props.commit, { keepSelection: true })
+    if (angle !== 0) run([{ op: "rotate", atoms: current.ids, angle, center: current.center }], { keepSelection: true })
     host.setDraft(null)
     host.setCursor(null)
     host.setRotating(false)
@@ -352,7 +353,7 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
   }
   if (current.kind === "scale") {
     const [sx, sy] = scaleFactors(current, world)
-    if (sx !== 1 || sy !== 1) runOps(current.mol, [{ op: "scale", atoms: current.ids, sx, sy, center: current.center }], host.props.commit, { keepSelection: true })
+    if (sx !== 1 || sy !== 1) run([{ op: "scale", atoms: current.ids, sx, sy, center: current.center }], { keepSelection: true })
     host.setDraft(null)
     host.setCursor(null)
     return
@@ -360,7 +361,7 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
   if (current.kind === "move") {
     const dx = world.x - current.origin.x
     const dy = world.y - current.origin.y
-    if (dx !== 0 || dy !== 0) runOps(current.mol, [{ op: "move", atoms: current.ids, dx, dy }], host.props.commit, { keepSelection: true })
+    if (dx !== 0 || dy !== 0) run([{ op: "move", atoms: current.ids, dx, dy }], { keepSelection: true })
     host.setDraft(null)
     return
   }

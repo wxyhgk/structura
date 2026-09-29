@@ -1,5 +1,6 @@
-import type { Arrow, BondStyle, Molecule, Point, RingKind, Selection, ToolId } from "@/chem/types"
+import type { Arrow, BondStyle, Drawing, Molecule, Point, RingKind, Selection, ToolId } from "@/chem/types"
 import type { Viewport } from "@/editor/canvas/viewport"
+import type { Run } from "@/editor/ops"
 
 export type CanvasHandle = {
   /** Hover hotkeys; returns whether the key was used. */
@@ -23,7 +24,10 @@ export type EditorSlice = {
   atomEl: string
   selection: Selection
   colorHetero: boolean
-  commit: (mol: Molecule, keepSelection?: boolean) => void
+  /** Applies ops to the latest drawing and commits them; see useEditor. */
+  run: Run
+  /** The drawing as of the last edit, ahead of the re-render when keys come fast. */
+  latest: () => Drawing
   setSelection: (selection: Selection) => void
   viewport: Viewport
 }

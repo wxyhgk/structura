@@ -10,7 +10,6 @@ import { useHotspot } from "@/editor/canvas/useHotspot"
 import { useViewport } from "@/editor/canvas/useViewport"
 import { hotkeyOps } from "@/editor/hotkeys/lookup"
 import { keyOf } from "@/editor/input/keymap"
-import { runOps } from "@/editor/ops"
 
 /** The drawing surface: pointer gestures, hover keys, the label field and the view. */
 export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(props, ref) {
@@ -26,11 +25,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const [handleCursor, setHandleCursor] = useState<string | null>(null)
   const [rotating, setRotating] = useState(false)
   const [labelEdit, setLabelEdit] = useState<{ id: number; initial: string } | null>(null)
-  /** The molecule as of the last edit here, ahead of the re-render when keys come fast. */
-  const molRef = useRef(props.mol)
-  useEffect(() => {
-    molRef.current = props.mol
-  })
+  /** The molecule as of the last edit, ahead of the re-render when keys come fast. */
+  const current = () => props.latest().molecule
 
   function cancelGesture() {
     gesture.current = { kind: "idle" }
@@ -64,7 +60,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   function handleKey(event: KeyboardEvent): boolean {
     if (event.metaKey || event.ctrlKey || event.altKey) return false
     if (gesture.current.kind !== "idle") return false
-    const mol = molRef.current
+    const mol = current()
     const hot = hotspot.active(mol)
     if (!hot) return false
     const key = keyOf(event)
@@ -87,9 +83,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     // but cannot apply (no room for the ring) is still used up, so it never switches tools.
     const ops = hotkeyOps(mol, hot, key)
     if (!ops) return false
-    const result = runOps(mol, ops, props.commit, { quiet: true })
+    const result = props.run(ops, { quiet: true })
     if (!result) return true
-    molRef.current = result.drawing.molecule
     if (result.next) hotspot.remember(result.next, result.drawing.molecule)
     return true
   }
@@ -106,14 +101,14 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
       space.current = false
       setPanning(false)
       if (spaceDragged.current) return
-      const hot = hotspot.active(molRef.current)
+      const hot = hotspot.active(current())
       if (hot?.type !== "atom") return
-      props.setSelection(selectionFromAtoms(molRef.current, componentOf(molRef.current, hot.id)))
+      props.setSelection(selectionFromAtoms(current(), componentOf(current(), hot.id)))
       hotspot.unpin()
     },
     cancelGesture,
     hasGesture: () => gesture.current.kind !== "idle",
-    hotspot: () => hotspot.active(molRef.current),
+    hotspot: () => hotspot.active(current()),
     focusAtom: hotspot.pin,
   }))
 
@@ -137,7 +132,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
           pointerDown(host, event)
         }}
         onPointerMove={(event) => {
-          hotspot.track(event.clientX, event.clientY, () => hoverOf(molRef.current, viewport.toWorld(event.clientX, event.clientY), viewport.get().zoom))
+          hotspot.track(event.clientX, event.clientY, () => hoverOf(current(), viewport.toWorld(event.clientX, event.clientY), viewport.get().zoom))
           pointerMove(host, event)
         }}
         onPointerUp={(event) => pointerUp(host, event)}
@@ -179,8 +174,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
           onDone={(text) => {
             setLabelEdit(null)
             if (text == null) return
-            const result = runOps(molRef.current, [{ op: "label", atom: labelEdit.id, text }], props.commit, { keepSelection: true })
-            if (result) molRef.current = result.drawing.molecule
+            props.run([{ op: "label", atom: labelEdit.id, text }], { keepSelection: true })
           }}
         />
       )}

@@ -1,7 +1,7 @@
 import { ATOM_HIT, BOND_LENGTH, RING_SIZE, SINGLE, SNAP_ATOM, SNAP_CHAIN } from "../constants.ts"
 import { angleTo, dist, distToSegment, norm, pointFrom, sideOfLine, signedDelta } from "../geometry.ts"
 import type { Bond, BondStyle, Molecule, Point, RingKind } from "../types.ts"
-import { addAtom, addBond, atomById, bondById, bondOrderSum, cloneMolecule, componentOf, cycleAround, neighbors, setElement, spliceIn, subMolecule } from "./graph.ts"
+import { addAtom, addBond, atomById, bondBetween, bondById, bondOrderSum, cloneMolecule, componentOf, cycleAround, neighbors, setElement, spliceIn, subMolecule } from "./graph.ts"
 import { kekulizeAromaticReport } from "./kekule.ts"
 import { nearestAtom } from "./snap.ts"
 
@@ -209,9 +209,7 @@ function buildRing(
   if (kind === "cyclopentene") {
     const from = ids[2]
     const to = ids[3 % ids.length]
-    const bond = next.bonds.find(
-      (item) => (item.a === from && item.b === to) || (item.a === to && item.b === from),
-    )
+    const bond = bondBetween(next, from, to)
     if (bond) bond.order = 2
   }
   if (kind === "benzene") {
@@ -226,9 +224,7 @@ function markAromatic(mol: Molecule, ids: number[]): Molecule {
   for (let index = 0; index < ids.length; index++) {
     const a = ids[index]
     const b = ids[(index + 1) % ids.length]
-    const bond = next.bonds.find(
-      (item) => (item.a === a && item.b === b) || (item.a === b && item.b === a),
-    )
+    const bond = bondBetween(next, a, b)
     if (bond) bond.aromatic = true
   }
   return next
@@ -494,10 +490,6 @@ export function commitChain(mol: Molecule, points: Point[], fromId: number | nul
 
 const COINCIDENT = 0.8
 
-function bonded(mol: Molecule, a: number, b: number): boolean {
-  return mol.bonds.some((bond) => (bond.a === a && bond.b === b) || (bond.a === b && bond.b === a))
-}
-
 /**
  * Vertices that land on an existing atom are reused. That is how a third
  * ring closes across the bay of naphthalene: the new hexagon shares the
@@ -534,7 +526,7 @@ function planFusion(
   for (let index = 0; index < reuse.length; index++) {
     const left = reuse[index]
     const right = reuse[(index + 1) % reuse.length]
-    if (left != null && right != null && bonded(mol, left, right)) continue
+    if (left != null && right != null && bondBetween(mol, left, right)) continue
     adds = true
     if (left != null) extra.set(left, (extra.get(left) ?? 0) + 1)
     if (right != null) extra.set(right, (extra.get(right) ?? 0) + 1)

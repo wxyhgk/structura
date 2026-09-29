@@ -1,5 +1,5 @@
 import { elementOf } from "../elements/index.ts"
-import { atomById, bondById } from "../molecule/graph.ts"
+import { atomById, bondBetween, bondById } from "../molecule/graph.ts"
 import type { HotTarget, Molecule } from "../types.ts"
 import type { BondRef, Ref } from "./types.ts"
 
@@ -33,7 +33,7 @@ export function makeContext(current: () => Molecule, names: Record<string, numbe
         return ref
       }
       const [a, b] = ref.between.map(atom)
-      const found = mol.bonds.find((item) => (item.a === a && item.b === b) || (item.a === b && item.b === a))
+      const found = bondBetween(mol, a, b)
       if (!found) throw new OpError(`atoms #${a} and #${b} are not bonded`)
       return found.id
     },

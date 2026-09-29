@@ -1,4 +1,5 @@
 import type { Atom, Bond, BondLook, BondStyle, Group, Molecule, Point, Selection } from "../types.ts"
+import { bondsOf, lookup } from "./lookup.ts"
 
 /** A look only survives on a plain single bond. */
 function lookFor(style: BondStyle): BondLook | undefined {
@@ -35,19 +36,22 @@ function dissolveTouching(next: Molecule, atomIds: Iterable<number>): void {
 }
 
 export function atomById(mol: Molecule, id: number): Atom | undefined {
-  return mol.atoms.find((atom) => atom.id === id)
+  return lookup(mol).atomById.get(id)
 }
 
 export function bondById(mol: Molecule, id: number): Bond | undefined {
-  return mol.bonds.find((bond) => bond.id === id)
+  return lookup(mol).bondById.get(id)
+}
+
+/** The bond joining two atoms, whichever way round it was drawn. */
+export function bondBetween(mol: Molecule, a: number, b: number): Bond | undefined {
+  return bondsOf(mol, a).find((bond) => (bond.a === a && bond.b === b) || (bond.a === b && bond.b === a))
 }
 
 export function neighbors(mol: Molecule, id: number): Atom[] {
   const found: Atom[] = []
-  for (const bond of mol.bonds) {
-    const otherId = bond.a === id ? bond.b : bond.b === id ? bond.a : 0
-    if (!otherId) continue
-    const other = atomById(mol, otherId)
+  for (const bond of bondsOf(mol, id)) {
+    const other = atomById(mol, bond.a === id ? bond.b : bond.a)
     if (other) found.push(other)
   }
   return found
@@ -55,9 +59,7 @@ export function neighbors(mol: Molecule, id: number): Atom[] {
 
 export function bondOrderSum(mol: Molecule, id: number): number {
   let sum = 0
-  for (const bond of mol.bonds) {
-    if (bond.a === id || bond.b === id) sum += bond.order
-  }
+  for (const bond of bondsOf(mol, id)) sum += bond.order
   return sum
 }
 
@@ -82,9 +84,7 @@ export function addBond(
   overwrite = true,
 ): { mol: Molecule; id: number } | null {
   if (a === b) return null
-  const existing = mol.bonds.find(
-    (bond) => (bond.a === a && bond.b === b) || (bond.a === b && bond.b === a),
-  )
+  const existing = bondBetween(mol, a, b)
   if (existing) {
     if (!overwrite) return { mol, id: existing.id }
     const next = cloneMolecule(mol)

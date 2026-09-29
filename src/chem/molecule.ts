@@ -3,6 +3,7 @@ export {
   addBond,
   atomById,
   atomIdsOfSelection,
+  bondBetween,
   bondById,
   bondOrderSum,
   boundsCenter,

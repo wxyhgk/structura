@@ -5,8 +5,12 @@ import { plainFormula, molecularWeight, valenceErrorCount } from "../../src/chem
 import { angleTo, dist } from "../../src/chem/geometry.ts"
 import { toMolfile } from "../../src/chem/molfile.ts"
 import {
+  addAtom,
+  addBond,
   atomById,
   attachRing,
+  bondBetween,
+  neighbors,
   bondOrderSum,
   growRing,
   centroidOf,
@@ -273,4 +277,25 @@ test("two quarter tumbles carry depth and mirror the structure", () => {
 
   const lost = tumbleAtoms(quarter.mol, ids, { x: 0, y: 0 }, "y", Math.PI / 2)
   for (const atom of lost.mol.atoms) assert.ok(Math.abs(atom.x) < 1e-9)
+})
+
+test("lookups by id and between atoms follow every edit", () => {
+  const ethane = createBondAt(emptyMolecule(), { x: 0, y: 0 }, { order: 1, stereo: "none" })
+  const [a, b] = ethane.atoms.map((atom) => atom.id)
+  assert.equal(bondBetween(ethane, a, b)?.id, ethane.bonds[0].id)
+  assert.equal(bondBetween(ethane, b, a)?.id, ethane.bonds[0].id, "either way round")
+  const third = addAtom(ethane, "O", 80, 0)
+  assert.equal(bondBetween(third.mol, b, third.id), undefined)
+  assert.deepEqual(neighbors(third.mol, b).map((atom) => atom.id), [a])
+  const joined = addBond(third.mol, b, third.id, { order: 2, stereo: "none" })!
+  assert.equal(bondBetween(joined.mol, third.id, b)?.order, 2)
+  assert.deepEqual(neighbors(joined.mol, b).map((atom) => atom.id), [a, third.id])
+  assert.deepEqual(neighbors(third.mol, b).map((atom) => atom.id), [a], "the earlier molecule is untouched")
+  assert.equal(atomById(joined.mol, third.id)?.el, "O")
+
+  // A clone filled in after a lookup was taken is looked up afresh.
+  const filling = { ...joined.mol, atoms: [...joined.mol.atoms] }
+  assert.equal(atomById(filling, 99), undefined)
+  filling.atoms.push({ id: 99, el: "N", x: 0, y: 40, charge: 0 })
+  assert.equal(atomById(filling, 99)?.el, "N")
 })

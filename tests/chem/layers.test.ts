@@ -42,6 +42,7 @@ const isLayout = (path: string) =>
     "molecule/abbreviate",
     "molecule/recipes",
     "molecule/grow",
+    "molecule/relax",
   ].some((prefix) => path.startsWith(prefix))
 const isDraw = (path: string) => path === "draw.ts" || path.startsWith("draw/")
 

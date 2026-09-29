@@ -21,26 +21,51 @@ function graphOf(mol: Molecule, atoms?: Iterable<number>): Graph {
   return graph
 }
 
-/** Strips chain ends over and over: what is left is only ring atoms and the links between ring systems. */
+/**
+ * Only the ring bonds: every bond whose removal would split its piece (a bridge) goes, and
+ * so do the atoms left with nothing. What remains falls apart into ring systems, which
+ * keeps the ring search small even in a long chain with rings strung along it.
+ */
 function ringCore(graph: Graph): Graph {
-  const degree = new Map([...graph].map(([id, around]) => [id, around.length]))
-  const stack = [...graph.keys()].filter((id) => degree.get(id)! <= 1)
-  const gone = new Set<number>()
-  while (stack.length > 0) {
-    const id = stack.pop()!
-    if (gone.has(id)) continue
-    gone.add(id)
-    for (const other of graph.get(id)!) {
-      if (gone.has(other)) continue
-      const left = degree.get(other)! - 1
-      degree.set(other, left)
-      if (left <= 1) stack.push(other)
+  const order = new Map<number, number>()
+  const low = new Map<number, number>()
+  const bridges = new Set<string>()
+  for (const root of graph.keys()) {
+    if (order.has(root)) continue
+    order.set(root, order.size)
+    low.set(root, order.get(root)!)
+    // Depth-first without recursion, so long chains cannot overflow the stack.
+    const stack: Array<{ id: number; parent: number | null; next: number }> = [{ id: root, parent: null, next: 0 }]
+    while (stack.length > 0) {
+      const frame = stack[stack.length - 1]
+      const around = graph.get(frame.id)!
+      if (frame.next < around.length) {
+        const other = around[frame.next++]
+        if (other === frame.parent) continue
+        if (order.has(other)) {
+          low.set(frame.id, Math.min(low.get(frame.id)!, order.get(other)!))
+        } else {
+          order.set(other, order.size)
+          low.set(other, order.get(other)!)
+          stack.push({ id: other, parent: frame.id, next: 0 })
+        }
+        continue
+      }
+      stack.pop()
+      if (frame.parent == null) continue
+      low.set(frame.parent, Math.min(low.get(frame.parent)!, low.get(frame.id)!))
+      if (low.get(frame.id)! > order.get(frame.parent)!) bridges.add(pairKey(frame.id, frame.parent))
     }
   }
   const core: Graph = new Map()
-  for (const [id, around] of graph) if (!gone.has(id)) core.set(id, around.filter((other) => !gone.has(other)))
+  for (const [id, around] of graph) {
+    const kept = around.filter((other) => !bridges.has(pairKey(id, other)))
+    if (kept.length > 0) core.set(id, kept)
+  }
   return core
 }
+
+const pairKey = (a: number, b: number) => (a < b ? `${a}-${b}` : `${b}-${a}`)
 
 function components(graph: Graph): number[][] {
   const seen = new Set<number>()

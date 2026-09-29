@@ -1,15 +1,22 @@
 import assert from "node:assert/strict"
 import test from "node:test"
+import { addReactionArrow, emptyDrawing } from "../../src/chem/drawing.ts"
 import { plainFormula } from "../../src/chem/formula.ts"
-import { addAtom, atomById, bondById, createBondAt, emptyMolecule, neighbors } from "../../src/chem/molecule.ts"
+import { addAtom, atomById, bondById, boundsCenter, createBondAt, emptyMolecule, neighbors, tumbleAtoms } from "../../src/chem/molecule.ts"
 import { applyOps, type Op } from "../../src/chem/ops.ts"
 import type { Molecule } from "../../src/chem/types.ts"
 import { validate } from "../../src/chem/validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 
+/** The ops on a drawing that holds just this molecule; `mol` is the molecule afterwards. */
+function run(mol: Molecule, ops: Op[]) {
+  const result = applyOps({ ...emptyDrawing(), molecule: mol }, ops)
+  return { ...result, mol: result.drawing.molecule }
+}
+
 function ok(mol: Molecule, ops: Op[]) {
-  const result = applyOps(mol, ops)
+  const result = run(mol, ops)
   assert.ok(result.ok, result.ok ? "" : `op ${result.index}: ${result.error}`)
   return result
 }
@@ -29,7 +36,7 @@ test("a molecule can be built from nothing with named atoms", () => {
 
 test("a batch is all or nothing and says which op failed", () => {
   const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
-  const result = applyOps(start, [
+  const result = run(start, [
     { op: "set_element", atom: 1, el: "N" },
     { op: "set_element", atom: 99, el: "O" },
   ])
@@ -56,7 +63,7 @@ test("mistakes are reported instead of guessed at", () => {
     [[{ op: "add_group", to: 1, name: "Zzz" }], /not a known abbreviation/],
   ]
   for (const [ops, message] of cases) {
-    const result = applyOps(start, ops)
+    const result = run(start, ops)
     assert.equal(result.ok, false, JSON.stringify(ops))
     if (!result.ok) assert.match(result.error, message)
     assert.equal(result.mol, start)
@@ -138,7 +145,7 @@ test("random batches either apply cleanly or change nothing", () => {
             return { op: "rotate", atoms: mol.atoms.map((atom) => atom.id), angle: next() }
         }
       })
-      const result = applyOps(mol, ops)
+      const result = run(mol, ops)
       if (result.ok) {
         assert.deepEqual(validate(result.mol).filter((problem) => problem.severity === "error"), [], `seed ${seed} step ${step}`)
         mol = result.mol
@@ -153,7 +160,7 @@ test("random batches either apply cleanly or change nothing", () => {
 test("add_atom always adds the atom it was asked for, even next to another atom", () => {
   // Put an O exactly where the next chain atom would go.
   const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
-  const spot = applyOps(start, [{ op: "add_atom", el: "C", to: 2, as: "probe" }])
+  const spot = run(start, [{ op: "add_atom", el: "C", to: 2, as: "probe" }])
   assert.ok(spot.ok)
   const probe = atomById(spot.mol, spot.names.probe)!
   const crowded = addAtom(start, "O", probe.x + 3, probe.y + 3).mol
@@ -194,10 +201,10 @@ test("the result lists exactly the atoms and bonds a batch created", () => {
   assert.ok(ring.added.atoms.every((id) => id >= start.nextAtomId))
 
   const removed = ok(ring.mol, [{ op: "remove", atoms: [ring.added.atoms[0]] }])
-  assert.deepEqual(removed.added, { atoms: [], bonds: [] })
+  assert.deepEqual(removed.added, { atoms: [], bonds: [], arrows: [] })
 
   const relabelled = ok(start, [{ op: "set_element", atom: 2, el: "N" }])
-  assert.deepEqual(relabelled.added, { atoms: [], bonds: [] })
+  assert.deepEqual(relabelled.added, { atoms: [], bonds: [], arrows: [] })
 })
 
 test("drawing ops do what the mouse tools do", () => {
@@ -218,14 +225,14 @@ test("drawing ops do what the mouse tools do", () => {
   assert.equal(plainFormula(placed.mol), "H3N")
   const ring = ok(empty, [{ op: "add_ring", at: { x: 0, y: 0 }, size: 6, aromatic: true }])
   assert.equal(plainFormula(ring.mol), "C6H6")
-  assert.equal(applyOps(empty, [{ op: "add_ring", at: { x: 0, y: 0 }, atom: 1, size: 6 }]).ok, false)
+  assert.equal(run(empty, [{ op: "add_ring", at: { x: 0, y: 0 }, atom: 1, size: 6 }]).ok, false)
 })
 
 test("scaling and duplicating report what they did", () => {
   const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
   const scaled = ok(start, [{ op: "scale", atoms: [1, 2], sx: 2, sy: 2, center: { x: 0, y: 0 } }])
   assert.equal(atomById(scaled.mol, 2)?.x, 80)
-  assert.equal(applyOps(start, [{ op: "scale", atoms: [1, 2], sx: 0, sy: 1 }]).ok, false)
+  assert.equal(run(start, [{ op: "scale", atoms: [1, 2], sx: 0, sy: 1 }]).ok, false)
 
   const copy = ok(start, [{ op: "duplicate", atoms: [1, 2] }])
   assert.equal(copy.added.atoms.length, 2)
@@ -237,14 +244,14 @@ test("a ring can be named by kind, which also reaches cyclopentene", () => {
   const fused = ok(start, [{ op: "add_ring", bond: 1, kind: "cyclopentene" }])
   assert.equal(plainFormula(fused.mol), "C5H8")
   assert.equal(plainFormula(ok(emptyMolecule(), [{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).mol), "C6H6")
-  const bad = applyOps(start, [{ op: "add_ring", bond: 1, kind: "cyclodecane" as never }])
+  const bad = run(start, [{ op: "add_ring", bond: 1, kind: "cyclodecane" as never }])
   assert.equal(bad.ok, false)
-  assert.equal(applyOps(start, [{ op: "add_ring", bond: 1 }]).ok, false, "size or kind is required")
+  assert.equal(run(start, [{ op: "add_ring", bond: 1 }]).ok, false, "size or kind is required")
 })
 
 test("an unknown recipe is named with the ones there are", () => {
   const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
-  const bad = applyOps(start, [{ op: "add_recipe", to: 2, name: "unobtainium" as never }])
+  const bad = run(start, [{ op: "add_recipe", to: 2, name: "unobtainium" as never }])
   assert.equal(bad.ok, false)
   if (!bad.ok) assert.match(bad.error, /not a known recipe.*nitro/)
 })
@@ -261,8 +268,8 @@ test("add_atom can wedge its bond and aim it", () => {
   assert.ok(Math.abs(tip.x - from.x) < 1e-9 && tip.y < from.y - 39, "π/2 grows straight up the page")
   assert.deepEqual(up.next, { type: "atom", id: up.names.tip })
 
-  assert.equal(applyOps(start, [{ op: "add_atom", el: "C", to: 2, order: 2, stereo: "up" }]).ok, false)
-  assert.equal(applyOps(start, [{ op: "add_atom", el: "C", angle: 1 }]).ok, false, "an angle needs `to`")
+  assert.equal(run(start, [{ op: "add_atom", el: "C", to: 2, order: 2, stereo: "up" }]).ok, false)
+  assert.equal(run(start, [{ op: "add_atom", el: "C", angle: 1 }]).ok, false, "an angle needs `to`")
 })
 
 test("set_bond sets and clears the emphasised side of a double bond", () => {
@@ -274,7 +281,7 @@ test("set_bond sets and clears the emphasised side of a double bond", () => {
   assert.equal(bondById(kept.mol, 1)?.emphasis, "dashed", "left out, the emphasis stays")
   const cleared = ok(dashed.mol, [{ op: "set_bond", bond: 1, emphasis: null }])
   assert.equal(bondById(cleared.mol, 1)?.emphasis, undefined)
-  assert.equal(applyOps(start, [{ op: "set_bond", bond: 1, emphasis: "bold" }]).ok, false, "a single bond has no second stroke")
+  assert.equal(run(start, [{ op: "set_bond", bond: 1, emphasis: "bold" }]).ok, false, "a single bond has no second stroke")
 })
 
 test("add_ring with chair folds a cyclohexane chair onto a bond or an atom", () => {
@@ -291,8 +298,8 @@ test("add_ring with chair folds a cyclohexane chair onto a bond or an atom", () 
   assert.deepEqual(onAtom.mol, recipe.mol)
   assert.deepEqual(onAtom.next, recipe.next)
 
-  assert.equal(applyOps(start, [{ op: "add_ring", bond: 1, chair: 1, kind: "benzene" }]).ok, false)
-  assert.equal(applyOps(start, [{ op: "add_ring", at: { x: 0, y: 0 }, chair: 1 }]).ok, false)
+  assert.equal(run(start, [{ op: "add_ring", bond: 1, chair: 1, kind: "benzene" }]).ok, false)
+  assert.equal(run(start, [{ op: "add_ring", at: { x: 0, y: 0 }, chair: 1 }]).ok, false)
 })
 
 test("ops that change an atom or bond in place leave the cursor on it", () => {
@@ -301,4 +308,50 @@ test("ops that change an atom or bond in place leave the cursor on it", () => {
   assert.deepEqual(ok(start, [{ op: "set_charge", atom: 2, charge: 1 }]).next, { type: "atom", id: 2 })
   assert.deepEqual(ok(start, [{ op: "set_isotope", atom: 2, isotope: 13 }]).next, { type: "atom", id: 2 })
   assert.deepEqual(ok(start, [{ op: "set_bond", bond: 1, order: 2 }]).next, { type: "bond", id: 1 })
+})
+
+test("an arrow is drawn beside the atoms and reported as added", () => {
+  const molecule = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const start = { ...emptyDrawing(), molecule }
+  const result = applyOps(start, [{ op: "add_arrow", atoms: [1, 2], direction: "right" }])
+  assert.ok(result.ok)
+  assert.deepEqual(result.drawing, addReactionArrow(start, [1, 2], "right"))
+  assert.deepEqual(result.added, { atoms: [], bonds: [], arrows: [1] })
+  assert.equal(result.drawing.molecule, molecule, "the molecule is untouched")
+  assert.equal(applyOps(start, [{ op: "add_arrow", atoms: [], direction: "up" }]).ok, false)
+  assert.equal(applyOps(start, [{ op: "add_arrow", atoms: [7], direction: "up" }]).ok, false)
+})
+
+test("tumbling hands back depth, so turns in steps match the chemistry's own", () => {
+  const molecule = ok(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE), [{ op: "add_ring", atom: 2, size: 6 }]).mol
+  const ids = molecule.atoms.map((atom) => atom.id)
+  const center = boundsCenter(molecule, ids)!
+  const step = Math.PI / 12
+  const first = tumbleAtoms(molecule, ids, center, "y", step)
+  const second = tumbleAtoms(first.mol, ids, center, "y", step, first.depth)
+
+  const start = { ...emptyDrawing(), molecule }
+  const once = applyOps(start, [{ op: "tumble", atoms: ids, axis: "y", angle: step }])
+  assert.ok(once.ok && once.depth)
+  assert.deepEqual(once.drawing.molecule, first.mol)
+  const twice = applyOps(once.drawing, [{ op: "tumble", atoms: ids, axis: "y", angle: step, center, depth: once.depth }])
+  assert.ok(twice.ok)
+  assert.deepEqual(twice.drawing.molecule, second.mol)
+  const batched = applyOps(start, [
+    { op: "tumble", atoms: ids, axis: "y", angle: step },
+    { op: "tumble", atoms: ids, axis: "y", angle: step, center },
+  ])
+  assert.ok(batched.ok)
+  assert.deepEqual(batched.drawing.molecule, second.mol, "within a batch the depth carries over")
+  assert.equal(ok(molecule, [{ op: "move", atoms: [1], dx: 1, dy: 0 }]).depth, undefined, "only a tumble leaves depth")
+})
+
+test("the result lists the atoms an edit moved", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  assert.deepEqual(ok(start, [{ op: "move", atoms: [2], dx: 5, dy: 0 }]).moved, [2])
+  assert.deepEqual(ok(start, [{ op: "rotate", atoms: [1, 2], angle: Math.PI / 2 }]).moved, [1, 2])
+  assert.deepEqual(ok(start, [{ op: "move", atoms: [2], dx: 5, dy: 0 }, { op: "move", atoms: [2], dx: -5, dy: 0 }]).moved, [], "moved back")
+  const grown = ok(start, [{ op: "add_atom", el: "C", to: 2 }])
+  assert.deepEqual(grown.moved, [], "new atoms are added, not moved")
+  assert.deepEqual(ok(start, [{ op: "set_element", atom: 2, el: "N" }]).moved, [])
 })

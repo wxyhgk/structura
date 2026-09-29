@@ -5,9 +5,10 @@ import {
   plainFormula,
   valenceErrorCount,
 } from "@/chem/formula"
-import { addReactionArrow, emptyDrawing } from "@/chem/drawing"
+import { emptyDrawing } from "@/chem/drawing"
 import { emptyHistory, historyReducer, type History } from "@/chem/history"
 import { toMolfile } from "@/chem/molfile"
+import { applyOps } from "@/chem/ops"
 import { ROTATE_STEP } from "@/editor/canvas/view"
 import { selectionHotkeyOps, selectionTips } from "@/editor/hotkeys/lookup"
 import { runOps } from "@/editor/ops"
@@ -19,7 +20,6 @@ import {
   neighbors,
   selectAll,
   selectionFromAtoms,
-  tumbleAtoms,
 } from "@/chem/molecule"
 import type { BondStyle, Drawing, Molecule, RingKind, Selection, ToolId } from "@/chem/types"
 
@@ -38,7 +38,7 @@ export function useEditor(initial: Molecule[] = []) {
   const [colorHetero, setColorHetero] = useState(true)
   const [helpOpen, setHelpOpen] = useState(false)
   /** Depth from the last tumble, valid only while the molecule is still the one it produced. */
-  const tumbleDepth = useRef<{ mol: Molecule; depth: Map<number, number> } | null>(null)
+  const tumbleDepth = useRef<{ mol: Molecule; depth: Record<number, number> | undefined } | null>(null)
   const drawing = history.present
   const mol = drawing.molecule
 
@@ -72,7 +72,7 @@ export function useEditor(initial: Molecule[] = []) {
     const ids = atomIdsOfSelection(mol, selection)
     if (ids.length === 0) return
     const copy = runOps(mol, [{ op: "duplicate", atoms: ids }], commit, { keepSelection: true })
-    if (copy) setSelection(selectionFromAtoms(copy.mol, copy.added.atoms))
+    if (copy) setSelection(selectionFromAtoms(copy.drawing.molecule, copy.added.atoms))
   }, [commit, mol, selection])
 
   /** The selection as molfile text for the clipboard, or null when nothing is selected. */
@@ -139,18 +139,20 @@ export function useEditor(initial: Molecule[] = []) {
       const axis = direction === "left" || direction === "right" ? "y" : "x"
       const sign = direction === "left" || direction === "up" ? 1 : -1
       const depth = tumbleDepth.current?.mol === mol ? tumbleDepth.current.depth : undefined
-      const tumbled = tumbleAtoms(mol, ids, center, axis, sign * ROTATE_STEP, depth)
-      tumbleDepth.current = tumbled
-      commit(tumbled.mol, true)
+      const result = applyOps(drawing, [{ op: "tumble", atoms: ids, axis, angle: sign * ROTATE_STEP, center, depth }])
+      if (!result.ok) return
+      tumbleDepth.current = { mol: result.drawing.molecule, depth: result.depth }
+      commitDrawing(result.drawing, true)
     },
-    [commit, mol, selection],
+    [commitDrawing, drawing, mol, selection],
   )
 
   const addArrow = useCallback(
     (direction: "left" | "right" | "up" | "down") => {
       const ids = atomIdsOfSelection(mol, selection)
       if (ids.length === 0) return
-      commitDrawing(addReactionArrow(drawing, ids, direction), true)
+      const result = applyOps(drawing, [{ op: "add_arrow", atoms: ids, direction }])
+      if (result.ok) commitDrawing(result.drawing, true)
     },
     [commitDrawing, drawing, mol, selection],
   )
@@ -168,7 +170,7 @@ export function useEditor(initial: Molecule[] = []) {
       if (!result || selection.atoms.length === 0) return true
       const tips = selectionTips(selection.atoms, result.names)
       // Keys that change an atom in place (O, +, Me…) keep the selection as it was.
-      if (tips.some((tip, index) => tip !== selection.atoms[index])) setSelection(selectionFromAtoms(result.mol, [...new Set(tips)]))
+      if (tips.some((tip, index) => tip !== selection.atoms[index])) setSelection(selectionFromAtoms(result.drawing.molecule, [...new Set(tips)]))
       return true
     },
     [commit, mol, selection],

@@ -1,3 +1,4 @@
+import { emptyDrawing } from "@/chem/drawing"
 import { bondById } from "@/chem/molecule"
 import { applyOps, type Op, type OpsResult } from "@/chem/ops"
 import type { BondStyle, Molecule } from "@/chem/types"
@@ -16,12 +17,12 @@ export function runOps(
     quiet?: boolean
   } = {},
 ): Extract<OpsResult, { ok: true }> | null {
-  const result = applyOps(mol, ops)
+  const result = applyOps({ ...emptyDrawing(), molecule: mol }, ops)
   if (!result.ok) {
     if (!options.quiet) console.warn(`edit rejected at op ${result.index}: ${result.error}`)
     return null
   }
-  commit(result.mol, options.keepSelection)
+  commit(result.drawing.molecule, options.keepSelection)
   return result
 }
 

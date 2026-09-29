@@ -89,8 +89,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     if (!ops) return false
     const result = runOps(mol, ops, props.commit, { quiet: true })
     if (!result) return true
-    molRef.current = result.mol
-    if (result.next) hotspot.remember(result.next, result.mol)
+    molRef.current = result.drawing.molecule
+    if (result.next) hotspot.remember(result.next, result.drawing.molecule)
     return true
   }
 
@@ -180,7 +180,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             setLabelEdit(null)
             if (text == null) return
             const result = runOps(molRef.current, [{ op: "label", atom: labelEdit.id, text }], props.commit, { keepSelection: true })
-            if (result) molRef.current = result.mol
+            if (result) molRef.current = result.drawing.molecule
           }}
         />
       )}

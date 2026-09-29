@@ -1,19 +1,26 @@
 import assert from "node:assert/strict"
 import test from "node:test"
+import { emptyDrawing } from "../../../src/chem/drawing.ts"
 import { plainFormula } from "../../../src/chem/formula.ts"
 import { dist } from "../../../src/chem/geometry.ts"
 import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors } from "../../../src/chem/molecule.ts"
-import { applyOps } from "../../../src/chem/ops.ts"
+import { applyOps, type Op } from "../../../src/chem/ops.ts"
 import type { HotTarget, Molecule } from "../../../src/chem/types.ts"
 import { ATOM_KEYS, BOND_KEYS, hasHotkey, hotkeyOps, selectionHotkeyOps, selectionTips } from "../../../src/editor/hotkeys/lookup.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 
+/** The ops on a drawing that holds just this molecule; `mol` is the molecule afterwards. */
+function run(mol: Molecule, ops: Op[]) {
+  const result = applyOps({ ...emptyDrawing(), molecule: mol }, ops)
+  return { ...result, mol: result.drawing.molecule }
+}
+
 /** A hover key pressed over the target: its ops through applyOps, as the canvas does. */
 function press(mol: Molecule, target: HotTarget, key: string): { mol: Molecule; next: HotTarget } | null {
   const ops = hotkeyOps(mol, target, key)
   if (!ops) return null
-  const result = applyOps(mol, ops)
+  const result = run(mol, ops)
   assert.ok(result.ok, result.ok ? "" : `key ${key}: ${result.error}`)
   assert.ok(result.next, `key ${key} leaves the cursor somewhere`)
   return { mol: result.mol, next: result.next }
@@ -232,7 +239,7 @@ test("j and J chairs mirror across the chain", () => {
 test("Enter label accepts an element or a nickname", () => {
   const start = ethane()
   const label = (text: string) => {
-    const result = applyOps(start.mol, [{ op: "label", atom: start.end, text }])
+    const result = run(start.mol, [{ op: "label", atom: start.end, text }])
     assert.ok(result.ok)
     return result.mol
   }
@@ -272,7 +279,7 @@ test("keys and named recipes build the same groups", () => {
   const start = ethane()
   const pairs: Array<[string, string]> = [["nitro", "N"], ["tert-butyl", "K"], ["carbonyl", "2"], ["trifluoromethyl", "F"], ["chair", "j"]]
   for (const [name, key] of pairs) {
-    const byName = applyOps(start.mol, [{ op: "add_recipe", to: start.end, name: name as never }])
+    const byName = run(start.mol, [{ op: "add_recipe", to: start.end, name: name as never }])
     const byKey = press(start.mol, { type: "atom", id: start.end }, key)
     assert.ok(byName.ok && byKey)
     assert.equal(plainFormula(byName.mol), plainFormula(byKey.mol), name)
@@ -284,7 +291,7 @@ test("one key on several selected atoms is one edit and follows every new tip", 
   const selected = start.mol.atoms.map((atom) => atom.id)
   const ops = selectionHotkeyOps(start.mol, { atoms: selected, bonds: [] }, "x")
   assert.ok(ops)
-  const result = applyOps(start.mol, ops)
+  const result = run(start.mol, ops)
   assert.ok(result.ok)
   assert.equal(plainFormula(result.mol), "C4H10")
   const tips = selectionTips(selected, result.names)
@@ -294,11 +301,11 @@ test("one key on several selected atoms is one edit and follows every new tip", 
     assert.ok(atomById(result.mol, tip))
   })
 
-  const oxygens = applyOps(start.mol, selectionHotkeyOps(start.mol, { atoms: selected, bonds: [] }, "o")!)
+  const oxygens = run(start.mol, selectionHotkeyOps(start.mol, { atoms: selected, bonds: [] }, "o")!)
   assert.ok(oxygens.ok)
   assert.deepEqual(selectionTips(selected, oxygens.names), selected, "a key that changes atoms in place keeps them")
 
-  const bonds = applyOps(start.mol, selectionHotkeyOps(start.mol, { atoms: [], bonds: [start.bond] }, "2")!)
+  const bonds = run(start.mol, selectionHotkeyOps(start.mol, { atoms: [], bonds: [start.bond] }, "2")!)
   assert.ok(bonds.ok)
   assert.equal(bonds.mol.bonds[0].order, 2, "with only bonds selected, bond keys apply")
   assert.equal(selectionHotkeyOps(start.mol, { atoms: selected, bonds: [] }, "§"), null)
@@ -338,7 +345,7 @@ test("random key presses never break the molecule", () => {
       const onBond = next() < 0.3 && mol.bonds.length > 0
       const target: HotTarget = onBond ? { type: "bond", id: pick(mol.bonds).id } : { type: "atom", id: pick(mol.atoms).id }
       const key = pick(onBond ? bondKeys : atomKeys)
-      const result = applyOps(mol, hotkeyOps(mol, target, key)!)
+      const result = run(mol, hotkeyOps(mol, target, key)!)
       // A key may find no room (a ring on a crowded bond), but never leaves a broken molecule.
       if (!result.ok) assert.doesNotMatch(result.error, /break/, `seed ${seed}, step ${step}: ${target.type} key ${key}`)
       else mol = result.mol

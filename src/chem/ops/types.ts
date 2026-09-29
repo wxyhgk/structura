@@ -1,4 +1,4 @@
-import type { BondEmphasis, BondLook, BondOrder, BondStereo, HotTarget, Molecule, Point, RingKind } from "../types.ts"
+import type { BondEmphasis, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Point, RingKind } from "../types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
@@ -61,6 +61,14 @@ export type Op =
   | { op: "flip"; atoms: Ref[]; axis: "horizontal" | "vertical" }
   | { op: "scale"; atoms: Ref[]; sx: number; sy: number; center?: Point }
   /**
+   * Turns atoms out of the page about a horizontal (x) or vertical (y) axis through
+   * `center` and projects them back, like tilting a model. Pass the previous tumble's
+   * result `depth` so that repeated small turns keep turning the same 3D shape.
+   */
+  | { op: "tumble"; atoms: Ref[]; axis: "x" | "y"; angle: number; center?: Point; depth?: Record<number, number> }
+  /** A reaction arrow beside these atoms, pointing away from them. */
+  | { op: "add_arrow"; atoms: Ref[]; direction: "left" | "right" | "up" | "down" }
+  /**
    * Drawing with the mouse, where positions come from the pointer. These join nearby atoms
    * the way the drawing tools do; an agent normally uses add_atom and add_ring instead.
    */
@@ -71,7 +79,7 @@ export type Op =
 export type OpsResult =
   | {
       ok: true
-      mol: Molecule
+      drawing: Drawing
       /** Ids of the atoms named with `as`. */
       names: Record<string, number>
       /** Warnings such as an overfilled atom. The edit still went through. */
@@ -81,7 +89,11 @@ export type OpsResult =
        * presses: the new tip, or the atom or bond it changed.
        */
       next: HotTarget | null
-      /** Atoms and bonds this batch created (ids are never reused, so this is exact). */
-      added: { atoms: number[]; bonds: number[] }
+      /** Atoms, bonds and arrows this batch created (ids are never reused, so this is exact). */
+      added: { atoms: number[]; bonds: number[]; arrows: number[] }
+      /** Atoms that were there before and now sit somewhere else. */
+      moved: number[]
+      /** Set when the batch ends with a tumble: pass it to the next tumble's `depth`. */
+      depth?: Record<number, number>
     }
-  | { ok: false; mol: Molecule; index: number; error: string }
+  | { ok: false; drawing: Drawing; index: number; error: string }

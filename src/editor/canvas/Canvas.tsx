@@ -76,6 +76,9 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     if (event.key === "Enter" && hot.type === "atom") {
       const atom = atomById(mol, hot.id)
       if (!atom) return false
+      // The field covers the atom, so the canvas sees the pointer leave; pinning keeps the
+      // atom as the hotspot, so Enter after Escape reopens it and keys go on from there.
+      hotspot.pin(atom.id)
       setLabelEdit({ id: atom.id, initial: atom.alias ?? (atom.el === "C" ? "" : atom.el) })
       return true
     }

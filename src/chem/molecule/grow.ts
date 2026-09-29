@@ -3,12 +3,6 @@ import { neighbors } from "./graph.ts"
 import { sproutAt } from "./place.ts"
 import type { BondStyle, HotTarget, Molecule } from "../types.ts"
 
-export const SINGLE: BondStyle = { order: 1, stereo: "none" }
-export const DOUBLE: BondStyle = { order: 2, stereo: "none" }
-export const TRIPLE: BondStyle = { order: 3, stereo: "none" }
-export const WEDGE: BondStyle = { order: 1, stereo: "up" }
-export const HASH: BondStyle = { order: 1, stereo: "down" }
-
 export type HotResult = { mol: Molecule; next: HotTarget }
 
 export function atomNext(mol: Molecule, id: number): HotResult {

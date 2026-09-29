@@ -1,5 +1,5 @@
 import { elementOf } from "./elements/index.ts"
-import { insertGroup } from "./molecule/abbreviate.ts"
+import { groupOrAlias, insertGroup } from "./molecule/abbreviate.ts"
 import { setAlias, setElement, setIsotope } from "./molecule/graph.ts"
 import { GROUP_FIRST, templateFor } from "./templates.ts"
 import type { Molecule } from "./types.ts"
@@ -24,7 +24,5 @@ export function setAtomLabel(mol: Molecule, id: number, text: string): Molecule 
   if (elementOf(trimmed)) return setElement(mol, [id], trimmed)
   const heavy = HYDROGEN_ISOTOPES[trimmed] ?? isotopeLabel(trimmed)
   if (heavy) return setIsotope(setElement(mol, [id], heavy.el), [id], heavy.isotope)
-  const placed = template ? insertGroup(mol, id, template, trimmed) : null
-  if (placed) return placed.mol
-  return setAlias(setElement(mol, [id], "C"), id, trimmed)
+  return groupOrAlias(mol, id, trimmed).mol
 }

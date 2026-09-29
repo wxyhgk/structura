@@ -4,13 +4,13 @@ import { addReactionArrow, emptyDrawing } from "../../src/chem/drawing.ts"
 import { applyHotkey } from "../../src/chem/hotkeys.ts"
 import { setAtomLabel } from "../../src/chem/label.ts"
 import {
-  attachRing,
+  attachRingAt,
   bumpCharge,
   createBondAt,
-  deleteHit,
+  deleteSelection,
   emptyMolecule,
   flipAtoms,
-  fuseRing,
+  fuseRingAt,
   growRing,
   placeRing,
   rotateAtoms,
@@ -129,10 +129,10 @@ test("random edits never break an invariant", () => {
         mol = sprout(mol, atom.id, SINGLE, pick(["C", "N", "O"]))
         label = `sprout #${atom.id}`
       } else if (roll < 0.63) {
-        mol = attachRing(mol, atom.id, pick(RINGS))
+        mol = attachRingAt(mol, atom.id, pick(RINGS)).mol
         label = `attach ring #${atom.id}`
       } else if (roll < 0.68 && bond) {
-        mol = fuseRing(mol, bond.id, pick(RINGS), next() < 0.5 ? 1 : -1)
+        mol = fuseRingAt(mol, bond.id, pick(RINGS), next() < 0.5 ? 1 : -1).mol
         label = `fuse ring #${bond.id}`
       } else if (roll < 0.71) {
         mol = spiroRing(mol, atom.id, pick(RINGS)).mol
@@ -141,7 +141,7 @@ test("random edits never break an invariant", () => {
         mol = growRing(mol, atom.id, pick(RINGS)).mol
         label = `grow ring #${atom.id}`
       } else if (roll < 0.8) {
-        mol = deleteHit(mol, next() < 0.5 || !bond ? { type: "atom", id: atom.id } : { type: "bond", id: bond.id })
+        mol = deleteSelection(mol, next() < 0.5 || !bond ? { atoms: [atom.id], bonds: [] } : { atoms: [], bonds: [bond.id] })
         label = `delete near #${atom.id}`
       } else if (roll < 0.84) {
         mol = setAtomLabel(mol, atom.id, pick(LABELS))

@@ -115,16 +115,6 @@ export function addBond(
   return { mol: next, id }
 }
 
-export function paintBond(mol: Molecule, bondId: number, style: BondStyle): Molecule {
-  const bond = bondById(mol, bondId)
-  if (!bond) return mol
-  if (style.order === 1 && style.stereo === "none" && !style.look && bond.stereo === "none" && !bond.look) {
-    const order = bond.order === 1 ? 2 : bond.order === 2 ? 3 : 1
-    return addBond(mol, bond.a, bond.b, { order, stereo: "none" })?.mol ?? mol
-  }
-  return addBond(mol, bond.a, bond.b, style)?.mol ?? mol
-}
-
 export function setBondOrder(mol: Molecule, bondIds: number[], order: 1 | 2 | 3): Molecule {
   const wanted = new Set(bondIds)
   const next = cloneMolecule(mol)
@@ -152,11 +142,6 @@ export function deleteSelection(mol: Molecule, selection: Selection): Molecule {
   )
   next.atoms = next.atoms.filter((atom) => !atoms.has(atom.id))
   return next
-}
-
-export function deleteHit(mol: Molecule, hit: { type: "atom"; id: number } | { type: "bond"; id: number }): Molecule {
-  if (hit.type === "atom") return deleteSelection(mol, { atoms: [hit.id], bonds: [] })
-  return deleteSelection(mol, { atoms: [], bonds: [hit.id] })
 }
 
 export function moveAtoms(mol: Molecule, ids: number[], dx: number, dy: number): Molecule {

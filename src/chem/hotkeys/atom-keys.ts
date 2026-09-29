@@ -1,4 +1,4 @@
-import { DOUBLE, HASH, SINGLE, TRIPLE, WEDGE } from "../molecule/grow.ts"
+import { DOUBLE, HASH, SINGLE, TRIPLE, WEDGE } from "../constants.ts"
 import type { AtomAction } from "./actions.ts"
 
 /** The keys pressed over an atom. Upper case is Shift. */

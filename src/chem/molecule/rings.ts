@@ -116,10 +116,6 @@ function ringAttachedPoints(origin: Point, angle: number, size: number, length =
   return points
 }
 
-export function attachRing(mol: Molecule, atomId: number, kind: RingKind): Molecule {
-  return attachRingAt(mol, atomId, kind).mol
-}
-
 export function attachRingAt(
   mol: Molecule,
   atomId: number,

@@ -1,4 +1,4 @@
-import { BOND_LENGTH, RING_SHAPES, ringKindFor } from "../constants.ts"
+import { RING_SHAPES, ringKindFor } from "../constants.ts"
 import { applyHotkey } from "../hotkeys.ts"
 import { setAtomLabel } from "../label.ts"
 import {
@@ -18,20 +18,14 @@ import {
   setElement,
   setIsotope,
   sproutAngle,
+  spotBeside,
   sproutAt,
 } from "../molecule.ts"
 import { RECIPES } from "../molecule/recipes.ts"
 import { templateFor } from "../templates.ts"
-import type { HotTarget, Molecule, Point } from "../types.ts"
+import type { HotTarget, Molecule } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"
 import type { Op } from "./types.ts"
-
-/** Somewhere clear for an atom that is not attached to anything yet. */
-function freeSpot(mol: Molecule): Point {
-  if (mol.atoms.length === 0) return { x: 0, y: 0 }
-  const ys = mol.atoms.map((atom) => atom.y)
-  return { x: Math.max(...mol.atoms.map((atom) => atom.x)) + BOND_LENGTH * 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 }
-}
 
 /** Ops that change what is bonded to what. Returns null for ops it does not handle. */
 export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
@@ -46,7 +40,7 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
         ctx.name(op.as, grown.id)
         return { mol: grown.mol, next: { type: "atom", id: grown.id } }
       }
-      const spot = freeSpot(mol)
+      const spot = spotBeside(mol)
       const added = addAtom(mol, op.el, spot.x, spot.y)
       ctx.name(op.as, added.id)
       return { mol: added.mol, next: { type: "atom", id: added.id } }

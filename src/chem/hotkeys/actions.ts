@@ -1,5 +1,6 @@
 import { bumpCharge, fuseChairAt, fuseRingAt, setBondLook, sproutAt } from "../molecule.ts"
-import { atomNext, degree, extend, SINGLE, type HotResult } from "../molecule/grow.ts"
+import { SINGLE } from "../constants.ts"
+import { atomNext, degree, extend, type HotResult } from "../molecule/grow.ts"
 import { addPhenyl, addRing, become, isotopeOf, nick, RECIPES, type RecipeName } from "../molecule/recipes.ts"
 import type { BondStyle, Molecule, RingKind } from "../types.ts"
 

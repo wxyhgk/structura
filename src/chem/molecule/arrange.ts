@@ -1,5 +1,5 @@
 import { BOND_LENGTH } from "../constants.ts"
-import type { Molecule } from "../types.ts"
+import type { Molecule, Point } from "../types.ts"
 import { emptyMolecule, spliceIn, subMolecule } from "./graph.ts"
 import { bondLengthAt } from "./measure.ts"
 
@@ -35,14 +35,19 @@ export function sideBySide(molecules: Molecule[], after: Molecule = emptyMolecul
  */
 export function placeBeside(existing: Molecule, molecules: Molecule[]): Molecule {
   if (existing.atoms.length === 0) return sideBySide(molecules, existing)
-  const right = Math.max(...existing.atoms.map((atom) => atom.x))
-  const ys = existing.atoms.map((atom) => atom.y)
-  const middle = (Math.min(...ys) + Math.max(...ys)) / 2
+  const spot = spotBeside(existing)
   let merged = existing
   rowOffsets(molecules).forEach((offset, index) => {
-    if (offset) merged = spliceIn(merged, molecules[index], offset.dx + right + BOND_LENGTH * 2, offset.dy + middle).mol
+    if (offset) merged = spliceIn(merged, molecules[index], offset.dx + spot.x, offset.dy + spot.y).mol
   })
   return merged
+}
+
+/** Where something new goes: two bond lengths right of the drawing, level with its middle; the origin on an empty page. */
+export function spotBeside(existing: Molecule): Point {
+  if (existing.atoms.length === 0) return { x: 0, y: 0 }
+  const ys = existing.atoms.map((atom) => atom.y)
+  return { x: Math.max(...existing.atoms.map((atom) => atom.x)) + BOND_LENGTH * 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 }
 }
 
 /**

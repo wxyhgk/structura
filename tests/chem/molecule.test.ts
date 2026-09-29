@@ -8,7 +8,7 @@ import {
   addAtom,
   addBond,
   atomById,
-  attachRing,
+  attachRingAt,
   bondBetween,
   neighbors,
   bondOrderSum,
@@ -17,7 +17,7 @@ import {
   createBondAt,
   emptyMolecule,
   flipAtoms,
-  fuseRing,
+  fuseRingAt,
   placeRing,
   ringOnBond,
   rotateAtoms,
@@ -91,7 +91,7 @@ test("benzene and cyclohexane formulas", () => {
 test("fusing benzene onto a bond uses that bond as a shared edge", () => {
   const base = createBondAt(emptyMolecule(), { x: 10, y: 20 }, { order: 1, stereo: "none" })
   const bond = base.bonds[0]
-  const fused = fuseRing(base, bond.id, "benzene", 1)
+  const fused = fuseRingAt(base, bond.id, "benzene", 1).mol
   assert.equal(fused.atoms.length, 6)
   assert.equal(fused.bonds.length, 6)
   assert.equal(plainFormula(fused), "C6H6")
@@ -106,7 +106,7 @@ test("fusing benzene onto a bond uses that bond as a shared edge", () => {
 test("fusing benzene onto a ring bond does not overfill the bridgeheads", () => {
   const benzene = placeRing(emptyMolecule(), { x: 0, y: 0 }, "benzene")
   for (const bond of benzene.bonds) {
-    const fused = fuseRing(benzene, bond.id, "benzene", 1)
+    const fused = fuseRingAt(benzene, bond.id, "benzene", 1).mol
     assert.equal(plainFormula(fused), "C10H8")
     assert.equal(valenceErrorCount(fused), 0)
     for (const atom of fused.atoms) {
@@ -118,7 +118,7 @@ test("fusing benzene onto a ring bond does not overfill the bridgeheads", () => 
   }
   const single = benzene.bonds.find((bond) => bond.order === 1)
   assert.ok(single)
-  const naphthalene = fuseRing(benzene, single.id, "benzene", 1)
+  const naphthalene = fuseRingAt(benzene, single.id, "benzene", 1).mol
   assert.equal(valenceErrorCount(naphthalene), 0)
   const open = naphthalene.bonds.filter((bond) => {
     const ends = [bond.a, bond.b]
@@ -126,7 +126,7 @@ test("fusing benzene onto a ring bond does not overfill the bridgeheads", () => 
   })
   assert.ok(open.length >= 2)
   for (const bond of open) {
-    const fused = fuseRing(naphthalene, bond.id, "benzene", 1)
+    const fused = fuseRingAt(naphthalene, bond.id, "benzene", 1).mol
     assert.equal(valenceErrorCount(fused), 0)
     assert.equal(plainFormula(fused), "C14H10")
     for (const atom of fused.atoms) {
@@ -142,7 +142,7 @@ test("fusing benzene onto a ring bond does not overfill the bridgeheads", () => 
     return degrees[0] === 2 && degrees[1] === 3
   })
   assert.ok(bay)
-  const phenalene = fuseRing(naphthalene, bay.id, "benzene", 1)
+  const phenalene = fuseRingAt(naphthalene, bay.id, "benzene", 1).mol
   assert.equal(phenalene.atoms.length, 13)
   assert.equal(plainFormula(phenalene), "C13H10")
   assert.equal(valenceErrorCount(phenalene), 0)
@@ -155,7 +155,7 @@ test("fusing benzene onto a ring bond does not overfill the bridgeheads", () => 
   assert.equal(bare.length, 1)
   const shared = naphthalene.bonds.find((bond) => degreeOf(bond.a) === 3 && degreeOf(bond.b) === 3)
   assert.ok(shared)
-  const refused = fuseRing(naphthalene, shared.id, "benzene", 1)
+  const refused = fuseRingAt(naphthalene, shared.id, "benzene", 1).mol
   assert.equal(refused.atoms.length, naphthalene.atoms.length)
 })
 
@@ -164,7 +164,7 @@ test("a fused ring stays off the existing ring on either side of the bond", () =
   const occupied = new Set(benzene.atoms.map((atom) => atom.id))
   for (const bond of benzene.bonds) {
     for (const side of [1, -1] as const) {
-      const fused = fuseRing(benzene, bond.id, "benzene", side)
+      const fused = fuseRingAt(benzene, bond.id, "benzene", side).mol
       for (const atom of fused.atoms) {
         if (occupied.has(atom.id)) continue
         let nearest = Infinity
@@ -175,14 +175,14 @@ test("a fused ring stays off the existing ring on either side of the bond", () =
   }
   const single = benzene.bonds.find((bond) => bond.order === 1)
   assert.ok(single)
-  const naphthalene = fuseRing(benzene, single.id, "benzene", 1)
+  const naphthalene = fuseRingAt(benzene, single.id, "benzene", 1).mol
   const placed = new Set(naphthalene.atoms.map((atom) => atom.id))
   const degree = (id: number) =>
     naphthalene.bonds.filter((bond) => bond.a === id || bond.b === id).length
   for (const bond of naphthalene.bonds) {
     if (degree(bond.a) > 2 || degree(bond.b) > 2) continue
     for (const side of [1, -1] as const) {
-      const fused = fuseRing(naphthalene, bond.id, "benzene", side)
+      const fused = fuseRingAt(naphthalene, bond.id, "benzene", side).mol
       for (const atom of fused.atoms) {
         if (placed.has(atom.id)) continue
         let nearest = Infinity
@@ -220,7 +220,7 @@ test("flipping horizontally mirrors across the center and swaps wedges", () => {
 test("a ring on an atom hangs off by one single bond", () => {
   const base = createBondAt(emptyMolecule(), { x: 0, y: 0 }, { order: 1, stereo: "none" })
   const target = base.atoms[1].id
-  const attached = attachRing(base, target, "benzene")
+  const attached = attachRingAt(base, target, "benzene").mol
   assert.equal(attached.atoms.length, 8)
   assert.equal(attached.bonds.length, 8)
   assert.equal(plainFormula(attached), "C8H10")

@@ -16,7 +16,8 @@ import {
   setElement,
   sprout,
 } from "../../src/chem/molecule.ts"
-import { allTemplates, keptAsLabel, templateFor } from "../../src/chem/templates.ts"
+import { keptAsLabel, templateFor } from "../../src/chem/templates.ts"
+import { ABBREVIATIONS } from "../../src/chem/templates/abbreviations.ts"
 import type { Molecule } from "../../src/chem/types.ts"
 import { validate } from "../../src/chem/validate.ts"
 
@@ -39,7 +40,7 @@ const BRIDGED = new Set(["9-BBN"])
 
 test("every abbreviation lands with RDKit's formula, sane bonds and no valence problem", () => {
   const wrong: string[] = []
-  for (const template of allTemplates().filter((item) => item.attachments === 1)) {
+  for (const template of ABBREVIATIONS.filter((item) => item.attachments === 1)) {
     const { mol, end } = ethane()
     const placed = insertGroup(mol, end, template)
     if (!placed) {
@@ -146,7 +147,7 @@ test("editing a member turns the group back into plain atoms; moving keeps it", 
 })
 
 test("only the common abbreviations stay as labels", () => {
-  const kept = allTemplates().filter(keptAsLabel).map((template) => template.label)
+  const kept = ABBREVIATIONS.filter(keptAsLabel).map((template) => template.label)
   assert.deepEqual(kept.sort(), ["Ac", "Bn", "Boc", "Bz", "Cbz", "Et", "Fmoc", "Me", "Ph", "TBS", "TMS", "Ts", "iPr", "tBu"].sort())
   const { mol, end } = ethane()
   assert.equal(setAtomLabel(mol, end, "CH3").groups[0]?.label, "CH3")

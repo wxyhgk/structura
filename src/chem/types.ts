@@ -99,9 +99,5 @@ export type ToolId =
 
 export type Selection = { atoms: number[]; bonds: number[] }
 
-export type Hit =
-  | { type: "atom"; id: number }
-  | { type: "bond"; id: number }
-
 /** Where the next key press lands: the atom or bond under the pointer, or the one a key left behind. */
 export type HotTarget = { type: "atom"; id: number } | { type: "bond"; id: number }

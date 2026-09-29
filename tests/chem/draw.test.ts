@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { buildScene, type DrawLine } from "../../src/chem/draw.ts"
-import { addAtom, addBond, emptyMolecule, paintBond, setBondLook, setBondOrder } from "../../src/chem/molecule.ts"
+import { addAtom, addBond, emptyMolecule, setBondLook, setBondOrder } from "../../src/chem/molecule.ts"
 
 function lineDistance(point: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }) {
   const dx = b.x - a.x
@@ -82,7 +82,7 @@ test("a drawing look and chemical stereo never sit on the same bond", () => {
   const doubled = setBondOrder(mol, [mol.bonds[0].id], 2)
   assert.equal(doubled.bonds[0].look, undefined)
 
-  const plain = paintBond(mol, mol.bonds[0].id, { order: 1, stereo: "none" })
+  const plain = addBond(mol, first.id, second.id, { order: 1, stereo: "none" })!.mol
   assert.equal(plain.bonds[0].order, 1)
   assert.equal(plain.bonds[0].look, undefined)
 

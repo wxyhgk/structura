@@ -1,4 +1,4 @@
-import type { RingKind } from "./types.ts"
+import type { BondStyle, RingKind } from "./types.ts"
 
 export const BOND_LENGTH = 40
 
@@ -47,3 +47,7 @@ export function ringKindFor(size: number, aromatic = false): RingKind | undefine
 }
 
 export const SINGLE: { order: 1; stereo: "none" } = { order: 1, stereo: "none" }
+export const DOUBLE: BondStyle = { order: 2, stereo: "none" }
+export const TRIPLE: BondStyle = { order: 3, stereo: "none" }
+export const WEDGE: BondStyle = { order: 1, stereo: "up" }
+export const HASH: BondStyle = { order: 1, stereo: "down" }

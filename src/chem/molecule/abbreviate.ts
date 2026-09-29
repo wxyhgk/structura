@@ -1,5 +1,5 @@
 import { angleTo, norm } from "../geometry.ts"
-import { keptAsLabel, type GroupTemplate } from "../templates.ts"
+import { keptAsLabel, templateFor, type GroupTemplate } from "../templates.ts"
 import type { Molecule, Point } from "../types.ts"
 import {
   addAtom,
@@ -10,6 +10,7 @@ import {
   deleteSelection,
   groupOf,
   neighbors,
+  setAlias,
   setElement,
   setIsotope,
 } from "./graph.ts"
@@ -98,4 +99,14 @@ export function insertGroup(
   const grouped = cloneMolecule(next)
   grouped.groups.push({ id: grouped.nextGroupId++, label, atoms: ids, collapsed: true })
   return { mol: grouped, id: host }
+}
+
+/**
+ * Puts the named abbreviation on the atom, or, when there is no such template or it does
+ * not fit, just writes the text on a carbon as its label. Returns where the group sits.
+ */
+export function groupOrAlias(mol: Molecule, atomId: number, text: string): { mol: Molecule; id: number } {
+  const template = templateFor(text)
+  const placed = template ? insertGroup(mol, atomId, template, text) : null
+  return placed ?? { mol: setAlias(setElement(mol, [atomId], "C"), atomId, text), id: atomId }
 }

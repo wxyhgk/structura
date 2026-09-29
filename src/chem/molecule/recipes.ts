@@ -1,13 +1,13 @@
 import { angleTo } from "../geometry.ts"
-import { insertGroup } from "./abbreviate.ts"
-import { atomById, bumpCharge, neighbors, setAlias, setElement, setIsotope } from "./graph.ts"
+import { groupOrAlias } from "./abbreviate.ts"
+import { atomById, bumpCharge, neighbors, setElement, setIsotope } from "./graph.ts"
 import { branchAngles, sproutAngle } from "./angles.ts"
 import { attachChairAt } from "./chair.ts"
 import { sproutAt } from "./place.ts"
 import { growRing } from "./rings.ts"
-import { templateFor } from "../templates.ts"
 import type { Molecule, RingKind } from "../types.ts"
-import { atomNext, degree, HASH, inRing, SINGLE, DOUBLE, WEDGE, type HotResult } from "./grow.ts"
+import { DOUBLE, HASH, SINGLE, WEDGE } from "../constants.ts"
+import { atomNext, degree, inRing, type HotResult } from "./grow.ts"
 
 function addCarbonyl(mol: Molecule, id: number): HotResult {
   if (degree(mol, id) >= 2 && inRing(mol, id)) {
@@ -124,10 +124,8 @@ export function isotopeOf(mol: Molecule, id: number, el: string, isotope: number
 
 /** Puts the named abbreviation on the atom, or just its label when there is no template. */
 export function nick(mol: Molecule, id: number, label: string): HotResult {
-  const template = templateFor(label)
-  const placed = template ? insertGroup(mol, id, template, label) : null
-  if (placed) return atomNext(placed.mol, placed.id)
-  return atomNext(setAlias(setElement(mol, [id], "C"), id, label), id)
+  const placed = groupOrAlias(mol, id, label)
+  return atomNext(placed.mol, placed.id)
 }
 
 /**

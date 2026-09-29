@@ -12,7 +12,6 @@ export {
   cloneMolecule,
   componentOf,
   cycleAround,
-  deleteHit,
   deleteSelection,
   dragIds,
   emptyMolecule,
@@ -21,7 +20,6 @@ export {
   groupOf,
   moveAtoms,
   neighbors,
-  paintBond,
   rotateAtoms,
   scaleAtoms,
   selectAll,
@@ -37,20 +35,18 @@ export {
 } from "./molecule/graph.ts"
 export { nearestAtom, nearestBond } from "./molecule/snap.ts"
 export { bondLengthAt } from "./molecule/measure.ts"
-export { outwardAngle, sproutAngle } from "./molecule/angles.ts"
+export { sproutAngle } from "./molecule/angles.ts"
 export { sproutAt } from "./molecule/place.ts"
 export {
-  attachRing,
   attachRingAt,
   growRing,
   growRingPreview,
   placeRing,
   ringOnBond,
   ringPoints,
-  ringThroughPoints,
   spiroRing,
 } from "./molecule/rings.ts"
-export { fuseRing, fuseRingAt } from "./molecule/fusion.ts"
+export { fuseRingAt } from "./molecule/fusion.ts"
 export { attachChairAt, fuseChairAt } from "./molecule/chair.ts"
 export {
   chainCount,
@@ -65,4 +61,4 @@ export {
   sprout,
 } from "./molecule/pointer.ts"
 export { insertGroup } from "./molecule/abbreviate.ts"
-export { duplicateAtoms, placeBeside, sideBySide } from "./molecule/arrange.ts"
+export { duplicateAtoms, placeBeside, sideBySide, spotBeside } from "./molecule/arrange.ts"

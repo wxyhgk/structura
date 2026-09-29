@@ -46,7 +46,3 @@ for (const template of ABBREVIATIONS) {
 export function templateFor(text: string): GroupTemplate | undefined {
   return byName.get(text)
 }
-
-export function allTemplates(): readonly GroupTemplate[] {
-  return ABBREVIATIONS
-}

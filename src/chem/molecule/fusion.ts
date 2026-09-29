@@ -83,10 +83,6 @@ export function openSide(mol: Molecule, bond: Bond, preferred: 1 | -1): 1 | -1 {
   return occupied === 1 ? -1 : 1
 }
 
-export function fuseRing(mol: Molecule, bondId: number, kind: RingKind, side: 1 | -1): Molecule {
-  return fuseRingAt(mol, bondId, kind, side).mol
-}
-
 export function fuseRingAt(
   mol: Molecule,
   bondId: number,

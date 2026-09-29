@@ -143,10 +143,6 @@ export function elementMass(symbol: string): number {
   return elementOf(symbol)?.mass ?? 0
 }
 
-export function elementValences(symbol: string): number[] | undefined {
-  return elementOf(symbol)?.valences
-}
-
 export function elementColor(symbol: string, enabled: boolean): string {
   if (!enabled) return "#222222"
   return elementOf(symbol)?.color ?? "#222222"

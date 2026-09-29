@@ -4,7 +4,7 @@ import test from "node:test"
 import { BOND_LENGTH } from "../../src/chem/constants.ts"
 import { plainFormula } from "../../src/chem/formula.ts"
 import { setAtomLabel } from "../../src/chem/label.ts"
-import { addAtom, addBond, bondLengthAt, bumpCharge, createBondAt, emptyMolecule, fuseRing, placeRing, sprout } from "../../src/chem/molecule.ts"
+import { addAtom, addBond, bondLengthAt, bumpCharge, createBondAt, emptyMolecule, fuseRingAt, placeRing, sprout } from "../../src/chem/molecule.ts"
 import { kekulizeAromaticReport } from "../../src/chem/molecule/kekule.ts"
 import { toMolfile } from "../../src/chem/molfile.ts"
 import { placeBeside, sideBySide } from "../../src/chem/molecule/arrange.ts"
@@ -88,7 +88,7 @@ function sampleMolecules(): Array<[string, Molecule]> {
 
   const labelled = setAtomLabel(setAtomLabel(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE), 1, "13C"), 2, "D")
   let naphthalene = placeRing(emptyMolecule(), { x: 0, y: 0 }, "benzene")
-  naphthalene = fuseRing(naphthalene, naphthalene.bonds[0].id, "benzene", 1)
+  naphthalene = fuseRingAt(naphthalene, naphthalene.bonds[0].id, "benzene", 1).mol
   return [["acetate", acetate], ["wedges", wedges], ["charges", charged], ["isotopes", labelled], ["naphthalene", naphthalene]]
 }
 

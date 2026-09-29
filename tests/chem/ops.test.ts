@@ -392,8 +392,8 @@ test("clean without atoms tidies the whole molecule", () => {
 
 test("clean rejects atoms that are not there", () => {
   const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
-  const unnamed = applyOps(start, [{ op: "clean", atoms: ["nobody"] }])
+  const unnamed = run(start, [{ op: "clean", atoms: ["nobody"] }])
   assert.ok(!unnamed.ok && /no atom is named "nobody"/.test(unnamed.error))
-  const missing = applyOps(start, [{ op: "clean", lock: [99] }])
+  const missing = run(start, [{ op: "clean", lock: [99] }])
   assert.ok(!missing.ok && /#99/.test(missing.error))
 })

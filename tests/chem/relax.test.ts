@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
+import { emptyDrawing } from "../../src/chem/drawing.ts"
 import { dist } from "../../src/chem/geometry.ts"
 import { atomById, emptyMolecule, neighbors } from "../../src/chem/molecule.ts"
 import { relax } from "../../src/chem/molecule/relax.ts"
@@ -7,9 +8,9 @@ import { applyOps, type Op } from "../../src/chem/ops.ts"
 import type { Molecule } from "../../src/chem/types.ts"
 
 function build(ops: Op[], start = emptyMolecule()): Molecule {
-  const result = applyOps(start, ops)
+  const result = applyOps({ ...emptyDrawing(), molecule: start }, ops)
   assert.ok(result.ok, result.ok ? "" : `op ${result.index}: ${result.error}`)
-  return result.mol
+  return result.drawing.molecule
 }
 
 /** A zigzag chain of `length` carbons, ids 1…length. */

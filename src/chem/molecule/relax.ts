@@ -4,6 +4,7 @@ import { objective, positionsFor } from "./relax/energy.ts"
 import { minimize } from "./relax/minimize.ts"
 import { setUp } from "./relax/setup.ts"
 import { buildSprings } from "./relax/springs.ts"
+import { unfold } from "./relax/unfold.ts"
 
 export type RelaxOptions = {
   /** The atoms allowed to move. Every other atom stays exactly where it is. */
@@ -56,6 +57,8 @@ function relaxOnce(mol: Molecule, free: Set<number>, locked: Set<number>, iterat
 /**
  * Tidies part of a drawing: the free atoms move towards even bond lengths, ideal angles
  * and regular rings, away from atoms they overlap, while staying near where they were.
+ * Atoms trapped inside a ring or on top of another atom are first set back outside (see
+ * unfold), since small steps alone cannot carry them across a ring bond.
  * Nothing else moves, groups move whole, and no wedge or hash comes to mean the other
  * stereoisomer: a centre that would flip is held still, with its neighbours, and the
  * clean-up is run again.
@@ -66,6 +69,8 @@ export function relax(mol: Molecule, options: RelaxOptions): Molecule {
   const iterations = options.iterations ?? 300
   const centres = stereoCentres(mol)
   const before = new Map(centres.map((id) => [id, handedness(mol, id)]))
+  const wedged = new Set(centres.flatMap((id) => [id, ...neighbors(mol, id).map((other) => other.id)]))
+  mol = unfold(mol, free, new Set([...locked, ...wedged]))
 
   for (let round = 0; round < 3; round++) {
     const next = relaxOnce(mol, free, locked, iterations)

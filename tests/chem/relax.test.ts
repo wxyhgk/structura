@@ -1,10 +1,13 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import test from "node:test"
 import { emptyDrawing } from "../../src/chem/drawing.ts"
 import { dist } from "../../src/chem/geometry.ts"
 import { atomById, emptyMolecule, neighbors } from "../../src/chem/molecule.ts"
+import { smallestRings } from "../../src/chem/molecule/cycles.ts"
 import { relax } from "../../src/chem/molecule/relax.ts"
 import { applyOps, type Op } from "../../src/chem/ops.ts"
+import { readMolfile } from "../../src/chem/sdf.ts"
 import type { Molecule } from "../../src/chem/types.ts"
 
 function build(ops: Op[], start = emptyMolecule()): Molecule {
@@ -181,4 +184,32 @@ test("a group moves as one rigid piece", () => {
 test("the same input always gives the same drawing", () => {
   const mol = scramble(build([{ op: "add_ring", at: { x: 0, y: 0 }, size: 7 }, { op: "add_atom", el: "C", to: 3 }]), 14)
   assert.deepEqual(relax(mol, { atoms: ids(mol) }), relax(mol, { atoms: ids(mol) }))
+})
+
+/** Atoms lying well inside a ring they are not part of. */
+function trappedInRings(mol: Molecule): number[] {
+  return smallestRings(mol).flatMap((ring) => {
+    const atoms = ring.map((id) => atomById(mol, id)!)
+    const x = atoms.reduce((sum, atom) => sum + atom.x, 0) / atoms.length
+    const y = atoms.reduce((sum, atom) => sum + atom.y, 0) / atoms.length
+    const radius = Math.min(...atoms.map((atom) => Math.hypot(atom.x - x, atom.y - y)))
+    return mol.atoms.filter((atom) => !ring.includes(atom.id) && Math.hypot(atom.x - x, atom.y - y) < radius * 0.8).map((atom) => atom.id)
+  })
+}
+
+// Pressing x twice on every atom of a substituted ring: one new tip lands inside the ring on
+// top of a ring atom. Small steps alone cannot carry it back across the ring bond.
+const crowded = readMolfile(readFileSync(new URL("./fixtures/crowded.mol", import.meta.url), "utf8")).mol
+
+test("a substituent stuck inside a ring is set back outside, whole drawing or selection", () => {
+  const tips = [15, 16, 17, 18, 19, 20, 21]
+  for (const free of [ids(crowded), tips]) {
+    const out = relax(crowded, { atoms: free })
+    assert.deepEqual(trappedInRings(out), [])
+    assert.ok(closestPair(out) > 0.7 * medianBond(crowded), `closest pair ${closestPair(out).toFixed(1)}`)
+  }
+  const selected = relax(crowded, { atoms: tips })
+  for (const atom of crowded.atoms.filter((item) => !tips.includes(item.id))) {
+    assert.deepEqual(atomById(selected, atom.id), atom, "unselected atoms stay exactly put")
+  }
 })

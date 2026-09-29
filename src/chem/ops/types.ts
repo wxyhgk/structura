@@ -69,6 +69,11 @@ export type Op =
   /** A reaction arrow beside these atoms, pointing away from them. */
   | { op: "add_arrow"; atoms: Ref[]; direction: "left" | "right" | "up" | "down" }
   /**
+   * Tidies the atoms (all of them when left out): even bonds, ideal angles, regular rings,
+   * no overlaps. Only these atoms move, and never the locked ones.
+   */
+  | { op: "clean"; atoms?: Ref[]; lock?: Ref[] }
+  /**
    * Drawing with the mouse, where positions come from the pointer. These join nearby atoms
    * the way the drawing tools do; an agent normally uses add_atom and add_ring instead.
    */

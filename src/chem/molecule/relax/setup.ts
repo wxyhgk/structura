@@ -41,19 +41,26 @@ function median(values: number[]): number | null {
   return sorted[Math.floor(sorted.length / 2)]
 }
 
-/** The bond length of the atoms staying put around the moving ones, else the drawing's usual length. */
+/**
+ * The bond length of the bonds staying put around the moving atoms, else of any bond
+ * staying put, else the drawing's usual length. Bonds that move are what is being fixed,
+ * so they are the last thing to trust.
+ */
 function targetLength(mol: Molecule, moving: Set<number>): number {
   const around = new Set<number>()
   for (const id of moving) if (!around.has(id)) for (const other of componentOf(mol, id)) around.add(other)
   const index = new Map(mol.atoms.map((atom) => [atom.id, atom]))
-  const fixed: number[] = []
+  const near: number[] = []
+  const far: number[] = []
   for (const bond of mol.bonds) {
-    if (!around.has(bond.a) || moving.has(bond.a) || moving.has(bond.b)) continue
+    if (moving.has(bond.a) || moving.has(bond.b)) continue
     const a = index.get(bond.a)
     const b = index.get(bond.b)
-    if (a && b && dist(a, b) > 1) fixed.push(dist(a, b))
+    if (!a || !b || dist(a, b) <= 1) continue
+    if (around.has(bond.a)) near.push(dist(a, b))
+    else far.push(dist(a, b))
   }
-  return median(fixed) ?? bondLengthAt(mol, [...moving][0])
+  return median(near) ?? median(far) ?? bondLengthAt(mol, [...moving][0])
 }
 
 /**

@@ -62,3 +62,4 @@ export {
 } from "./molecule/pointer.ts"
 export { insertGroup } from "./molecule/abbreviate.ts"
 export { duplicateAtoms, placeBeside, sideBySide, spotBeside } from "./molecule/arrange.ts"
+export { relax } from "./molecule/relax.ts"

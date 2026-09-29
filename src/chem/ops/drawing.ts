@@ -6,6 +6,7 @@ import {
   flipAtoms,
   moveAtoms,
   placeAtom,
+  relax,
   rotateAtoms,
   scaleAtoms,
   sprout,
@@ -35,6 +36,10 @@ export function drawingOp(mol: Molecule, op: Op, ctx: Context): Step | null {
     }
     case "flip":
       return { mol: flipAtoms(mol, op.atoms.map(ctx.atom), op.axis) }
+    case "clean": {
+      const atoms = op.atoms ? op.atoms.map(ctx.atom) : mol.atoms.map((atom) => atom.id)
+      return { mol: relax(mol, { atoms, locked: (op.lock ?? []).map(ctx.atom) }) }
+    }
     case "place_atom":
       ctx.element(op.el)
       return { mol: placeAtom(mol, op.el, op.at), next: null }

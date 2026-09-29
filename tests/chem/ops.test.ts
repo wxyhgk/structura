@@ -355,3 +355,45 @@ test("the result lists the atoms an edit moved", () => {
   assert.deepEqual(grown.moved, [], "new atoms are added, not moved")
   assert.deepEqual(ok(start, [{ op: "set_element", atom: 2, el: "N" }]).moved, [])
 })
+
+test("clean tidies atoms named earlier in the batch and leaves the rest alone", () => {
+  const build: Op[] = [
+    { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
+    { op: "add_atom", el: "C", to: 1 },
+    { op: "add_atom", el: "C", to: 2, as: "a" },
+    { op: "add_recipe", to: "a", name: "tert-butyl", as: "tbu" },
+  ]
+  const before = ok(emptyMolecule(), build)
+  const result = ok(emptyMolecule(), [
+    ...build,
+    { op: "move", atoms: ["tbu"], dx: 17, dy: -11 },
+    { op: "clean", atoms: ["tbu", 1], lock: [1] },
+  ])
+  const tbu = result.names.tbu
+  for (const atom of result.mol.atoms) if (atom.id !== tbu) assert.deepEqual(atom, atomById(before.mol, atom.id))
+  const centre = atomById(result.mol, tbu)!
+  for (const other of neighbors(result.mol, tbu)) assert.ok(Math.abs(Math.hypot(other.x - centre.x, other.y - centre.y) - 40) < 2)
+})
+
+test("clean without atoms tidies the whole molecule", () => {
+  const folded = ok(emptyMolecule(), [
+    { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
+    { op: "add_atom", el: "C", to: 1 },
+    { op: "add_atom", el: "C", to: 2 },
+    { op: "add_atom", el: "C", to: 3 },
+  ])
+  const [one, four] = [atomById(folded.mol, 1)!, atomById(folded.mol, 4)!]
+  const squashed = ok(folded.mol, [{ op: "move", atoms: [4], dx: one.x - four.x, dy: one.y - four.y }])
+  const cleaned = ok(squashed.mol, [{ op: "clean" }])
+  const [a, b] = [atomById(cleaned.mol, 1)!, atomById(cleaned.mol, 4)!]
+  assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > 30)
+  assert.equal(cleaned.mol.atoms.length, 4)
+})
+
+test("clean rejects atoms that are not there", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const unnamed = applyOps(start, [{ op: "clean", atoms: ["nobody"] }])
+  assert.ok(!unnamed.ok && /no atom is named "nobody"/.test(unnamed.error))
+  const missing = applyOps(start, [{ op: "clean", lock: [99] }])
+  assert.ok(!missing.ok && /#99/.test(missing.error))
+})

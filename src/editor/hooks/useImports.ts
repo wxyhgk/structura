@@ -19,13 +19,13 @@ const RDKIT_FAILED = "RDKit 加载失败，请检查网络后重试。"
  */
 export function useImports(editor: Pick<EditorState, "mol" | "arrows" | "openMolecules" | "appendMolecules">, viewport: Viewport) {
   const [notes, setNotes] = useState<ImportNotes | null>(null)
-  /** Set when an import lands, so the view fits the drawing once it has rendered. */
+  /** Set when an import lands, so the view shows the drawing once it has rendered. */
   const fitAfterImport = useRef(false)
 
   useEffect(() => {
     if (!fitAfterImport.current) return
     fitAfterImport.current = false
-    viewport.fit(drawingPoints(editor.mol, editor.arrows))
+    viewport.reveal(drawingPoints(editor.mol, editor.arrows))
   }, [viewport, editor.mol, editor.arrows])
 
   /** Adds molecules to the right of the drawing, as one undoable step. */

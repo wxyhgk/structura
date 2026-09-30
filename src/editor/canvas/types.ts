@@ -14,6 +14,8 @@ export type CanvasHandle = {
   hasGesture: () => boolean
   hotspot: () => { type: "atom" | "bond"; id: number } | null
   focusAtom: (id: number) => void
+  /** Opens a field on the fragment made of these atoms; what is typed replaces it. */
+  replaceFragment: (ids: number[]) => void
 }
 
 export type EditorSlice = {

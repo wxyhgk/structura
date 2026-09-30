@@ -1,6 +1,6 @@
 import type { RefObject } from "react"
 import { sceneToSvg } from "@/chem/draw"
-import { emptySelection } from "@/chem/molecule"
+import { atomIdsOfSelection, bondsLeaving, emptySelection } from "@/chem/molecule"
 import { toMolfile } from "@/chem/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
@@ -104,6 +104,15 @@ export function useCommands({
       keys: [{ key: "k", meta: true, shift: true }],
       enabled: editor.mol.atoms.length > 0,
     }),
+    replace: command(
+      "替换选中部分…",
+      () => {
+        const ids = atomIdsOfSelection(editor.mol, editor.selection)
+        if (ids.length > 0) canvas.current?.replaceFragment(ids)
+      },
+      // Only a fragment joined to the rest by one bond (or a whole molecule) can be swapped.
+      { keys: [{ key: "e", meta: true }], enabled: selected && bondsLeaving(editor.mol, atomIdsOfSelection(editor.mol, editor.selection)).length <= 1 },
+    ),
     nudge: perArrow((direction, key) =>
       command("移动 10 像素", () => editor.nudgeSelection(direction), { keys: [{ key, shift: true }], enabled: selected }),
     ),

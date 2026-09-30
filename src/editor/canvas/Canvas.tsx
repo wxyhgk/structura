@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
-import { atomById, componentOf, selectionFromAtoms } from "@/chem/molecule"
+import { atomById, bondsLeaving, componentOf, selectionFromAtoms } from "@/chem/molecule"
 import type { Drawing, Molecule } from "@/chem/types"
 import { AtomLabelInput } from "@/editor/canvas/AtomLabelInput"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
@@ -12,11 +12,11 @@ import { useViewport } from "@/editor/canvas/useViewport"
 import { hotkeyOps } from "@/editor/hotkeys/lookup"
 import { keyOf } from "@/editor/input/keymap"
 
-/** The drawing surface: pointer gestures, hover keys, the label field and the view. */
 /** Two presses this close in time (ms) and space (px) make a double click. */
 const DOUBLE_CLICK_MS = 500
 const DOUBLE_CLICK_SLOP = 6
 
+/** The drawing surface: pointer gestures, hover keys, the label field and the view. */
 export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(props, ref) {
   const { viewport } = props
   const { svgRef, zoom, pan } = useViewport(viewport)
@@ -29,7 +29,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const [panning, setPanning] = useState(false)
   const [handleCursor, setHandleCursor] = useState<string | null>(null)
   const [rotating, setRotating] = useState(false)
-  const [labelEdit, setLabelEdit] = useState<{ id: number; initial: string } | null>(null)
+  /** The label field: on one atom, or on a selected fragment to replace (`replace` lists its atoms). */
+  const [labelEdit, setLabelEdit] = useState<{ id: number; initial: string; replace?: number[] } | null>(null)
   /** The molecule as of the last edit, ahead of the re-render when keys come fast. */
   const current = () => props.latest().molecule
   /** What the last press hit and the drawing before it, to spot a double click. */
@@ -143,6 +144,13 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     hasGesture: () => gesture.current.kind !== "idle",
     hotspot: () => hotspot.active(current()),
     focusAtom: hotspot.pin,
+    replaceFragment(ids: number[]) {
+      const mol = current()
+      // The field sits on the atom that joins the fragment to the rest, where the new piece goes.
+      const [join] = bondsLeaving(mol, ids)
+      const at = join ? (ids.includes(join.a) ? join.a : join.b) : ids[0]
+      if (at != null && atomById(mol, at)) setLabelEdit({ id: at, initial: "", replace: ids })
+    },
   }))
 
   useEffect(() => {
@@ -217,12 +225,14 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
         <AtomLabelInput
           key={labelEdit.id}
           initial={labelEdit.initial}
+          placeholder={labelEdit.replace ? "替换为" : undefined}
           left={pan.x + labelAtom.x * zoom}
           top={pan.y + labelAtom.y * zoom}
           onDone={(text) => {
             setLabelEdit(null)
             if (text == null) return
-            props.run([{ op: "label", atom: labelEdit.id, text }], { keepSelection: true })
+            if (labelEdit.replace) props.run([{ op: "replace", atoms: labelEdit.replace, with: { label: text } }])
+            else props.run([{ op: "label", atom: labelEdit.id, text }], { keepSelection: true })
           }}
         />
       )}

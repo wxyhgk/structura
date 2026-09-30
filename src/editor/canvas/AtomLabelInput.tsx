@@ -7,11 +7,14 @@ import { useRef, useState } from "react"
  */
 export function AtomLabelInput({
   initial,
+  placeholder,
   left,
   top,
   onDone,
 }: {
   initial: string
+  /** Shown while empty; also names the field for screen readers. */
+  placeholder?: string
   /** Where the atom sits on the canvas, in screen pixels. */
   left: number
   top: number
@@ -31,7 +34,8 @@ export function AtomLabelInput({
       data-testid="atom-label-input"
       autoFocus
       value={value}
-      aria-label="原子标签"
+      placeholder={placeholder}
+      aria-label={placeholder ?? "原子标签"}
       className="absolute z-10 h-7 w-20 -translate-x-1/2 -translate-y-1/2 rounded-sm border border-[#1a73e8] bg-white text-center font-[Arial,Helvetica,sans-serif] text-[15px] outline-none"
       style={{ left, top }}
       onChange={(event) => setValue(event.target.value)}

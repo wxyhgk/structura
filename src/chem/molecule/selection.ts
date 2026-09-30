@@ -33,3 +33,9 @@ export function selectionFromAtoms(mol: Molecule, atomIds: number[]): Selection 
     bonds: mol.bonds.filter((bond) => set.has(bond.a) && set.has(bond.b)).map((bond) => bond.id),
   }
 }
+
+/** The bonds with one end among `ids` and the other outside: where a fragment joins the rest. */
+export function bondsLeaving(mol: Molecule, ids: Iterable<number>): Molecule["bonds"] {
+  const inside = new Set(ids)
+  return mol.bonds.filter((bond) => inside.has(bond.a) !== inside.has(bond.b))
+}

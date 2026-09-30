@@ -21,7 +21,7 @@ export {
   setElement,
   setIsotope,
 } from "./molecule/graph.ts"
-export { atomIdsOfSelection, emptySelection, selectAll, selectionFromAtoms } from "./molecule/selection.ts"
+export { atomIdsOfSelection, bondsLeaving, emptySelection, selectAll, selectionFromAtoms } from "./molecule/selection.ts"
 export { boundsCenter, centroidOf, flipAtoms, moveAtoms, rotateAtoms, scaleAtoms, tumbleAtoms } from "./molecule/transform.ts"
 export { nearestAtom, nearestBond } from "./molecule/snap.ts"
 export { bondLengthAt } from "./molecule/measure.ts"

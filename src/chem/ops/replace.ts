@@ -1,7 +1,7 @@
 import { SINGLE } from "../constants.ts"
 import { angleTo } from "../geometry.ts"
 import { setAtomLabel } from "../label.ts"
-import { addAtom, atomById, attachRingAt, centroidOf, deleteSelection, neighbors, placeRing, relax, sproutAt } from "../molecule.ts"
+import { addAtom, atomById, attachRingAt, bondsLeaving, centroidOf, deleteSelection, neighbors, placeRing, relax, sproutAt } from "../molecule.ts"
 import { RECIPES } from "../molecule/recipes.ts"
 import type { Molecule, Point } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"
@@ -61,7 +61,7 @@ export function replaceFragment(mol: Molecule, op: Extract<Op, { op: "replace" }
   }
   const ids = new Set(op.atoms.map(ctx.atom))
   if (ids.size === 0) throw new OpError("give the atoms to replace")
-  const joins = mol.bonds.filter((bond) => ids.has(bond.a) !== ids.has(bond.b))
+  const joins = bondsLeaving(mol, ids)
   if (joins.length > 1) {
     throw new OpError(`the fragment is joined to the rest by ${joins.length} bonds; only a fragment joined by one bond (or none) can be replaced`)
   }

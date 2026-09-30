@@ -78,6 +78,7 @@ export function MenuBar({
         <Item command={c.flipVertical} />
         <DropdownMenuSeparator />
         <Item command={c.clean} />
+        <Item command={c.replace} />
       </MenuButton>
       <MenuButton label="查看">
         <Item command={c.zoomIn} />

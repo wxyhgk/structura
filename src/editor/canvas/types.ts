@@ -1,4 +1,4 @@
-import type { Arrow, BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@/chem/types"
+import type { Arrow, Attachment, BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@/chem/types"
 import type { ToolId } from "@/editor/tools/types"
 import type { Viewport } from "@/editor/canvas/viewport"
 import type { Run } from "@/editor/ops"
@@ -27,6 +27,8 @@ export type EditorSlice = {
   atomEl: string
   selection: Selection
   colorHetero: boolean
+  /** The generic formula's variable points of attachment, drawn as lines into rings. */
+  attachments?: Attachment[]
   /** Applies ops to the latest drawing and commits them; see useEditor. */
   run: Run
   /** The drawing as of the last edit, ahead of the re-render when keys come fast. */

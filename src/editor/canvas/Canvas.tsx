@@ -218,6 +218,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             preview={preview}
             colorHetero={props.colorHetero}
             showFrame={!rotating}
+            attachments={props.attachments}
           />
         </g>
       </svg>

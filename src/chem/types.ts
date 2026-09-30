@@ -75,7 +75,16 @@ export type Drawing = {
    * (R1, X, Ar…). Absent for an ordinary drawing.
    */
   variables?: Record<string, Variable>
+  /** A generic formula's variable points of attachment (a line drawn into a ring's middle). */
+  attachments?: Attachment[]
 }
+
+/**
+ * A bond from `atom` to one of the `to` atoms, whichever: "–L–ETU is attached to any free
+ * position of this ring". Drawn as one line into the middle of the candidates; the bond
+ * is only made when the formula is expanded into concrete compounds.
+ */
+export type Attachment = { atom: number; to: number[] }
 
 /**
  * What a placeholder may stand for: its own list, or the same list as another variable

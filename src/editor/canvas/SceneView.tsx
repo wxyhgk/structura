@@ -1,8 +1,9 @@
 import { memo, useMemo } from "react"
 import { bondFigures, buildScene, type AtomLabel, type Figure } from "@/chem/draw"
 import { atomById } from "@/chem/molecule"
-import type { Arrow, Molecule, Selection } from "@/chem/types"
+import type { Arrow, Attachment, Molecule, Selection } from "@/chem/types"
 import type { ToolId } from "@/editor/tools/types"
+import { AttachmentLines } from "@/editor/markush/AttachmentLines"
 import { atomCircle } from "./rings.ts"
 import { SelectionMarks } from "./SelectionMarks.tsx"
 import { selectionFrame } from "./targeting.ts"
@@ -19,6 +20,7 @@ export function SceneView({
   preview,
   colorHetero,
   showFrame,
+  attachments,
 }: {
   mol: Molecule
   arrows: Arrow[]
@@ -30,12 +32,14 @@ export function SceneView({
   preview: Preview
   colorHetero: boolean
   showFrame: boolean
+  attachments?: Attachment[]
 }) {
   // Hover, previews and panning re-render often; the scene only changes with the molecule.
   const scene = useMemo(() => buildScene(mol, colorHetero), [mol, colorHetero])
   return (
     <>
       <Figures figures={scene.figures} />
+      <AttachmentLines mol={mol} attachments={attachments} labels={scene.labels} />
       <Arrows arrows={arrows} />
       <SelectionMarks mol={mol} selection={selection} labels={scene.labels} zoom={zoom} />
       <Labels labels={scene.labels} />

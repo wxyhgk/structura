@@ -1,3 +1,4 @@
+import { attachmentProblem } from "./markush/attachments.ts"
 import { variableProblem } from "./markush/variables.ts"
 import type { Drawing } from "./types.ts"
 import { errorsOf, validateDrawing } from "./validate.ts"
@@ -39,9 +40,14 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
     arrows: drawing.arrows,
     nextArrowId: drawing.nextArrowId ?? 1,
     ...(drawing.variables ? { variables: drawing.variables } : {}),
+    ...(drawing.attachments ? { attachments: drawing.attachments } : {}),
   }
   const errors = errorsOf(validateDrawing(whole))
   if (errors.length > 0) return { error: errors[0].message }
+  for (const attachment of whole.attachments ?? []) {
+    const problem = Array.isArray(attachment?.to) ? attachmentProblem(whole.molecule, attachment) : "an attachment lists no atoms"
+    if (problem) return { error: problem }
+  }
   for (const [name, variable] of Object.entries(whole.variables ?? {})) {
     const problem = variableProblem(name, variable, whole.variables)
     if (problem) return { error: problem }

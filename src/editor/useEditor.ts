@@ -257,6 +257,7 @@ export function useEditor(initial: Molecule[] = []) {
     mol,
     arrows: drawing.arrows,
     variables: drawing.variables,
+    attachments: drawing.attachments,
     tool,
     bondStyle,
     ringKind,

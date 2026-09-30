@@ -87,6 +87,12 @@ export type Op =
   /** Makes a variable share another's list: "R1 to R4 each independently are…". */
   | { op: "set_variable"; name: string; sameAs: string }
   | { op: "remove_variable"; name: string }
+  /**
+   * A variable point of attachment: `atom` is bonded to one of `to`, whichever, as when a
+   * line is drawn into a ring's middle. Replaces any earlier one from the same atom.
+   */
+  | { op: "set_attachment"; atom: Ref; to: Ref[] }
+  | { op: "remove_attachment"; atom: Ref }
   /** A reaction arrow beside these atoms, pointing away from them. */
   | { op: "add_arrow"; atoms: Ref[]; direction: "left" | "right" | "up" | "down" }
   /**

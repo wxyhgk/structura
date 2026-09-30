@@ -1,4 +1,5 @@
 import type { Drawing, HotTarget, Molecule } from "../types.ts"
+import { pruneAttachments } from "../markush/attachments.ts"
 import { validateDrawing } from "../validate.ts"
 import { makeContext, OpError, type Context } from "./context.ts"
 import { documentOp, type DocumentStep } from "./document.ts"
@@ -41,7 +42,8 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
   for (const [index, op] of ops.entries()) {
     try {
       const done = step(drawing, op, ctx, depth)
-      drawing = done.drawing
+      // Deleting atoms takes their variable attachments with them.
+      drawing = pruneAttachments(done.drawing)
       depth = done.depth
       if (done.next !== undefined) next = done.next
     } catch (error) {

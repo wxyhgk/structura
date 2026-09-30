@@ -1,4 +1,5 @@
-import { neighbors } from "../molecule.ts"
+import { pointFrom } from "../geometry.ts"
+import { atomById, bondLengthAt, componentOf, neighbors, sproutAngle } from "../molecule.ts"
 import { applyOps, type Op } from "../ops.ts"
 import type { Drawing, Molecule } from "../types.ts"
 import { representativesOf } from "./representatives.ts"
@@ -44,18 +45,82 @@ export type EnumerateOptions = {
   representatives?: boolean
 }
 
+/** A way of making every variable attachment's bond, with the placeholders it displaces gone. */
+type Layout = { drawing: Drawing; where: Array<{ name: string; text: string }> } | { error: string; where: Array<{ name: string; text: string }> }
+
 /**
- * Expands a generic formula into concrete molecules: every combination of each
- * placeholder's label alternatives, each placeholder choosing on its own. A class
- * ("(C1-C30)alkyl") is never expanded in full; it is left out, or with `representatives`
- * a few typical members inside its range stand in for it. The result says which.
+ * Every way of placing the variable attachments, one candidate atom each. A candidate
+ * that carries a placeholder (R10 on the ring carbon –L– lands on) loses it: the
+ * attachment takes that position.
+ */
+function* layouts(drawing: Drawing): Generator<Layout> {
+  const attachments = drawing.attachments ?? []
+  const names = new Set(Object.keys(drawing.variables ?? {}))
+  const label = (id: number) => drawing.molecule.atoms.find((atom) => atom.id === id)?.alias ?? `#${id}`
+  const choice = attachments.map(() => 0)
+  for (;;) {
+    let laid: Drawing = { molecule: drawing.molecule, arrows: [], nextArrowId: drawing.nextArrowId, variables: drawing.variables }
+    const where: Array<{ name: string; text: string }> = []
+    let error: string | null = null
+    for (const [index, attachment] of attachments.entries()) {
+      const target = attachment.to[choice[index]]
+      const displaced = neighbors(laid.molecule, target).filter((atom) => atom.alias && names.has(atom.alias) && neighbors(laid.molecule, atom.id).length === 1)
+      where.push({ name: `${label(attachment.atom)} 连接位置`, text: displaced[0]?.alias ?? `#${target}` })
+      const placed = attach(laid, attachment.atom, target, displaced.map((atom) => atom.id))
+      if ("error" in placed) {
+        error = placed.error
+        break
+      }
+      laid = placed.drawing
+    }
+    yield error ? { error, where } : { drawing: laid, where }
+    let index = attachments.length - 1
+    for (; index >= 0; index--) {
+      choice[index]++
+      if (choice[index] < attachments[index].to.length) break
+      choice[index] = 0
+    }
+    if (index < 0) return
+  }
+}
+
+/**
+ * Makes one attachment's bond: the placeholder on `target` goes, the attached piece (the
+ * hub and everything it carries) is carried over to sit one bond out from `target`, the
+ * way a substituent would grow there, then bonded and tidied. Nothing else moves.
+ */
+function attach(drawing: Drawing, hub: number, target: number, displaced: number[]): { drawing: Drawing } | { error: string } {
+  const freed = displaced.length > 0 ? applyOps(drawing, [{ op: "remove", atoms: displaced }]) : { ok: true as const, drawing }
+  if (!freed.ok) return { error: freed.error }
+  const mol = freed.drawing.molecule
+  const piece = componentOf(mol, hub)
+  if (piece.includes(target)) return { error: `atom #${hub} is already joined to the ring it attaches to` }
+  const from = atomById(mol, hub)!
+  const spot = pointFrom(atomById(mol, target)!, sproutAngle(mol, target), bondLengthAt(mol, target))
+  const result = applyOps(freed.drawing, [
+    { op: "move", atoms: piece, dx: spot.x - from.x, dy: spot.y - from.y },
+    { op: "add_bond", a: hub, b: target },
+    ...(piece.length > 1 ? [{ op: "clean" as const, atoms: piece.filter((id) => id !== hub), lock: [hub] }] : []),
+  ])
+  return result.ok ? { drawing: result.drawing } : { error: result.error }
+}
+
+/**
+ * Expands a generic formula into concrete molecules: every placement of each variable
+ * attachment, and every combination of each placeholder's label alternatives, each
+ * placeholder choosing on its own. A class ("(C1-C30)alkyl") is never expanded in full;
+ * it is left out, or with `representatives` a few typical members inside its range stand
+ * in for it. The result says which.
  */
 export function enumerate(drawing: Drawing, { limit = 1000, representatives = false }: EnumerateOptions = {}): Enumeration {
   const variables = drawing.variables ?? {}
   const undefinedNames = undefinedVariables(drawing)
   const classesLeftOut: Record<string, number> = {}
   const represented: Record<string, string[]> = {}
-  const sites: Site[] = placeholders(drawing).map(({ atom, name }) => {
+  /** Each variable's concrete labels, counting its classes once however many atoms carry it. */
+  const labelsOf = new Map<string, string[]>()
+  for (const { name } of placeholders(drawing)) {
+    if (labelsOf.has(name)) continue
     const alternatives = alternativesOf(variables, name)
     const labels = alternatives.flatMap((item) => (item.kind === "label" ? [item.text] : []))
     for (const item of alternatives) {
@@ -65,30 +130,45 @@ export function enumerate(drawing: Drawing, { limit = 1000, representatives = fa
       labels.push(...standIns)
       if (standIns.length > 0) represented[name] = [...(represented[name] ?? []), ...standIns]
     }
-    return { atom, name, labels, inChain: neighbors(drawing.molecule, atom).length >= 2 }
-  })
-  const onlyClasses = [...new Set(sites.filter((site) => site.labels.length === 0).map((site) => site.name))]
-  if (onlyClasses.length > 0) return { molecules: [], total: 0, classesLeftOut, represented, undefinedNames, onlyClasses, failures: [], failed: 0 }
-  const total = sites.reduce((product, site) => product * site.labels.length, 1)
+    labelsOf.set(name, labels)
+  }
+  const onlyClasses = [...labelsOf].flatMap(([name, labels]) => (labels.length === 0 ? [name] : []))
+  const empty = { classesLeftOut, represented, undefinedNames }
+  if (onlyClasses.length > 0) return { molecules: [], total: 0, ...empty, onlyClasses, failures: [], failed: 0 }
+
+  let total = 0
   const molecules: Molecule[] = []
   const failures: Enumeration["failures"] = []
   let failed = 0
-  const base: Drawing = { molecule: drawing.molecule, arrows: [], nextArrowId: drawing.nextArrowId }
-  // An odometer over the sites: the last placeholder turns fastest.
-  const choice = sites.map(() => 0)
-  for (let made = 0; made < Math.min(total, limit); made++) {
-    // Relabelling in place first, then swaps, then removals, so no op aims at an atom already gone.
-    const chosen = sites.map((site, index) => ({ site, text: site.labels[choice[index]] }))
-    const order = (item: (typeof chosen)[number]) => (item.site.inChain ? 0 : item.text === "H" ? 2 : 1)
-    const ops = [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, text }) => opsFor(site, text))
-    const result = applyOps(base, ops)
-    if (result.ok) molecules.push(result.drawing.molecule)
-    else if (failed++ < 5) failures.push({ choice: chosen.map(({ site, text }) => ({ name: site.name, text })), error: result.error })
-    for (let index = sites.length - 1; index >= 0; index--) {
-      choice[index]++
-      if (choice[index] < sites[index].labels.length) break
-      choice[index] = 0
+  const fail = (choice: Array<{ name: string; text: string }>, error: string) => {
+    if (failed++ < 5) failures.push({ choice, error })
+  }
+  for (const layout of layouts(drawing)) {
+    if ("error" in layout) {
+      total++
+      fail(layout.where, layout.error)
+      continue
+    }
+    const laid = layout.drawing
+    const sites: Site[] = placeholders(laid).map(({ atom, name }) => ({ atom, name, labels: labelsOf.get(name)!, inChain: neighbors(laid.molecule, atom).length >= 2 }))
+    const count = sites.reduce((product, site) => product * site.labels.length, 1)
+    total += count
+    // An odometer over the sites: the last placeholder turns fastest.
+    const choice = sites.map(() => 0)
+    for (let made = 0; made < count && molecules.length + failed < limit; made++) {
+      // Relabelling in place first, then swaps, then removals, so no op aims at an atom already gone.
+      const chosen = sites.map((site, index) => ({ site, text: site.labels[choice[index]] }))
+      const order = (item: (typeof chosen)[number]) => (item.site.inChain ? 0 : item.text === "H" ? 2 : 1)
+      const ops = [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, text }) => opsFor(site, text))
+      const result = applyOps({ ...laid, variables: undefined }, ops)
+      if (result.ok) molecules.push(result.drawing.molecule)
+      else fail([...layout.where, ...chosen.map(({ site, text }) => ({ name: site.name, text }))], result.error)
+      for (let index = sites.length - 1; index >= 0; index--) {
+        choice[index]++
+        if (choice[index] < sites[index].labels.length) break
+        choice[index] = 0
+      }
     }
   }
-  return { molecules, total, classesLeftOut, represented, undefinedNames, onlyClasses: [], failures, failed }
+  return { molecules, total, ...empty, onlyClasses: [], failures, failed }
 }

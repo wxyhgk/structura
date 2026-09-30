@@ -109,6 +109,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               atomEl={editor.atomEl}
               selection={editor.selection}
               colorHetero={editor.colorHetero}
+              attachments={editor.attachments}
               run={editor.run}
               latest={editor.latest}
               setSelection={editor.setSelection}

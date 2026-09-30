@@ -1,4 +1,5 @@
 import { addReactionArrow } from "../drawing.ts"
+import { attachmentProblem } from "../markush/attachments.ts"
 import { sharers, variableProblem } from "../markush/variables.ts"
 import { boundsCenter, tumbleAtoms } from "../molecule.ts"
 import type { Drawing, HotTarget, Variable } from "../types.ts"
@@ -43,6 +44,19 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       const problem = variableProblem(op.name, variable, drawing.variables)
       if (problem) throw new OpError(problem)
       return { drawing: { ...drawing, variables: { ...drawing.variables, [op.name]: variable } } }
+    }
+    case "set_attachment": {
+      const attachment = { atom: ctx.atom(op.atom), to: [...new Set(op.to.map(ctx.atom))] }
+      const problem = attachmentProblem(drawing.molecule, attachment)
+      if (problem) throw new OpError(problem)
+      const others = (drawing.attachments ?? []).filter((item) => item.atom !== attachment.atom)
+      return { drawing: { ...drawing, attachments: [...others, attachment] } }
+    }
+    case "remove_attachment": {
+      const atom = ctx.atom(op.atom)
+      if (!drawing.attachments?.some((item) => item.atom === atom)) throw new OpError(`atom #${atom} has no variable attachment`)
+      const others = drawing.attachments.filter((item) => item.atom !== atom)
+      return { drawing: { ...drawing, attachments: others.length > 0 ? others : undefined } }
     }
     case "remove_variable": {
       if (!drawing.variables || !Object.hasOwn(drawing.variables, op.name)) throw new OpError(`there is no variable ${op.name}`)

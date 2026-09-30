@@ -1,4 +1,5 @@
 import { RING_SIZE } from "@/chem/constants"
+import { ringPositionsAt } from "@/chem/markush/attachments"
 import { paintOps } from "@/editor/ops"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@/chem/geometry"
 import {
@@ -327,6 +328,15 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
     if (!current.moved) {
       run([{ op: "draw_bond", from, start: current.origin, ...style }])
       return
+    }
+    // Dragged from an atom into the middle of a ring: –L– hangs off any of that ring's free
+    // positions (a variable point of attachment), not off a new atom there.
+    if (current.fromId != null && !hitOf(current.mol, world, zoom)) {
+      const positions = ringPositionsAt(current.mol, world, current.fromId)
+      if (positions) {
+        run([{ op: "set_attachment", atom: current.fromId, to: positions }])
+        return
+      }
     }
     const origin = current.fromId == null ? current.origin : atomById(current.mol, current.fromId) ?? current.origin
     const end = bondEnd(origin, world, current.mol, current.fromId, event.altKey, zoom)

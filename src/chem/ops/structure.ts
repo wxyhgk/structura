@@ -26,6 +26,7 @@ import { RECIPES } from "../molecule/recipes.ts"
 import { templateFor } from "../templates.ts"
 import type { HotTarget, Molecule } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"
+import { replaceFragment } from "./replace.ts"
 import type { Op } from "./types.ts"
 
 /** A chair cyclohexane on an atom or bond: the add_ring op with `chair` given. */
@@ -150,6 +151,8 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       const next = setAtomLabel(mol, id, op.text)
       return { mol: next, next: atomById(next, id) ? { type: "atom", id } : null }
     }
+    case "replace":
+      return replaceFragment(mol, op, ctx)
     case "duplicate": {
       const copy = duplicateAtoms(mol, op.atoms.map(ctx.atom))
       return { mol: copy.mol, next: null }

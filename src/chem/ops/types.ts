@@ -5,6 +5,9 @@ import type { Problem } from "../validate.ts"
 /** An atom: its id, or a name given with `as` earlier in the same batch. */
 export type Ref = number | string
 
+/** What a fragment is replaced with (see the replace op). */
+export type Replacement = { label: string } | { ring: RingKind } | { recipe: RecipeName }
+
 /** A bond: its id, or the two atoms it joins. `between[0]` is where a wedge starts. */
 export type BondRef = number | { between: [Ref, Ref] }
 
@@ -55,6 +58,14 @@ export type Op =
   /** A named group built from an atom: nitro, tert-butyl, carbonyl… (see molecule/recipes.ts). */
   | { op: "add_recipe"; to: Ref; name: RecipeName; as?: string }
   | { op: "label"; atom: Ref; text: string }
+  /**
+   * Swaps a fragment (these atoms) for another piece: a label as typed on an atom (an
+   * element or abbreviation such as "Ph", "OMe", "Boc"), a ring, or a recipe. A fragment
+   * hanging off the rest by one bond is rebuilt on the same atom, the way it pointed; a
+   * free-standing one is replaced where it was. Only the new atoms are tidied. `as` names
+   * the new piece's first atom.
+   */
+  | { op: "replace"; atoms: Ref[]; with: Replacement; as?: string }
   | { op: "duplicate"; atoms: Ref[] }
   | { op: "move"; atoms: Ref[]; dx: number; dy: number }
   | { op: "rotate"; atoms: Ref[]; angle: number; center?: Point }

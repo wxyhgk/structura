@@ -73,6 +73,8 @@ export type Preview =
   | { kind: "ring"; points: Point[]; doubles: boolean; anchor?: Point }
   | { kind: "marquee"; a: Point; b: Point }
   | { kind: "lasso"; points: Point[] }
+  /** A bond dragged into a ring: it will attach at any of `positions`, meeting the ring at `centre`. */
+  | { kind: "attachment"; a: Point; centre: Point; positions: Point[] }
 
 export type HoverTarget = { type: "atom" | "bond"; id: number } | null
 

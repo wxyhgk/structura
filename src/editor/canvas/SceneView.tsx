@@ -257,6 +257,20 @@ function SelectionChrome({ mol, selection, zoom }: { mol: Molecule; selection: S
 }
 
 function PreviewLayer({ preview }: { preview: Exclude<Preview, null> }) {
+  if (preview.kind === "attachment") {
+    const reach = Math.max(...preview.positions.map((point) => Math.hypot(point.x - preview.centre.x, point.y - preview.centre.y)))
+    return (
+      <g data-testid="attachment-preview">
+        <line x1={preview.a.x} y1={preview.a.y} x2={preview.centre.x} y2={preview.centre.y} stroke="#1a73e8" strokeWidth={1.8} strokeLinecap="round" />
+        {preview.positions.map((point, index) => (
+          <circle key={index} cx={point.x} cy={point.y} r={9} fill="rgba(26, 115, 232, 0.12)" stroke="#1a73e8" strokeDasharray="3 2" />
+        ))}
+        <text x={preview.centre.x} y={preview.centre.y + reach + 22} textAnchor="middle" fontSize={11} fill="#1a73e8">
+          任一位置（{preview.positions.length} 处）
+        </text>
+      </g>
+    )
+  }
   if (preview.kind === "marquee") {
     const x = Math.min(preview.a.x, preview.b.x)
     const y = Math.min(preview.a.y, preview.b.y)

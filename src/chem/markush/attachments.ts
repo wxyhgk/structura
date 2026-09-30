@@ -26,6 +26,21 @@ export function pruneAttachments(drawing: Drawing): Drawing {
   return { ...drawing, attachments: kept.length > 0 ? kept : undefined }
 }
 
+/** Rings found once per molecule: asked on every pointer move while a bond is dragged. */
+const ringCache = new WeakMap<Molecule, { rings: number[][]; inRings: Map<number, number> }>()
+
+function ringsOf(mol: Molecule) {
+  let found = ringCache.get(mol)
+  if (!found) {
+    const rings = smallestRings(mol)
+    const inRings = new Map<number, number>()
+    for (const ring of rings) for (const id of ring) inRings.set(id, (inRings.get(id) ?? 0) + 1)
+    found = { rings, inRings }
+    ringCache.set(mol, found)
+  }
+  return found
+}
+
 /**
  * The ring whose inside the point is in, as the atoms a substituent could hang from: the
  * ring's atoms that are in no other ring (not the fusion atoms). Null when the point is in
@@ -33,9 +48,7 @@ export function pruneAttachments(drawing: Drawing): Drawing {
  * than two such atoms.
  */
 export function ringPositionsAt(mol: Molecule, point: Point, except?: number): number[] | null {
-  const rings = smallestRings(mol)
-  const inRings = new Map<number, number>()
-  for (const ring of rings) for (const id of ring) inRings.set(id, (inRings.get(id) ?? 0) + 1)
+  const { rings, inRings } = ringsOf(mol)
   const ring = rings.find((ids) => pointInPolygon(point, ids.map((id) => atomById(mol, id)!)))
   if (!ring || (except != null && ring.includes(except))) return null
   const positions = ring.filter((id) => inRings.get(id) === 1)

@@ -271,6 +271,14 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
       const origin = current.fromId == null ? current.origin : atomById(current.mol, current.fromId) ?? current.origin
       const snapped = nearestAtom(current.mol, world, SNAP_ATOM / zoom, current.fromId ?? undefined)
       host.assignHover(snapped ? { type: "atom", id: snapped.id } : null)
+      // Inside a ring, letting go makes a variable attachment; show where it could land.
+      const positions = current.fromId != null && !snapped ? ringPositionsAt(current.mol, world, current.fromId) : null
+      if (positions) {
+        const atoms = positions.map((id) => atomById(current.mol, id)!)
+        const centre = { x: atoms.reduce((sum, atom) => sum + atom.x, 0) / atoms.length, y: atoms.reduce((sum, atom) => sum + atom.y, 0) / atoms.length }
+        host.setPreview({ kind: "attachment", a: origin, centre, positions: atoms })
+        return
+      }
       host.setPreview({
         kind: "bond",
         a: origin,

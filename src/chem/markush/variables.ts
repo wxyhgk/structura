@@ -1,0 +1,66 @@
+import type { Alternative, Drawing, GroupClass, Molecule, Variable } from "../types.ts"
+
+/** How each class's size is counted. */
+export const GROUP_CLASSES: Record<GroupClass, { size: "carbons" | "members" }> = {
+  alkyl: { size: "carbons" },
+  alkenyl: { size: "carbons" },
+  alkynyl: { size: "carbons" },
+  cycloalkyl: { size: "carbons" },
+  heterocycloalkyl: { size: "members" },
+  aryl: { size: "carbons" },
+  heteroaryl: { size: "members" },
+  alkoxy: { size: "carbons" },
+  aryloxy: { size: "carbons" },
+  silyl: { size: "carbons" },
+  amino: { size: "carbons" },
+}
+
+/**
+ * R, R1, R12, R', X, X1, Z…: how a variable's label may look. Only letters that are no
+ * element symbol, so typing one on an atom makes a placeholder rather than an element.
+ */
+export const VARIABLE_NAME = /^[RXZQGL]\d{0,3}'{0,2}$/
+
+/** Why a variable definition is not usable, or null when it is. */
+export function variableProblem(name: string, variable: Variable): string | null {
+  if (!VARIABLE_NAME.test(name)) return `"${name}" is not a variable name (like R, R1, R' or X)`
+  if (variable.alternatives.length === 0) return `${name} needs at least one alternative`
+  for (const alternative of variable.alternatives) {
+    const problem = alternativeProblem(alternative)
+    if (problem) return `${name}: ${problem}`
+  }
+  return null
+}
+
+function alternativeProblem(alternative: Alternative): string | null {
+  if (alternative.kind === "label") {
+    const text = alternative.text.trim()
+    if (!text || text.length > 32 || /[\r\n]/.test(text)) return "a label is one line of 1 to 32 characters"
+    return null
+  }
+  if (!Object.hasOwn(GROUP_CLASSES, alternative.class)) return `unknown class "${alternative.class}" (${Object.keys(GROUP_CLASSES).join(", ")})`
+  const { min, max } = alternative
+  for (const bound of [min, max]) {
+    if (bound != null && (!Number.isInteger(bound) || bound < 1 || bound > 100)) return `size ${bound} is not a whole number from 1 to 100`
+  }
+  if (min != null && max != null && min > max) return `size ${min} is above ${max}`
+  return null
+}
+
+/** The atoms standing for a variable of the drawing: those whose label names one. */
+export function placeholders(drawing: Drawing): Array<{ atom: number; name: string }> {
+  const variables = drawing.variables ?? {}
+  return drawing.molecule.atoms.flatMap((atom) => (atom.alias && Object.hasOwn(variables, atom.alias) ? [{ atom: atom.id, name: atom.alias }] : []))
+}
+
+/** Labels on atoms that look like variables but have no definition yet, in drawing order. */
+export function undefinedVariables(drawing: Drawing): string[] {
+  const variables = drawing.variables ?? {}
+  const names = drawing.molecule.atoms.flatMap((atom) => (atom.alias && VARIABLE_NAME.test(atom.alias) && !Object.hasOwn(variables, atom.alias) ? [atom.alias] : []))
+  return [...new Set(names)]
+}
+
+/** A molecule's placeholder atoms, whatever the variable table says: any label shaped like a variable. */
+export function variableLabels(mol: Molecule): string[] {
+  return [...new Set(mol.atoms.flatMap((atom) => (atom.alias && VARIABLE_NAME.test(atom.alias) ? [atom.alias] : [])))]
+}

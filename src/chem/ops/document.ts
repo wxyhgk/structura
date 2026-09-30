@@ -1,4 +1,5 @@
 import { addReactionArrow } from "../drawing.ts"
+import { variableProblem } from "../markush/variables.ts"
 import { boundsCenter, tumbleAtoms } from "../molecule.ts"
 import type { Drawing, HotTarget } from "../types.ts"
 import { OpError, type Context } from "./context.ts"
@@ -11,8 +12,9 @@ import type { Op } from "./types.ts"
 export type DocumentStep = { drawing: Drawing; next?: HotTarget | null; depth?: Map<number, number> }
 
 /**
- * Ops that need more than the molecule: arrows sit beside it on the drawing, and a tumble
- * carries out-of-page depth from one turn to the next. `depth` is what the previous op
+ * Ops that need more than the molecule: arrows sit beside it on the drawing, a tumble
+ * carries out-of-page depth from one turn to the next, and generic-formula variables
+ * belong to the drawing. `depth` is what the previous op
  * left, if it was a tumble. Returns null for ops it does not handle.
  */
 export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<number, number> | undefined): DocumentStep | null {
@@ -31,6 +33,17 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       const given = op.depth ? new Map(Object.entries(op.depth).map(([id, z]) => [Number(id), z])) : depth
       const tumbled = tumbleAtoms(mol, ids, center, op.axis, op.angle, given)
       return { drawing: { ...drawing, molecule: tumbled.mol }, depth: tumbled.depth }
+    }
+    case "set_variable": {
+      const variable = { alternatives: op.alternatives.map((item) => (item.kind === "label" ? { kind: "label" as const, text: item.text.trim() } : item)) }
+      const problem = variableProblem(op.name, variable)
+      if (problem) throw new OpError(problem)
+      return { drawing: { ...drawing, variables: { ...drawing.variables, [op.name]: variable } } }
+    }
+    case "remove_variable": {
+      if (!drawing.variables || !Object.hasOwn(drawing.variables, op.name)) throw new OpError(`there is no variable ${op.name}`)
+      const { [op.name]: _gone, ...rest } = drawing.variables
+      return { drawing: { ...drawing, variables: Object.keys(rest).length > 0 ? rest : undefined } }
     }
     default:
       return null

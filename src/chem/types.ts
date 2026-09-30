@@ -70,7 +70,38 @@ export type Drawing = {
   molecule: Molecule
   arrows: Arrow[]
   nextArrowId: number
+  /**
+   * A generic (Markush) formula's variables, by the label their placeholder atoms carry
+   * (R1, X, Ar…). Absent for an ordinary drawing.
+   */
+  variables?: Record<string, Variable>
 }
+
+/** What a placeholder may stand for. Every atom carrying the label chooses on its own. */
+export type Variable = { alternatives: Alternative[] }
+
+/**
+ * One choice for a variable: a label as typed on an atom (O, S, H, D, CN, OMe, Ph…), or a
+ * class of groups kept as a class, as a patent claim states it. `min`/`max` bound its
+ * size (carbons, or ring members for heteroaryl and heterocycloalkyl); `substituted`
+ * left out means "substituted or unsubstituted".
+ */
+export type Alternative =
+  | { kind: "label"; text: string }
+  | { kind: "class"; class: GroupClass; min?: number; max?: number; substituted?: boolean }
+
+export type GroupClass =
+  | "alkyl"
+  | "alkenyl"
+  | "alkynyl"
+  | "cycloalkyl"
+  | "heterocycloalkyl"
+  | "aryl"
+  | "heteroaryl"
+  | "alkoxy"
+  | "aryloxy"
+  | "silyl"
+  | "amino"
 
 export type Point = { x: number; y: number }
 

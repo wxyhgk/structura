@@ -1,4 +1,4 @@
-import type { BondEmphasis, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Point, RingKind } from "../types.ts"
+import type { Alternative, BondEmphasis, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Point, RingKind } from "../types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
@@ -77,6 +77,13 @@ export type Op =
    * result `depth` so that repeated small turns keep turning the same 3D shape.
    */
   | { op: "tumble"; atoms: Ref[]; axis: "x" | "y"; angle: number; center?: Point; depth?: Record<number, number> }
+  /**
+   * Defines (or redefines) a generic-formula variable: what atoms labelled `name` (R1, X…)
+   * may stand for. Alternatives are labels as typed on an atom ("O", "H", "CN", "OMe") or
+   * classes kept as classes ({ kind: "class", class: "alkyl", min: 1, max: 30 }).
+   */
+  | { op: "set_variable"; name: string; alternatives: Alternative[] }
+  | { op: "remove_variable"; name: string }
   /** A reaction arrow beside these atoms, pointing away from them. */
   | { op: "add_arrow"; atoms: Ref[]; direction: "left" | "right" | "up" | "down" }
   /**

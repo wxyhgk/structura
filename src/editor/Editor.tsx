@@ -76,7 +76,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
           <input
             ref={fileRef}
             type="file"
-            accept=".mol,.sdf,.sd,.mdl"
+            accept=".structura,.mol,.sdf,.sd,.mdl"
             className="hidden"
             data-testid="open-file"
             onChange={(event) => {

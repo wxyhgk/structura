@@ -1,4 +1,5 @@
 import type { RefObject } from "react"
+import { toDocument } from "@/chem/document"
 import { sceneToSvg } from "@/chem/draw"
 import { placeholders } from "@/chem/markush/variables"
 import { atomIdsOfSelection, bondsLeaving, emptySelection } from "@/chem/molecule"
@@ -21,6 +22,8 @@ export type Command = {
   shortcut?: string
   /** Checked at key time, for conditions that live outside React state. */
   when?: () => boolean
+  /** Its keys work even while typing in a field (⌘S, ⌘O), as they have nothing to do with text. */
+  inFields?: boolean
 }
 
 type Options = {
@@ -29,6 +32,7 @@ type Options = {
   hint?: KeyMatch
   enabled?: boolean
   when?: () => boolean
+  inFields?: boolean
 }
 
 function command(label: string, run: () => void, options: Options = {}): Command {
@@ -41,6 +45,7 @@ function command(label: string, run: () => void, options: Options = {}): Command
     enabled: options.enabled ?? true,
     shortcut: shown ? keyLabel(shown, MOD) : undefined,
     when: options.when,
+    inFields: options.inFields,
   }
 }
 
@@ -73,9 +78,13 @@ export function useCommands({
     Object.fromEntries(arrows.map((name) => [name.toLowerCase(), make(name.toLowerCase() as Arrow, `Arrow${name}`)])) as Record<Arrow, Command>
 
   return {
-    newDocument: command("新建", editor.newDocument, { keys: [{ key: "n", meta: true }] }),
-    open: command("打开 MOL/SDF…", openFileDialog, { keys: [{ key: "o", meta: true }] }),
+    newDocument: command("新建", editor.newDocument, { keys: [{ key: "n", meta: true }], inFields: true }),
+    open: command("打开…", openFileDialog, { keys: [{ key: "o", meta: true }], inFields: true }),
     importSmiles: command("导入 SMILES…", openSmilesDialog),
+    save: command("保存", () => download("未命名.structura", toDocument(editor.latest()), "application/json"), {
+      keys: [{ key: "s", meta: true }],
+      inFields: true,
+    }),
     exportSvg: command("导出 SVG", () => {
       const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows)
       if (svg) download("未命名.svg", svg, "image/svg+xml")

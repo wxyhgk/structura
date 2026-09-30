@@ -3,7 +3,7 @@ import type { CanvasHandle } from "@/editor/canvas/types"
 import { editorKeysBlocked, inTextField, keepFocusOffToolbar } from "@/editor/input/guards"
 import { matches } from "@/editor/input/keymap"
 import { useOwnership } from "@/editor/input/ownership"
-import { routeKey, type KeyRoutes } from "@/editor/input/router"
+import { routeFieldKey, routeKey, type KeyRoutes } from "@/editor/input/router"
 import { useWindowListener } from "@/editor/input/useWindowListener"
 
 type Input = Omit<KeyRoutes, "canvas"> & {
@@ -30,6 +30,7 @@ export function useEditorInput({ onPaste, onCopy, canvas, ...routes }: Input) {
     if (!owns(event)) return
     // ⌘A never selects the page's text, not even while a menu is open; fields keep it.
     if (matches(event, { key: "a", meta: true }) && !inTextField(event)) event.preventDefault()
+    if (inTextField(event) && routeFieldKey(event, routes.commands)) return
     if (editorKeysBlocked(event, overlayScope)) return
     if (event.code === "Space" && !event.repeat) {
       canvas.current?.holdSpace()

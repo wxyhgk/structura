@@ -56,6 +56,7 @@ export function MenuBar({
         <Item command={c.open} />
         <Item command={c.importSmiles} />
         <DropdownMenuSeparator />
+        <Item command={c.save} />
         <Item command={c.exportSvg} />
         <Item command={c.exportMol} />
       </MenuButton>

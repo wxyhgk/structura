@@ -21,7 +21,7 @@ import {
   selectAll,
   selectionFromAtoms,
 } from "@/chem/molecule"
-import type { BondStyle, Molecule, Point, RingKind, Selection } from "@/chem/types"
+import type { BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@/chem/types"
 import type { ToolId } from "@/editor/tools/types"
 
 export function useEditor(initial: Molecule[] = []) {
@@ -226,6 +226,15 @@ export function useEditor(initial: Molecule[] = []) {
     [dispatch],
   )
 
+  /** Replaces the drawing with a saved Structura document, as one undoable step. */
+  const loadDrawing = useCallback(
+    (saved: Drawing) => {
+      dispatch({ type: "load", drawing: saved })
+      setSelection(emptySelection())
+    },
+    [dispatch],
+  )
+
   const newDocument = useCallback(() => {
     const now = latest()
     if (now.molecule.atoms.length === 0 && now.arrows.length === 0) return
@@ -287,6 +296,7 @@ export function useEditor(initial: Molecule[] = []) {
     newDocument,
     openMolecules,
     appendMolecules,
+    loadDrawing,
   }
 }
 

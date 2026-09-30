@@ -15,6 +15,8 @@ export type HistoryAction =
   | { type: "open"; molecules: Molecule[]; at?: Point }
   /** Adds these molecules beside whatever is drawn when the action lands (paste, SMILES); round `at` on an empty page. */
   | { type: "append"; molecules: Molecule[]; at?: Point }
+  /** Replaces the drawing with a saved one, as it was saved (opening a Structura file). */
+  | { type: "load"; drawing: Drawing }
   | { type: "undo" }
   | { type: "redo" }
 
@@ -57,8 +59,8 @@ export function historyReducer(state: History, action: HistoryAction): History {
         : { ...current, molecule: placeBeside(current.molecule, action.molecules, action.at) }
     return historyReducer(state, { type: "commit", drawing })
   }
-  if (action.type === "commit" || action.type === "commit-molecule") {
-    const drawing = action.type === "commit" ? action.drawing : { ...state.present, molecule: action.mol }
+  if (action.type === "commit" || action.type === "commit-molecule" || action.type === "load") {
+    const drawing = action.type === "commit-molecule" ? { ...state.present, molecule: action.mol } : action.drawing
     return {
       past: [...state.past, state.present].slice(-LIMIT),
       present: keepCounters(drawing, state.present),

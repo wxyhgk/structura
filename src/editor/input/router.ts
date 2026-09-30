@@ -12,6 +12,18 @@ export type KeyRoutes = {
 }
 
 /**
+ * A key pressed while typing in a field: the field keeps it (⌘A, ⌘C, ⌘Z act on the text)
+ * unless a command says it works anywhere, like ⌘S. Returns whether a command ran.
+ */
+export function routeFieldKey(event: KeyboardEvent, commands: Commands): boolean {
+  const command = allCommands(commands).find((item) => item.inFields && item.enabled && item.keys.some((match) => matches(event, match)))
+  if (!command) return false
+  event.preventDefault()
+  command.run()
+  return true
+}
+
+/**
  * The one keyboard router, for a key the editor owns. Each key goes to the first of these
  * that uses it:
  * 1. the selection: a hover key acts on every selected atom (or bond),

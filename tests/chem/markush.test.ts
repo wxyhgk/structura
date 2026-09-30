@@ -42,7 +42,7 @@ test("variables are checked when they are defined, and can be removed", () => {
     assert.ok(!result.ok && message.test(result.error), JSON.stringify(op))
   }
   const defined = run(drawing, [{ op: "set_variable", name: "R1", alternatives: [label(" H "), { kind: "class", class: "alkyl", min: 1, max: 30 }] }])
-  assert.deepEqual(defined.variables?.R1.alternatives[0], { kind: "label", text: "H" }, "labels are trimmed")
+  assert.deepEqual((defined.variables?.R1 as { alternatives: unknown[] }).alternatives[0], { kind: "label", text: "H" }, "labels are trimmed")
   assert.deepEqual(undefinedVariables(defined), ["X", "R2"])
   const removed = run(defined, [{ op: "remove_variable", name: "R1" }])
   assert.equal(removed.variables, undefined)
@@ -97,5 +97,31 @@ test("a label alternative must be an element or a known abbreviation", () => {
   }
   for (const text of ["H", "D", "Cl", "CN", "Me", "Ph", "OMe", "13C"]) {
     assert.ok(applyOps(scaffold(), [{ op: "set_variable", name: "R1", alternatives: [label(text)] }]).ok, text)
+  }
+})
+
+test("R2 can share R1's list, as in 'R1 to R4 each independently are…'", () => {
+  const drawing = run(scaffold(), [
+    { op: "set_variable", name: "X", alternatives: [label("O")] },
+    { op: "set_variable", name: "R1", alternatives: [label("H"), label("F")] },
+    { op: "set_variable", name: "R2", sameAs: "R1" },
+  ])
+  // Each placeholder still chooses on its own: 2 × 2 combinations.
+  const result = enumerate(drawing)
+  assert.equal(result.total, 4)
+  assert.deepEqual(result.molecules.map((mol) => plainFormula(mol)).sort(), ["C4H6F2O", "C4H7FO", "C4H7FO", "C4H8O"])
+  // Editing R1 changes what R2 offers too.
+  const more = run(drawing, [{ op: "set_variable", name: "R1", alternatives: [label("H"), label("F"), label("Cl")] }])
+  assert.equal(enumerate(more).total, 9)
+
+  const refused: Array<[Op, RegExp]> = [
+    [{ op: "set_variable", name: "R2", sameAs: "R2" }, /its own list/],
+    [{ op: "set_variable", name: "R2", sameAs: "R9" }, /no list of its own/],
+    [{ op: "set_variable", name: "R1", sameAs: "X" }, /share R1's list/],
+    [{ op: "remove_variable", name: "R1" }, /share R1's list/],
+  ]
+  for (const [op, message] of refused) {
+    const outcome = applyOps(drawing, [op])
+    assert.ok(!outcome.ok && message.test(outcome.error), JSON.stringify(op))
   }
 })

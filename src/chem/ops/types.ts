@@ -80,9 +80,12 @@ export type Op =
   /**
    * Defines (or redefines) a generic-formula variable: what atoms labelled `name` (R1, X…)
    * may stand for. Alternatives are labels as typed on an atom ("O", "H", "CN", "OMe") or
-   * classes kept as classes ({ kind: "class", class: "alkyl", min: 1, max: 30 }).
+   * classes kept as classes ({ kind: "class", class: "alkyl", min: 1, max: 30 }). A label
+   * must be an element or a known abbreviation.
    */
   | { op: "set_variable"; name: string; alternatives: Alternative[] }
+  /** Makes a variable share another's list: "R1 to R4 each independently are…". */
+  | { op: "set_variable"; name: string; sameAs: string }
   | { op: "remove_variable"; name: string }
   /** A reaction arrow beside these atoms, pointing away from them. */
   | { op: "add_arrow"; atoms: Ref[]; direction: "left" | "right" | "up" | "down" }

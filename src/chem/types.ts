@@ -77,8 +77,11 @@ export type Drawing = {
   variables?: Record<string, Variable>
 }
 
-/** What a placeholder may stand for. Every atom carrying the label chooses on its own. */
-export type Variable = { alternatives: Alternative[] }
+/**
+ * What a placeholder may stand for: its own list, or the same list as another variable
+ * ("R1 to R4 each independently are…"). Every atom carrying the label chooses on its own.
+ */
+export type Variable = { alternatives: Alternative[] } | { sameAs: string }
 
 /**
  * One choice for a variable: a label as typed on an atom (O, S, H, D, CN, OMe, Ph…), or a

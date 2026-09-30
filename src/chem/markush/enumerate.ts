@@ -1,7 +1,7 @@
 import { neighbors } from "../molecule.ts"
 import { applyOps, type Op } from "../ops.ts"
 import type { Drawing, Molecule } from "../types.ts"
-import { placeholders, undefinedVariables } from "./variables.ts"
+import { alternativesOf, placeholders, undefinedVariables } from "./variables.ts"
 
 export type Enumeration = {
   /** Concrete molecules, in order, at most `limit` of them. */
@@ -44,7 +44,7 @@ export function enumerate(drawing: Drawing, limit = 1000): Enumeration {
   const undefinedNames = undefinedVariables(drawing)
   const classesLeftOut: Record<string, number> = {}
   const sites: Site[] = placeholders(drawing).map(({ atom, name }) => {
-    const alternatives = variables[name].alternatives
+    const alternatives = alternativesOf(variables, name)
     const classes = alternatives.filter((item) => item.kind === "class").length
     if (classes > 0) classesLeftOut[name] = classes
     const labels = alternatives.flatMap((item) => (item.kind === "label" ? [item.text] : []))

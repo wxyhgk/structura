@@ -22,9 +22,37 @@ export const GROUP_CLASSES: Record<GroupClass, { size: "carbons" | "members" }> 
  */
 export const VARIABLE_NAME = /^[RXZQGL]\d{0,3}'{0,2}$/
 
-/** Why a variable definition is not usable, or null when it is. */
-export function variableProblem(name: string, variable: Variable): string | null {
+/** A variable's list, following "same as" to the variable that holds it; empty if undefined. */
+export function alternativesOf(variables: Record<string, Variable> | undefined, name: string): Alternative[] {
+  const variable = variables?.[name]
+  if (!variable) return []
+  if ("sameAs" in variable) {
+    const source = variables?.[variable.sameAs]
+    return source && "alternatives" in source ? source.alternatives : []
+  }
+  return variable.alternatives
+}
+
+/** The variables whose list is "same as" this one. */
+export function sharers(variables: Record<string, Variable> | undefined, name: string): string[] {
+  return Object.entries(variables ?? {}).flatMap(([other, variable]) => ("sameAs" in variable && variable.sameAs === name ? [other] : []))
+}
+
+/**
+ * Why a variable definition is not usable among the others, or null when it is. A "same
+ * as" must point at a variable with a list of its own, so there are never chains, and a
+ * variable others share cannot itself become a "same as".
+ */
+export function variableProblem(name: string, variable: Variable, others: Record<string, Variable> = {}): string | null {
   if (!VARIABLE_NAME.test(name)) return `"${name}" is not a variable name (like R, R1, R' or X)`
+  if ("sameAs" in variable) {
+    const source = others[variable.sameAs]
+    if (variable.sameAs === name) return `${name} cannot share its own list`
+    if (!source || !("alternatives" in source)) return `${variable.sameAs} has no list of its own for ${name} to share`
+    const using = sharers(others, name)
+    if (using.length > 0) return `${using.join(", ")} share ${name}'s list, so ${name} must keep one of its own`
+    return null
+  }
   if (variable.alternatives.length === 0) return `${name} needs at least one alternative`
   for (const alternative of variable.alternatives) {
     const problem = alternativeProblem(alternative)

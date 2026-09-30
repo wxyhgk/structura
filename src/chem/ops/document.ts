@@ -1,7 +1,7 @@
 import { addReactionArrow } from "../drawing.ts"
-import { variableProblem } from "../markush/variables.ts"
+import { sharers, variableProblem } from "../markush/variables.ts"
 import { boundsCenter, tumbleAtoms } from "../molecule.ts"
-import type { Drawing, HotTarget } from "../types.ts"
+import type { Drawing, HotTarget, Variable } from "../types.ts"
 import { OpError, type Context } from "./context.ts"
 import type { Op } from "./types.ts"
 
@@ -35,13 +35,19 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       return { drawing: { ...drawing, molecule: tumbled.mol }, depth: tumbled.depth }
     }
     case "set_variable": {
-      const variable = { alternatives: op.alternatives.map((item) => (item.kind === "label" ? { kind: "label" as const, text: item.text.trim() } : item)) }
-      const problem = variableProblem(op.name, variable)
+      if (("sameAs" in op) === ("alternatives" in op)) throw new OpError("give either alternatives or sameAs")
+      const variable: Variable =
+        "sameAs" in op
+          ? { sameAs: op.sameAs }
+          : { alternatives: op.alternatives.map((item) => (item.kind === "label" ? { kind: "label" as const, text: item.text.trim() } : item)) }
+      const problem = variableProblem(op.name, variable, drawing.variables)
       if (problem) throw new OpError(problem)
       return { drawing: { ...drawing, variables: { ...drawing.variables, [op.name]: variable } } }
     }
     case "remove_variable": {
       if (!drawing.variables || !Object.hasOwn(drawing.variables, op.name)) throw new OpError(`there is no variable ${op.name}`)
+      const using = sharers(drawing.variables, op.name)
+      if (using.length > 0) throw new OpError(`${using.join(", ")} share ${op.name}'s list; change them first`)
       const { [op.name]: _gone, ...rest } = drawing.variables
       return { drawing: { ...drawing, variables: Object.keys(rest).length > 0 ? rest : undefined } }
     }

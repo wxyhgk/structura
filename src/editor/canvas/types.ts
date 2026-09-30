@@ -14,6 +14,8 @@ export type CanvasHandle = {
   cancelGesture: () => void
   hasGesture: () => boolean
   hotspot: () => { type: "atom" | "bond"; id: number } | null
+  /** The atom or bond under the pointer right now (not a pinned hotspot), if any. */
+  pointed: () => HoverTarget
   focusAtom: (id: number) => void
   /** Opens a field on the fragment made of these atoms; what is typed replaces it. */
   replaceFragment: (ids: number[]) => void

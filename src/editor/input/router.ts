@@ -6,7 +6,7 @@ import { toolForKey } from "@/editor/tools/bindings"
 import type { EditorState } from "@/editor/useEditor"
 
 export type KeyRoutes = {
-  editor: Pick<EditorState, "hotkeySelection" | "applyBondOrder" | "setBondStyle" | "setRingKind" | "setTool" | "applyElement">
+  editor: Pick<EditorState, "selection" | "hotkeySelection" | "applyBondOrder" | "setBondStyle" | "setRingKind" | "setTool" | "applyElement">
   canvas: CanvasHandle | null
   commands: Commands
 }
@@ -26,7 +26,8 @@ export function routeFieldKey(event: KeyboardEvent, commands: Commands): boolean
 /**
  * The one keyboard router, for a key the editor owns. Each key goes to the first of these
  * that uses it:
- * 1. the selection: a hover key acts on every selected atom (or bond),
+ * 1. the selection: a hover key acts on every selected atom (or bond), unless the pointer
+ *    is over an atom or bond outside the selection, which then takes the key,
  * 2. the canvas's hover hotkeys (the atom or bond under the pointer),
  * 3. a command bound to the key,
  * 4. a tool key,
@@ -35,7 +36,9 @@ export function routeFieldKey(event: KeyboardEvent, commands: Commands): boolean
 export function routeKey(event: KeyboardEvent, { editor, canvas, commands }: KeyRoutes): void {
   const key = keyOf(event)
   const plain = !event.metaKey && !event.ctrlKey && !event.altKey
-  if (plain && !canvas?.hasGesture() && editor.hotkeySelection(key)) {
+  const pointed = canvas?.pointed() ?? null
+  const elsewhere = pointed != null && !(pointed.type === "atom" ? editor.selection.atoms : editor.selection.bonds).includes(pointed.id)
+  if (plain && !elsewhere && !canvas?.hasGesture() && editor.hotkeySelection(key)) {
     event.preventDefault()
     return
   }

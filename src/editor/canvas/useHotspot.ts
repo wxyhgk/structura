@@ -54,6 +54,8 @@ export function useHotspot(scope: string) {
       hoverRef.current = null
       setHover(null)
     },
+    /** What the pointer itself is over now, whatever is pinned. */
+    under: (): HoverTarget => hoverRef.current,
     /** The target a hover key acts on now: the pin first, else what the pointer is over. */
     active(mol: Molecule): HotTarget | null {
       const pinned = pinRef.current

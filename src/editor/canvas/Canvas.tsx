@@ -125,7 +125,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     // but cannot apply (no room for the ring) is still used up, so it never switches tools.
     const ops = hotkeyOps(mol, hot, key)
     if (!ops) return false
-    const result = props.run(ops, { quiet: true })
+    // A key on the atom under the pointer leaves the selection alone; it may be elsewhere.
+    const result = props.run(ops, { quiet: true, keepSelection: true })
     if (!result) return true
     if (result.next) hotspot.remember(result.next, result.drawing.molecule)
     return true
@@ -151,6 +152,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     cancelGesture,
     hasGesture: () => gesture.current.kind !== "idle",
     hotspot: () => hotspot.active(current()),
+    pointed: () => hotspot.under(),
     focusAtom: hotspot.pin,
     replaceFragment(ids: number[]) {
       const mol = current()

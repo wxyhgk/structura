@@ -14,6 +14,8 @@ import { useEditorInput } from "@/editor/input/useEditorInput"
 import { ToolPalette } from "@/editor/palette/ToolPalette"
 import { HelpDialog } from "@/editor/shell/dialogs/HelpDialog"
 import { ImportNotesDialog } from "@/editor/shell/dialogs/ImportNotesDialog"
+import { EnumerateDialog } from "@/editor/markush/EnumerateDialog"
+import { VariablesPanel } from "@/editor/markush/VariablesPanel"
 import { SmilesDialog } from "@/editor/shell/dialogs/SmilesDialog"
 import { MenuBar } from "@/editor/shell/MenuBar"
 import { StatusBar } from "@/editor/shell/StatusBar"
@@ -42,6 +44,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const [viewport] = useState(createViewport)
   const zoom = useZoom(viewport)
   const [smilesOpen, setSmilesOpen] = useState(false)
+  const [enumerateOpen, setEnumerateOpen] = useState(false)
 
   const imports = useImports(editor, viewport)
   const clipboard = selectionClipboard(editor)
@@ -52,6 +55,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     clipboard,
     openFileDialog: () => fileRef.current?.click(),
     openSmilesDialog: () => setSmilesOpen(true),
+    openEnumerate: () => setEnumerateOpen(true),
   })
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
   useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange })
@@ -111,6 +115,13 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               undo={editor.undo}
               viewport={viewport}
             />
+            <VariablesPanel
+              mol={editor.mol}
+              variables={editor.variables}
+              run={editor.run}
+              canEnumerate={commands.enumerate.enabled}
+              onEnumerate={commands.enumerate.run}
+            />
           </div>
 
           <StatusBar
@@ -123,6 +134,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
           />
 
           <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
+          <EnumerateDialog open={enumerateOpen} onOpenChange={setEnumerateOpen} drawing={editor.latest()} colorHetero={editor.colorHetero} />
           <SmilesDialog
             open={smilesOpen}
             onOpenChange={setSmilesOpen}

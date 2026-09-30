@@ -79,6 +79,8 @@ export function MenuBar({
         <DropdownMenuSeparator />
         <Item command={c.clean} />
         <Item command={c.replace} />
+        <DropdownMenuSeparator />
+        <Item command={c.enumerate} />
       </MenuButton>
       <MenuButton label="查看">
         <Item command={c.zoomIn} />

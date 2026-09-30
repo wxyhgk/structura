@@ -1,5 +1,6 @@
 import type { RefObject } from "react"
 import { sceneToSvg } from "@/chem/draw"
+import { placeholders } from "@/chem/markush/variables"
 import { atomIdsOfSelection, bondsLeaving, emptySelection } from "@/chem/molecule"
 import { toMolfile } from "@/chem/molfile"
 import { download, MOD } from "@/editor/browser"
@@ -57,6 +58,7 @@ export function useCommands({
   clipboard,
   openFileDialog,
   openSmilesDialog,
+  openEnumerate,
 }: {
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
@@ -64,6 +66,7 @@ export function useCommands({
   clipboard: { copy: () => void; cut: () => void }
   openFileDialog: () => void
   openSmilesDialog: () => void
+  openEnumerate: () => void
 }) {
   const selected = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
   const perArrow = (make: (direction: Arrow, key: string) => Command) =>
@@ -113,6 +116,9 @@ export function useCommands({
       // Only a fragment joined to the rest by one bond (or a whole molecule) can be swapped.
       { keys: [{ key: "e", meta: true }], enabled: selected && bondsLeaving(editor.mol, atomIdsOfSelection(editor.mol, editor.selection)).length <= 1 },
     ),
+    enumerate: command("批量生成化合物…", openEnumerate, {
+      enabled: placeholders({ molecule: editor.mol, arrows: editor.arrows, nextArrowId: 0, variables: editor.variables }).length > 0,
+    }),
     nudge: perArrow((direction, key) =>
       command("移动 10 像素", () => editor.nudgeSelection(direction), { keys: [{ key, shift: true }], enabled: selected }),
     ),

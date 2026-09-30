@@ -10,8 +10,14 @@ export type Enumeration = {
   total: number
   /** Per variable, how many class alternatives were left out (classes are never expanded). */
   classesLeftOut: Record<string, number>
-  /** Why some or all combinations could not be built. */
-  problems: string[]
+  /** Placeholder labels with no definition: they stay placeholders in every molecule. */
+  undefinedNames: string[]
+  /** Variables with only classes: nothing concrete to put there, so nothing is generated. */
+  onlyClasses: string[]
+  /** Combinations that could not be built, and why (at most five are kept). */
+  failures: Array<{ choice: Array<{ name: string; text: string }>; error: string }>
+  /** How many combinations failed in all. */
+  failed: number
 }
 
 /** One placeholder atom and the labels it may take. */
@@ -35,7 +41,7 @@ function opsFor(site: Site, text: string): Op[] {
  */
 export function enumerate(drawing: Drawing, limit = 1000): Enumeration {
   const variables = drawing.variables ?? {}
-  const problems = undefinedVariables(drawing).map((name) => `${name} has no alternatives yet, so it stays a placeholder`)
+  const undefinedNames = undefinedVariables(drawing)
   const classesLeftOut: Record<string, number> = {}
   const sites: Site[] = placeholders(drawing).map(({ atom, name }) => {
     const alternatives = variables[name].alternatives
@@ -44,14 +50,12 @@ export function enumerate(drawing: Drawing, limit = 1000): Enumeration {
     const labels = alternatives.flatMap((item) => (item.kind === "label" ? [item.text] : []))
     return { atom, name, labels, inChain: neighbors(drawing.molecule, atom).length >= 2 }
   })
-  const empty = [...new Set(sites.filter((site) => site.labels.length === 0).map((site) => site.name))]
-  if (empty.length > 0) {
-    problems.push(`${empty.join(", ")} ${empty.length > 1 ? "have" : "has"} only classes, which are not expanded; give ${empty.length > 1 ? "them" : "it"} concrete alternatives to enumerate`)
-    return { molecules: [], total: 0, classesLeftOut, problems }
-  }
+  const onlyClasses = [...new Set(sites.filter((site) => site.labels.length === 0).map((site) => site.name))]
+  if (onlyClasses.length > 0) return { molecules: [], total: 0, classesLeftOut, undefinedNames, onlyClasses, failures: [], failed: 0 }
   const total = sites.reduce((product, site) => product * site.labels.length, 1)
   const molecules: Molecule[] = []
-  const failures = new Set<string>()
+  const failures: Enumeration["failures"] = []
+  let failed = 0
   const base: Drawing = { molecule: drawing.molecule, arrows: [], nextArrowId: drawing.nextArrowId }
   // An odometer over the sites: the last placeholder turns fastest.
   const choice = sites.map(() => 0)
@@ -62,13 +66,12 @@ export function enumerate(drawing: Drawing, limit = 1000): Enumeration {
     const ops = [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, text }) => opsFor(site, text))
     const result = applyOps(base, ops)
     if (result.ok) molecules.push(result.drawing.molecule)
-    else failures.add(chosen.map(({ site, text }) => `${site.name} = ${text}`).join(", ") + `: ${result.error}`)
+    else if (failed++ < 5) failures.push({ choice: chosen.map(({ site, text }) => ({ name: site.name, text })), error: result.error })
     for (let index = sites.length - 1; index >= 0; index--) {
       choice[index]++
       if (choice[index] < sites[index].labels.length) break
       choice[index] = 0
     }
   }
-  if (failures.size > 0) problems.push(...[...failures].slice(0, 5), ...(failures.size > 5 ? [`and ${failures.size - 5} more combinations could not be built`] : []))
-  return { molecules, total, classesLeftOut, problems }
+  return { molecules, total, classesLeftOut, undefinedNames, onlyClasses: [], failures, failed }
 }

@@ -1,4 +1,4 @@
-import type { Alternative, GroupClass } from "../types.ts"
+import type { Alternative, BridgeName, Choice, GroupClass } from "../types.ts"
 
 /**
  * A typical member of a class, for generating example compounds from a claim that names
@@ -6,10 +6,11 @@ import type { Alternative, GroupClass } from "../types.ts"
  * heteroaryl and heterocycloalkyl); `substituted` says whether it is the plain group
  * (SiH3, NH2) or one carrying substituents (SiMe3, NMe2, CF3).
  */
-type Representative = { label: string; size: number; substituted: boolean }
+type Representative = { choice: Choice; size: number; substituted: boolean }
 
-const plain = (label: string, size: number): Representative => ({ label, size, substituted: false })
-const carrying = (label: string, size: number): Representative => ({ label, size, substituted: true })
+const plain = (text: string, size: number): Representative => ({ choice: { kind: "label", text }, size, substituted: false })
+const carrying = (text: string, size: number): Representative => ({ choice: { kind: "label", text }, size, substituted: true })
+const bridge = (name: BridgeName, size: number): Representative => ({ choice: { kind: "bridge", name }, size, substituted: false })
 
 export const REPRESENTATIVES: Record<GroupClass, Representative[]> = {
   alkyl: [plain("Me", 1), plain("Et", 2), plain("iPr", 3), plain("tBu", 4), carrying("CF3", 1)],
@@ -24,16 +25,16 @@ export const REPRESENTATIVES: Record<GroupClass, Representative[]> = {
   // An element label is the bare group with its hydrogens: Si is SiH3, N is NH2.
   silyl: [plain("Si", 0), carrying("TMS", 3), carrying("SiPh3", 18)],
   amino: [plain("N", 0), carrying("NMe2", 2), carrying("NHPh", 6)],
-  // Bridge names (see bridges.ts), joining the two atoms a linker sits between.
-  arylene: [plain("p-phenylene", 6), plain("m-phenylene", 6), plain("4,4'-biphenylene", 12)],
-  heteroarylene: [plain("2,5-pyridinediyl", 6)],
+  // Divalent: joining the two atoms a linker sits between.
+  arylene: [bridge("p-phenylene", 6), bridge("m-phenylene", 6), bridge("4,4'-biphenylene", 12)],
+  heteroarylene: [bridge("2,5-pyridinediyl", 6)],
 }
 
 /** The representatives that fit a class alternative: inside its size range and its substitution. */
-export function representativesOf(alternative: Extract<Alternative, { kind: "class" }>): string[] {
+export function representativesOf(alternative: Extract<Alternative, { kind: "class" }>): Choice[] {
   const { min, max, substituted } = alternative
   return REPRESENTATIVES[alternative.class]
     .filter((item) => (min == null || item.size >= min) && (max == null || item.size <= max))
     .filter((item) => substituted == null || item.substituted === substituted)
-    .map((item) => item.label)
+    .map((item) => item.choice)
 }

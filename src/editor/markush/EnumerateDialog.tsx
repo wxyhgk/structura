@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { sceneToSvg } from "@/chem/draw"
 import { displayFormula, plainFormula } from "@/chem/formula"
-import { enumerate } from "@/chem/markush/enumerate"
+import { enumerate, type Enumeration } from "@/chem/markush/enumerate"
 import { toMolfile } from "@/chem/molfile"
 import type { Drawing } from "@/chem/types"
 import { download } from "@/editor/browser"
 import { useOverlayMark } from "@/editor/input/overlays"
-import { representativeName } from "./describe.ts"
+import { choiceName } from "./describe.ts"
 
 /** Generated at most; the SD file holds them all. */
 const LIMIT = 500
@@ -34,7 +34,7 @@ export function EnumerateDialog({
     () => (result?.molecules ?? []).slice(0, SHOWN).map((mol) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(sceneToSvg(mol, colorHetero))}`),
     [result, colorHetero],
   )
-  const notes = result ? notesOf(result) : []
+  const notes = result ? notesOf(result, LIMIT) : []
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,13 +88,16 @@ export function EnumerateDialog({
 }
 
 /** What the user should know about what was, and was not, generated. */
-function notesOf(result: ReturnType<typeof enumerate>): string[] {
+function notesOf(result: Enumeration, limit: number): string[] {
   const notes: string[] = []
-  for (const [name, labels] of Object.entries(result.represented)) {
-    notes.push(`${name} 的基团类别用代表结构展开：${labels.map(representativeName).join("、")}。`)
+  for (const [name, choices] of Object.entries(result.represented)) {
+    notes.push(`${name} 的基团类别用代表结构展开：${choices.map(choiceName).join("、")}。`)
+  }
+  for (const [name, choices] of Object.entries(result.misfits)) {
+    notes.push(`${name} 所在的位置放不下 ${choices.map(choiceName).join("、")}，这些已跳过（链末端只能接一价基团，环里只能是元素，连接基只能是单键、亚芳基或 O、S 这类原子）。`)
   }
   if (result.onlyClasses.length > 0) {
-    notes.push(`${result.onlyClasses.join("、")} 只有基团类别，且没有可用的代表结构；请勾选上面的选项，或补充具体候选项（如 H、Me、Ph）。`)
+    notes.push(`${result.onlyClasses.join("、")} 没有能放在该位置的具体候选项；请勾选上面的选项用代表结构，或补充具体候选项（如 H、Me、Ph）。`)
   }
   for (const [name, count] of Object.entries(result.classesLeftOut)) {
     if (!result.onlyClasses.includes(name)) notes.push(`${name} 有 ${count} 个基团类别没有展开，只用了具体候选项。`)
@@ -102,8 +105,9 @@ function notesOf(result: ReturnType<typeof enumerate>): string[] {
   if (result.undefinedNames.length > 0) notes.push(`${result.undefinedNames.join("、")} 还没有候选项，生成的结构里保留为占位符。`)
   if (result.failed > 0) {
     const first = result.failures[0]
-    notes.push(`${result.failed} 种组合没能生成，例如 ${first.choice.map((item) => `${item.name} = ${item.text}`).join("，")}（${first.error}）。`)
+    const picks = first.choice.map((pick) => ("position" in pick ? `${pick.name} 连在 ${pick.position} 位置` : `${pick.name} = ${choiceName(pick.choice)}`))
+    notes.push(`${result.failed} 种组合没能生成，例如 ${picks.join("，")}（${first.error}）。`)
   }
-  if (result.total > result.molecules.length + result.failed) notes.push(`组合太多，只生成了前 ${LIMIT} 种。`)
+  if (result.total > result.molecules.length + result.failed) notes.push(`组合太多，只生成了前 ${limit} 种。`)
   return notes
 }

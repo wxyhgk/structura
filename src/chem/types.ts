@@ -102,7 +102,15 @@ export type Alternative =
   | { kind: "label"; text: string }
   /** A direct bond, for a placeholder between two atoms: "L is a single bond". */
   | { kind: "bond" }
+  /** A divalent ring joining the two atoms a placeholder sits between: "L is p-phenylene". */
+  | { kind: "bridge"; name: BridgeName }
   | { kind: "class"; class: GroupClass; min?: number; max?: number; substituted?: boolean }
+
+/** The divalent rings a linker can be (see markush/bridges.ts for how each is built). */
+export type BridgeName = "p-phenylene" | "m-phenylene" | "4,4'-biphenylene" | "2,5-pyridinediyl"
+
+/** One concrete thing a placeholder can become: an alternative that is not a class. */
+export type Choice = Exclude<Alternative, { kind: "class" }>
 
 export type GroupClass =
   | "alkyl"

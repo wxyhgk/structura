@@ -1,22 +1,26 @@
 import { knownLabel } from "../label.ts"
+import { BRIDGES } from "./bridges.ts"
 import { smallestRings } from "../molecule/cycles.ts"
 import type { Alternative, Drawing, GroupClass, Molecule, Variable } from "../types.ts"
 
-/** How each class's size is counted. */
-export const GROUP_CLASSES: Record<GroupClass, { size: "carbons" | "members" }> = {
-  alkyl: { size: "carbons" },
-  alkenyl: { size: "carbons" },
-  alkynyl: { size: "carbons" },
-  cycloalkyl: { size: "carbons" },
-  heterocycloalkyl: { size: "members" },
-  aryl: { size: "carbons" },
-  heteroaryl: { size: "members" },
-  alkoxy: { size: "carbons" },
-  aryloxy: { size: "carbons" },
-  silyl: { size: "carbons" },
-  amino: { size: "carbons" },
-  arylene: { size: "carbons" },
-  heteroarylene: { size: "members" },
+/**
+ * How each class's size is counted, and how many atoms a member bonds to: 1 for a group
+ * that ends a branch (alkyl), 2 for one that links two atoms (arylene).
+ */
+export const GROUP_CLASSES: Record<GroupClass, { size: "carbons" | "members"; arity: 1 | 2 }> = {
+  alkyl: { size: "carbons", arity: 1 },
+  alkenyl: { size: "carbons", arity: 1 },
+  alkynyl: { size: "carbons", arity: 1 },
+  cycloalkyl: { size: "carbons", arity: 1 },
+  heterocycloalkyl: { size: "members", arity: 1 },
+  aryl: { size: "carbons", arity: 1 },
+  heteroaryl: { size: "members", arity: 1 },
+  alkoxy: { size: "carbons", arity: 1 },
+  aryloxy: { size: "carbons", arity: 1 },
+  silyl: { size: "carbons", arity: 1 },
+  amino: { size: "carbons", arity: 1 },
+  arylene: { size: "carbons", arity: 2 },
+  heteroarylene: { size: "members", arity: 2 },
 }
 
 /**
@@ -71,6 +75,7 @@ export function variableProblem(name: string, variable: Variable, others: Record
 
 function alternativeProblem(alternative: Alternative): string | null {
   if (alternative.kind === "bond") return null
+  if (alternative.kind === "bridge") return Object.hasOwn(BRIDGES, alternative.name) ? null : `unknown bridge "${alternative.name}" (${Object.keys(BRIDGES).join(", ")})`
   if (alternative.kind === "label") {
     const text = alternative.text.trim()
     if (!text || text.length > 32 || /[\r\n]/.test(text)) return "a label is one line of 1 to 32 characters"

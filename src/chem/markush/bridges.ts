@@ -1,7 +1,7 @@
 import { SINGLE } from "../constants.ts"
 import { angleTo, pointFrom } from "../geometry.ts"
 import { addBond, atomById, attachRingAt, bondLengthAt, componentOf, moveAtoms, relax, setElement } from "../molecule.ts"
-import type { Molecule } from "../types.ts"
+import type { BridgeName, Molecule } from "../types.ts"
 
 /**
  * Divalent pieces that join two atoms: "L is a single bond or a substituted or unsubstituted
@@ -15,9 +15,7 @@ export const BRIDGES = {
   "m-phenylene": { rings: [{ exit: 2 }], size: 6 },
   "4,4'-biphenylene": { rings: [{ exit: 3 }, { exit: 3 }], size: 12 },
   "2,5-pyridinediyl": { rings: [{ exit: 3, swap: { 5: "N" } }], size: 6 },
-} satisfies Record<string, Bridge>
-
-export type BridgeName = keyof typeof BRIDGES
+} satisfies Record<BridgeName, Bridge>
 
 /**
  * Joins `a` and `b` (not yet bonded) through a bridge, or directly for "bond". The smaller

@@ -226,8 +226,7 @@ function VariableRow({
 
 /** "C1–C30 烷基", "3–30 元杂芳基": a preset's button text. */
 function shortName(item: Alternative): string {
-  if (item.kind === "label") return item.text
-  if (item.kind === "bond") return "单键"
+  if (item.kind !== "class") return describeAlternative(item)
   const range = item.min != null ? (GROUP_CLASSES[item.class].size === "members" ? `${item.min}–${item.max} 元` : `C${item.min}–C${item.max} `) : ""
   return `${range}${CLASS_NAMES[item.class]}`
 }

@@ -86,7 +86,10 @@ test("a linker such as L becomes a single bond or a divalent ring between its tw
     { op: "set_variable", name: "L", alternatives: [{ kind: "bond" }, { kind: "class", class: "arylene", min: 6, max: 30 }, { kind: "class", class: "heteroarylene" }] },
   ])
   const result = enumerate(drawing, { representatives: true })
-  assert.deepEqual(result.represented.L, ["p-phenylene", "m-phenylene", "4,4'-biphenylene", "2,5-pyridinediyl"])
+  assert.deepEqual(
+    result.represented.L?.map((choice) => (choice.kind === "bridge" ? choice.name : "")),
+    ["p-phenylene", "m-phenylene", "4,4'-biphenylene", "2,5-pyridinediyl"],
+  )
   assert.equal(result.total, 15, "3 positions × (bond + 4 bridges)")
   assert.deepEqual([result.molecules.length, result.failed], [15, 0], JSON.stringify(result.failures))
   const formulas = new Set(result.molecules.map((mol) => plainFormula(mol)))
@@ -143,4 +146,15 @@ test("what is meant to be inside a ring stays", () => {
   assert.equal(oxygen.attachments, undefined)
   assert.equal(run(start, [{ op: "place_atom", el: "C", at: { x: 2, y: 2 } }]).attachments, undefined, "a lone atom")
   assert.equal(run(start, [{ op: "draw_bond", from: 1, end: { x: 3, y: 2 } }]).attachments, undefined, "a bond from the ring's own atom")
+})
+
+test("a linker can be given a divalent ring directly", () => {
+  const drawing = run(formula(), [
+    { op: "set_variable", name: "R2", alternatives: [label("H")] },
+    { op: "set_variable", name: "L", alternatives: [{ kind: "bridge", name: "p-phenylene" }] },
+  ])
+  const result = enumerate(drawing)
+  assert.deepEqual([result.molecules.length, result.failed], [3, 0])
+  assert.ok(result.molecules.every((mol) => plainFormula(mol) === "C18H14"), "terphenyl at each position")
+  assert.ok(!applyOps(drawing, [{ op: "set_variable", name: "L", alternatives: [{ kind: "bridge", name: "o-phenylene" as "p-phenylene" }] }]).ok)
 })

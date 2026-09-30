@@ -5,7 +5,7 @@ import { plainFormula } from "../../src/chem/formula.ts"
 import { enumerate } from "../../src/chem/markush/enumerate.ts"
 import { alternativesOf, isVariableName, undefinedVariables } from "../../src/chem/markush/variables.ts"
 import { applyOps, type Op } from "../../src/chem/ops.ts"
-import type { Drawing } from "../../src/chem/types.ts"
+import type { Choice, Drawing } from "../../src/chem/types.ts"
 import { errorsOf, validate } from "../../src/chem/validate.ts"
 
 function run(drawing: Drawing, ops: Op[]): Drawing {
@@ -136,12 +136,13 @@ test("with representatives, typical members inside each class's range stand in f
     ])
 
   const alkyl = enumerate(withClasses({ kind: "class", class: "alkyl", min: 1, max: 30 }), { representatives: true })
-  assert.deepEqual(alkyl.represented, { R1: ["Me", "Et", "iPr", "tBu", "CF3"] })
+  const texts = (choices: Choice[] | undefined) => choices?.map((choice) => (choice.kind === "label" ? choice.text : choice.kind))
+  assert.deepEqual(texts(alkyl.represented.R1), ["Me", "Et", "iPr", "tBu", "CF3"])
   assert.deepEqual([alkyl.molecules.length, alkyl.failed], [5, 0])
   assert.deepEqual(alkyl.classesLeftOut, {})
 
   const smallAryl = enumerate(withClasses({ kind: "class", class: "aryl", min: 6, max: 10, substituted: false }), { representatives: true })
-  assert.deepEqual(smallAryl.represented.R1, ["Ph", "1-Naphthyl", "2-Naphthyl"])
+  assert.deepEqual(texts(smallAryl.represented.R1), ["Ph", "1-Naphthyl", "2-Naphthyl"])
 
   // As in a real claim: heteroaryl, silyl and amino only. Every stand-in must build.
   const claim = enumerate(
@@ -163,4 +164,33 @@ test("with representatives, typical members inside each class's range stand in f
 test("L, ETU and Ar1 are variable names; elements and abbreviations are not", () => {
   for (const name of ["R", "R12", "R'", "X", "L", "ETU", "Ar1"]) assert.ok(isVariableName(name), name)
   for (const name of ["Me", "Ph", "Cl", "Y", "Ar", "D", "OMe"]) assert.ok(!isVariableName(name), name)
+})
+
+test("a choice that cannot go where its placeholder sits is skipped and reported, never built wrong", () => {
+  const cases: Array<[string, Op[], string]> = [
+    ["a bond at a branch end", [{ op: "set_variable", name: "R1", alternatives: [label("H"), { kind: "bond" }] }], "R1"],
+    ["an arylene at a branch end", [{ op: "set_variable", name: "R1", alternatives: [label("H"), { kind: "class", class: "arylene" }] }], "R1"],
+    ["an aryl group inside the ring", [{ op: "set_variable", name: "X", alternatives: [label("O"), { kind: "class", class: "aryl" }] }], "X"],
+  ]
+  for (const [why, ops, name] of cases) {
+    const result = enumerate(run(formula(), ops), { representatives: true })
+    assert.ok((result.misfits[name] ?? []).length > 0, `${why}: reported as not fitting`)
+    assert.equal(result.failed, 0, why)
+    for (const mol of result.molecules) assert.ok(mol.atoms.every((atom) => !atom.alias), `${why}: nothing left as a label`)
+  }
+  // Nothing at all fits: the variable is reported and nothing is built.
+  const none = enumerate(run(formula(), [{ op: "set_variable", name: "X", alternatives: [label("Ph")] }]))
+  assert.deepEqual([none.molecules.length, none.onlyClasses], [0, ["X"]])
+})
+
+test("a placeholder between two atoms takes an element in place, and none is left behind", () => {
+  // R1 (atom 6) carries a methyl, so it links the ring to that methyl: O makes an ether.
+  const drawing = run(formula(), [
+    { op: "add_atom", el: "C", to: 6 },
+    { op: "set_variable", name: "R1", alternatives: [label("O"), label("S")] },
+  ])
+  const result = enumerate(drawing)
+  assert.deepEqual([result.molecules.length, result.failed], [8, 0])
+  for (const mol of result.molecules) assert.ok(!mol.atoms.some((atom) => atom.alias), "no placeholder is left")
+  assert.ok(result.molecules.some((mol) => plainFormula(mol) === "C5H10O2"), "X = O, R1 = O, R2 = H: a methoxy ether")
 })

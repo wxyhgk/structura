@@ -1,27 +1,36 @@
+import { elementOf } from "../elements/index.ts"
 import { pointFrom } from "../geometry.ts"
+import { knownLabel } from "../label.ts"
 import { atomById, bondLengthAt, componentOf, neighbors, sproutAngle } from "../molecule.ts"
-import { applyOps, type Op } from "../ops.ts"
-import type { Drawing, Molecule } from "../types.ts"
 import { smallestRings } from "../molecule/cycles.ts"
-import { BRIDGES, type BridgeName } from "./bridges.ts"
+import { applyOps, type Op } from "../ops.ts"
+import type { Choice, Drawing, Molecule } from "../types.ts"
 import { representativesOf } from "./representatives.ts"
-import { alternativesOf, placeholders, undefinedVariables } from "./variables.ts"
+import { alternativesOf, isVariableName, placeholders, undefinedVariables } from "./variables.ts"
+
+/** One thing in a combination: a placeholder's choice, or where an attachment was made. */
+export type Pick = { name: string; choice: Choice } | { name: string; position: string }
 
 export type Enumeration = {
   /** Concrete molecules, in order, at most `limit` of them. */
   molecules: Molecule[]
-  /** How many combinations the concrete alternatives allow, generated or not. */
+  /** How many combinations the fitting choices allow, generated or not. */
   total: number
   /** Per variable, how many class alternatives were left out: all of them, unless representatives stand in. */
   classesLeftOut: Record<string, number>
-  /** Per variable, the representative labels that stood in for its classes. */
-  represented: Record<string, string[]>
+  /** Per variable, the representatives that stood in for its classes. */
+  represented: Record<string, Choice[]>
+  /**
+   * Per variable, choices that cannot go where its placeholder sits, and were skipped: a
+   * bond or a divalent ring at a branch end, a group inside a ring, a group where a linker is.
+   */
+  misfits: Record<string, Choice[]>
   /** Placeholder labels with no definition: they stay placeholders in every molecule. */
   undefinedNames: string[]
-  /** Variables with only classes: nothing concrete to put there, so nothing is generated. */
+  /** Variables with nothing concrete to put there (only classes, or nothing that fits), so nothing is generated. */
   onlyClasses: string[]
   /** Combinations that could not be built, and why (at most five are kept). */
-  failures: Array<{ choice: Array<{ name: string; text: string }>; error: string }>
+  failures: Array<{ choice: Pick[]; error: string }>
   /** How many combinations failed in all. */
   failed: number
 }
@@ -30,32 +39,53 @@ export type Enumeration = {
  * One placeholder atom and what it may become. `where` is how it sits: at the end of a
  * branch, inside a ring, or between two atoms of a chain (a linker such as L).
  */
-type Site = { atom: number; name: string; labels: string[]; where: "end" | "ring" | "link" }
+type Site = { atom: number; name: string; choices: Choice[]; where: "end" | "ring" | "link" }
 
-/** Stands for a direct bond among a site's choices ("L is a single bond"). */
-export const BOND = "单键"
+const same = (a: Choice, b: Choice) => JSON.stringify(a) === JSON.stringify(b)
+
+/**
+ * Whether a choice can go where a placeholder sits. A branch end takes a group or an atom
+ * (never a bond or a divalent ring); a ring position takes an element; a linker takes a
+ * bond, a divalent ring or an element such as O or S, never a group that ends a branch.
+ */
+function fits(where: Site["where"], choice: Choice): boolean {
+  if (where === "end") return choice.kind === "label"
+  const element = choice.kind === "label" && elementOf(choice.text) != null
+  if (where === "ring") return element
+  return choice.kind !== "label" || element
+}
 
 /**
  * What putting a choice on a placeholder takes. At a branch end it is swapped for the piece
- * (or dropped for H, leaving an implicit hydrogen). In a ring it is relabelled in place,
- * which suits X = O or S. Between two atoms, a bond or a divalent ring joins them, while an
- * element such as O or S takes the placeholder's place.
+ * (or dropped for H, leaving an implicit hydrogen). In a ring it is relabelled in place. A
+ * linker becomes a bond or a divalent ring joining its two neighbours, or an element in place.
  */
-function opsFor(site: Site, text: string): Op[] {
-  if (site.where === "ring") return [{ op: "label", atom: site.atom, text }]
-  if (site.where === "link") {
-    if (text === BOND) return [{ op: "replace", atoms: [site.atom], with: { bond: true } }]
-    if (Object.hasOwn(BRIDGES, text)) return [{ op: "replace", atoms: [site.atom], with: { bridge: text as BridgeName } }]
-    return [{ op: "label", atom: site.atom, text }]
-  }
-  if (text === "H") return [{ op: "remove", atoms: [site.atom] }]
-  return [{ op: "replace", atoms: [site.atom], with: { label: text } }]
+function opsFor(site: Site, choice: Choice): Op[] {
+  if (choice.kind === "bond") return [{ op: "replace", atoms: [site.atom], with: { bond: true } }]
+  if (choice.kind === "bridge") return [{ op: "replace", atoms: [site.atom], with: { bridge: choice.name } }]
+  if (site.where !== "end") return [{ op: "label", atom: site.atom, text: choice.text }]
+  if (choice.text === "H") return [{ op: "remove", atoms: [site.atom] }]
+  return [{ op: "replace", atoms: [site.atom], with: { label: choice.text } }]
 }
 
 /** How a placeholder sits in the (laid out) molecule. */
 function whereOf(mol: Molecule, atom: number, inRing: Set<number>): Site["where"] {
   if (inRing.has(atom)) return "ring"
   return neighbors(mol, atom).length >= 2 ? "link" : "end"
+}
+
+/**
+ * A label a built molecule must not keep: a defined variable's placeholder, or text that is
+ * no element or group (so a choice put a word where a structure belonged). Placeholders of
+ * variables with no definition are expected to stay.
+ */
+function leftover(mol: Molecule, defined: Set<string>): string | null {
+  for (const atom of mol.atoms) {
+    if (!atom.alias) continue
+    if (defined.has(atom.alias)) return `the placeholder ${atom.alias} was not replaced`
+    if (!isVariableName(atom.alias) && !knownLabel(atom.alias)) return `"${atom.alias}" is not a structure`
+  }
+  return null
 }
 
 export type EnumerateOptions = {
@@ -66,7 +96,7 @@ export type EnumerateOptions = {
 }
 
 /** A way of making every variable attachment's bond, with the placeholders it displaces gone. */
-type Layout = { drawing: Drawing; where: Array<{ name: string; text: string }> } | { error: string; where: Array<{ name: string; text: string }> }
+type Layout = { drawing: Drawing; where: Pick[] } | { error: string; where: Pick[] }
 
 /**
  * Every way of placing the variable attachments, one candidate atom each. A candidate
@@ -80,12 +110,12 @@ function* layouts(drawing: Drawing): Generator<Layout> {
   const choice = attachments.map(() => 0)
   for (;;) {
     let laid: Drawing = { molecule: drawing.molecule, arrows: [], nextArrowId: drawing.nextArrowId, variables: drawing.variables }
-    const where: Array<{ name: string; text: string }> = []
+    const where: Pick[] = []
     let error: string | null = null
     for (const [index, attachment] of attachments.entries()) {
       const target = attachment.to[choice[index]]
       const displaced = neighbors(laid.molecule, target).filter((atom) => atom.alias && names.has(atom.alias) && neighbors(laid.molecule, atom.id).length === 1)
-      where.push({ name: `${label(attachment.atom)} 连接位置`, text: displaced[0]?.alias ?? `#${target}` })
+      where.push({ name: label(attachment.atom), position: displaced[0]?.alias ?? `#${target}` })
       const placed = attach(laid, attachment.atom, target, displaced.map((atom) => atom.id))
       if ("error" in placed) {
         error = placed.error
@@ -127,40 +157,43 @@ function attach(drawing: Drawing, hub: number, target: number, displaced: number
 
 /**
  * Expands a generic formula into concrete molecules: every placement of each variable
- * attachment, and every combination of each placeholder's label alternatives, each
- * placeholder choosing on its own. A class ("(C1-C30)alkyl") is never expanded in full;
- * it is left out, or with `representatives` a few typical members inside its range stand
- * in for it. The result says which.
+ * attachment, and every combination of each placeholder's choices that fit where it sits,
+ * each placeholder choosing on its own. A class ("(C1-C30)alkyl") is never expanded in
+ * full; it is left out, or with `representatives` a few typical members inside its range
+ * stand in for it. The result says which, and what was skipped as not fitting.
  */
 export function enumerate(drawing: Drawing, { limit = 1000, representatives = false }: EnumerateOptions = {}): Enumeration {
   const variables = drawing.variables ?? {}
+  const defined = new Set(Object.keys(variables))
   const undefinedNames = undefinedVariables(drawing)
   const classesLeftOut: Record<string, number> = {}
-  const represented: Record<string, string[]> = {}
-  /** Each variable's concrete labels, counting its classes once however many atoms carry it. */
-  const labelsOf = new Map<string, string[]>()
+  const represented: Record<string, Choice[]> = {}
+  const misfits: Record<string, Choice[]> = {}
+  /** Each variable's choices, counting its classes once however many atoms carry it. */
+  const choicesOf = new Map<string, Choice[]>()
   for (const { name } of placeholders(drawing)) {
-    if (labelsOf.has(name)) continue
+    if (choicesOf.has(name)) continue
     const alternatives = alternativesOf(variables, name)
-    const labels = alternatives.flatMap((item) => (item.kind === "label" ? [item.text] : item.kind === "bond" ? [BOND] : []))
+    const choices: Choice[] = alternatives.flatMap((item) => (item.kind === "class" ? [] : [item]))
     for (const item of alternatives) {
       if (item.kind !== "class") continue
-      const standIns = representatives ? representativesOf(item).filter((label) => !labels.includes(label)) : []
+      const standIns = representatives ? representativesOf(item).filter((choice) => !choices.some((other) => same(other, choice))) : []
       if (standIns.length === 0) classesLeftOut[name] = (classesLeftOut[name] ?? 0) + 1
-      labels.push(...standIns)
+      choices.push(...standIns)
       if (standIns.length > 0) represented[name] = [...(represented[name] ?? []), ...standIns]
     }
-    labelsOf.set(name, labels)
+    choicesOf.set(name, choices)
   }
-  const onlyClasses = [...labelsOf].flatMap(([name, labels]) => (labels.length === 0 ? [name] : []))
-  const empty = { classesLeftOut, represented, undefinedNames }
-  if (onlyClasses.length > 0) return { molecules: [], total: 0, ...empty, onlyClasses, failures: [], failed: 0 }
+  const report = { classesLeftOut, represented, misfits, undefinedNames }
+  const bare = [...choicesOf].flatMap(([name, choices]) => (choices.length === 0 ? [name] : []))
+  if (bare.length > 0) return { molecules: [], total: 0, ...report, onlyClasses: bare, failures: [], failed: 0 }
 
   let total = 0
   const molecules: Molecule[] = []
   const failures: Enumeration["failures"] = []
   let failed = 0
-  const fail = (choice: Array<{ name: string; text: string }>, error: string) => {
+  const unfilled = new Set<string>()
+  const fail = (choice: Pick[], error: string) => {
     if (failed++ < 5) failures.push({ choice, error })
   }
   for (const layout of layouts(drawing)) {
@@ -171,26 +204,36 @@ export function enumerate(drawing: Drawing, { limit = 1000, representatives = fa
     }
     const laid = layout.drawing
     const inRing = new Set(smallestRings(laid.molecule).flat())
-    const sites: Site[] = placeholders(laid).map(({ atom, name }) => ({ atom, name, labels: labelsOf.get(name)!, where: whereOf(laid.molecule, atom, inRing) }))
-    const count = sites.reduce((product, site) => product * site.labels.length, 1)
+    const sites: Site[] = placeholders(laid).map(({ atom, name }) => {
+      const where = whereOf(laid.molecule, atom, inRing)
+      const all = choicesOf.get(name)!
+      const skipped = all.filter((choice) => !fits(where, choice))
+      for (const choice of skipped) if (!(misfits[name] ?? []).some((other) => same(other, choice))) misfits[name] = [...(misfits[name] ?? []), choice]
+      return { atom, name, where, choices: all.filter((choice) => fits(where, choice)) }
+    })
+    for (const site of sites) if (site.choices.length === 0) unfilled.add(site.name)
+    const count = sites.reduce((product, site) => product * site.choices.length, 1)
     total += count
     // An odometer over the sites: the last placeholder turns fastest.
-    const choice = sites.map(() => 0)
+    const index = sites.map(() => 0)
     for (let made = 0; made < count && molecules.length + failed < limit; made++) {
       // Relabelling in place first, then links, then swaps, then removals, so no op aims at an
       // atom already gone and a link is made before the branch ends it carries are swapped.
-      const chosen = sites.map((site, index) => ({ site, text: site.labels[choice[index]] }))
-      const order = ({ site, text }: (typeof chosen)[number]) => (site.where === "ring" ? 0 : site.where === "link" ? 1 : text === "H" ? 3 : 2)
-      const ops = [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, text }) => opsFor(site, text))
+      const chosen = sites.map((site, at) => ({ site, choice: site.choices[index[at]] }))
+      const order = ({ site, choice }: (typeof chosen)[number]) =>
+        site.where === "ring" ? 0 : site.where === "link" ? 1 : choice.kind === "label" && choice.text === "H" ? 3 : 2
+      const ops = [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, choice }) => opsFor(site, choice))
+      const picks: Pick[] = [...layout.where, ...chosen.map(({ site, choice }) => ({ name: site.name, choice }))]
       const result = applyOps({ ...laid, variables: undefined }, ops)
-      if (result.ok) molecules.push(result.drawing.molecule)
-      else fail([...layout.where, ...chosen.map(({ site, text }) => ({ name: site.name, text }))], result.error)
-      for (let index = sites.length - 1; index >= 0; index--) {
-        choice[index]++
-        if (choice[index] < sites[index].labels.length) break
-        choice[index] = 0
+      const wrong = result.ok ? leftover(result.drawing.molecule, defined) : result.error
+      if (result.ok && !wrong) molecules.push(result.drawing.molecule)
+      else fail(picks, wrong!)
+      for (let at = sites.length - 1; at >= 0; at--) {
+        index[at]++
+        if (index[at] < sites[at].choices.length) break
+        index[at] = 0
       }
     }
   }
-  return { molecules, total, ...empty, onlyClasses: [], failures, failed }
+  return { molecules, total, ...report, onlyClasses: [...unfilled], failures, failed }
 }

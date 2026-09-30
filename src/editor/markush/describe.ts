@@ -1,4 +1,5 @@
-import type { Alternative, GroupClass } from "@/chem/types"
+import { GROUP_CLASSES } from "@/chem/markush/variables"
+import type { Alternative, BridgeName, Choice, GroupClass } from "@/chem/types"
 
 // Generic-formula wording for the editor: class names, and what typed text means.
 
@@ -18,16 +19,22 @@ export const CLASS_NAMES: Record<GroupClass, string> = {
   heteroarylene: "亚杂芳基",
 }
 
-/** Classes whose size counts ring members ("3–30 元") rather than carbons ("C1–C30"). */
-const BY_MEMBERS = new Set<GroupClass>(["heteroaryl", "heterocycloalkyl", "heteroarylene"])
+/** The divalent rings a linker can be, by name. Typed by BridgeName, so none is missed. */
+export const BRIDGE_NAMES: Record<BridgeName, string> = {
+  "p-phenylene": "对亚苯基",
+  "m-phenylene": "间亚苯基",
+  "4,4'-biphenylene": "4,4′-联亚苯基",
+  "2,5-pyridinediyl": "2,5-亚吡啶基",
+}
 
 /** "取代或未取代的 (C1–C30) 烷基", as a claim would put it; a label is itself. */
 export function describeAlternative(alternative: Alternative): string {
   if (alternative.kind === "label") return alternative.text
   if (alternative.kind === "bond") return "单键"
+  if (alternative.kind === "bridge") return BRIDGE_NAMES[alternative.name]
   const { min, max } = alternative
   const range = min != null || max != null ? `${min ?? 1}–${max ?? "∞"}` : ""
-  const size = range ? (BY_MEMBERS.has(alternative.class) ? `(${range} 元)` : `(C${range.replace("–", "–C")})`) : ""
+  const size = range ? (GROUP_CLASSES[alternative.class].size === "members" ? `(${range} 元)` : `(C${range.replace("–", "–C")})`) : ""
   const substituted = alternative.substituted == null ? "取代或未取代的" : alternative.substituted ? "取代的" : "未取代的"
   return `${substituted}${size}${CLASS_NAMES[alternative.class]}`
 }
@@ -44,7 +51,7 @@ export function parseLabels(text: string): string[] {
   return [...new Set(words.flatMap((word) => SHORTHANDS[word] ?? [word]))]
 }
 
-/** Chinese names for the representatives that stand in for classes when generating. */
+/** Chinese names for the representative labels that stand in for classes when generating. */
 const REPRESENTATIVE_NAMES: Record<string, string> = {
   Me: "甲基",
   Et: "乙基",
@@ -78,13 +85,10 @@ const REPRESENTATIVE_NAMES: Record<string, string> = {
   N: "氨基（NH₂）",
   NMe2: "二甲氨基",
   NHPh: "苯氨基",
-  "p-phenylene": "对亚苯基",
-  "m-phenylene": "间亚苯基",
-  "4,4'-biphenylene": "4,4′-联亚苯基",
-  "2,5-pyridinediyl": "2,5-亚吡啶基",
 }
 
-/** "2-吡啶基", or the label itself when there is no Chinese name for it. */
-export function representativeName(label: string): string {
-  return REPRESENTATIVE_NAMES[label] ?? label
+/** "2-吡啶基" for a representative label, the bridge's name, or 单键. */
+export function choiceName(choice: Choice): string {
+  if (choice.kind === "label") return REPRESENTATIVE_NAMES[choice.text] ?? choice.text
+  return describeAlternative(choice)
 }

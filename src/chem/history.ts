@@ -1,6 +1,6 @@
 import { emptyDrawing } from "./drawing.ts"
 import { placeBeside, sideBySide } from "./molecule/arrange.ts"
-import type { Drawing, Molecule } from "./types.ts"
+import type { Drawing, Molecule, Point } from "./types.ts"
 
 export type History = {
   past: Drawing[]
@@ -11,10 +11,10 @@ export type History = {
 export type HistoryAction =
   | { type: "commit"; drawing: Drawing }
   | { type: "commit-molecule"; mol: Molecule }
-  /** Replaces the drawing with these molecules side by side (opening a file). */
-  | { type: "open"; molecules: Molecule[] }
-  /** Adds these molecules beside whatever is drawn when the action lands (paste, SMILES). */
-  | { type: "append"; molecules: Molecule[] }
+  /** Replaces the drawing with these molecules side by side (opening a file), centred on `at`. */
+  | { type: "open"; molecules: Molecule[]; at?: Point }
+  /** Adds these molecules beside whatever is drawn when the action lands (paste, SMILES); round `at` on an empty page. */
+  | { type: "append"; molecules: Molecule[]; at?: Point }
   | { type: "undo" }
   | { type: "redo" }
 
@@ -53,8 +53,8 @@ export function historyReducer(state: History, action: HistoryAction): History {
     const current = state.present
     const drawing =
       action.type === "open"
-        ? { molecule: sideBySide(action.molecules, current.molecule), arrows: [], nextArrowId: current.nextArrowId }
-        : { ...current, molecule: placeBeside(current.molecule, action.molecules) }
+        ? { molecule: sideBySide(action.molecules, current.molecule, action.at), arrows: [], nextArrowId: current.nextArrowId }
+        : { ...current, molecule: placeBeside(current.molecule, action.molecules, action.at) }
     return historyReducer(state, { type: "commit", drawing })
   }
   if (action.type === "commit" || action.type === "commit-molecule") {

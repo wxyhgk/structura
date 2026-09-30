@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { clampZoom, createViewport, fittedView, revealedView, zoomedAt } from "../../../src/editor/canvas/viewport.ts"
+import { clampZoom, createViewport, fittedView, zoomedAt } from "../../../src/editor/canvas/viewport.ts"
 
 const box = { getBoundingClientRect: () => ({ left: 100, top: 50, width: 800, height: 600 }) }
 
@@ -44,17 +44,10 @@ test("the viewport notifies on every change and maps screen to world through its
   assert.equal(calls, 2)
 })
 
-test("new content is revealed without ever zooming in", () => {
-  const home = { zoom: 1, pan: { x: 0, y: 0 } }
-  // Already on screen: nothing moves, so a paste does not make the drawing bigger.
-  assert.equal(revealedView(home, [{ x: 100, y: 100 }, { x: 140, y: 100 }], 800, 600), null)
-  // Off screen but small: centred at the same zoom.
-  const off = revealedView(home, [{ x: 1000, y: 100 }, { x: 1040, y: 100 }], 800, 600)!
-  assert.equal(off.zoom, 1)
-  assert.deepEqual(off.pan, { x: 400 - 1020, y: 300 - 100 })
-  // Too wide for the canvas: zoomed out just enough, the same as a fit.
-  const wide = [{ x: 0, y: 0 }, { x: 1880, y: 0 }]
-  assert.deepEqual(revealedView(home, wide, 800, 600), fittedView(wide, 800, 600))
-  // Zoomed out already: stays zoomed out.
-  assert.equal(revealedView({ zoom: 0.5, pan: { x: 0, y: 0 } }, [{ x: 3000, y: 0 }], 800, 600)!.zoom, 0.5)
+test("new content lands in the middle of the canvas the user is looking at", () => {
+  const viewport = createViewport()
+  viewport.attach(box as unknown as Element)
+  assert.deepEqual(viewport.centre(), { x: 400, y: 300 })
+  viewport.zoomBy(2)
+  assert.deepEqual(viewport.centre(), { x: 400, y: 300 }, "zooming about the middle keeps the middle")
 })

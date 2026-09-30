@@ -3,10 +3,13 @@ import type { Molecule, Point } from "../types.ts"
 import { emptyMolecule, spliceIn, subMolecule } from "./graph.ts"
 import { bondLengthAt } from "./measure.ts"
 
-/** Offsets that put each molecule left to right, two bond lengths apart, centred on y = 0. */
-function rowOffsets(molecules: Molecule[]): Array<{ dx: number; dy: number } | null> {
+/**
+ * Offsets that put each molecule left to right, two bond lengths apart, on one line: the
+ * row centred on `at` when given, else starting at x = 0 and centred on y = 0.
+ */
+function rowOffsets(molecules: Molecule[], at?: Point): Array<{ dx: number; dy: number } | null> {
   let cursor = 0
-  return molecules.map((mol) => {
+  const offsets = molecules.map((mol) => {
     if (mol.atoms.length === 0) return null
     const xs = mol.atoms.map((atom) => atom.x)
     const ys = mol.atoms.map((atom) => atom.y)
@@ -14,16 +17,19 @@ function rowOffsets(molecules: Molecule[]): Array<{ dx: number; dy: number } | n
     cursor += Math.max(...xs) - Math.min(...xs) + BOND_LENGTH * 2
     return offset
   })
+  if (!at) return offsets
+  const width = cursor - BOND_LENGTH * 2
+  return offsets.map((offset) => offset && { dx: offset.dx + at.x - width / 2, dy: offset.dy + at.y })
 }
 
 /**
  * Lays several molecules out left to right, two bond lengths apart and centred on one
- * line, and merges them into one molecule. Ids start after `after`'s counters, so ids
- * already handed out in this session are not handed out again.
+ * line (around `at` when given), and merges them into one molecule. Ids start after
+ * `after`'s counters, so ids already handed out in this session are not handed out again.
  */
-export function sideBySide(molecules: Molecule[], after: Molecule = emptyMolecule()): Molecule {
+export function sideBySide(molecules: Molecule[], after: Molecule = emptyMolecule(), at?: Point): Molecule {
   let merged: Molecule = { ...emptyMolecule(), nextAtomId: after.nextAtomId, nextBondId: after.nextBondId, nextGroupId: after.nextGroupId }
-  rowOffsets(molecules).forEach((offset, index) => {
+  rowOffsets(molecules, at).forEach((offset, index) => {
     if (offset) merged = spliceIn(merged, molecules[index], offset.dx, offset.dy).mol
   })
   return merged
@@ -31,10 +37,10 @@ export function sideBySide(molecules: Molecule[], after: Molecule = emptyMolecul
 
 /**
  * Adds molecules to the right of what is already drawn, two bond lengths away and
- * centred on it, without moving the existing atoms.
+ * centred on it, without moving the existing atoms. On an empty page they go round `at`.
  */
-export function placeBeside(existing: Molecule, molecules: Molecule[]): Molecule {
-  if (existing.atoms.length === 0) return sideBySide(molecules, existing)
+export function placeBeside(existing: Molecule, molecules: Molecule[], at?: Point): Molecule {
+  if (existing.atoms.length === 0) return sideBySide(molecules, existing, at)
   const spot = spotBeside(existing)
   let merged = existing
   rowOffsets(molecules).forEach((offset, index) => {

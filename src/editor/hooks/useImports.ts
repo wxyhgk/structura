@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { usableRecords } from "@/chem/import"
 import { emptyMolecule } from "@/chem/molecule"
 import { readMolfile, type MolRecord } from "@/chem/sdf"
 import type { Molecule } from "@/chem/types"
 import { failure } from "@/editor/browser"
-import { drawingPoints, type Viewport } from "@/editor/canvas/viewport"
+import type { Viewport } from "@/editor/canvas/viewport"
 import { importNotes, type ImportNotes } from "@/editor/imports/notes"
 import { readMolText } from "@/editor/imports/read"
 import { loadRDKit } from "@/editor/rdkit"
@@ -17,22 +17,17 @@ const RDKIT_FAILED = "RDKit 加载失败，请检查网络后重试。"
  * Opening files, pasting molfile or SMILES text, and importing SMILES: all go through
  * usableRecords, land as one undoable step, and report problems through `notes`.
  */
-export function useImports(editor: Pick<EditorState, "mol" | "arrows" | "openMolecules" | "appendMolecules">, viewport: Viewport) {
+export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMolecules">, viewport: Viewport) {
   const [notes, setNotes] = useState<ImportNotes | null>(null)
-  /** Set when an import lands, so the view shows the drawing once it has rendered. */
-  const fitAfterImport = useRef(false)
 
-  useEffect(() => {
-    if (!fitAfterImport.current) return
-    fitAfterImport.current = false
-    viewport.reveal(drawingPoints(editor.mol, editor.arrows))
-  }, [viewport, editor.mol, editor.arrows])
-
-  /** Adds molecules to the right of the drawing, as one undoable step. */
+  /**
+   * Adds molecules to the right of the drawing, as one undoable step. The canvas is
+   * endless and the view never moves on its own: on an empty page they land in the middle
+   * of what the user is looking at.
+   */
   function addBeside(molecules: Molecule[]) {
     if (molecules.length === 0) return
-    fitAfterImport.current = true
-    editor.appendMolecules(molecules)
+    editor.appendMolecules(molecules, viewport.centre())
   }
 
   /**
@@ -57,14 +52,13 @@ export function useImports(editor: Pick<EditorState, "mol" | "arrows" | "openMol
   }
 
   /**
-   * Replaces the drawing with the molecules in molfile or SD text, fitting them in view,
+   * Replaces the drawing with the molecules in molfile or SD text, in the middle of the view,
    * and says what happened. Throws when the text cannot be read at all.
    */
   function openText(text: string): ImportNotes {
     const { molecules, lines } = readMolText(text)
     if (molecules.length === 0) return { opened: false, lines: lines.length > 0 ? lines : ["文件里没有可以读取的分子。"] }
-    fitAfterImport.current = true
-    editor.openMolecules(molecules)
+    editor.openMolecules(molecules, viewport.centre())
     return { opened: true, lines }
   }
 

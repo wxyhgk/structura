@@ -21,7 +21,7 @@ import {
   selectAll,
   selectionFromAtoms,
 } from "@/chem/molecule"
-import type { BondStyle, Molecule, RingKind, Selection } from "@/chem/types"
+import type { BondStyle, Molecule, Point, RingKind, Selection } from "@/chem/types"
 import type { ToolId } from "@/editor/tools/types"
 
 export function useEditor(initial: Molecule[] = []) {
@@ -208,19 +208,19 @@ export function useEditor(initial: Molecule[] = []) {
   // Opening, importing and starting over replace or extend the document as a whole, so
   // they stay history actions rather than ops; each is still one undoable step.
 
-  /** Replaces the drawing with an opened file's molecules. */
+  /** Replaces the drawing with an opened file's molecules, centred on `at`. */
   const openMolecules = useCallback(
-    (molecules: Molecule[]) => {
-      dispatch({ type: "open", molecules })
+    (molecules: Molecule[], at?: Point) => {
+      dispatch({ type: "open", molecules, at })
       setSelection(emptySelection())
     },
     [dispatch],
   )
 
-  /** Adds imported molecules beside the drawing as it is when they arrive. */
+  /** Adds imported molecules beside the drawing as it is when they arrive; round `at` on an empty page. */
   const appendMolecules = useCallback(
-    (molecules: Molecule[]) => {
-      dispatch({ type: "append", molecules })
+    (molecules: Molecule[], at?: Point) => {
+      dispatch({ type: "append", molecules, at })
       setSelection(emptySelection())
     },
     [dispatch],

@@ -31,25 +31,6 @@ export function fittedView(points: Point[], width: number, height: number): View
   return { zoom, pan: { x: width / 2 - cx * zoom, y: height / 2 - cy * zoom } }
 }
 
-/**
- * The view after new content lands: unchanged when every point is already on screen,
- * else centred on the points, zoomed out only as far as they need, and never zoomed in,
- * so pasting or importing does not suddenly make the drawing bigger. Null when nothing moves.
- */
-export function revealedView(view: View, points: Point[], width: number, height: number): View | null {
-  const fitted = fittedView(points, width, height)
-  if (!fitted) return null
-  const onScreen = points.every((point) => {
-    const x = point.x * view.zoom + view.pan.x
-    const y = point.y * view.zoom + view.pan.y
-    return x >= FIT_MARGIN && x <= width - FIT_MARGIN && y >= FIT_MARGIN && y <= height - FIT_MARGIN
-  })
-  if (onScreen) return null
-  const zoom = Math.min(view.zoom, fitted.zoom)
-  const scale = zoom / fitted.zoom
-  return { zoom, pan: { x: width / 2 - (width / 2 - fitted.pan.x) * scale, y: height / 2 - (height / 2 - fitted.pan.y) * scale } }
-}
-
 /** Every point a fit has to keep in view: atoms and both ends of each arrow. */
 export function drawingPoints(mol: Molecule, arrows: Arrow[]): Point[] {
   return [...mol.atoms, ...arrows.flatMap((arrow) => [{ x: arrow.x1, y: arrow.y1 }, { x: arrow.x2, y: arrow.y2 }])]
@@ -110,11 +91,11 @@ export function createViewport() {
       const next = rect ? fittedView(points, rect.width, rect.height) : null
       if (next) set(next)
     },
-    /** Brings the points into view without zooming in; see revealedView. */
-    reveal(points: Point[]) {
+    /** The world point at the middle of the canvas: where new content lands on an empty page. */
+    centre(): Point {
       const rect = element?.getBoundingClientRect()
-      const next = rect ? revealedView(view, points, rect.width, rect.height) : null
-      if (next) set(next)
+      const middle = rect ? { x: rect.width / 2, y: rect.height / 2 } : { x: 0, y: 0 }
+      return { x: (middle.x - view.pan.x) / view.zoom, y: (middle.y - view.pan.y) / view.zoom }
     },
   }
 }

@@ -87,3 +87,14 @@ test("imports merge into the drawing as it is when they land", () => {
   assert.equal(opened.present.molecule.atoms.length, 6)
   assert.ok(opened.present.molecule.atoms.every((atom) => atom.id > 2), "ids continue after those already used")
 })
+
+test("an import onto an empty page lands round the point it is given", () => {
+  const piece = createBondAt(emptyMolecule(), { x: -500, y: -500 }, SINGLE)
+  for (const type of ["open", "append"] as const) {
+    const next = historyReducer(emptyHistory(), { type, molecules: [piece, piece], at: { x: 300, y: 200 } })
+    const xs = next.present.molecule.atoms.map((atom) => atom.x)
+    const ys = next.present.molecule.atoms.map((atom) => atom.y)
+    assert.equal((Math.min(...xs) + Math.max(...xs)) / 2, 300, type)
+    assert.equal((Math.min(...ys) + Math.max(...ys)) / 2, 200, type)
+  }
+})

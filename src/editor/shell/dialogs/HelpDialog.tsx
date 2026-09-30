@@ -69,7 +69,7 @@ export function HelpDialog({
         <DialogHeader>
           <DialogTitle>快捷键</DialogTitle>
           <DialogDescription>
-            悬停在原子上（蓝圈）再按键，会直接接上结构。绿圈是下一次按键的位置，鼠标先别动可以连按。鼠标挪到别的原子上之后，按键就作用在那里。按键先作用于鼠标下的原子或键；鼠标没指着东西时，作用于绿圈（上一次按键留下的位置）；两者都没有时，作用于选中的每个原子。鼠标停在选中部分上时，也作用于整个选中。Esc 取消选中。没悬停也没选中时，按键切换工具。
+            蓝圈标出下一次按键作用的位置：鼠标悬停的原子或键。刚按完键、鼠标没动时，蓝圈跳到新接出的原子上，可以接着连按；鼠标移开到空白处，蓝圈留在原处。没有蓝圈时，按键作用于选中的每个原子（鼠标停在选中部分上时也是）。Esc 取消选中。既没蓝圈也没选中时，按键切换工具。
           </DialogDescription>
         </DialogHeader>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">

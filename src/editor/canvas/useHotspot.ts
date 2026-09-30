@@ -15,6 +15,20 @@ type Pin = { id: number; x: number; y: number; covered: HoverTarget }
  * there while the pointer rests; it lets go once the pointer moves onto something else.
  * `scope` changes (tool or ring kind) clear the hover.
  */
+/**
+ * Where the next key acts, the one place the canvas marks: the atom or bond under the
+ * pointer, as in ChemDraw, else the hotspot the last key left. Right after a key, while the
+ * pointer still rests on the atom it was pressed on, the hotspot wins, so keys chain.
+ */
+export function resolveTarget(mol: Molecule, hover: HoverTarget, pin: Pin | null): HotTarget | null {
+  const pointed =
+    hover && (hover.type === "atom" ? atomById(mol, hover.id) : mol.bonds.some((bond) => bond.id === hover.id)) ? hover : null
+  const pinned: HotTarget | null = pin && atomById(mol, pin.id) ? { type: "atom", id: pin.id } : null
+  if (!pinned) return pointed
+  if (!pointed || sameHover(pointed, pinned) || (pin!.covered != null && sameHover(pointed, pin!.covered))) return pinned
+  return pointed
+}
+
 export function useHotspot(scope: string) {
   const [hover, setHover] = useState<HoverTarget>(null)
   const [pinnedId, setPinnedId] = useState<number | null>(null)
@@ -45,8 +59,6 @@ export function useHotspot(scope: string) {
 
   return {
     hover,
-    /** The pinned atom's id, while that atom still exists. */
-    pinnedIn: (mol: Molecule) => (pinnedId != null && atomById(mol, pinnedId) ? pinnedId : null),
     assignHover(next: HoverTarget) {
       hoverRef.current = next
       setHover((current) => (sameHover(current, next) ? current : next))
@@ -57,16 +69,10 @@ export function useHotspot(scope: string) {
     },
     /** What the pointer itself is over now, whatever is pinned. */
     under: (): HoverTarget => hoverRef.current,
-    /** The target a hover key acts on now: the pin first, else what the pointer is over. */
-    active(mol: Molecule): HotTarget | null {
-      const pinned = pinRef.current
-      if (pinned && atomById(mol, pinned.id)) return { type: "atom", id: pinned.id }
-      const current = hoverRef.current
-      if (!current) return null
-      if (current.type === "atom" && atomById(mol, current.id)) return current
-      if (current.type === "bond" && mol.bonds.some((bond) => bond.id === current.id)) return current
-      return null
-    },
+    /** Where a key acts right now (see resolveTarget). */
+    active: (mol: Molecule): HotTarget | null => resolveTarget(mol, hoverRef.current, pinRef.current),
+    /** The same, from rendered state: the one atom or bond the canvas marks. */
+    target: (mol: Molecule): HotTarget | null => resolveTarget(mol, hover, pinnedId != null ? pinRef.current : null),
     /** Pins where a key's result says the next key should go; a bond or nothing unpins. */
     remember(next: HotTarget, mol: Molecule) {
       if (next.type === "atom" && atomById(mol, next.id)) pin(next.id)

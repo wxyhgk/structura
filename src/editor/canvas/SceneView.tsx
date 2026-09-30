@@ -17,8 +17,7 @@ export function SceneView({
   selection,
   tool,
   zoom,
-  hover,
-  hotspotId,
+  target,
   preview,
   colorHetero,
   showFrame,
@@ -30,8 +29,8 @@ export function SceneView({
   selection: Selection
   tool: ToolId
   zoom: number
-  hover: HoverTarget
-  hotspotId: number | null
+  /** Where the next key acts: under the pointer, else the hotspot the last key left. */
+  target: HoverTarget
   preview: Preview
   colorHetero: boolean
   showFrame: boolean
@@ -48,10 +47,7 @@ export function SceneView({
       <Arrows arrows={arrows} />
       <SelectionMarks mol={mol} selection={selection} labels={scene.labels} zoom={zoom} />
       <Labels labels={scene.labels} />
-      <HoverCue mol={mol} hover={hover} labels={scene.labels} zoom={zoom} />
-      {hotspotId != null && !(hover?.type === "atom" && hover.id === hotspotId) && (
-        <Hotspot mol={mol} id={hotspotId} labels={scene.labels} zoom={zoom} />
-      )}
+      <HoverCue mol={mol} hover={target} labels={scene.labels} zoom={zoom} />
       {showFrame && (tool === "lasso" || tool === "marquee") && (
         <SelectionChrome mol={mol} selection={selection} zoom={zoom} />
       )}
@@ -189,31 +185,6 @@ function HoverCue({
       fill="rgba(26, 115, 232, 0.08)"
       stroke="#1a73e8"
       strokeWidth={stroke}
-    />
-  )
-}
-
-function Hotspot({
-  mol,
-  id,
-  labels,
-  zoom,
-}: {
-  mol: Molecule
-  id: number
-  labels: AtomLabel[]
-  zoom: number
-}) {
-  const atom = atomById(mol, id)
-  if (!atom || zoom <= 0) return null
-  const circle = atomCircle(atom, labels.find((item) => item.atomId === atom.id), zoom, 7)
-  return (
-    <circle
-      data-testid="hotspot-atom"
-      {...circle}
-      fill="rgba(22, 140, 72, 0.14)"
-      stroke="#168c48"
-      strokeWidth={1.6 / zoom}
     />
   )
 }

@@ -3,7 +3,7 @@ import test from "node:test"
 import { emptyDrawing } from "../../src/chem/drawing.ts"
 import { plainFormula } from "../../src/chem/formula.ts"
 import { enumerate } from "../../src/chem/markush/enumerate.ts"
-import { undefinedVariables } from "../../src/chem/markush/variables.ts"
+import { alternativesOf, undefinedVariables } from "../../src/chem/markush/variables.ts"
 import { applyOps, type Op } from "../../src/chem/ops.ts"
 import type { Drawing } from "../../src/chem/types.ts"
 import { errorsOf, validate } from "../../src/chem/validate.ts"
@@ -42,7 +42,7 @@ test("variables are checked when they are defined, and can be removed", () => {
     assert.ok(!result.ok && message.test(result.error), JSON.stringify(op))
   }
   const defined = run(drawing, [{ op: "set_variable", name: "R1", alternatives: [label(" H "), { kind: "class", class: "alkyl", min: 1, max: 30 }] }])
-  assert.deepEqual((defined.variables?.R1 as { alternatives: unknown[] }).alternatives[0], { kind: "label", text: "H" }, "labels are trimmed")
+  assert.deepEqual(alternativesOf(defined.variables, "R1")[0], { kind: "label", text: "H" }, "labels are trimmed")
   assert.deepEqual(undefinedVariables(defined), ["X", "R2"])
   const removed = run(defined, [{ op: "remove_variable", name: "R1" }])
   assert.equal(removed.variables, undefined)

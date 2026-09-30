@@ -1,3 +1,4 @@
+import { knownLabel } from "../label.ts"
 import type { Alternative, Drawing, GroupClass, Molecule, Variable } from "../types.ts"
 
 /** How each class's size is counted. */
@@ -36,6 +37,7 @@ function alternativeProblem(alternative: Alternative): string | null {
   if (alternative.kind === "label") {
     const text = alternative.text.trim()
     if (!text || text.length > 32 || /[\r\n]/.test(text)) return "a label is one line of 1 to 32 characters"
+    if (!knownLabel(text)) return `"${text}" is not an element or a known abbreviation; for a range such as C1-C30 use a class`
     return null
   }
   if (!Object.hasOwn(GROUP_CLASSES, alternative.class)) return `unknown class "${alternative.class}" (${Object.keys(GROUP_CLASSES).join(", ")})`

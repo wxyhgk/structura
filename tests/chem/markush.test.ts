@@ -89,3 +89,13 @@ test("a variable with only classes, or none at all, is reported", () => {
   assert.equal(partial.molecules.length, 6)
   assert.deepEqual(partial.undefinedNames, ["R2"])
 })
+
+test("a label alternative must be an element or a known abbreviation", () => {
+  for (const text of ["C1-C30", "alkyl", "R5"]) {
+    const result = applyOps(scaffold(), [{ op: "set_variable", name: "R1", alternatives: [label(text)] }])
+    assert.ok(!result.ok && /not an element or a known abbreviation/.test(result.error), text)
+  }
+  for (const text of ["H", "D", "Cl", "CN", "Me", "Ph", "OMe", "13C"]) {
+    assert.ok(applyOps(scaffold(), [{ op: "set_variable", name: "R1", alternatives: [label(text)] }]).ok, text)
+  }
+})

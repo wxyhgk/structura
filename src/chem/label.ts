@@ -16,6 +16,15 @@ function isotopeLabel(text: string): { el: string; isotope: number } | null {
   return { el: match[2], isotope: Number(match[1]) }
 }
 
+/**
+ * Whether a label means a definite atom or group: an element, a hydrogen isotope or mass
+ * number, or a known abbreviation. Anything else would only ever be a placeholder.
+ */
+export function knownLabel(text: string): boolean {
+  const trimmed = text.trim()
+  return Boolean(templateFor(trimmed) || elementOf(trimmed) || HYDROGEN_ISOTOPES[trimmed] || isotopeLabel(trimmed))
+}
+
 export function setAtomLabel(mol: Molecule, id: number, text: string): Molecule {
   const trimmed = text.trim()
   if (!trimmed) return setAlias(mol, id, undefined)

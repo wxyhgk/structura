@@ -3,7 +3,7 @@ import test from "node:test"
 import { emptyDrawing } from "../../src/chem/drawing.ts"
 import { plainFormula } from "../../src/chem/formula.ts"
 import { enumerate } from "../../src/chem/markush/enumerate.ts"
-import { alternativesOf, undefinedVariables } from "../../src/chem/markush/variables.ts"
+import { alternativesOf, isVariableName, undefinedVariables } from "../../src/chem/markush/variables.ts"
 import { applyOps, type Op } from "../../src/chem/ops.ts"
 import type { Drawing } from "../../src/chem/types.ts"
 import { errorsOf, validate } from "../../src/chem/validate.ts"
@@ -32,6 +32,7 @@ test("variables are checked when they are defined, and can be removed", () => {
   const drawing = scaffold()
   const bad: Array<[Op, RegExp]> = [
     [{ op: "set_variable", name: "Me", alternatives: [label("H")] }, /not a variable name/],
+    [{ op: "set_variable", name: "Cl", alternatives: [label("H")] }, /not a variable name/],
     [{ op: "set_variable", name: "R1", alternatives: [] }, /at least one/],
     [{ op: "set_variable", name: "R1", alternatives: [{ kind: "class", class: "wizard" as "alkyl" }] }, /unknown class/],
     [{ op: "set_variable", name: "R1", alternatives: [{ kind: "class", class: "alkyl", min: 30, max: 1 }] }, /above/],
@@ -157,4 +158,9 @@ test("with representatives, typical members inside each class's range stand in f
   assert.deepEqual([none.onlyClasses, none.classesLeftOut], [["R1"], { R1: 1 }])
   // Without representatives, classes are left out as before.
   assert.deepEqual(enumerate(withClasses({ kind: "class", class: "alkyl" })).onlyClasses, ["R1"])
+})
+
+test("L, ETU and Ar1 are variable names; elements and abbreviations are not", () => {
+  for (const name of ["R", "R12", "R'", "X", "L", "ETU", "Ar1"]) assert.ok(isVariableName(name), name)
+  for (const name of ["Me", "Ph", "Cl", "Y", "Ar", "D", "OMe"]) assert.ok(!isVariableName(name), name)
 })

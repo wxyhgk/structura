@@ -17,10 +17,15 @@ export const GROUP_CLASSES: Record<GroupClass, { size: "carbons" | "members" }> 
 }
 
 /**
- * R, R1, R12, R', X, X1, Z…: how a variable's label may look. Only letters that are no
- * element symbol, so typing one on an atom makes a placeholder rather than an element.
+ * How a variable's label may look: R, R1, R', X, L, Ar1, ETU… A short name starting with a
+ * capital, optionally numbered, that is no element and no known abbreviation, so typing
+ * it on an atom makes a placeholder rather than an atom or a group.
  */
-export const VARIABLE_NAME = /^[RXZQGL]\d{0,3}'{0,2}$/
+const VARIABLE_SHAPE = /^[A-Z][A-Za-z]{0,3}\d{0,3}'{0,2}$/
+
+export function isVariableName(text: string): boolean {
+  return VARIABLE_SHAPE.test(text) && !knownLabel(text)
+}
 
 /** A variable's list, following "same as" to the variable that holds it; empty if undefined. */
 export function alternativesOf(variables: Record<string, Variable> | undefined, name: string): Alternative[] {
@@ -44,7 +49,7 @@ export function sharers(variables: Record<string, Variable> | undefined, name: s
  * variable others share cannot itself become a "same as".
  */
 export function variableProblem(name: string, variable: Variable, others: Record<string, Variable> = {}): string | null {
-  if (!VARIABLE_NAME.test(name)) return `"${name}" is not a variable name (like R, R1, R' or X)`
+  if (!isVariableName(name)) return `"${name}" is not a variable name (like R1, X, L or ETU; not an element or an abbreviation)`
   if ("sameAs" in variable) {
     const source = others[variable.sameAs]
     if (variable.sameAs === name) return `${name} cannot share its own list`
@@ -86,11 +91,11 @@ export function placeholders(drawing: Drawing): Array<{ atom: number; name: stri
 /** Labels on atoms that look like variables but have no definition yet, in drawing order. */
 export function undefinedVariables(drawing: Drawing): string[] {
   const variables = drawing.variables ?? {}
-  const names = drawing.molecule.atoms.flatMap((atom) => (atom.alias && VARIABLE_NAME.test(atom.alias) && !Object.hasOwn(variables, atom.alias) ? [atom.alias] : []))
+  const names = drawing.molecule.atoms.flatMap((atom) => (atom.alias && isVariableName(atom.alias) && !Object.hasOwn(variables, atom.alias) ? [atom.alias] : []))
   return [...new Set(names)]
 }
 
 /** A molecule's placeholder atoms, whatever the variable table says: any label shaped like a variable. */
 export function variableLabels(mol: Molecule): string[] {
-  return [...new Set(mol.atoms.flatMap((atom) => (atom.alias && VARIABLE_NAME.test(atom.alias) ? [atom.alias] : [])))]
+  return [...new Set(mol.atoms.flatMap((atom) => (atom.alias && isVariableName(atom.alias) ? [atom.alias] : [])))]
 }

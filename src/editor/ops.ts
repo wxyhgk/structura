@@ -6,6 +6,8 @@ export type RunOptions = {
   keepSelection?: boolean
   /** A rejection is expected (a key that cannot apply here), so do not log it. */
   quiet?: boolean
+  /** Told which op was rejected and why, for callers that report it (the embedding API). */
+  onReject?: (rejection: { index: number; error: string }) => void
 }
 
 /**

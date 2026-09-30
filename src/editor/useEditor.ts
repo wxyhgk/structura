@@ -24,7 +24,7 @@ import {
 import type { BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@/chem/types"
 import type { ToolId } from "@/editor/tools/types"
 
-export function useEditor(initial: Molecule[] = []) {
+export function useEditor(initial: Molecule[] | Drawing = []) {
   const { history, dispatch, latest } = useHistory(initial)
   const [tool, setTool] = useState<ToolId>("bond")
   const [bondStyle, setBondStyle] = useState<BondStyle>({ order: 1, stereo: "none" })
@@ -47,7 +47,8 @@ export function useEditor(initial: Molecule[] = []) {
     (ops: Op[], options: RunOptions = {}) => {
       const result = applyOps(latest(), ops)
       if (!result.ok) {
-        if (!options.quiet) console.warn(`edit rejected at op ${result.index}: ${result.error}`)
+        options.onReject?.({ index: result.index, error: result.error })
+        if (!options.quiet && !options.onReject) console.warn(`edit rejected at op ${result.index}: ${result.error}`)
         return null
       }
       dispatch({ type: "commit", drawing: result.drawing })
@@ -256,6 +257,8 @@ export function useEditor(initial: Molecule[] = []) {
   return {
     mol,
     arrows: drawing.arrows,
+    /** The whole drawing as rendered: molecule, arrows and the generic formula's variables and attachments. */
+    drawing,
     variables: drawing.variables,
     attachments: drawing.attachments,
     tool,

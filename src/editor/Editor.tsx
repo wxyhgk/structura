@@ -8,7 +8,7 @@ import { selectionClipboard } from "@/editor/clipboard"
 import { useCommands } from "@/editor/hooks/useCommands"
 import { useEditorHandle, type EditorHandle } from "@/editor/hooks/useEditorHandle"
 import { useImports } from "@/editor/hooks/useImports"
-import { initialMolecules } from "@/editor/imports/read"
+import { initialContent } from "@/editor/imports/read"
 import { OverlayScope } from "@/editor/input/overlays"
 import { useEditorInput } from "@/editor/input/useEditorInput"
 import { ToolPalette } from "@/editor/palette/ToolPalette"
@@ -23,21 +23,27 @@ import { Toolbar } from "@/editor/shell/Toolbar"
 import { toolLabel } from "@/editor/tools/catalog"
 import { useEditor } from "@/editor/useEditor"
 
-export type { EditorHandle } from "@/editor/hooks/useEditorHandle"
+export type { EditorHandle, RunResult } from "@/editor/hooks/useEditorHandle"
+export type { EnumerateOptions, Enumeration } from "@/chem/markush/enumerate"
+export type { Op } from "@/chem/ops"
 
 export type EditorProps = {
   /** Molfile or SD text to start with; read once, when the editor mounts. */
   initialMolfile?: string
-  /** The drawing as molfile text, after every edit that changes it. */
+  /** A Structura document (from getDocument or a saved .structura file) to start with; wins over initialMolfile. */
+  initialDocument?: string
+  /** The drawing as molfile text, after every edit that changes the molecule. */
   onChange?: (molfile: string) => void
+  /** The whole drawing as a Structura document, after every edit, including a generic formula's variables. */
+  onDocumentChange?: (document: string) => void
 }
 
 /**
  * Lays out the editor and wires state, commands and input together. It fills its
  * container, so the host decides its size.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, onChange }, ref) {
-  const [initial] = useState(() => initialMolecules(initialMolfile))
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange }, ref) {
+  const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
   const editor = useEditor(initial)
   const canvasRef = useRef<CanvasHandle>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -58,7 +64,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     openEnumerate: () => setEnumerateOpen(true),
   })
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
-  useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange })
+  useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange })
 
   return (
     <TooltipProvider delayDuration={350}>

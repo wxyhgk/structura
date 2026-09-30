@@ -1,28 +1,49 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react"
-import { toMolfile } from "@/chem/molfile"
+import { readDocument, toDocument } from "@/chem/document"
+import { enumerate, type EnumerateOptions, type Enumeration } from "@/chem/markush/enumerate"
+import { toMolfile, toSdf } from "@/chem/molfile"
+import type { Op, OpsResult } from "@/chem/ops"
 import { failure } from "@/editor/browser"
 import { drawingPoints, type Viewport } from "@/editor/canvas/viewport"
 import type { Imports } from "@/editor/hooks/useImports"
 import type { EditorState } from "@/editor/useEditor"
 
+/** What `run` hands back: the op layer's result, or which op was rejected and why. */
+export type RunResult = Extract<OpsResult, { ok: true }> | { ok: false; index: number; error: string }
+
 /** What a host page can do with an embedded editor, through its ref. */
 export type EditorHandle = {
-  /** The drawing as molfile text. */
+  /** The drawing as molfile text (the molecule only: a generic formula's variables are not in it). */
   getMolfile(): string
   /**
    * Replaces the drawing with molfile or SD text as one undoable step and fits it in view;
    * blank text clears it. Returns the problems worth telling the user, if any. The host
-   * set this text, so onChange is not called for it.
+   * set this text, so onChange and onDocumentChange are not called for it.
    */
   setMolfile(text: string): string[]
+  /** The whole drawing as a Structura document (JSON): molecule, arrows, variables, attachments. */
+  getDocument(): string
+  /**
+   * Replaces the drawing with a Structura document, as it was saved, as one undoable step.
+   * Returns why it could not be read, or nothing. Not echoed to onChange / onDocumentChange.
+   */
+  setDocument(text: string): string[]
+  /**
+   * Applies edits through the same op layer agents use (add_atom, replace, set_variable…),
+   * all or nothing, as one undoable step. Reported to onChange / onDocumentChange like any edit.
+   */
+  run(ops: Op[]): RunResult
+  /** Expands the generic formula into concrete compounds, with the SD file of those made. */
+  enumerate(options?: EnumerateOptions): Enumeration & { sdf: string }
   /** Zooms and pans so the whole drawing is in view. */
   fit(): void
 }
 
 /**
- * The editor as a component other code talks to: the ref handle, `onChange` with the new
- * molfile after every edit that changes the molecule (not on hover, selection or a gesture
- * still in progress), and fitting a starting document into view.
+ * The editor as a component other code talks to: the ref handle; `onChange` with the new
+ * molfile after every edit that changes the molecule, and `onDocumentChange` with the whole
+ * document after every edit that changes anything in it (not on hover, selection or a
+ * gesture still in progress); and fitting a starting document into view.
  */
 export function useEditorHandle(
   ref: Ref<EditorHandle>,
@@ -31,26 +52,33 @@ export function useEditorHandle(
     viewport,
     openText,
     onChange,
+    onDocumentChange,
   }: {
-    editor: Pick<EditorState, "mol" | "arrows" | "newDocument">
+    editor: Pick<EditorState, "mol" | "arrows" | "drawing" | "latest" | "run" | "loadDrawing" | "newDocument">
     viewport: Viewport
     openText: Imports["openText"]
     onChange?: (molfile: string) => void
+    onDocumentChange?: (document: string) => void
   },
 ) {
-  const reported = useRef(editor.mol)
-  /** Set when the host's own setMolfile is about to change the molecule. */
+  const reported = useRef({ mol: editor.mol, drawing: editor.drawing })
+  /** Set when the host's own setMolfile / setDocument is about to change the drawing. */
   const quiet = useRef(false)
   const started = useRef(false)
 
   const fit = () => viewport.fit(drawingPoints(editor.mol, editor.arrows))
 
   useEffect(() => {
-    if (reported.current === editor.mol) return
-    reported.current = editor.mol
-    if (quiet.current) quiet.current = false
-    else onChange?.(toMolfile(editor.mol))
-  }, [editor.mol, onChange])
+    const last = reported.current
+    if (last.drawing === editor.drawing) return
+    reported.current = { mol: editor.mol, drawing: editor.drawing }
+    if (quiet.current) {
+      quiet.current = false
+      return
+    }
+    if (last.mol !== editor.mol) onChange?.(toMolfile(editor.mol))
+    onDocumentChange?.(toDocument(editor.drawing))
+  }, [editor.drawing, editor.mol, onChange, onDocumentChange])
 
   // A document the editor starts with is fitted once the canvas has its size.
   useEffect(() => {
@@ -60,10 +88,11 @@ export function useEditorHandle(
   })
 
   useImperativeHandle(ref, () => ({
-    getMolfile: () => toMolfile(editor.mol),
+    getMolfile: () => toMolfile(editor.latest().molecule),
     setMolfile(text: string) {
       if (!text.trim()) {
-        if (editor.mol.atoms.length > 0 || editor.arrows.length > 0) quiet.current = true
+        const now = editor.latest()
+        if (now.molecule.atoms.length > 0 || now.arrows.length > 0) quiet.current = true
         editor.newDocument()
         return []
       }
@@ -74,6 +103,24 @@ export function useEditorHandle(
       } catch (error) {
         return [failure(error)]
       }
+    },
+    getDocument: () => toDocument(editor.latest()),
+    setDocument(text: string) {
+      const read = readDocument(text)
+      if ("error" in read) return [read.error]
+      quiet.current = true
+      editor.loadDrawing(read.drawing)
+      return []
+    },
+    run(ops: Op[]) {
+      let rejected: { index: number; error: string } | null = null
+      const result = editor.run(ops, { keepSelection: true, onReject: (why) => (rejected = why) })
+      if (result) return result
+      return { ok: false, ...(rejected ?? { index: -1, error: "the edit was rejected" }) }
+    },
+    enumerate(options?: EnumerateOptions) {
+      const result = enumerate(editor.latest(), options)
+      return { ...result, sdf: toSdf(result.molecules) }
     },
     fit,
   }))

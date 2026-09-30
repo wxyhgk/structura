@@ -108,6 +108,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               run={editor.run}
               latest={editor.latest}
               setSelection={editor.setSelection}
+              undo={editor.undo}
               viewport={viewport}
             />
           </div>

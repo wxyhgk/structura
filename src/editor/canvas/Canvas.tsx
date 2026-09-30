@@ -1,17 +1,22 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
 import { atomById, componentOf, selectionFromAtoms } from "@/chem/molecule"
-import type { Molecule } from "@/chem/types"
+import type { Drawing, Molecule } from "@/chem/types"
 import { AtomLabelInput } from "@/editor/canvas/AtomLabelInput"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
 import { SceneView } from "@/editor/canvas/SceneView"
-import { hoverOf } from "@/editor/canvas/targeting"
-import type { CanvasHandle, EditorSlice, Gesture, PointerHost, Preview } from "@/editor/canvas/types"
+import { doubleClickAction } from "@/editor/canvas/doubleClick"
+import { hitOf, hoverOf, sameHover } from "@/editor/canvas/targeting"
+import type { CanvasHandle, EditorSlice, Gesture, HoverTarget, PointerHost, Preview } from "@/editor/canvas/types"
 import { useHotspot } from "@/editor/canvas/useHotspot"
 import { useViewport } from "@/editor/canvas/useViewport"
 import { hotkeyOps } from "@/editor/hotkeys/lookup"
 import { keyOf } from "@/editor/input/keymap"
 
 /** The drawing surface: pointer gestures, hover keys, the label field and the view. */
+/** Two presses this close in time (ms) and space (px) make a double click. */
+const DOUBLE_CLICK_MS = 500
+const DOUBLE_CLICK_SLOP = 6
+
 export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(props, ref) {
   const { viewport } = props
   const { svgRef, zoom, pan } = useViewport(viewport)
@@ -27,6 +32,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const [labelEdit, setLabelEdit] = useState<{ id: number; initial: string } | null>(null)
   /** The molecule as of the last edit, ahead of the re-render when keys come fast. */
   const current = () => props.latest().molecule
+  /** What the last press hit and the drawing before it, to spot a double click. */
+  const firstClick = useRef<{ hit: HoverTarget; before: Drawing; time: number; x: number; y: number } | null>(null)
 
   function cancelGesture() {
     gesture.current = { kind: "idle" }
@@ -57,6 +64,37 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
    * Hover hotkeys: g, Tab, Enter and chemistry keys on the atom or bond under the pointer.
    * Returns whether the key was used; the editor's key router asks here first.
    */
+  /** Opens the label field on an atom; false if the atom is gone. */
+  function openLabel(id: number): boolean {
+    const atom = atomById(current(), id)
+    if (!atom) return false
+    // The field covers the atom, so the canvas sees the pointer leave; pinning keeps the
+    // atom as the hotspot, so Enter after Escape reopens it and keys go on from there.
+    hotspot.pin(atom.id)
+    setLabelEdit({ id: atom.id, initial: atom.alias ?? (atom.el === "C" ? "" : atom.el) })
+    return true
+  }
+
+  /**
+   * The second press of a double click on the same atom or bond: soon after the first and
+   * close to it. (Pointer events carry no click count, so it is timed here.) The first
+   * press was an ordinary click, which may have drawn a bond or changed a bond order; that
+   * is undone before the double click acts. Returns whether it acted.
+   */
+  function doubleClick(event: PointerEvent<SVGSVGElement>): boolean {
+    const first = firstClick.current
+    firstClick.current = null
+    if (event.button !== 0 || !first) return false
+    if (event.timeStamp - first.time > DOUBLE_CLICK_MS || Math.hypot(event.clientX - first.x, event.clientY - first.y) > DOUBLE_CLICK_SLOP) return false
+    const hit = hitOf(current(), viewport.toWorld(event.clientX, event.clientY), viewport.get().zoom)
+    if (!hit || !sameHover(first.hit, hit)) return false
+    if (props.latest() !== first.before) props.undo()
+    const action = doubleClickAction(current(), hit)
+    if (action?.kind === "label") openLabel(action.atom)
+    else if (action?.kind === "select") props.setSelection(action.selection)
+    return action != null
+  }
+
   function handleKey(event: KeyboardEvent): boolean {
     if (event.metaKey || event.ctrlKey || event.altKey) return false
     if (gesture.current.kind !== "idle") return false
@@ -73,15 +111,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
       hotspot.unpin()
       return true
     }
-    if (event.key === "Enter" && hot.type === "atom") {
-      const atom = atomById(mol, hot.id)
-      if (!atom) return false
-      // The field covers the atom, so the canvas sees the pointer leave; pinning keeps the
-      // atom as the hotspot, so Enter after Escape reopens it and keys go on from there.
-      hotspot.pin(atom.id)
-      setLabelEdit({ id: atom.id, initial: atom.alias ?? (atom.el === "C" ? "" : atom.el) })
-      return true
-    }
+    if (event.key === "Enter" && hot.type === "atom") return openLabel(hot.id)
     // A key that means nothing here falls through to the tool keys. One that means something
     // but cannot apply (no room for the ring) is still used up, so it never switches tools.
     const ops = hotkeyOps(mol, hot, key)
@@ -132,6 +162,21 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
         style={{ cursor }}
         onPointerDown={(event) => {
           if (space.current) spaceDragged.current = true
+          if (doubleClick(event)) {
+            // Keeps the browser's mousedown from taking focus off a label field just opened.
+            event.preventDefault()
+            return
+          }
+          if (event.button === 0) {
+            const world = viewport.toWorld(event.clientX, event.clientY)
+            firstClick.current = {
+              hit: hitOf(current(), world, viewport.get().zoom),
+              before: props.latest(),
+              time: event.timeStamp,
+              x: event.clientX,
+              y: event.clientY,
+            }
+          }
           pointerDown(host, event)
         }}
         onPointerMove={(event) => {

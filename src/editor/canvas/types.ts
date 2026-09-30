@@ -30,6 +30,8 @@ export type EditorSlice = {
   /** The drawing as of the last edit, ahead of the re-render when keys come fast. */
   latest: () => Drawing
   setSelection: (selection: Selection) => void
+  /** Takes back the last edit; a double click uses it to drop what its first press drew. */
+  undo: () => void
   viewport: Viewport
 }
 

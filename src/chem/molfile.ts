@@ -96,3 +96,8 @@ export function toMolfile(mol: Molecule, title = "Structura"): string {
   lines.push(...aliases, ...propertyLines("CHG", charged), ...propertyLines("ISO", isotopes), ...propertyLines("RGP", rGroups), "M  END", "")
   return lines.join("\n")
 }
+
+/** Molecules as one SD file, each record titled with its place in the list ("Structura 1", …). */
+export function toSdf(molecules: readonly Molecule[], title = "Structura"): string {
+  return molecules.map((mol, index) => `${toMolfile(mol, `${title} ${index + 1}`)}$$$$\n`).join("")
+}

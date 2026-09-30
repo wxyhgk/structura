@@ -3,8 +3,8 @@ import test from "node:test"
 import { addAtom, addBond, bondById, bumpCharge, createBondAt, emptyMolecule, sprout } from "../../src/chem/molecule.ts"
 import { plainFormula } from "../../src/chem/formula.ts"
 import { setAtomLabel } from "../../src/chem/label.ts"
-import { toMolfile } from "../../src/chem/molfile.ts"
-import { readMolfile } from "../../src/chem/sdf.ts"
+import { toMolfile, toSdf } from "../../src/chem/molfile.ts"
+import { readMolfile, readSdf } from "../../src/chem/sdf.ts"
 import type { Molecule } from "../../src/chem/types.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
@@ -128,4 +128,11 @@ test("metals state their valence so readers add no hydrogens we did not draw", (
   assert.equal(valence(lines[0]), "3", "Sn with three bonds")
   assert.equal(valence(lines[1]), "0", "carbon is left to the reader")
   assert.equal(valence(lines[4]), "15", "lone Na has zero valence")
+})
+
+test("an SD file holds each molecule as a numbered record, and reads back", () => {
+  const sdf = toSdf([acetate(), acetate()])
+  assert.equal(sdf, `${ACETATE.replace("acetate", "Structura 1")}$$$$\n${ACETATE.replace("acetate", "Structura 2")}$$$$\n`)
+  assert.deepEqual(readSdf(sdf).map((record) => [record.title, plainFormula(record.mol)]), [["Structura 1", "C2H3O2"], ["Structura 2", "C2H3O2"]])
+  assert.equal(toSdf([]), "")
 })

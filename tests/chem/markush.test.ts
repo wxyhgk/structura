@@ -74,7 +74,7 @@ test("a generic formula expands into every concrete combination; classes stay ou
 })
 
 test("enumeration stops at the limit but still counts every combination", () => {
-  const result = enumerate(formula(), 5)
+  const result = enumerate(formula(), { limit: 5 })
   assert.equal(result.molecules.length, 5)
   assert.equal(result.total, 12)
 })
@@ -124,4 +124,37 @@ test("R2 can share R1's list, as in 'R1 to R4 each independently are…'", () =>
     const outcome = applyOps(drawing, [op])
     assert.ok(!outcome.ok && message.test(outcome.error), JSON.stringify(op))
   }
+})
+
+test("with representatives, typical members inside each class's range stand in for it", () => {
+  const withClasses = (...alternatives: Array<{ kind: "class"; class: "alkyl" | "aryl" | "heteroaryl" | "silyl" | "amino"; min?: number; max?: number; substituted?: boolean }>) =>
+    run(formula(), [
+      { op: "set_variable", name: "X", alternatives: [label("O")] },
+      { op: "set_variable", name: "R1", alternatives },
+      { op: "set_variable", name: "R2", alternatives: [label("H")] },
+    ])
+
+  const alkyl = enumerate(withClasses({ kind: "class", class: "alkyl", min: 1, max: 30 }), { representatives: true })
+  assert.deepEqual(alkyl.represented, { R1: ["Me", "Et", "iPr", "tBu", "CF3"] })
+  assert.deepEqual([alkyl.molecules.length, alkyl.failed], [5, 0])
+  assert.deepEqual(alkyl.classesLeftOut, {})
+
+  const smallAryl = enumerate(withClasses({ kind: "class", class: "aryl", min: 6, max: 10, substituted: false }), { representatives: true })
+  assert.deepEqual(smallAryl.represented.R1, ["Ph", "1-Naphthyl", "2-Naphthyl"])
+
+  // As in a real claim: heteroaryl, silyl and amino only. Every stand-in must build.
+  const claim = enumerate(
+    withClasses({ kind: "class", class: "heteroaryl", min: 3, max: 30 }, { kind: "class", class: "silyl" }, { kind: "class", class: "amino" }),
+    { representatives: true },
+  )
+  assert.equal(claim.failed, 0, JSON.stringify(claim.failures))
+  assert.equal(claim.molecules.length, 11)
+  const formulas = new Set(claim.molecules.map((mol) => plainFormula(mol)))
+  assert.ok(formulas.has("C4H9NO"), "amino: NH2 on the ring")
+  assert.ok(formulas.has("C4H10OSi"), "silyl: SiH3 on the ring")
+
+  const none = enumerate(withClasses({ kind: "class", class: "heteroaryl", substituted: true }), { representatives: true })
+  assert.deepEqual([none.onlyClasses, none.classesLeftOut], [["R1"], { R1: 1 }])
+  // Without representatives, classes are left out as before.
+  assert.deepEqual(enumerate(withClasses({ kind: "class", class: "alkyl" })).onlyClasses, ["R1"])
 })

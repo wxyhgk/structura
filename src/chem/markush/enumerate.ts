@@ -1,6 +1,7 @@
 import { neighbors } from "../molecule.ts"
 import { applyOps, type Op } from "../ops.ts"
 import type { Drawing, Molecule } from "../types.ts"
+import { representativesOf } from "./representatives.ts"
 import { alternativesOf, placeholders, undefinedVariables } from "./variables.ts"
 
 export type Enumeration = {
@@ -8,8 +9,10 @@ export type Enumeration = {
   molecules: Molecule[]
   /** How many combinations the concrete alternatives allow, generated or not. */
   total: number
-  /** Per variable, how many class alternatives were left out (classes are never expanded). */
+  /** Per variable, how many class alternatives were left out: all of them, unless representatives stand in. */
   classesLeftOut: Record<string, number>
+  /** Per variable, the representative labels that stood in for its classes. */
+  represented: Record<string, string[]>
   /** Placeholder labels with no definition: they stay placeholders in every molecule. */
   undefinedNames: string[]
   /** Variables with only classes: nothing concrete to put there, so nothing is generated. */
@@ -34,24 +37,38 @@ function opsFor(site: Site, text: string): Op[] {
   return [{ op: "replace", atoms: [site.atom], with: { label: text } }]
 }
 
+export type EnumerateOptions = {
+  /** Most molecules to build; the total is counted regardless. */
+  limit?: number
+  /** Let typical members stand in for each class (methyl, ethyl… for alkyl); else classes are left out. */
+  representatives?: boolean
+}
+
 /**
  * Expands a generic formula into concrete molecules: every combination of each
- * placeholder's label alternatives, each placeholder choosing on its own. Class
- * alternatives ("(C1-C30)alkyl") stay classes and are left out, as noted in the result.
+ * placeholder's label alternatives, each placeholder choosing on its own. A class
+ * ("(C1-C30)alkyl") is never expanded in full; it is left out, or with `representatives`
+ * a few typical members inside its range stand in for it. The result says which.
  */
-export function enumerate(drawing: Drawing, limit = 1000): Enumeration {
+export function enumerate(drawing: Drawing, { limit = 1000, representatives = false }: EnumerateOptions = {}): Enumeration {
   const variables = drawing.variables ?? {}
   const undefinedNames = undefinedVariables(drawing)
   const classesLeftOut: Record<string, number> = {}
+  const represented: Record<string, string[]> = {}
   const sites: Site[] = placeholders(drawing).map(({ atom, name }) => {
     const alternatives = alternativesOf(variables, name)
-    const classes = alternatives.filter((item) => item.kind === "class").length
-    if (classes > 0) classesLeftOut[name] = classes
     const labels = alternatives.flatMap((item) => (item.kind === "label" ? [item.text] : []))
+    for (const item of alternatives) {
+      if (item.kind !== "class") continue
+      const standIns = representatives ? representativesOf(item).filter((label) => !labels.includes(label)) : []
+      if (standIns.length === 0) classesLeftOut[name] = (classesLeftOut[name] ?? 0) + 1
+      labels.push(...standIns)
+      if (standIns.length > 0) represented[name] = [...(represented[name] ?? []), ...standIns]
+    }
     return { atom, name, labels, inChain: neighbors(drawing.molecule, atom).length >= 2 }
   })
   const onlyClasses = [...new Set(sites.filter((site) => site.labels.length === 0).map((site) => site.name))]
-  if (onlyClasses.length > 0) return { molecules: [], total: 0, classesLeftOut, undefinedNames, onlyClasses, failures: [], failed: 0 }
+  if (onlyClasses.length > 0) return { molecules: [], total: 0, classesLeftOut, represented, undefinedNames, onlyClasses, failures: [], failed: 0 }
   const total = sites.reduce((product, site) => product * site.labels.length, 1)
   const molecules: Molecule[] = []
   const failures: Enumeration["failures"] = []
@@ -73,5 +90,5 @@ export function enumerate(drawing: Drawing, limit = 1000): Enumeration {
       choice[index] = 0
     }
   }
-  return { molecules, total, classesLeftOut, undefinedNames, onlyClasses: [], failures, failed }
+  return { molecules, total, classesLeftOut, represented, undefinedNames, onlyClasses: [], failures, failed }
 }

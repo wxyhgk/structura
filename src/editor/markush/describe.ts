@@ -37,3 +37,44 @@ export function parseLabels(text: string): string[] {
   const words = text.split(/[,，、;；\s]+/).map((word) => word.trim()).filter(Boolean)
   return [...new Set(words.flatMap((word) => SHORTHANDS[word] ?? [word]))]
 }
+
+/** Chinese names for the representatives that stand in for classes when generating. */
+const REPRESENTATIVE_NAMES: Record<string, string> = {
+  Me: "甲基",
+  Et: "乙基",
+  iPr: "异丙基",
+  tBu: "叔丁基",
+  CF3: "三氟甲基",
+  Vinyl: "乙烯基",
+  Allyl: "烯丙基",
+  Ethynyl: "乙炔基",
+  Propargyl: "炔丙基",
+  cPr: "环丙基",
+  Cy: "环己基",
+  THP: "四氢吡喃基",
+  Ph: "苯基",
+  "1-Naphthyl": "1-萘基",
+  "2-Naphthyl": "2-萘基",
+  "4-Biphenylyl": "4-联苯基",
+  Tol: "甲苯基",
+  Mes: "均三甲苯基",
+  "2-Pyridyl": "2-吡啶基",
+  "2-Furyl": "2-呋喃基",
+  "2-Thienyl": "2-噻吩基",
+  "2-Pyrimidinyl": "2-嘧啶基",
+  "3-Indolyl": "3-吲哚基",
+  OMe: "甲氧基",
+  OEt: "乙氧基",
+  OPh: "苯氧基",
+  Si: "甲硅烷基（SiH₃）",
+  TMS: "三甲基硅基",
+  SiPh3: "三苯基硅基",
+  N: "氨基（NH₂）",
+  NMe2: "二甲氨基",
+  NHPh: "苯氨基",
+}
+
+/** "2-吡啶基", or the label itself when there is no Chinese name for it. */
+export function representativeName(label: string): string {
+  return REPRESENTATIVE_NAMES[label] ?? label
+}

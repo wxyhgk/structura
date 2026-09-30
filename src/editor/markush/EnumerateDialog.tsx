@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { sceneToSvg } from "@/chem/draw"
@@ -8,6 +8,7 @@ import { toMolfile } from "@/chem/molfile"
 import type { Drawing } from "@/chem/types"
 import { download } from "@/editor/browser"
 import { useOverlayMark } from "@/editor/input/overlays"
+import { representativeName } from "./describe.ts"
 
 /** Generated at most; the SD file holds them all. */
 const LIMIT = 500
@@ -27,7 +28,8 @@ export function EnumerateDialog({
   colorHetero: boolean
 }) {
   const overlayMark = useOverlayMark()
-  const result = useMemo(() => (open ? enumerate(drawing, LIMIT) : null), [open, drawing])
+  const [representatives, setRepresentatives] = useState(true)
+  const result = useMemo(() => (open ? enumerate(drawing, { limit: LIMIT, representatives }) : null), [open, drawing, representatives])
   const pictures = useMemo(
     () => (result?.molecules ?? []).slice(0, SHOWN).map((mol) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(sceneToSvg(mol, colorHetero))}`),
     [result, colorHetero],
@@ -45,6 +47,10 @@ export function EnumerateDialog({
               : "没有可以生成的化合物。"}
           </DialogDescription>
         </DialogHeader>
+        <label className="flex items-center gap-2 text-[13px]">
+          <input type="checkbox" checked={representatives} onChange={(event) => setRepresentatives(event.target.checked)} />
+          基团类别用代表结构展开（如烷基用甲基、乙基、异丙基、叔丁基）
+        </label>
         {notes.length > 0 && (
           <ul className="list-disc space-y-0.5 pl-5 text-[12px] text-[#8a5a00]">
             {notes.map((note) => (
@@ -84,9 +90,14 @@ export function EnumerateDialog({
 /** What the user should know about what was, and was not, generated. */
 function notesOf(result: ReturnType<typeof enumerate>): string[] {
   const notes: string[] = []
-  if (result.onlyClasses.length > 0) notes.push(`${result.onlyClasses.join("、")} 只有基团类别，类别不展开；请补充具体候选项（如 H、Me、Ph）。`)
+  for (const [name, labels] of Object.entries(result.represented)) {
+    notes.push(`${name} 的基团类别用代表结构展开：${labels.map(representativeName).join("、")}。`)
+  }
+  if (result.onlyClasses.length > 0) {
+    notes.push(`${result.onlyClasses.join("、")} 只有基团类别，且没有可用的代表结构；请勾选上面的选项，或补充具体候选项（如 H、Me、Ph）。`)
+  }
   for (const [name, count] of Object.entries(result.classesLeftOut)) {
-    if (!result.onlyClasses.includes(name)) notes.push(`${name} 的 ${count} 个基团类别未展开，只用了具体候选项。`)
+    if (!result.onlyClasses.includes(name)) notes.push(`${name} 有 ${count} 个基团类别没有展开，只用了具体候选项。`)
   }
   if (result.undefinedNames.length > 0) notes.push(`${result.undefinedNames.join("、")} 还没有候选项，生成的结构里保留为占位符。`)
   if (result.failed > 0) {

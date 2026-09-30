@@ -75,19 +75,22 @@ export function useHotspot(scope: string) {
     pin,
     unpin,
     /**
-     * Follows the pointer; `under` finds what it is over. The pin lets go once the pointer
-     * has moved off and onto something other than the pinned atom or what it covered.
+     * Follows the pointer; `under` finds what it is over. The pin lets go as soon as the
+     * pointer is over something other than the pinned atom, as in ChemDraw. The atom the key
+     * was pressed on is the one exception, so keys can be pressed again without moving, but
+     * only until the pointer leaves it: coming back to it later takes the keys as usual.
      */
     track(clientX: number, clientY: number, under: () => HoverTarget) {
       pointerRef.current = { x: clientX, y: clientY }
       const pinned = pinRef.current
-      if (!pinned || Math.hypot(clientX - pinned.x, clientY - pinned.y) <= PIN_SLACK) return
+      if (!pinned) return
+      // A little jitter where the key was pressed is not a move; once the pointer has left, it is.
+      if (pinned.covered != null && Math.hypot(clientX - pinned.x, clientY - pinned.y) <= PIN_SLACK) return
       const target = under()
-      const stayed =
-        target != null &&
-        ((target.type === "atom" && target.id === pinned.id) ||
-          (pinned.covered != null && target.type === pinned.covered.type && target.id === pinned.covered.id))
-      if (target && !stayed) unpin()
+      const onCovered = target != null && pinned.covered != null && sameHover(target, pinned.covered)
+      if (!onCovered) pinned.covered = null
+      const onPinned = target?.type === "atom" && target.id === pinned.id
+      if (target && !onPinned && !onCovered) unpin()
     },
   }
 }

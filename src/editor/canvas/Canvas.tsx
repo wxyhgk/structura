@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
 import { atomById, bondsLeaving, componentOf, selectionFromAtoms } from "@/chem/molecule"
-import type { Drawing, Molecule } from "@/chem/types"
+import type { Drawing, Molecule, Selection } from "@/chem/types"
 import { AtomLabelInput } from "@/editor/canvas/AtomLabelInput"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
 import { SceneView } from "@/editor/canvas/SceneView"
@@ -34,7 +34,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   /** The molecule as of the last edit, ahead of the re-render when keys come fast. */
   const current = () => props.latest().molecule
   /** What the last press hit and the drawing before it, to spot a double click. */
-  const firstClick = useRef<{ hit: HoverTarget; before: Drawing; time: number; x: number; y: number } | null>(null)
+  const firstClick = useRef<{ hit: HoverTarget; before: Drawing; selection: Selection; time: number; x: number; y: number } | null>(null)
 
   function cancelGesture() {
     gesture.current = { kind: "idle" }
@@ -79,8 +79,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   /**
    * The second press of a double click on the same atom or bond: soon after the first and
    * close to it. (Pointer events carry no click count, so it is timed here.) The first
-   * press was an ordinary click, which may have drawn a bond or changed a bond order; that
-   * is undone before the double click acts. Returns whether it acted.
+   * press was an ordinary click, which may have drawn a bond, changed a bond order or
+   * selected something; that is undone before the double click acts. Returns whether it acted.
    */
   function doubleClick(event: PointerEvent<SVGSVGElement>): boolean {
     const first = firstClick.current
@@ -91,7 +91,11 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     if (!hit || !sameHover(first.hit, hit)) return false
     if (props.latest() !== first.before) props.undo()
     const action = doubleClickAction(current(), hit)
-    if (action?.kind === "label") openLabel(action.atom)
+    // The first press may have selected what it hit; a double click leaves the selection as it found it.
+    if (action?.kind === "label") {
+      props.setSelection(first.selection)
+      openLabel(action.atom)
+    }
     else if (action?.kind === "select") props.setSelection(action.selection)
     return action != null
   }
@@ -180,6 +184,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             firstClick.current = {
               hit: hitOf(current(), world, viewport.get().zoom),
               before: props.latest(),
+              selection: props.selection,
               time: event.timeStamp,
               x: event.clientX,
               y: event.clientY,

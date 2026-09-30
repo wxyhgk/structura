@@ -33,6 +33,8 @@ export function AtomLabelInput({
     <input
       data-testid="atom-label-input"
       autoFocus
+      // The current label starts selected, so typing replaces it, as in ChemDraw.
+      onFocus={(event) => event.currentTarget.select()}
       value={value}
       placeholder={placeholder}
       aria-label={placeholder ?? "原子标签"}

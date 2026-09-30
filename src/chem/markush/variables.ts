@@ -44,6 +44,15 @@ export function alternativesOf(variables: Record<string, Variable> | undefined, 
   return variable.alternatives
 }
 
+/**
+ * The variables `name` could share a list with: those with a list of their own. None when
+ * others already share `name`'s list, since then it must keep its own (no chains).
+ */
+export function shareSources(variables: Record<string, Variable> | undefined, name: string): string[] {
+  if (sharers(variables, name).length > 0) return []
+  return Object.entries(variables ?? {}).flatMap(([other, variable]) => (other !== name && "alternatives" in variable ? [other] : []))
+}
+
 /** The variables whose list is "same as" this one. */
 export function sharers(variables: Record<string, Variable> | undefined, name: string): string[] {
   return Object.entries(variables ?? {}).flatMap(([other, variable]) => ("sameAs" in variable && variable.sameAs === name ? [other] : []))
@@ -72,7 +81,8 @@ export function variableProblem(name: string, variable: Variable, others: Record
   return null
 }
 
-function alternativeProblem(alternative: Alternative): string | null {
+/** Why one alternative is not usable, or null: what the editor's class form checks too. */
+export function alternativeProblem(alternative: Alternative): string | null {
   if (alternative.kind === "bond") return null
   if (alternative.kind === "bridge") return Object.hasOwn(BRIDGES, alternative.name) ? null : `unknown bridge "${alternative.name}" (${Object.keys(BRIDGES).join(", ")})`
   if (alternative.kind === "label") {

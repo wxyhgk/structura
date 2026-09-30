@@ -1,7 +1,7 @@
 import { GROUP_CLASSES } from "@/chem/markush/variables"
 import type { Alternative, BridgeName, Choice, GroupClass } from "@/chem/types"
 
-// Generic-formula wording for the editor: class names, and what typed text means.
+// Generic-formula wording for the editor: class, ring and representative names in Chinese.
 
 export const CLASS_NAMES: Record<GroupClass, string> = {
   alkyl: "烷基",
@@ -37,18 +37,6 @@ export function describeAlternative(alternative: Alternative): string {
   const size = range ? (GROUP_CLASSES[alternative.class].size === "members" ? `(${range} 元)` : `(C${range.replace("–", "–C")})`) : ""
   const substituted = alternative.substituted == null ? "取代或未取代的" : alternative.substituted ? "取代的" : "未取代的"
   return `${substituted}${size}${CLASS_NAMES[alternative.class]}`
-}
-
-/** Words that stand for several labels at once. */
-const SHORTHANDS: Record<string, string[]> = { 卤素: ["F", "Cl", "Br", "I"], halogen: ["F", "Cl", "Br", "I"], 氢: ["H"], 氘: ["D"] }
-
-/** What typing "单键" means: a direct bond, for a linker. */
-export const BOND_WORDS = new Set(["单键", "bond", "single bond"])
-
-/** Labels typed in one go: "H, D, 卤素、CN" gives H, D, F, Cl, Br, I, CN, without repeats. */
-export function parseLabels(text: string): string[] {
-  const words = text.split(/[,，、;；\s]+/).map((word) => word.trim()).filter(Boolean)
-  return [...new Set(words.flatMap((word) => SHORTHANDS[word] ?? [word]))]
 }
 
 /** Chinese names for the representative labels that stand in for classes when generating. */

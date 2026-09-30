@@ -1,11 +1,11 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { knownLabel } from "@/chem/label"
 import { linkerNames } from "@/chem/markush/sites"
-import { alternativesOf, GROUP_CLASSES, sharers, variableLabels } from "@/chem/markush/variables"
+import { alternativesFromText } from "@/chem/markush/parse"
+import { alternativeProblem, alternativesOf, GROUP_CLASSES, shareSources, sharers, variableLabels } from "@/chem/markush/variables"
 import type { Alternative, Attachment, GroupClass, Molecule, Variable } from "@/chem/types"
 import type { Run } from "@/editor/ops"
-import { BOND_WORDS, CLASS_NAMES, describeAlternative, parseLabels } from "./describe.ts"
+import { CLASS_NAMES, describeAlternative } from "./describe.ts"
 
 /**
  * The generic formula's variables beside the canvas: every placeholder label on the
@@ -82,7 +82,7 @@ function VariableRow({
   const shared = variable && "sameAs" in variable ? variable.sameAs : null
   const sharedBy = sharers(variables, name)
   /** Variables with a list of their own, which this one could share. */
-  const sources = Object.entries(variables ?? {}).flatMap(([other, item]) => (other !== name && "alternatives" in item ? [other] : []))
+  const sources = shareSources(variables, name)
   const [text, setText] = useState("")
   const [unknown, setUnknown] = useState<string[]>([])
   /** The class form: adding a new class, or editing the one at this index. */
@@ -104,14 +104,8 @@ function VariableRow({
 
   /** Adds what was typed; words that are no element or abbreviation stay in the field, flagged. */
   function addLabels() {
-    const typed = parseLabels(text)
-    const bond = typed.some((word) => BOND_WORDS.has(word)) && !alternatives.some((item) => item.kind === "bond")
-    const words = typed.filter((word) => !BOND_WORDS.has(word))
-    const have = new Set(alternatives.flatMap((item) => (item.kind === "label" ? [item.text] : [])))
-    const added = words.filter((label) => knownLabel(label) && !have.has(label))
-    const rejected = words.filter((label) => !knownLabel(label))
-    const additions: Alternative[] = [...(bond ? [{ kind: "bond" as const }] : []), ...added.map((label) => ({ kind: "label" as const, text: label }))]
-    if (additions.length > 0) save([...alternatives, ...additions])
+    const { add, rejected } = alternativesFromText(text, alternatives)
+    if (add.length > 0) save([...alternatives, ...add])
     setUnknown(rejected)
     setText(rejected.join(", "))
   }
@@ -245,7 +239,13 @@ function ClassForm({ initial, onSave, onCancel }: { initial?: Alternative; onSav
   const ranged = min.trim() !== "" || max.trim() !== ""
   const low = Number(min)
   const high = Number(max)
-  const valid = !ranged || (Number.isInteger(low) && Number.isInteger(high) && low >= 1 && high <= 100 && low <= high)
+  const candidate: Alternative = {
+    kind: "class",
+    class: group,
+    ...(ranged ? { min: low, max: high } : {}),
+    ...(substituted === "either" ? {} : { substituted: substituted === "yes" }),
+  }
+  const valid = alternativeProblem(candidate) == null
   const field = "h-7 rounded-sm border border-[#d0d0d0] bg-white px-1 outline-none focus:border-[#1a73e8]"
   return (
     <div className="mt-1.5 grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1 rounded-sm border border-[#e0e0e0] bg-white p-2">
@@ -270,18 +270,7 @@ function ClassForm({ initial, onSave, onCancel }: { initial?: Alternative; onSav
       </select>
       <span />
       <span className="flex gap-2">
-        <Button
-          size="sm"
-          disabled={!valid}
-          onClick={() =>
-            onSave({
-              kind: "class",
-              class: group,
-              ...(ranged ? { min: low, max: high } : {}),
-              ...(substituted === "either" ? {} : { substituted: substituted === "yes" }),
-            })
-          }
-        >
+        <Button size="sm" disabled={!valid} onClick={() => onSave(candidate)}>
           {initial ? "保存" : "添加"}
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>

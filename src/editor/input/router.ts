@@ -26,23 +26,30 @@ export function routeFieldKey(event: KeyboardEvent, commands: Commands): boolean
 /**
  * The one keyboard router, for a key the editor owns. Each key goes to the first of these
  * that uses it:
- * 1. the selection: a hover key acts on every selected atom (or bond), unless the pointer
- *    is over an atom or bond outside the selection, which then takes the key,
- * 2. the canvas's hover hotkeys (the atom or bond under the pointer),
- * 3. a command bound to the key,
- * 4. a tool key,
- * 5. an element key.
+ * 1. the atom or bond under the pointer, as in ChemDraw; if the pointer is over part of the
+ *    selection, the key acts on every selected atom (or bond) instead,
+ * 2. with nothing under the pointer, the hotspot the last key left (the green circle),
+ * 3. with neither, every selected atom (or bond),
+ * 4. a command bound to the key,
+ * 5. a tool key,
+ * 6. an element key.
  */
 export function routeKey(event: KeyboardEvent, { editor, canvas, commands }: KeyRoutes): void {
   const key = keyOf(event)
   const plain = !event.metaKey && !event.ctrlKey && !event.altKey
   const pointed = canvas?.pointed() ?? null
-  const elsewhere = pointed != null && !(pointed.type === "atom" ? editor.selection.atoms : editor.selection.bonds).includes(pointed.id)
-  if (plain && !elsewhere && !canvas?.hasGesture() && editor.hotkeySelection(key)) {
+  const onSelection = pointed != null && (pointed.type === "atom" ? editor.selection.atoms : editor.selection.bonds).includes(pointed.id)
+  const idle = plain && !canvas?.hasGesture()
+  if (idle && onSelection && editor.hotkeySelection(key)) {
     event.preventDefault()
     return
   }
+  // The pointer's atom or bond, else the hotspot the last key left.
   if (canvas?.handleKey(event)) {
+    event.preventDefault()
+    return
+  }
+  if (idle && editor.hotkeySelection(key)) {
     event.preventDefault()
     return
   }

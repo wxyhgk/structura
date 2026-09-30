@@ -163,6 +163,12 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     },
   }))
 
+  // Selecting something starts afresh: an old hotspot must not take the keys meant for the selection.
+  const { unpin } = hotspot
+  useEffect(() => {
+    if (props.selection.atoms.length > 0 || props.selection.bonds.length > 0) unpin()
+  }, [props.selection, unpin])
+
   useEffect(() => {
     if (gesture.current.kind === "idle") setPreview(null)
   }, [props.tool, props.ringKind])

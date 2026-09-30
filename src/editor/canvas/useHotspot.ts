@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { atomById } from "@/chem/molecule"
 import type { HotTarget, Molecule } from "@/chem/types"
 import { sameHover } from "@/editor/canvas/targeting"
@@ -37,10 +37,11 @@ export function useHotspot(scope: string) {
     setPinnedId(id)
   }
 
-  function unpin() {
+  // Stable, so effects can depend on it.
+  const unpin = useCallback(() => {
     pinRef.current = null
     setPinnedId(null)
-  }
+  }, [])
 
   return {
     hover,

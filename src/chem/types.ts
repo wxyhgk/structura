@@ -100,6 +100,8 @@ export type Variable = { alternatives: Alternative[] } | { sameAs: string }
  */
 export type Alternative =
   | { kind: "label"; text: string }
+  /** A direct bond, for a placeholder between two atoms: "L is a single bond". */
+  | { kind: "bond" }
   | { kind: "class"; class: GroupClass; min?: number; max?: number; substituted?: boolean }
 
 export type GroupClass =
@@ -114,6 +116,9 @@ export type GroupClass =
   | "aryloxy"
   | "silyl"
   | "amino"
+  /** Divalent, for a placeholder between two atoms (a linker such as L). */
+  | "arylene"
+  | "heteroarylene"
 
 export type Point = { x: number; y: number }
 

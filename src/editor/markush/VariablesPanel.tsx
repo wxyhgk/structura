@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { knownLabel } from "@/chem/label"
-import { alternativesOf, GROUP_CLASSES, sharers, variableLabels } from "@/chem/markush/variables"
-import type { Alternative, GroupClass, Molecule, Variable } from "@/chem/types"
+import { alternativesOf, GROUP_CLASSES, linkerNames, sharers, variableLabels } from "@/chem/markush/variables"
+import type { Alternative, Attachment, GroupClass, Molecule, Variable } from "@/chem/types"
 import type { Run } from "@/editor/ops"
-import { CLASS_NAMES, describeAlternative, parseLabels } from "./describe.ts"
+import { BOND_WORDS, CLASS_NAMES, describeAlternative, parseLabels } from "./describe.ts"
 
 /**
  * The generic formula's variables beside the canvas: every placeholder label on the
@@ -13,17 +13,20 @@ import { CLASS_NAMES, describeAlternative, parseLabels } from "./describe.ts"
 export function VariablesPanel({
   mol,
   variables,
+  attachments,
   run,
   canEnumerate,
   onEnumerate,
 }: {
   mol: Molecule
   variables: Record<string, Variable> | undefined
+  attachments: Attachment[] | undefined
   run: Run
   canEnumerate: boolean
   onEnumerate: () => void
 }) {
   const onDrawing = variableLabels(mol)
+  const linkers = linkerNames({ molecule: mol, arrows: [], nextArrowId: 0, attachments })
   const names = [...new Set([...onDrawing, ...Object.keys(variables ?? {})])]
   if (names.length === 0) return null
   return (
@@ -31,7 +34,7 @@ export function VariablesPanel({
       <header className="border-b border-[#e0e0e0] px-3 py-2 font-medium text-[#333]">通式变量</header>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {names.map((name) => (
-          <VariableRow key={name} name={name} variables={variables} onDrawing={onDrawing.includes(name)} run={run} />
+          <VariableRow key={name} name={name} variables={variables} onDrawing={onDrawing.includes(name)} linker={linkers.has(name)} run={run} />
         ))}
       </div>
       <footer className="border-t border-[#e0e0e0] p-2">
@@ -42,6 +45,13 @@ export function VariablesPanel({
     </aside>
   )
 }
+
+/** For a linker such as L: "a single bond, (C6–C30)arylene or (3–30 membered)heteroarylene". */
+const LINKER_PRESETS: Alternative[] = [
+  { kind: "bond" },
+  { kind: "class", class: "arylene", min: 6, max: 30 },
+  { kind: "class", class: "heteroarylene", min: 3, max: 30 },
+]
 
 /** The classes patent claims name most, one click each; "更多…" opens the full form. */
 const PRESETS: Alternative[] = [
@@ -56,11 +66,14 @@ function VariableRow({
   name,
   variables,
   onDrawing,
+  linker,
   run,
 }: {
   name: string
   variables: Record<string, Variable> | undefined
   onDrawing: boolean
+  /** It sits between two atoms (like L), so it offers a bond and divalent rings. */
+  linker: boolean
   run: Run
 }) {
   const variable = variables?.[name]
@@ -91,10 +104,13 @@ function VariableRow({
   /** Adds what was typed; words that are no element or abbreviation stay in the field, flagged. */
   function addLabels() {
     const typed = parseLabels(text)
+    const bond = typed.some((word) => BOND_WORDS.has(word)) && !alternatives.some((item) => item.kind === "bond")
+    const words = typed.filter((word) => !BOND_WORDS.has(word))
     const have = new Set(alternatives.flatMap((item) => (item.kind === "label" ? [item.text] : [])))
-    const added = typed.filter((label) => knownLabel(label) && !have.has(label))
-    const rejected = typed.filter((label) => !knownLabel(label))
-    if (added.length > 0) save([...alternatives, ...added.map((label) => ({ kind: "label" as const, text: label }))])
+    const added = words.filter((label) => knownLabel(label) && !have.has(label))
+    const rejected = words.filter((label) => !knownLabel(label))
+    const additions: Alternative[] = [...(bond ? [{ kind: "bond" as const }] : []), ...added.map((label) => ({ kind: "label" as const, text: label }))]
+    if (additions.length > 0) save([...alternatives, ...additions])
     setUnknown(rejected)
     setText(rejected.join(", "))
   }
@@ -159,7 +175,7 @@ function VariableRow({
         <>
           <input
             className="h-7 w-full rounded-sm border border-[#d0d0d0] bg-white px-2 outline-none focus:border-[#1a73e8]"
-            placeholder="H, D, 卤素, CN… 回车添加"
+            placeholder={linker ? "单键, O, S… 回车添加" : "H, D, 卤素, CN… 回车添加"}
             value={text}
             onChange={(event) => {
               setText(event.target.value)
@@ -187,9 +203,9 @@ function VariableRow({
             />
           ) : (
             <div className="mt-1.5 flex flex-wrap gap-1">
-              {PRESETS.map((preset) => (
+              {(linker ? LINKER_PRESETS : PRESETS).map((preset) => (
                 <button
-                  key={preset.kind === "class" ? preset.class : ""}
+                  key={preset.kind === "class" ? preset.class : preset.kind}
                   className="rounded-sm border border-dashed border-[#9fc3ee] px-1.5 py-0.5 text-[#1a73e8] hover:bg-[#e8f1fb]"
                   onClick={() => addClass(preset)}
                   title={`添加：${describeAlternative(preset)}`}
@@ -211,6 +227,7 @@ function VariableRow({
 /** "C1–C30 烷基", "3–30 元杂芳基": a preset's button text. */
 function shortName(item: Alternative): string {
   if (item.kind === "label") return item.text
+  if (item.kind === "bond") return "单键"
   const range = item.min != null ? (GROUP_CLASSES[item.class].size === "members" ? `${item.min}–${item.max} 元` : `C${item.min}–C${item.max} `) : ""
   return `${range}${CLASS_NAMES[item.class]}`
 }

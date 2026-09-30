@@ -121,9 +121,9 @@ export function attachRingAt(
   atomId: number,
   kind: RingKind,
   angle = sproutAngle(mol, atomId),
-): { mol: Molecule; ipso: number; far: number } {
+): { mol: Molecule; ipso: number; far: number; ids: number[] } {
   const atom = atomById(mol, atomId)
-  if (!atom) return { mol, ipso: atomId, far: atomId }
+  if (!atom) return { mol, ipso: atomId, far: atomId, ids: [] }
   const size = RING_SIZE[kind]
   const points = ringAttachedPoints(atom, angle, size, bondLengthAt(mol, atomId))
   const built = buildRing(
@@ -137,6 +137,8 @@ export function attachRingAt(
     mol: linked?.mol ?? built.mol,
     ipso: built.ids[0],
     far: built.ids[Math.floor(size / 2)] ?? built.ids[0],
+    // The ring's atoms in order round it, from the ipso atom.
+    ids: built.ids,
   }
 }
 

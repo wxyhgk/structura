@@ -119,6 +119,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             <VariablesPanel
               mol={editor.mol}
               variables={editor.variables}
+              attachments={editor.attachments}
               run={editor.run}
               canEnumerate={commands.enumerate.enabled}
               onEnumerate={commands.enumerate.run}

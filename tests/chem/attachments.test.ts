@@ -73,3 +73,40 @@ test("a point inside a ring picks that ring's free positions, not the fusion ato
   assert.equal(positions?.length, 4)
   assert.equal(ringPositionsAt(naphthalene, { x: 900, y: 900 }), null)
 })
+
+function closestPair(mol: Drawing["molecule"]): number {
+  let best = Infinity
+  for (const [index, a] of mol.atoms.entries()) for (const b of mol.atoms.slice(index + 1)) best = Math.min(best, Math.hypot(a.x - b.x, a.y - b.y))
+  return best
+}
+
+test("a linker such as L becomes a single bond or a divalent ring between its two neighbours", () => {
+  const drawing = run(formula(), [
+    { op: "set_variable", name: "R2", alternatives: [label("H")] },
+    { op: "set_variable", name: "L", alternatives: [{ kind: "bond" }, { kind: "class", class: "arylene", min: 6, max: 30 }, { kind: "class", class: "heteroarylene" }] },
+  ])
+  const result = enumerate(drawing, { representatives: true })
+  assert.deepEqual(result.represented.L, ["p-phenylene", "m-phenylene", "4,4'-biphenylene", "2,5-pyridinediyl"])
+  assert.equal(result.total, 15, "3 positions × (bond + 4 bridges)")
+  assert.deepEqual([result.molecules.length, result.failed], [15, 0], JSON.stringify(result.failures))
+  const formulas = new Set(result.molecules.map((mol) => plainFormula(mol)))
+  assert.deepEqual([...formulas].sort(), ["C12H10", "C17H13N", "C18H14", "C24H18"], "biphenyl, pyridine, terphenyl, quaterphenyl")
+  for (const mol of result.molecules) {
+    assert.ok(mol.atoms.every((atom) => !atom.alias))
+    assert.ok(closestPair(mol) > 0.6 * 40, `closest pair ${closestPair(mol).toFixed(1)}`)
+  }
+})
+
+test("replace joins a two-bond fragment's neighbours by a bond or a bridge, and only such a fragment", () => {
+  const chain = run(emptyDrawing(), [
+    { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
+    { op: "add_atom", el: "C", to: 1, as: "mid" },
+    { op: "add_atom", el: "C", to: "mid" },
+  ])
+  const bonded = run(chain, [{ op: "replace", atoms: [2], with: { bond: true } }])
+  assert.equal(plainFormula(bonded.molecule), "C2H6")
+  const bridged = run(chain, [{ op: "replace", atoms: [2], with: { bridge: "p-phenylene" } }])
+  assert.equal(plainFormula(bridged.molecule), "C8H10", "para-xylene")
+  const end = applyOps(chain, [{ op: "replace", atoms: [3], with: { bond: true } }])
+  assert.ok(!end.ok && /joined by two bonds, not 1/.test(end.error))
+})

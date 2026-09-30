@@ -1,4 +1,5 @@
 import type { Alternative, BondEmphasis, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Point, RingKind } from "../types.ts"
+import type { BridgeName } from "../markush/bridges.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
@@ -6,7 +7,13 @@ import type { Problem } from "../validate.ts"
 export type Ref = number | string
 
 /** What a fragment is replaced with (see the replace op). */
-export type Replacement = { label: string } | { ring: RingKind } | { recipe: RecipeName }
+export type Replacement =
+  | { label: string }
+  | { ring: RingKind }
+  | { recipe: RecipeName }
+  /** For a fragment joined by two bonds: join its two neighbours directly, or through a divalent ring. */
+  | { bond: true }
+  | { bridge: BridgeName }
 
 /** A bond: its id, or the two atoms it joins. `between[0]` is where a wedge starts. */
 export type BondRef = number | { between: [Ref, Ref] }

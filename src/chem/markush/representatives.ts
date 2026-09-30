@@ -24,6 +24,9 @@ export const REPRESENTATIVES: Record<GroupClass, Representative[]> = {
   // An element label is the bare group with its hydrogens: Si is SiH3, N is NH2.
   silyl: [plain("Si", 0), carrying("TMS", 3), carrying("SiPh3", 18)],
   amino: [plain("N", 0), carrying("NMe2", 2), carrying("NHPh", 6)],
+  // Bridge names (see bridges.ts), joining the two atoms a linker sits between.
+  arylene: [plain("p-phenylene", 6), plain("m-phenylene", 6), plain("4,4'-biphenylene", 12)],
+  heteroarylene: [plain("2,5-pyridinediyl", 6)],
 }
 
 /** The representatives that fit a class alternative: inside its size range and its substitution. */

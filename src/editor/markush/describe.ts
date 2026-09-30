@@ -14,14 +14,17 @@ export const CLASS_NAMES: Record<GroupClass, string> = {
   aryloxy: "芳氧基",
   silyl: "甲硅烷基",
   amino: "氨基",
+  arylene: "亚芳基",
+  heteroarylene: "亚杂芳基",
 }
 
 /** Classes whose size counts ring members ("3–30 元") rather than carbons ("C1–C30"). */
-const BY_MEMBERS = new Set<GroupClass>(["heteroaryl", "heterocycloalkyl"])
+const BY_MEMBERS = new Set<GroupClass>(["heteroaryl", "heterocycloalkyl", "heteroarylene"])
 
 /** "取代或未取代的 (C1–C30) 烷基", as a claim would put it; a label is itself. */
 export function describeAlternative(alternative: Alternative): string {
   if (alternative.kind === "label") return alternative.text
+  if (alternative.kind === "bond") return "单键"
   const { min, max } = alternative
   const range = min != null || max != null ? `${min ?? 1}–${max ?? "∞"}` : ""
   const size = range ? (BY_MEMBERS.has(alternative.class) ? `(${range} 元)` : `(C${range.replace("–", "–C")})`) : ""
@@ -31,6 +34,9 @@ export function describeAlternative(alternative: Alternative): string {
 
 /** Words that stand for several labels at once. */
 const SHORTHANDS: Record<string, string[]> = { 卤素: ["F", "Cl", "Br", "I"], halogen: ["F", "Cl", "Br", "I"], 氢: ["H"], 氘: ["D"] }
+
+/** What typing "单键" means: a direct bond, for a linker. */
+export const BOND_WORDS = new Set(["单键", "bond", "single bond"])
 
 /** Labels typed in one go: "H, D, 卤素、CN" gives H, D, F, Cl, Br, I, CN, without repeats. */
 export function parseLabels(text: string): string[] {
@@ -72,6 +78,10 @@ const REPRESENTATIVE_NAMES: Record<string, string> = {
   N: "氨基（NH₂）",
   NMe2: "二甲氨基",
   NHPh: "苯氨基",
+  "p-phenylene": "对亚苯基",
+  "m-phenylene": "间亚苯基",
+  "4,4'-biphenylene": "4,4′-联亚苯基",
+  "2,5-pyridinediyl": "2,5-亚吡啶基",
 }
 
 /** "2-吡啶基", or the label itself when there is no Chinese name for it. */

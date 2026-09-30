@@ -2,6 +2,8 @@ import { pointFrom } from "../geometry.ts"
 import { atomById, bondLengthAt, componentOf, neighbors, sproutAngle } from "../molecule.ts"
 import { applyOps, type Op } from "../ops.ts"
 import type { Drawing, Molecule } from "../types.ts"
+import { smallestRings } from "../molecule/cycles.ts"
+import { BRIDGES, type BridgeName } from "./bridges.ts"
 import { representativesOf } from "./representatives.ts"
 import { alternativesOf, placeholders, undefinedVariables } from "./variables.ts"
 
@@ -24,18 +26,36 @@ export type Enumeration = {
   failed: number
 }
 
-/** One placeholder atom and the labels it may take. */
-type Site = { atom: number; name: string; labels: string[]; inChain: boolean }
+/**
+ * One placeholder atom and what it may become. `where` is how it sits: at the end of a
+ * branch, inside a ring, or between two atoms of a chain (a linker such as L).
+ */
+type Site = { atom: number; name: string; labels: string[]; where: "end" | "ring" | "link" }
+
+/** Stands for a direct bond among a site's choices ("L is a single bond"). */
+export const BOND = "单键"
 
 /**
- * What putting `text` on a placeholder takes. A terminal one is swapped for the piece (or
- * dropped for H, leaving an implicit hydrogen); one inside a ring or chain is relabelled
- * in place, which suits an atom such as X = O or S.
+ * What putting a choice on a placeholder takes. At a branch end it is swapped for the piece
+ * (or dropped for H, leaving an implicit hydrogen). In a ring it is relabelled in place,
+ * which suits X = O or S. Between two atoms, a bond or a divalent ring joins them, while an
+ * element such as O or S takes the placeholder's place.
  */
 function opsFor(site: Site, text: string): Op[] {
-  if (site.inChain) return [{ op: "label", atom: site.atom, text }]
+  if (site.where === "ring") return [{ op: "label", atom: site.atom, text }]
+  if (site.where === "link") {
+    if (text === BOND) return [{ op: "replace", atoms: [site.atom], with: { bond: true } }]
+    if (Object.hasOwn(BRIDGES, text)) return [{ op: "replace", atoms: [site.atom], with: { bridge: text as BridgeName } }]
+    return [{ op: "label", atom: site.atom, text }]
+  }
   if (text === "H") return [{ op: "remove", atoms: [site.atom] }]
   return [{ op: "replace", atoms: [site.atom], with: { label: text } }]
+}
+
+/** How a placeholder sits in the (laid out) molecule. */
+function whereOf(mol: Molecule, atom: number, inRing: Set<number>): Site["where"] {
+  if (inRing.has(atom)) return "ring"
+  return neighbors(mol, atom).length >= 2 ? "link" : "end"
 }
 
 export type EnumerateOptions = {
@@ -122,7 +142,7 @@ export function enumerate(drawing: Drawing, { limit = 1000, representatives = fa
   for (const { name } of placeholders(drawing)) {
     if (labelsOf.has(name)) continue
     const alternatives = alternativesOf(variables, name)
-    const labels = alternatives.flatMap((item) => (item.kind === "label" ? [item.text] : []))
+    const labels = alternatives.flatMap((item) => (item.kind === "label" ? [item.text] : item.kind === "bond" ? [BOND] : []))
     for (const item of alternatives) {
       if (item.kind !== "class") continue
       const standIns = representatives ? representativesOf(item).filter((label) => !labels.includes(label)) : []
@@ -150,15 +170,17 @@ export function enumerate(drawing: Drawing, { limit = 1000, representatives = fa
       continue
     }
     const laid = layout.drawing
-    const sites: Site[] = placeholders(laid).map(({ atom, name }) => ({ atom, name, labels: labelsOf.get(name)!, inChain: neighbors(laid.molecule, atom).length >= 2 }))
+    const inRing = new Set(smallestRings(laid.molecule).flat())
+    const sites: Site[] = placeholders(laid).map(({ atom, name }) => ({ atom, name, labels: labelsOf.get(name)!, where: whereOf(laid.molecule, atom, inRing) }))
     const count = sites.reduce((product, site) => product * site.labels.length, 1)
     total += count
     // An odometer over the sites: the last placeholder turns fastest.
     const choice = sites.map(() => 0)
     for (let made = 0; made < count && molecules.length + failed < limit; made++) {
-      // Relabelling in place first, then swaps, then removals, so no op aims at an atom already gone.
+      // Relabelling in place first, then links, then swaps, then removals, so no op aims at an
+      // atom already gone and a link is made before the branch ends it carries are swapped.
       const chosen = sites.map((site, index) => ({ site, text: site.labels[choice[index]] }))
-      const order = (item: (typeof chosen)[number]) => (item.site.inChain ? 0 : item.text === "H" ? 2 : 1)
+      const order = ({ site, text }: (typeof chosen)[number]) => (site.where === "ring" ? 0 : site.where === "link" ? 1 : text === "H" ? 3 : 2)
       const ops = [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, text }) => opsFor(site, text))
       const result = applyOps({ ...laid, variables: undefined }, ops)
       if (result.ok) molecules.push(result.drawing.molecule)

@@ -3,7 +3,7 @@ import test from "node:test"
 import { readDocument, toDocument } from "../../src/chem/document.ts"
 import { emptyDrawing } from "../../src/chem/drawing.ts"
 import { plainFormula } from "../../src/chem/formula.ts"
-import { ringPositionsAt } from "../../src/chem/markush/attachments.ts"
+import { ringPositionsAt } from "../../src/chem/markush/pointer.ts"
 import { enumerate } from "../../src/chem/markush/enumerate.ts"
 import { applyOps, type Op } from "../../src/chem/ops.ts"
 import type { Drawing } from "../../src/chem/types.ts"
@@ -124,28 +124,32 @@ function benzeneAndBond(): Drawing {
   ])
 }
 
-test("any line that ends inside a ring becomes a variable attachment, however it was drawn", () => {
+test("with the drawing tools, any line that ends inside a ring becomes a variable attachment", () => {
   const start = benzeneAndBond()
   // A drawn line's new end atom goes, so the count stays; a dragged end was already there, so one goes.
   const expect = (drawing: Drawing, hub: number, why: string, atoms = start.molecule.atoms.length) => {
     assert.deepEqual(drawing.attachments, [{ atom: hub, to: [1, 2, 3, 4, 5, 6] }], why)
     assert.equal(drawing.molecule.atoms.length, atoms, `${why}: no atom is left in the ring`)
   }
-  expect(run(start, [{ op: "draw_bond", from: 7, end: { x: 3, y: 2 } }]), 7, "bond from L into the ring")
+  expect(run(start, [{ op: "draw_bond", from: 7, end: { x: 3, y: 2 }, ringPointer: true }]), 7, "bond from L into the ring")
   const l = start.molecule.atoms.find((atom) => atom.id === 7)!
-  expect(run(start, [{ op: "draw_bond", start: { x: -2, y: 4 }, end: { x: l.x, y: l.y } }]), 7, "bond from the ring onto L")
-  const chained = run(start, [{ op: "draw_chain", from: 7, points: [{ x: l.x, y: l.y }, { x: 120, y: -80 }, { x: 60, y: -40 }, { x: 5, y: 0 }] }])
+  expect(run(start, [{ op: "draw_bond", start: { x: -2, y: 4 }, end: { x: l.x, y: l.y }, ringPointer: true }]), 7, "bond from the ring onto L")
+  const chained = run(start, [{ op: "draw_chain", from: 7, points: [{ x: l.x, y: l.y }, { x: 120, y: -80 }, { x: 60, y: -40 }, { x: 5, y: 0 }], ringPointer: true }])
   assert.equal(chained.attachments?.length, 1, "a chain whose last point is in the ring")
   assert.notEqual(chained.attachments![0].atom, 7)
-  expect(run(start, [{ op: "move", atoms: [8], dx: -start.molecule.atoms[7].x + 4, dy: -start.molecule.atoms[7].y - 3 }]), 7, "an end atom dragged into the ring", start.molecule.atoms.length - 1)
+  expect(run(start, [{ op: "move", atoms: [8], dx: -start.molecule.atoms[7].x + 4, dy: -start.molecule.atoms[7].y - 3, ringPointer: true }]), 7, "an end atom dragged into the ring", start.molecule.atoms.length - 1)
 })
 
 test("what is meant to be inside a ring stays", () => {
   const start = benzeneAndBond()
-  const oxygen = run(start, [{ op: "draw_bond", from: 7, end: { x: 3, y: 2 } }, { op: "remove_attachment", atom: 7 }, { op: "add_atom", el: "O", to: 8 }])
+  const oxygen = run(start, [{ op: "draw_bond", from: 7, end: { x: 3, y: 2 }, ringPointer: true }, { op: "remove_attachment", atom: 7 }, { op: "add_atom", el: "O", to: 8 }])
   assert.equal(oxygen.attachments, undefined)
   assert.equal(run(start, [{ op: "place_atom", el: "C", at: { x: 2, y: 2 } }]).attachments, undefined, "a lone atom")
-  assert.equal(run(start, [{ op: "draw_bond", from: 1, end: { x: 3, y: 2 } }]).attachments, undefined, "a bond from the ring's own atom")
+  assert.equal(run(start, [{ op: "draw_bond", from: 1, end: { x: 3, y: 2 }, ringPointer: true }]).attachments, undefined, "a bond from the ring's own atom")
+  // Without ringPointer (an agent's op, or enumeration moving atoms), a line into a ring stays a line.
+  const plain = run(start, [{ op: "draw_bond", from: 7, end: { x: 3, y: 2 } }])
+  assert.equal(plain.attachments, undefined)
+  assert.equal(plain.molecule.atoms.length, start.molecule.atoms.length + 1)
 })
 
 test("a linker can be given a divalent ring directly", () => {

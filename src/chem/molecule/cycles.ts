@@ -203,3 +203,19 @@ export function smallestRings(mol: Molecule, atoms?: Iterable<number>): number[]
   const rings = components(core).flatMap((piece) => componentRings(core, piece))
   return rings.sort((a, b) => a.length - b.length || compareIds(a, b))
 }
+
+/** Rings found once per molecule; asked on every pointer move while drawing, and per enumerated layout. */
+const membership = new WeakMap<Molecule, { rings: number[][]; count: Map<number, number> }>()
+
+/** The molecule's smallest rings, and how many of them each atom is in (0 when absent). */
+export function ringMembership(mol: Molecule): { rings: number[][]; count: Map<number, number> } {
+  let found = membership.get(mol)
+  if (!found) {
+    const rings = smallestRings(mol)
+    const count = new Map<number, number>()
+    for (const ring of rings) for (const id of ring) count.set(id, (count.get(id) ?? 0) + 1)
+    found = { rings, count }
+    membership.set(mol, found)
+  }
+  return found
+}

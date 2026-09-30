@@ -1,5 +1,6 @@
 import type { Drawing, HotTarget, Molecule } from "../types.ts"
-import { absorbRingPointers, pruneAttachments } from "../markush/attachments.ts"
+import { pruneAttachments } from "../markush/attachments.ts"
+import { absorbRingPointers } from "../markush/pointer.ts"
 import { validateDrawing } from "../validate.ts"
 import { makeContext, OpError, type Context } from "./context.ts"
 import { documentOp, type DocumentStep } from "./document.ts"
@@ -17,10 +18,13 @@ function step(drawing: Drawing, op: Op, ctx: Context, depth: Map<number, number>
   return { drawing: part.mol === mol ? drawing : { ...drawing, molecule: part.mol }, next: part.next }
 }
 
-/** The atoms a pointer op left where the pointer let go: new atoms of a drawn bond or chain, or one dragged atom. */
+/**
+ * The atoms a pointer op asking for `ringPointer` left where the pointer let go: the new
+ * atoms of a drawn bond or chain, or one dragged atom. Other ops never change this way.
+ */
 function pointerEnds(op: Op, drawing: Drawing, before: number, ctx: Context): number[] {
-  if (op.op === "draw_bond" || op.op === "draw_chain") return drawing.molecule.atoms.filter((atom) => atom.id >= before).map((atom) => atom.id)
-  if (op.op === "move" && op.atoms.length === 1) return [ctx.atom(op.atoms[0])]
+  if ((op.op === "draw_bond" || op.op === "draw_chain") && op.ringPointer) return drawing.molecule.atoms.filter((atom) => atom.id >= before).map((atom) => atom.id)
+  if (op.op === "move" && op.ringPointer && op.atoms.length === 1) return [ctx.atom(op.atoms[0])]
   return []
 }
 
@@ -52,7 +56,7 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
       const done = step(drawing, op, ctx, depth)
       // Deleting atoms takes their variable attachments with them.
       drawing = pruneAttachments(done.drawing)
-      // A line drawn (or an end dragged) into a ring's middle is a variable attachment.
+      // Drawn with the pointer tools, a line into a ring's middle is a variable attachment.
       const ends = pointerEnds(op, drawing, before, ctx)
       if (ends.length > 0) drawing = absorbRingPointers(drawing, ends)
       depth = done.depth

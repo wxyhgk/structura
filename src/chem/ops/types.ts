@@ -73,7 +73,7 @@ export type Op =
    */
   | { op: "replace"; atoms: Ref[]; with: Replacement; as?: string }
   | { op: "duplicate"; atoms: Ref[] }
-  | { op: "move"; atoms: Ref[]; dx: number; dy: number }
+  | { op: "move"; atoms: Ref[]; dx: number; dy: number; ringPointer?: boolean }
   | { op: "rotate"; atoms: Ref[]; angle: number; center?: Point }
   | { op: "flip"; atoms: Ref[]; axis: "horizontal" | "vertical" }
   | { op: "scale"; atoms: Ref[]; sx: number; sy: number; center?: Point }
@@ -109,10 +109,12 @@ export type Op =
   /**
    * Drawing with the mouse, where positions come from the pointer. These join nearby atoms
    * the way the drawing tools do; an agent normally uses add_atom and add_ring instead.
+   * With `ringPointer` (as the drawing tools pass, and on a `move` of one atom), an end left
+   * inside a ring's middle becomes a variable point of attachment to that ring (Markush drawing).
    */
   | { op: "place_atom"; el: string; at: Point }
-  | { op: "draw_bond"; from?: Ref; start?: Point; end?: Point; order?: BondOrder; stereo?: BondStereo; look?: BondLook }
-  | { op: "draw_chain"; from?: Ref; points: Point[] }
+  | { op: "draw_bond"; from?: Ref; start?: Point; end?: Point; order?: BondOrder; stereo?: BondStereo; look?: BondLook; ringPointer?: boolean }
+  | { op: "draw_chain"; from?: Ref; points: Point[]; ringPointer?: boolean }
 
 export type OpsResult =
   | {

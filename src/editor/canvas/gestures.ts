@@ -1,5 +1,5 @@
 import { RING_SIZE } from "@/chem/constants"
-import { ringPointerAt, ringPositionsAt } from "@/chem/markush/attachments"
+import { ringPointerAt, ringPositionsAt } from "@/chem/markush/pointer"
 import { ringHint } from "@/editor/markush/hints"
 import { paintOps } from "@/editor/ops"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@/chem/geometry"
@@ -376,7 +376,7 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
     const style = { order: current.style.order, stereo: current.style.stereo, look: current.style.look }
     const from = current.fromId ?? undefined
     if (!current.moved) {
-      run([{ op: "draw_bond", from, start: current.origin, ...style }])
+      run([{ op: "draw_bond", from, start: current.origin, ...style, ringPointer: true }])
       return
     }
     const attachment = attachmentTarget(current, world, zoom)
@@ -386,13 +386,13 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
     }
     const origin = current.fromId == null ? current.origin : atomById(current.mol, current.fromId) ?? current.origin
     const end = bondEnd(origin, world, current.mol, current.fromId, event.altKey, zoom)
-    run([{ op: "draw_bond", from, start: origin, end, ...style }])
+    run([{ op: "draw_bond", from, start: origin, end, ...style, ringPointer: true }])
     return
   }
   if (current.kind === "chain") {
     const { points } = chainTo(current, world, event.altKey)
     host.setPreview(null)
-    run([{ op: "draw_chain", from: current.fromId ?? undefined, points }])
+    run([{ op: "draw_chain", from: current.fromId ?? undefined, points, ringPointer: true }])
     return
   }
   if (current.kind === "rotate") {
@@ -414,7 +414,7 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
   if (current.kind === "move") {
     const dx = world.x - current.origin.x
     const dy = world.y - current.origin.y
-    if (dx !== 0 || dy !== 0) run([{ op: "move", atoms: current.ids, dx, dy }], { keepSelection: true })
+    if (dx !== 0 || dy !== 0) run([{ op: "move", atoms: current.ids, dx, dy, ringPointer: true }], { keepSelection: true })
     host.setDraft(null)
     return
   }

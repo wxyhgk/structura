@@ -4,6 +4,7 @@ import { knownLabel } from "../label.ts"
 import { atomById, bondLengthAt, componentOf, neighbors, sproutAngle } from "../molecule.ts"
 import { applyOps, type Op } from "../ops.ts"
 import type { Choice, Drawing, Molecule } from "../types.ts"
+import { odometer } from "./odometer.ts"
 import { representativesOf } from "./representatives.ts"
 import { siteKind, type SiteKind } from "./sites.ts"
 import { alternativesOf, isVariableName, placeholders, undefinedVariables } from "./variables.ts"
@@ -98,8 +99,7 @@ function* layouts(drawing: Drawing): Generator<Layout> {
   const attachments = drawing.attachments ?? []
   const names = new Set(Object.keys(drawing.variables ?? {}))
   const label = (id: number) => drawing.molecule.atoms.find((atom) => atom.id === id)?.alias ?? `#${id}`
-  const choice = attachments.map(() => 0)
-  for (;;) {
+  for (const choice of odometer(attachments.map((attachment) => attachment.to.length))) {
     let laid: Drawing = { molecule: drawing.molecule, arrows: [], nextArrowId: drawing.nextArrowId, variables: drawing.variables }
     const where: Pick[] = []
     let error: string | null = null
@@ -115,13 +115,6 @@ function* layouts(drawing: Drawing): Generator<Layout> {
       laid = placed.drawing
     }
     yield error ? { error, where } : { drawing: laid, where }
-    let index = attachments.length - 1
-    for (; index >= 0; index--) {
-      choice[index]++
-      if (choice[index] < attachments[index].to.length) break
-      choice[index] = 0
-    }
-    if (index < 0) return
   }
 }
 
@@ -146,6 +139,9 @@ function attach(drawing: Drawing, hub: number, target: number, displaced: number
   return result.ok ? { drawing: result.drawing } : { error: result.error }
 }
 
+/** A laid-out formula ready to build: its sites with the choices that fit, and how many combinations they make. */
+type Plan = { layout: Layout; sites: Site[]; count: number }
+
 /**
  * Expands a generic formula into concrete molecules: every placement of each variable
  * attachment, and every combination of each placeholder's choices that fit where it sits,
@@ -153,10 +149,24 @@ function attach(drawing: Drawing, hub: number, target: number, displaced: number
  * full; it is left out, or with `representatives` a few typical members inside its range
  * stand in for it. The result says which, and what was skipped as not fitting.
  */
-export function enumerate(drawing: Drawing, { limit = 1000, representatives = false }: EnumerateOptions = {}): Enumeration {
+export function enumerate(drawing: Drawing, options: EnumerateOptions = {}): Enumeration {
+  const steps = enumerateSteps(drawing, options)
+  for (;;) {
+    const step = steps.next()
+    if (step.done) return step.value
+  }
+}
+
+/**
+ * enumerate() one step at a time, so a caller can spread the work out, show progress, or
+ * stop early and keep what was made. It first lays out every attachment placement (one
+ * step each), so `total` and the misfits are complete before any molecule is built, then
+ * builds one combination per step. Every step yields the same result object, growing in
+ * place: copy what you keep. The return value is exactly what enumerate() returns.
+ */
+export function* enumerateSteps(drawing: Drawing, { limit = 1000, representatives = false }: EnumerateOptions = {}): Generator<Enumeration, Enumeration> {
   const variables = drawing.variables ?? {}
   const defined = new Set(Object.keys(variables))
-  const undefinedNames = undefinedVariables(drawing)
   const classesLeftOut: Record<string, number> = {}
   const represented: Record<string, Choice[]> = {}
   const misfits: Record<string, Choice[]> = {}
@@ -175,22 +185,27 @@ export function enumerate(drawing: Drawing, { limit = 1000, representatives = fa
     }
     choicesOf.set(name, choices)
   }
-  const report = { classesLeftOut, represented, misfits, undefinedNames }
-  const bare = [...choicesOf].flatMap(([name, choices]) => (choices.length === 0 ? [name] : []))
-  if (bare.length > 0) return { molecules: [], total: 0, ...report, onlyClasses: bare, failures: [], failed: 0 }
-
-  let total = 0
-  const molecules: Molecule[] = []
-  const failures: Enumeration["failures"] = []
-  let failed = 0
-  const unfilled = new Set<string>()
-  const fail = (choice: Pick[], error: string) => {
-    if (failed++ < 5) failures.push({ choice, error })
+  const result: Enumeration = {
+    molecules: [],
+    total: 0,
+    classesLeftOut,
+    represented,
+    misfits,
+    undefinedNames: undefinedVariables(drawing),
+    onlyClasses: [],
+    failures: [],
+    failed: 0,
   }
+  const bare = [...choicesOf].flatMap(([name, choices]) => (choices.length === 0 ? [name] : []))
+  if (bare.length > 0) return { ...result, onlyClasses: bare }
+
+  const unfilled = new Set<string>()
+  const plans: Plan[] = []
   for (const layout of layouts(drawing)) {
     if ("error" in layout) {
-      total++
-      fail(layout.where, layout.error)
+      result.total++
+      plans.push({ layout, sites: [], count: 0 })
+      yield result
       continue
     }
     const laid = layout.drawing
@@ -203,10 +218,23 @@ export function enumerate(drawing: Drawing, { limit = 1000, representatives = fa
     })
     for (const site of sites) if (site.choices.length === 0) unfilled.add(site.name)
     const count = sites.reduce((product, site) => product * site.choices.length, 1)
-    total += count
-    // An odometer over the sites: the last placeholder turns fastest.
-    const index = sites.map(() => 0)
-    for (let made = 0; made < count && molecules.length + failed < limit; made++) {
+    result.total += count
+    result.onlyClasses = [...unfilled]
+    plans.push({ layout, sites, count })
+    yield result
+  }
+
+  const fail = (choice: Pick[], error: string) => {
+    if (result.failed++ < 5) result.failures.push({ choice, error })
+  }
+  for (const { layout, sites } of plans) {
+    if ("error" in layout) {
+      fail(layout.where, layout.error)
+      continue
+    }
+    const laid = layout.drawing
+    for (const index of odometer(sites.map((site) => site.choices.length))) {
+      if (result.molecules.length + result.failed >= limit) break
       // Relabelling in place first, then links, then swaps, then removals, so no op aims at an
       // atom already gone and a link is made before the branch ends it carries are swapped.
       const chosen = sites.map((site, at) => ({ site, choice: site.choices[index[at]] }))
@@ -214,16 +242,12 @@ export function enumerate(drawing: Drawing, { limit = 1000, representatives = fa
         site.where === "ring" ? 0 : site.where === "link" ? 1 : choice.kind === "label" && choice.text === "H" ? 3 : 2
       const ops = [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, choice }) => opsFor(site, choice))
       const picks: Pick[] = [...layout.where, ...chosen.map(({ site, choice }) => ({ name: site.name, choice }))]
-      const result = applyOps({ ...laid, variables: undefined }, ops)
-      const wrong = result.ok ? leftover(result.drawing.molecule, defined) : result.error
-      if (result.ok && !wrong) molecules.push(result.drawing.molecule)
+      const built = applyOps({ ...laid, variables: undefined }, ops)
+      const wrong = built.ok ? leftover(built.drawing.molecule, defined) : built.error
+      if (built.ok && !wrong) result.molecules.push(built.drawing.molecule)
       else fail(picks, wrong!)
-      for (let at = sites.length - 1; at >= 0; at--) {
-        index[at]++
-        if (index[at] < sites[at].choices.length) break
-        index[at] = 0
-      }
+      yield result
     }
   }
-  return { molecules, total, ...report, onlyClasses: [...unfilled], failures, failed }
+  return result
 }

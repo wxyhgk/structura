@@ -74,12 +74,14 @@ export function insertGroup(
   if (anchor.isotope != null) next = setIsotope(next, [host], anchor.isotope)
 
   // The template's first attachment points along -x; turn it toward the real neighbour.
+  // Templates and `rotate` work in screen coordinates (y down), while angleTo and
+  // sproutAngle measure with y up, so their angles are negated here.
   const bonded = neighbors(next, host)
   let turn = 0
   if (template.attachments === 1 && bonded.length === 1) {
-    turn = norm(angleTo(hostAtom, bonded[0]) - Math.PI)
+    turn = norm(-angleTo(hostAtom, bonded[0]) - Math.PI)
   } else if (template.attachments > 1) {
-    turn = norm(sproutAngle(mol, atomId) - bodyAngle(template))
+    turn = norm(-sproutAngle(mol, atomId) - bodyAngle(template))
   }
 
   // Templates are drawn at the default bond length; match the structure they join.

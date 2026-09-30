@@ -154,3 +154,20 @@ test("only the common abbreviations stay as labels", () => {
   assert.equal(setAtomLabel(mol, end, "NO2").groups.length, 0)
   assert.equal(setAtomLabel(mol, end, "TIPS").groups.length, 0)
 })
+
+test("a group grows away from the atom it hangs off, whichever way the bond points", async () => {
+  const { emptyDrawing } = await import("../../src/chem/drawing.ts")
+  const { applyOps } = await import("../../src/chem/ops.ts")
+  for (const angle of [Math.PI / 2, -Math.PI / 2, Math.PI / 3, (2 * Math.PI) / 3, -Math.PI / 6, Math.PI]) {
+    const built = applyOps(emptyDrawing(), [
+      { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
+      { op: "add_atom", el: "C", to: 1, angle, as: "tip" },
+      { op: "label", atom: "tip", text: "Ph" },
+    ])
+    assert.ok(built.ok)
+    const mol = built.drawing.molecule
+    const base = mol.atoms.find((atom) => atom.id === 1)!
+    const nearest = Math.min(...mol.atoms.filter((atom) => atom.id > 2).map((atom) => Math.hypot(atom.x - base.x, atom.y - base.y)))
+    assert.ok(nearest > 1.5 * 40, `angle ${angle.toFixed(2)}: a ring atom comes within ${nearest.toFixed(1)} of the base`)
+  }
+})

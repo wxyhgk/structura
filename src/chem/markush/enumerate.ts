@@ -2,10 +2,10 @@ import { elementOf } from "../elements/index.ts"
 import { pointFrom } from "../geometry.ts"
 import { knownLabel } from "../label.ts"
 import { atomById, bondLengthAt, componentOf, neighbors, sproutAngle } from "../molecule.ts"
-import { smallestRings } from "../molecule/cycles.ts"
 import { applyOps, type Op } from "../ops.ts"
 import type { Choice, Drawing, Molecule } from "../types.ts"
 import { representativesOf } from "./representatives.ts"
+import { siteKind, type SiteKind } from "./sites.ts"
 import { alternativesOf, isVariableName, placeholders, undefinedVariables } from "./variables.ts"
 
 /** One thing in a combination: a placeholder's choice, or where an attachment was made. */
@@ -35,11 +35,8 @@ export type Enumeration = {
   failed: number
 }
 
-/**
- * One placeholder atom and what it may become. `where` is how it sits: at the end of a
- * branch, inside a ring, or between two atoms of a chain (a linker such as L).
- */
-type Site = { atom: number; name: string; choices: Choice[]; where: "end" | "ring" | "link" }
+/** One placeholder atom, how it sits (see siteKind), and what it may become there. */
+type Site = { atom: number; name: string; choices: Choice[]; where: SiteKind }
 
 const same = (a: Choice, b: Choice) => JSON.stringify(a) === JSON.stringify(b)
 
@@ -48,7 +45,7 @@ const same = (a: Choice, b: Choice) => JSON.stringify(a) === JSON.stringify(b)
  * (never a bond or a divalent ring); a ring position takes an element; a linker takes a
  * bond, a divalent ring or an element such as O or S, never a group that ends a branch.
  */
-function fits(where: Site["where"], choice: Choice): boolean {
+function fits(where: SiteKind, choice: Choice): boolean {
   if (where === "end") return choice.kind === "label"
   const element = choice.kind === "label" && elementOf(choice.text) != null
   if (where === "ring") return element
@@ -66,12 +63,6 @@ function opsFor(site: Site, choice: Choice): Op[] {
   if (site.where !== "end") return [{ op: "label", atom: site.atom, text: choice.text }]
   if (choice.text === "H") return [{ op: "remove", atoms: [site.atom] }]
   return [{ op: "replace", atoms: [site.atom], with: { label: choice.text } }]
-}
-
-/** How a placeholder sits in the (laid out) molecule. */
-function whereOf(mol: Molecule, atom: number, inRing: Set<number>): Site["where"] {
-  if (inRing.has(atom)) return "ring"
-  return neighbors(mol, atom).length >= 2 ? "link" : "end"
 }
 
 /**
@@ -203,9 +194,8 @@ export function enumerate(drawing: Drawing, { limit = 1000, representatives = fa
       continue
     }
     const laid = layout.drawing
-    const inRing = new Set(smallestRings(laid.molecule).flat())
     const sites: Site[] = placeholders(laid).map(({ atom, name }) => {
-      const where = whereOf(laid.molecule, atom, inRing)
+      const where = siteKind(laid, atom)
       const all = choicesOf.get(name)!
       const skipped = all.filter((choice) => !fits(where, choice))
       for (const choice of skipped) if (!(misfits[name] ?? []).some((other) => same(other, choice))) misfits[name] = [...(misfits[name] ?? []), choice]

@@ -1,6 +1,5 @@
 import { knownLabel } from "../label.ts"
 import { BRIDGES } from "./bridges.ts"
-import { smallestRings } from "../molecule/cycles.ts"
 import type { Alternative, Drawing, GroupClass, Molecule, Variable } from "../types.ts"
 
 /**
@@ -107,21 +106,4 @@ export function undefinedVariables(drawing: Drawing): string[] {
 /** A molecule's placeholder atoms, whatever the variable table says: any label shaped like a variable. */
 export function variableLabels(mol: Molecule): string[] {
   return [...new Set(mol.atoms.flatMap((atom) => (atom.alias && isVariableName(atom.alias) ? [atom.alias] : [])))]
-}
-
-/**
- * Variables that link two atoms rather than end a branch: a placeholder with two or more
- * bonds outside any ring, or one a variable attachment starts from (–L– before it is made).
- */
-export function linkerNames(drawing: Drawing): Set<string> {
-  const mol = drawing.molecule
-  const inRing = new Set(smallestRings(mol).flat())
-  const hubs = new Set((drawing.attachments ?? []).map((attachment) => attachment.atom))
-  return new Set(
-    mol.atoms.flatMap((atom) => {
-      if (!atom.alias || !isVariableName(atom.alias) || inRing.has(atom.id)) return []
-      const bonds = mol.bonds.filter((bond) => bond.a === atom.id || bond.b === atom.id).length + (hubs.has(atom.id) ? 1 : 0)
-      return bonds >= 2 ? [atom.alias] : []
-    }),
-  )
 }

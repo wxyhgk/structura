@@ -4,6 +4,7 @@ import { readDocument, toDocument } from "../../src/chem/document.ts"
 import { emptyDrawing } from "../../src/chem/drawing.ts"
 import { plainFormula } from "../../src/chem/formula.ts"
 import { ringPositionsAt } from "../../src/chem/markush/pointer.ts"
+import { linkerNames, siteKind } from "../../src/chem/markush/sites.ts"
 import { enumerate } from "../../src/chem/markush/enumerate.ts"
 import { applyOps, type Op } from "../../src/chem/ops.ts"
 import type { Drawing } from "../../src/chem/types.ts"
@@ -161,4 +162,16 @@ test("a linker can be given a divalent ring directly", () => {
   assert.deepEqual([result.molecules.length, result.failed], [3, 0])
   assert.ok(result.molecules.every((mol) => plainFormula(mol) === "C18H14"), "terphenyl at each position")
   assert.ok(!applyOps(drawing, [{ op: "set_variable", name: "L", alternatives: [{ kind: "bridge", name: "o-phenylene" as "p-phenylene" }] }]).ok)
+})
+
+test("one rule says how a placeholder sits, for the panel and for enumeration alike", () => {
+  const drawing = formula()
+  // L (atom 8) has one bond so far, plus the one its attachment will make.
+  assert.equal(siteKind(drawing, 8), "link")
+  assert.equal(siteKind(drawing, 9), "end", "ETU ends the branch")
+  assert.equal(siteKind(drawing, 1), "ring")
+  assert.deepEqual([...linkerNames(drawing)], ["L"])
+  const loose = run(drawing, [{ op: "remove_attachment", atom: 8 }])
+  assert.equal(siteKind(loose, 8), "end")
+  assert.deepEqual([...linkerNames(loose)], [])
 })

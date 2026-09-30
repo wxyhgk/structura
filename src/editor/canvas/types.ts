@@ -1,6 +1,7 @@
 import type { Arrow, Attachment, BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@/chem/types"
 import type { ToolId } from "@/editor/tools/types"
 import type { Viewport } from "@/editor/canvas/viewport"
+import type { RingHintShape } from "@/editor/markush/hints"
 import type { Run } from "@/editor/ops"
 
 export type CanvasHandle = {
@@ -92,4 +93,6 @@ export type PointerHost = {
   assignHover: (hover: HoverTarget) => void
   setCursor: (cursor: string | null) => void
   setRotating: (rotating: boolean) => void
+  /** Where a line being drawn into a ring will attach, or null. */
+  setRingHint: (hint: RingHintShape | null) => void
 }

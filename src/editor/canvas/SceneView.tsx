@@ -4,6 +4,8 @@ import { atomById } from "@/chem/molecule"
 import type { Arrow, Attachment, Molecule, Selection } from "@/chem/types"
 import type { ToolId } from "@/editor/tools/types"
 import { AttachmentLines } from "@/editor/markush/AttachmentLines"
+import type { RingHintShape } from "@/editor/markush/hints"
+import { RingHint } from "@/editor/markush/RingHint"
 import { atomCircle } from "./rings.ts"
 import { SelectionMarks } from "./SelectionMarks.tsx"
 import { selectionFrame } from "./targeting.ts"
@@ -21,6 +23,7 @@ export function SceneView({
   colorHetero,
   showFrame,
   attachments,
+  ringHint,
 }: {
   mol: Molecule
   arrows: Arrow[]
@@ -33,6 +36,8 @@ export function SceneView({
   colorHetero: boolean
   showFrame: boolean
   attachments?: Attachment[]
+  /** While drawing a line into a ring (chain tool, dragging an end): where it will attach. */
+  ringHint?: RingHintShape | null
 }) {
   // Hover, previews and panning re-render often; the scene only changes with the molecule.
   const scene = useMemo(() => buildScene(mol, colorHetero), [mol, colorHetero])
@@ -51,6 +56,7 @@ export function SceneView({
         <SelectionChrome mol={mol} selection={selection} zoom={zoom} />
       )}
       {preview && <PreviewLayer preview={preview} />}
+      {ringHint && <RingHint hint={ringHint} />}
     </>
   )
 }
@@ -258,16 +264,10 @@ function SelectionChrome({ mol, selection, zoom }: { mol: Molecule; selection: S
 
 function PreviewLayer({ preview }: { preview: Exclude<Preview, null> }) {
   if (preview.kind === "attachment") {
-    const reach = Math.max(...preview.positions.map((point) => Math.hypot(point.x - preview.centre.x, point.y - preview.centre.y)))
     return (
       <g data-testid="attachment-preview">
         <line x1={preview.a.x} y1={preview.a.y} x2={preview.centre.x} y2={preview.centre.y} stroke="#1a73e8" strokeWidth={1.8} strokeLinecap="round" />
-        {preview.positions.map((point, index) => (
-          <circle key={index} cx={point.x} cy={point.y} r={9} fill="rgba(26, 115, 232, 0.12)" stroke="#1a73e8" strokeDasharray="3 2" />
-        ))}
-        <text x={preview.centre.x} y={preview.centre.y + reach + 22} textAnchor="middle" fontSize={11} fill="#1a73e8">
-          任一位置（{preview.positions.length} 处）
-        </text>
+        <RingHint hint={{ centre: preview.centre, positions: preview.positions }} />
       </g>
     )
   }

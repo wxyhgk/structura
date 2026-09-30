@@ -9,6 +9,7 @@ import { hitOf, hoverOf, sameHover } from "@/editor/canvas/targeting"
 import type { CanvasHandle, EditorSlice, Gesture, HoverTarget, PointerHost, Preview } from "@/editor/canvas/types"
 import { useHotspot } from "@/editor/canvas/useHotspot"
 import { useViewport } from "@/editor/canvas/useViewport"
+import type { RingHintShape } from "@/editor/markush/hints"
 import { hotkeyOps } from "@/editor/hotkeys/lookup"
 import { keyOf } from "@/editor/input/keymap"
 
@@ -26,6 +27,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const spaceDragged = useRef(false)
   const [preview, setPreview] = useState<Preview>(null)
   const [draft, setDraft] = useState<Molecule | null>(null)
+  const [ringHint, setRingHint] = useState<RingHintShape | null>(null)
   const [panning, setPanning] = useState(false)
   const [handleCursor, setHandleCursor] = useState<string | null>(null)
   const [rotating, setRotating] = useState(false)
@@ -39,6 +41,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   function cancelGesture() {
     gesture.current = { kind: "idle" }
     setPreview(null)
+    setRingHint(null)
     hotspot.clearHover()
     setDraft(null)
     setPanning(false)
@@ -55,6 +58,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     setView: (nextZoom, nextPan) => viewport.set({ zoom: nextZoom, pan: nextPan }),
     setPreview,
     setDraft,
+    setRingHint,
     setPanning,
     assignHover: hotspot.assignHover,
     setCursor: setHandleCursor,
@@ -221,6 +225,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             hover={hotspot.hover}
             hotspotId={hotspot.pinnedIn(props.mol)}
             preview={preview}
+            ringHint={ringHint}
             colorHetero={props.colorHetero}
             showFrame={!rotating}
             attachments={props.attachments}

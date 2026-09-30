@@ -1,5 +1,6 @@
 import { RING_SIZE } from "@/chem/constants"
-import { ringPositionsAt } from "@/chem/markush/attachments"
+import { ringPointerAt, ringPositionsAt } from "@/chem/markush/attachments"
+import { ringHint } from "@/editor/markush/hints"
 import { paintOps } from "@/editor/ops"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@/chem/geometry"
 import {
@@ -289,10 +290,9 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
     return
   }
   if (current.kind === "chain") {
-    const distance = Math.hypot(world.x - current.origin.x, world.y - current.origin.y)
-    const axis = event.altKey ? angleTo(current.origin, world) : snapAngle(angleTo(current.origin, world))
-    const length = bondLengthAt(current.mol, current.fromId ?? undefined)
-    host.setPreview({ kind: "chain", points: chainPoints(current.origin, axis, chainCount(distance, length), length) })
+    const { points, positions } = chainTo(current, world, event.altKey)
+    host.setPreview({ kind: "chain", points })
+    host.setRingHint(positions ? ringHint(positions.map((id) => atomById(current.mol, id)!)) : null)
     return
   }
   if (current.kind === "rotate") {
@@ -306,7 +306,13 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
     return
   }
   if (current.kind === "move") {
-    host.setDraft(moveAtoms(current.mol, current.ids, world.x - current.origin.x, world.y - current.origin.y))
+    const dx = world.x - current.origin.x
+    const dy = world.y - current.origin.y
+    host.setDraft(moveAtoms(current.mol, current.ids, dx, dy))
+    // A line's end dragged into a ring will attach there.
+    const end = current.ids.length === 1 ? atomById(current.mol, current.ids[0]) : undefined
+    const positions = end ? ringPointerAt(current.mol, end.id, { x: end.x + dx, y: end.y + dy }) : null
+    host.setRingHint(positions ? ringHint(positions.map((id) => atomById(current.mol, id)!)) : null)
     return
   }
   if (current.kind === "marquee") {
@@ -317,6 +323,23 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
     current.points = [...current.points, world]
     host.setPreview({ kind: "lasso", points: current.points })
   }
+}
+
+/**
+ * The zigzag the chain tool draws toward the pointer. Its direction snaps to 30° steps
+ * (not with Alt), except when the pointer is inside a ring: then it aims straight there and
+ * ends exactly at the pointer, so the chain attaches at any of that ring's free positions,
+ * which are returned too.
+ */
+function chainTo(gesture: Extract<Gesture, { kind: "chain" }>, world: { x: number; y: number }, free: boolean) {
+  const mol = gesture.mol
+  const positions = ringPositionsAt(mol, world, gesture.fromId ?? undefined)
+  const distance = Math.hypot(world.x - gesture.origin.x, world.y - gesture.origin.y)
+  const axis = free || positions ? angleTo(gesture.origin, world) : snapAngle(angleTo(gesture.origin, world))
+  const length = bondLengthAt(mol, gesture.fromId ?? undefined)
+  const points = chainPoints(gesture.origin, axis, chainCount(distance, length), length)
+  if (positions) points[points.length - 1] = world
+  return { points, positions }
 }
 
 /**
@@ -339,6 +362,7 @@ function attachmentTarget(gesture: Extract<Gesture, { kind: "bond" }>, world: { 
 
 export function pointerUp(host: PointerHost, event: { clientX: number; clientY: number; altKey: boolean }) {
   const { run } = host.props
+  host.setRingHint(null)
   const current = host.gesture.current
   host.gesture.current = { kind: "idle" }
   if (current.kind === "pan") {
@@ -366,10 +390,7 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
     return
   }
   if (current.kind === "chain") {
-    const distance = Math.hypot(world.x - current.origin.x, world.y - current.origin.y)
-    const axis = event.altKey ? angleTo(current.origin, world) : snapAngle(angleTo(current.origin, world))
-    const length = bondLengthAt(current.mol, current.fromId ?? undefined)
-    const points = chainPoints(current.origin, axis, chainCount(distance, length), length)
+    const { points } = chainTo(current, world, event.altKey)
     host.setPreview(null)
     run([{ op: "draw_chain", from: current.fromId ?? undefined, points }])
     return

@@ -1,5 +1,5 @@
 import type { Drawing, HotTarget, Molecule } from "../types.ts"
-import { pruneAttachments } from "../markush/attachments.ts"
+import { absorbRingPointers, pruneAttachments } from "../markush/attachments.ts"
 import { validateDrawing } from "../validate.ts"
 import { makeContext, OpError, type Context } from "./context.ts"
 import { documentOp, type DocumentStep } from "./document.ts"
@@ -15,6 +15,13 @@ function step(drawing: Drawing, op: Op, ctx: Context, depth: Map<number, number>
   const part = structureOp(mol, op, ctx) ?? drawingOp(mol, op, ctx)
   if (!part) throw new OpError(`unknown op "${(op as { op: string }).op}"`)
   return { drawing: part.mol === mol ? drawing : { ...drawing, molecule: part.mol }, next: part.next }
+}
+
+/** The atoms a pointer op left where the pointer let go: new atoms of a drawn bond or chain, or one dragged atom. */
+function pointerEnds(op: Op, drawing: Drawing, before: number, ctx: Context): number[] {
+  if (op.op === "draw_bond" || op.op === "draw_chain") return drawing.molecule.atoms.filter((atom) => atom.id >= before).map((atom) => atom.id)
+  if (op.op === "move" && op.atoms.length === 1) return [ctx.atom(op.atoms[0])]
+  return []
 }
 
 /** Atoms present both before and after whose coordinates differ. */
@@ -41,9 +48,13 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
 
   for (const [index, op] of ops.entries()) {
     try {
+      const before = drawing.molecule.nextAtomId
       const done = step(drawing, op, ctx, depth)
       // Deleting atoms takes their variable attachments with them.
       drawing = pruneAttachments(done.drawing)
+      // A line drawn (or an end dragged) into a ring's middle is a variable attachment.
+      const ends = pointerEnds(op, drawing, before, ctx)
+      if (ends.length > 0) drawing = absorbRingPointers(drawing, ends)
       depth = done.depth
       if (done.next !== undefined) next = done.next
     } catch (error) {

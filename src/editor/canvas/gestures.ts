@@ -271,12 +271,12 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
       const origin = current.fromId == null ? current.origin : atomById(current.mol, current.fromId) ?? current.origin
       const snapped = nearestAtom(current.mol, world, SNAP_ATOM / zoom, current.fromId ?? undefined)
       host.assignHover(snapped ? { type: "atom", id: snapped.id } : null)
-      // Inside a ring, letting go makes a variable attachment; show where it could land.
-      const positions = current.fromId != null && !snapped ? ringPositionsAt(current.mol, world, current.fromId) : null
-      if (positions) {
-        const atoms = positions.map((id) => atomById(current.mol, id)!)
+      // Between a ring's inside and an atom, letting go makes a variable attachment; show where it could land.
+      const attachment = attachmentTarget(current, world, zoom)
+      if (attachment) {
+        const atoms = attachment.positions.map((id) => atomById(current.mol, id)!)
         const centre = { x: atoms.reduce((sum, atom) => sum + atom.x, 0) / atoms.length, y: atoms.reduce((sum, atom) => sum + atom.y, 0) / atoms.length }
-        host.setPreview({ kind: "attachment", a: origin, centre, positions: atoms })
+        host.setPreview({ kind: "attachment", a: atomById(current.mol, attachment.atom)!, centre, positions: atoms })
         return
       }
       host.setPreview({
@@ -319,6 +319,24 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
   }
 }
 
+/**
+ * A bond dragged between an atom and the inside of a ring, either way round, makes a
+ * variable point of attachment rather than a bond: –L– hangs off any of that ring's free
+ * positions. Returns the atom and those positions, or null for an ordinary bond.
+ */
+function attachmentTarget(gesture: Extract<Gesture, { kind: "bond" }>, world: { x: number; y: number }, zoom: number): { atom: number; positions: number[] } | null {
+  const mol = gesture.mol
+  if (gesture.fromId != null) {
+    if (hitOf(mol, world, zoom)) return null
+    const positions = ringPositionsAt(mol, world, gesture.fromId)
+    return positions ? { atom: gesture.fromId, positions } : null
+  }
+  const landed = nearestAtom(mol, world, SNAP_ATOM / zoom)
+  if (!landed) return null
+  const positions = ringPositionsAt(mol, gesture.origin, landed.id)
+  return positions ? { atom: landed.id, positions } : null
+}
+
 export function pointerUp(host: PointerHost, event: { clientX: number; clientY: number; altKey: boolean }) {
   const { run } = host.props
   const current = host.gesture.current
@@ -337,14 +355,10 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
       run([{ op: "draw_bond", from, start: current.origin, ...style }])
       return
     }
-    // Dragged from an atom into the middle of a ring: –L– hangs off any of that ring's free
-    // positions (a variable point of attachment), not off a new atom there.
-    if (current.fromId != null && !hitOf(current.mol, world, zoom)) {
-      const positions = ringPositionsAt(current.mol, world, current.fromId)
-      if (positions) {
-        run([{ op: "set_attachment", atom: current.fromId, to: positions }])
-        return
-      }
+    const attachment = attachmentTarget(current, world, zoom)
+    if (attachment) {
+      run([{ op: "set_attachment", atom: attachment.atom, to: attachment.positions }])
+      return
     }
     const origin = current.fromId == null ? current.origin : atomById(current.mol, current.fromId) ?? current.origin
     const end = bondEnd(origin, world, current.mol, current.fromId, event.altKey, zoom)

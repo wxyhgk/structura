@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { enumerateSteps, type EnumerateOptions, type Enumeration } from "@/chem/markush/enumerate"
-import type { Drawing } from "@/chem/types"
+import { enumerateSteps, type EnumerateOptions, type Enumeration } from "@structura/core/markush"
+import type { Drawing } from "@structura/core/types"
 
 /** Work done per slice before the page gets to paint and handle input again. */
 const SLICE_MS = 12

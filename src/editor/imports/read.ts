@@ -1,7 +1,7 @@
-import { usableRecords } from "@/chem/import"
-import { readSdf } from "@/chem/sdf"
-import { readDocument } from "@/chem/document"
-import type { Drawing, Molecule } from "@/chem/types"
+import { usableRecords } from "@structura/core/import"
+import { readSdf } from "@structura/core/sdf"
+import { readDocument } from "@structura/core/document"
+import type { Drawing, Molecule } from "@structura/core/types"
 import { importNotes } from "@/editor/imports/notes"
 
 /**

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { atomById } from "@/chem/molecule"
-import type { HotTarget, Molecule } from "@/chem/types"
+import { atomById } from "@structura/core/molecule"
+import type { HotTarget, Molecule } from "@structura/core/types"
 import { sameHover } from "@/editor/canvas/targeting"
 import type { HoverTarget } from "@/editor/canvas/types"
 

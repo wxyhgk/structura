@@ -1,5 +1,5 @@
-import { atomById, bondById, componentOf, selectionFromAtoms } from "@/chem/molecule"
-import type { Molecule, Selection } from "@/chem/types"
+import { atomById, bondById, componentOf, selectionFromAtoms } from "@structura/core/molecule"
+import type { Molecule, Selection } from "@structura/core/types"
 import type { HoverTarget } from "./types.ts"
 
 /** What a double click does, as in ChemDraw: on an atom, edit its label; on a bond, select its molecule. */

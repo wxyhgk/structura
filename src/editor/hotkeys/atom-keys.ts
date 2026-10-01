@@ -1,4 +1,4 @@
-import { DOUBLE, HASH, SINGLE, TRIPLE, WEDGE } from "@/chem/constants"
+import { DOUBLE, HASH, SINGLE, TRIPLE, WEDGE } from "@structura/core/constants"
 import type { AtomAction } from "./actions.ts"
 
 /** The keys pressed over an atom. Upper case is Shift. */

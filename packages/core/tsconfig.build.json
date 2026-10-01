@@ -1,0 +1,15 @@
+{
+  // Builds dist/ (JavaScript and type declarations) for projects outside this repository.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": null,
+    "types": [],
+    "module": "esnext",
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src"]
+}

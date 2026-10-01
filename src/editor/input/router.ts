@@ -1,4 +1,4 @@
-import { shortcutToElement } from "@/chem/elements/index"
+import { shortcutToElement } from "@structura/core/elements"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { allCommands, type Commands } from "@/editor/hooks/useCommands"
 import { keyOf, matches } from "@/editor/input/keymap"

@@ -1,4 +1,4 @@
-import type { BondStyle, RingKind } from "@/chem/types"
+import type { BondStyle, RingKind } from "@structura/core/types"
 import type { ToolId } from "@/editor/tools/types"
 
 /**

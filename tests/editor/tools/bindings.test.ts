@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { ELEMENTS } from "../../../src/chem/elements/index.ts"
+import { ELEMENTS } from "@structura/core/elements"
 import { TOOL_KEYS, toolForKey } from "../../../src/editor/tools/bindings.ts"
 
 function describe(key: string): string {

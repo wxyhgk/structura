@@ -1,8 +1,7 @@
-import { neighbors, atomById } from "@/chem/molecule"
-import type { RecipeName } from "@/chem/molecule/recipes"
-import type { Op } from "@/chem/ops"
-import { templateFor } from "@/chem/templates"
-import type { BondStyle, Molecule, RingKind } from "@/chem/types"
+import { neighbors, atomById } from "@structura/core/molecule"
+import type { Op, RecipeName } from "@structura/core/ops"
+import { templateFor } from "@structura/core/templates"
+import type { BondStyle, Molecule, RingKind } from "@structura/core/types"
 
 /** What a key does to an atom, as data, so the key tables stay free of code. */
 export type AtomAction =

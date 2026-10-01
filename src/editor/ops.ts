@@ -1,6 +1,6 @@
-import { bondById } from "@/chem/molecule"
-import type { Op, OpsResult } from "@/chem/ops"
-import type { BondStyle, Molecule } from "@/chem/types"
+import { bondById } from "@structura/core/molecule"
+import type { Op, OpsResult } from "@structura/core/ops"
+import type { BondStyle, Molecule } from "@structura/core/types"
 
 export type RunOptions = {
   keepSelection?: boolean

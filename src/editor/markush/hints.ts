@@ -1,4 +1,4 @@
-import type { Point } from "@/chem/types"
+import type { Point } from "@structura/core/types"
 
 /** Where a line ending inside a ring will attach: the ring's free positions, and their centre. */
 export type RingHintShape = { centre: Point; positions: Point[] }

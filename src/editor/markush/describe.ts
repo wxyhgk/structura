@@ -1,5 +1,5 @@
-import { GROUP_CLASSES } from "@/chem/markush/variables"
-import type { Alternative, BridgeName, Choice, GroupClass } from "@/chem/types"
+import { GROUP_CLASSES } from "@structura/core/markush"
+import type { Alternative, BridgeName, Choice, GroupClass } from "@structura/core/types"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.
 

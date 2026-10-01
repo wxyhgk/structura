@@ -1,5 +1,5 @@
-import type { AtomLabel } from "@/chem/draw"
-import type { Atom } from "@/chem/types"
+import type { AtomLabel } from "@structura/core/draw"
+import type { Atom } from "@structura/core/types"
 
 /**
  * The circle drawn around an atom: centred on its label when it has one and just big

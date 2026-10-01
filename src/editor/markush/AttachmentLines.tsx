@@ -1,6 +1,6 @@
 import { memo } from "react"
-import type { AtomLabel } from "@/chem/draw"
-import type { Attachment, Molecule, Point } from "@/chem/types"
+import type { AtomLabel } from "@structura/core/draw"
+import type { Attachment, Molecule, Point } from "@structura/core/types"
 
 /** How far along the way from `from` to `to` the line leaves a label's box, padded a little. */
 function leaveBox(from: Point, to: Point, label: AtomLabel | undefined): number {

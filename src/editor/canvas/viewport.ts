@@ -1,4 +1,4 @@
-import type { Arrow, Molecule, Point } from "@/chem/types"
+import type { Arrow, Molecule, Point } from "@structura/core/types"
 
 /** How the drawing sits on screen: screen = pan + world × zoom. */
 export type View = { zoom: number; pan: Point }

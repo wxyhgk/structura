@@ -1,5 +1,5 @@
-import type { MolRecord } from "../../chem/sdf.ts"
-import type { Problem } from "../../chem/validate.ts"
+import type { MolRecord } from "@structura/core/sdf"
+import type { Problem } from "@structura/core/validate"
 
 /** What the import dialog shows: whether anything was opened, and one line per problem. */
 export type ImportNotes = { opened: boolean; lines: string[] }

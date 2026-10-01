@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { emptyDrawing } from "../../../src/chem/drawing.ts"
-import { plainFormula } from "../../../src/chem/formula.ts"
-import { dist } from "../../../src/chem/geometry.ts"
-import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors } from "../../../src/chem/molecule.ts"
-import { applyOps, type Op } from "../../../src/chem/ops.ts"
-import type { HotTarget, Molecule } from "../../../src/chem/types.ts"
+import { emptyDrawing } from "@structura/core/drawing"
+import { plainFormula } from "@structura/core/formula"
+import { dist } from "@structura/core/geometry"
+import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors } from "@structura/core/molecule"
+import { applyOps, type Op } from "@structura/core/ops"
+import type { HotTarget, Molecule } from "@structura/core/types"
 import { ATOM_KEYS, BOND_KEYS, hasHotkey, hotkeyOps, selectionHotkeyOps, selectionTips } from "../../../src/editor/hotkeys/lookup.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }

@@ -4,10 +4,10 @@ import {
   molecularWeight,
   plainFormula,
   valenceErrorCount,
-} from "@/chem/formula"
-import { emptyDrawing } from "@/chem/drawing"
-import { toMolfile } from "@/chem/molfile"
-import { applyOps, type Op } from "@/chem/ops"
+} from "@structura/core/formula"
+import { emptyDrawing } from "@structura/core/drawing"
+import { toMolfile } from "@structura/core/molfile"
+import { applyOps, type Op } from "@structura/core/ops"
 import { ROTATE_STEP } from "@/editor/canvas/view"
 import { useHistory } from "@/editor/hooks/useHistory"
 import { selectionHotkeyOps, selectionTips } from "@/editor/hotkeys/lookup"
@@ -20,8 +20,8 @@ import {
   neighbors,
   selectAll,
   selectionFromAtoms,
-} from "@/chem/molecule"
-import type { BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@/chem/types"
+} from "@structura/core/molecule"
+import type { BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
 import type { ToolId } from "@/editor/tools/types"
 
 export function useEditor(initial: Molecule[] | Drawing = []) {

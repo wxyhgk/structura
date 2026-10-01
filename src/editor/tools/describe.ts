@@ -1,5 +1,5 @@
 import type { AtomAction, BondAction } from "@/editor/hotkeys/lookup"
-import type { BondStyle } from "@/chem/types"
+import type { BondStyle } from "@structura/core/types"
 import { BOND_STYLES, RING_NAMES, sameStyle } from "@/editor/tools/catalog"
 
 // What the hover keys do, in words, worked out from the key tables so the help never drifts.

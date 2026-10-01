@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { BondStyle, RingKind } from "@/chem/types"
+import type { BondStyle, RingKind } from "@structura/core/types"
 
 function Frame({ children }: { children: ReactNode }) {
   return (

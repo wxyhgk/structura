@@ -1,4 +1,4 @@
-import { elementAt, type ElementCategory, type ElementRecord } from "@/chem/elements/index"
+import { elementAt, type ElementCategory, type ElementRecord } from "@structura/core/elements"
 import {
   Dialog,
   DialogContent,

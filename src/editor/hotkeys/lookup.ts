@@ -1,7 +1,7 @@
 // Keys pressed over an atom or bond. The tables say what each key means; actions.ts turns
 // that into ops, so a key press is an edit like any other.
-import type { Op } from "@/chem/ops"
-import type { HotTarget, Molecule, Selection } from "@/chem/types"
+import type { Op } from "@structura/core/ops"
+import type { HotTarget, Molecule, Selection } from "@structura/core/types"
 import { atomActionOps, bondActionOps } from "./actions.ts"
 import { ATOM_KEYS } from "./atom-keys.ts"
 import { BOND_KEYS } from "./bond-keys.ts"

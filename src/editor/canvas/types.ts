@@ -1,4 +1,4 @@
-import type { Arrow, Attachment, BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@/chem/types"
+import type { Arrow, Attachment, BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
 import type { ToolId } from "@/editor/tools/types"
 import type { Viewport } from "@/editor/canvas/viewport"
 import type { RingHintShape } from "@/editor/markush/hints"

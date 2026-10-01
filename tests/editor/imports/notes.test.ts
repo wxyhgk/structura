@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { emptyMolecule } from "../../../src/chem/molecule.ts"
+import { emptyMolecule } from "@structura/core/molecule"
 import { importNotes } from "../../../src/editor/imports/notes.ts"
 
 test("import notes are in Chinese and name the record when there are several", () => {

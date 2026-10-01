@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react"
-import type { AtomLabel } from "@/chem/draw"
-import type { Molecule, Selection } from "@/chem/types"
+import type { AtomLabel } from "@structura/core/draw"
+import type { Molecule, Selection } from "@structura/core/types"
 import { atomCircle } from "./rings.ts"
 
 /** A circle on every selected atom and a soft band along every selected bond. */

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { elementColor, paletteElements } from "@/chem/elements/index"
+import { elementColor, paletteElements } from "@structura/core/elements"
 import type { ToolId } from "@/editor/tools/types"
 import { PeriodicTable } from "./PeriodicTable.tsx"
 import { ToolButton } from "./ToolButton.tsx"

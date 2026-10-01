@@ -1,4 +1,4 @@
-"""Builds src/chem/templates/abbreviations.ts from data/abbreviations.json.
+"""Builds packages/core/src/templates/abbreviations.ts from data/abbreviations.json.
 
 Each abbreviation's SMILES marks attachment points with [*:1], [*:2]. RDKit parses it,
 checks the group formula, kekulizes it and lays it out in 2D, so the editor never has to
@@ -8,7 +8,7 @@ scaled so its median bond is one editor bond.
 
 Sugars and dative ligands are left out until the editor supports them.
 
-    .venv/bin/python scripts/build-abbreviations.py > src/chem/templates/abbreviations.ts
+    .venv/bin/python scripts/build-abbreviations.py > packages/core/src/templates/abbreviations.ts
 """
 import json
 import math

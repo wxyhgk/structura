@@ -1,8 +1,8 @@
-import { RING_SIZE } from "@/chem/constants"
-import { ringPointerAt, ringPositionsAt } from "@/chem/markush/pointer"
+import { RING_SIZE } from "@structura/core/constants"
+import { ringPointerAt, ringPositionsAt } from "@structura/core/markush"
 import { ringHint } from "@/editor/markush/hints"
 import { paintOps } from "@/editor/ops"
-import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@/chem/geometry"
+import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@structura/core/geometry"
 import {
   SNAP_ATOM,
   atomById,
@@ -21,7 +21,7 @@ import {
   rotateAtoms,
   scaleAtoms,
   selectionFromAtoms,
-} from "@/chem/molecule"
+} from "@structura/core/molecule"
 import { bondEnd, clampScale, dragIds, frameAt, handleCursor, hitOf, hoverOf, selectionFrame } from "./targeting.ts"
 import type { Gesture, PointerHost } from "./types.ts"
 

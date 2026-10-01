@@ -1,10 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import initRDKitModule from "@rdkit/rdkit"
-import { plainFormula } from "../../src/chem/formula.ts"
-import { usableRecords } from "../../src/chem/import.ts"
-import { toMolfile } from "../../src/chem/molfile.ts"
-import { readMolfile } from "../../src/chem/sdf.ts"
+import { plainFormula } from "@structura/core/formula"
+import { usableRecords } from "@structura/core/import"
+import { toMolfile } from "@structura/core/molfile"
+import { readMolfile } from "@structura/core/sdf"
 import { looksLikeSmiles, smilesLines, smilesToMolfile } from "../../src/rdkit/smiles.ts"
 
 const rdkit = await initRDKitModule()

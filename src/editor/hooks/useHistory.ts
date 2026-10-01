@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react"
-import { emptyHistory, historyReducer, type History, type HistoryAction } from "@/chem/history"
-import type { Drawing, Molecule } from "@/chem/types"
+import { emptyHistory, historyReducer, type History, type HistoryAction } from "@structura/core/history"
+import type { Drawing, Molecule } from "@structura/core/types"
 
 /** A document that starts out holding these molecules, or this saved drawing, with nothing to undo. */
 function startHistory(initial: Molecule[] | Drawing): History {

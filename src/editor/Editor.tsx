@@ -24,8 +24,8 @@ import { toolLabel } from "@/editor/tools/catalog"
 import { useEditor } from "@/editor/useEditor"
 
 export type { EditorHandle, RunResult } from "@/editor/hooks/useEditorHandle"
-export type { EnumerateOptions, Enumeration } from "@/chem/markush/enumerate"
-export type { Op } from "@/chem/ops"
+export type { EnumerateOptions, Enumeration } from "@structura/core/markush"
+export type { Op } from "@structura/core/ops"
 
 export type EditorProps = {
   /** Molfile or SD text to start with; read once, when the editor mounts. */

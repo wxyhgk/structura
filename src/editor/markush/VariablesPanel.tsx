@@ -1,9 +1,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { linkerNames } from "@/chem/markush/sites"
-import { alternativesFromText } from "@/chem/markush/parse"
-import { alternativeProblem, alternativesOf, GROUP_CLASSES, shareSources, sharers, variableLabels } from "@/chem/markush/variables"
-import type { Alternative, Attachment, GroupClass, Molecule, Variable } from "@/chem/types"
+import { alternativeProblem, alternativesFromText, alternativesOf, GROUP_CLASSES, linkerNames, shareSources, sharers, variableLabels } from "@structura/core/markush"
+import type { Alternative, Attachment, GroupClass, Molecule, Variable } from "@structura/core/types"
 import type { Run } from "@/editor/ops"
 import { CLASS_NAMES, describeAlternative } from "./describe.ts"
 

@@ -1,6 +1,6 @@
-import { angleTo, snapAngle } from "@/chem/geometry"
-import { ATOM_HIT, SNAP_ATOM, atomById, atomIdsOfSelection, bondById, bondLengthAt, nearestAtom, nearestBond } from "@/chem/molecule"
-import type { HotTarget, Molecule, Point, Selection } from "@/chem/types"
+import { angleTo, snapAngle } from "@structura/core/geometry"
+import { ATOM_HIT, SNAP_ATOM, atomById, atomIdsOfSelection, bondById, bondLengthAt, nearestAtom, nearestBond } from "@structura/core/molecule"
+import type { HotTarget, Molecule, Point, Selection } from "@structura/core/types"
 import type { HoverTarget } from "./types.ts"
 
 /** Clicking a bond, in screen pixels. */

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import type { Enumeration } from "../../../src/chem/markush/enumerate.ts"
-import { emptyMolecule } from "../../../src/chem/molecule.ts"
+import type { Enumeration } from "@structura/core/markush"
+import { emptyMolecule } from "@structura/core/molecule"
 import { choiceName } from "../../../src/editor/markush/describe.ts"
 import { notesOf } from "../../../src/editor/markush/notes.ts"
 

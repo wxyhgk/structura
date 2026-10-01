@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
-import { atomById, bondsLeaving, componentOf, selectionFromAtoms } from "@/chem/molecule"
-import type { Drawing, Molecule, Selection } from "@/chem/types"
+import { atomById, bondsLeaving, componentOf, selectionFromAtoms } from "@structura/core/molecule"
+import type { Drawing, Molecule, Selection } from "@structura/core/types"
 import { AtomLabelInput } from "@/editor/canvas/AtomLabelInput"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
 import { SceneView } from "@/editor/canvas/SceneView"

@@ -1,16 +1,14 @@
 import { useState } from "react"
 import { isDocument, readDocument } from "@structura/core/document"
 import { usableRecords } from "@structura/core/import"
-import { emptyMolecule } from "@structura/core/molecule"
-import { readMolfile, type MolRecord } from "@structura/core/sdf"
 import type { Molecule } from "@structura/core/types"
+import { looksLikeSmiles, smilesLines, smilesRecords } from "@structura/rdkit"
 import { failure } from "@/editor/browser"
 import type { Viewport } from "@/editor/canvas/viewport"
 import { importNotes, type ImportNotes } from "@/editor/imports/notes"
 import { readMolText } from "@/editor/imports/read"
 import { loadRDKit } from "@/editor/rdkit"
 import type { EditorState } from "@/editor/useEditor"
-import { looksLikeSmiles, smilesLines, smilesToMolfile } from "@/rdkit/smiles"
 
 const RDKIT_FAILED = "RDKit 加载失败，请检查网络后重试。"
 
@@ -36,17 +34,9 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
    * what to tell the user and how many lines were left out.
    */
   async function importSmiles(text: string): Promise<{ lines: string[]; skipped: number }> {
-    const entries = smilesLines(text)
-    if (entries.length === 0) return { lines: ["没有找到 SMILES。"], skipped: 0 }
+    if (smilesLines(text).length === 0) return { lines: ["没有找到 SMILES。"], skipped: 0 }
     const rdkit = await loadRDKit()
-    const records: MolRecord[] = entries.map(({ smiles, name }) => {
-      const result = smilesToMolfile(rdkit, smiles)
-      if ("error" in result) {
-        return { mol: emptyMolecule(), title: smiles, properties: {}, problems: [{ code: "bad-molfile", severity: "error", message: result.error }] }
-      }
-      const read = readMolfile(result.molfile)
-      return { mol: read.mol, title: name || smiles, properties: {}, problems: read.problems }
-    })
+    const records = smilesRecords(rdkit, text)
     const imported = usableRecords(records)
     addBeside(imported.molecules)
     return { lines: importNotes(records, imported.problems), skipped: imported.skipped }

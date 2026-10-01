@@ -1,0 +1,26 @@
+{
+  "name": "@structura/rdkit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Structura 的 RDKit 桥：SMILES 经 RDKit 转成 molfile 和 @structura/core 的分子记录。",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "npm run build -w @structura/core && tsc -p tsconfig.build.json",
+    "test": "node --experimental-strip-types --conditions=source --test \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@rdkit/rdkit": "^2026.3.6",
+    "@structura/core": "*"
+  }
+}

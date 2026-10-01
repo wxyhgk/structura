@@ -64,3 +64,18 @@ if (result.ok) console.log(toSdf(enumerate(result.drawing).molecules))
 - 仓库内（编辑器、测试）通过 `source` 条件直接用 TypeScript 源码，改了立即生效，不用先构建。
 - 给别的项目用：`cd packages/core && npm run build`，生成 `dist/`（JavaScript 和类型声明）。
 - 核心自己的测试在 `packages/core/tests`，`cd packages/core && npm test` 可以单独跑；根目录的 `npm test` 两边一起跑。
+
+## RDKit 桥 `@structura/rdkit`
+
+`packages/rdkit` 把 SMILES 经 RDKit 转成 molfile，再读成 core 的分子记录。RDKit（约 2.4 MB 的 WebAssembly）单独放在这个包里，core 因此保持零依赖。RDKit 模块由调用方加载后传进来：Node 里直接 `await initRDKitModule()`；浏览器里要给出 .wasm 的地址（编辑器的做法见 `src/editor/rdkit.ts`）。
+
+```ts
+import initRDKitModule from "@rdkit/rdkit"
+import { usableRecords } from "@structura/core/import"
+import { smilesRecords } from "@structura/rdkit"
+
+const rdkit = await initRDKitModule()
+const { molecules, skipped } = usableRecords(smilesRecords(rdkit, "CC(=O)Oc1ccccc1C(=O)O aspirin"))
+```
+
+`npm run build` 会先构建 core，再生成自己的 `dist/`。

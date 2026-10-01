@@ -5,7 +5,7 @@ import { plainFormula } from "@structura/core/formula"
 import { usableRecords } from "@structura/core/import"
 import { toMolfile } from "@structura/core/molfile"
 import { readMolfile } from "@structura/core/sdf"
-import { looksLikeSmiles, smilesLines, smilesToMolfile } from "../../src/rdkit/smiles.ts"
+import { looksLikeSmiles, smilesLines, smilesRecords, smilesToMolfile } from "../src/index.ts"
 
 const rdkit = await initRDKitModule()
 rdkit.prefer_coordgen(true)
@@ -76,4 +76,15 @@ test("what RDKit writes but the editor cannot hold is reported, not dropped sile
   const kept = usableRecords([{ ...readMolfile(radical.molfile), properties: {} }])
   assert.equal(kept.molecules.length, 1)
   assert.ok(kept.problems.some((problem) => problem.message.includes("radical")))
+})
+
+test("SMILES text becomes named records, and a bad line a record core leaves out", () => {
+  const records = smilesRecords(rdkit, "CCO ethanol\nC(C\nc1ccccc1")
+  assert.deepEqual(
+    records.map((record) => [record.title, plainFormula(record.mol)]),
+    [["ethanol", "C2H6O"], ["C(C", ""], ["c1ccccc1", "C6H6"]],
+  )
+  const usable = usableRecords(records)
+  assert.equal(usable.molecules.length, 2)
+  assert.equal(usable.skipped, 1)
 })

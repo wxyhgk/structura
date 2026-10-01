@@ -31,3 +31,8 @@ for (const template of ABBREVIATIONS) {
 export function templateFor(text: string): GroupTemplate | undefined {
   return byName.get(text)
 }
+
+/** Every abbreviation by its label, with its formula and how many bonds it takes: for listing them. */
+export function abbreviationList(): Array<{ label: string; formula: string; attachments: number }> {
+  return ABBREVIATIONS.map(({ label, formula, attachments }) => ({ label, formula, attachments }))
+}

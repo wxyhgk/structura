@@ -8,8 +8,8 @@
 
     "module": "preserve",
     "moduleResolution": "bundler",
-    // @structura/core from its TypeScript sources (the "source" export condition).
-    "customConditions": ["source"],
+    // @structura/core from its TypeScript sources (the "structura-source" export condition).
+    "customConditions": ["structura-source"],
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,

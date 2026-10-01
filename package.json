@@ -4,13 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "NODE_OPTIONS=--conditions=structura-source vite --configLoader native",
+    "build": "tsc -b && NODE_OPTIONS=--conditions=structura-source vite --configLoader native build",
     "lint": "oxlint",
-    "test": "node --experimental-strip-types --conditions=source --import ./tests/support/alias.ts --test \"tests/**/*.test.ts\" \"packages/*/tests/**/*.test.ts\"",
-    "preview": "vite preview"
+    "test": "node --experimental-strip-types --conditions=structura-source --import ./tests/support/alias.ts --test \"tests/**/*.test.ts\" \"packages/*/tests/**/*.test.ts\"",
+    "preview": "NODE_OPTIONS=--conditions=structura-source vite --configLoader native preview"
   },
   "dependencies": {
+    "@structura/ai": "*",
     "@structura/core": "*",
     "@structura/rdkit": "*",
     "@fontsource-variable/geist": "^5.3.0",

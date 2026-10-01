@@ -16,6 +16,7 @@ export function VariablesPanel({
   run,
   canEnumerate,
   onEnumerate,
+  onFill,
 }: {
   mol: Molecule
   variables: Record<string, Variable> | undefined
@@ -23,6 +24,8 @@ export function VariablesPanel({
   run: Run
   canEnumerate: boolean
   onEnumerate: () => void
+  /** Opens 从专利文字填写; absent when the host has no way to reach Claude. */
+  onFill?: () => void
 }) {
   const onDrawing = variableLabels(mol)
   const linkers = linkerNames({ molecule: mol, arrows: [], nextArrowId: 0, attachments })
@@ -36,7 +39,12 @@ export function VariablesPanel({
           <VariableRow key={name} name={name} variables={variables} onDrawing={onDrawing.includes(name)} linker={linkers.has(name)} run={run} />
         ))}
       </div>
-      <footer className="border-t border-[#e0e0e0] p-2">
+      <footer className="space-y-1.5 border-t border-[#e0e0e0] p-2">
+        {onFill && (
+          <Button size="sm" variant="outline" className="w-full" onClick={onFill}>
+            从专利文字填写…
+          </Button>
+        )}
         <Button size="sm" className="w-full" disabled={!canEnumerate} onClick={onEnumerate}>
           批量生成化合物…
         </Button>

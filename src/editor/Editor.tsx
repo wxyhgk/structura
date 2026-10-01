@@ -15,6 +15,8 @@ import { ToolPalette } from "@/editor/palette/ToolPalette"
 import { HelpDialog } from "@/editor/shell/dialogs/HelpDialog"
 import { ImportNotesDialog } from "@/editor/shell/dialogs/ImportNotesDialog"
 import { EnumerateDialog } from "@/editor/markush/EnumerateDialog"
+import { FillDialog } from "@/editor/markush/FillDialog"
+import type { FillVariables } from "@/editor/markush/useFill"
 import { VariablesPanel } from "@/editor/markush/VariablesPanel"
 import { SmilesDialog } from "@/editor/shell/dialogs/SmilesDialog"
 import { MenuBar } from "@/editor/shell/MenuBar"
@@ -26,6 +28,7 @@ import { useEditor } from "@/editor/useEditor"
 export type { EditorHandle, RunResult } from "@/editor/hooks/useEditorHandle"
 export type { EnumerateOptions, Enumeration } from "@structura/core/markush"
 export type { Op } from "@structura/core/ops"
+export type { FillVariables } from "@/editor/markush/useFill"
 
 export type EditorProps = {
   /** Molfile or SD text to start with; read once, when the editor mounts. */
@@ -36,13 +39,19 @@ export type EditorProps = {
   onChange?: (molfile: string) => void
   /** The whole drawing as a Structura document, after every edit, including a generic formula's variables. */
   onDocumentChange?: (document: string) => void
+  /**
+   * How to reach Claude for "从专利文字填写": the editor builds the request and checks the
+   * answer; the host sends it to a server holding the API key (@structura/ai/server).
+   * Without it the button is not shown.
+   */
+  fillVariables?: FillVariables
 }
 
 /**
  * Lays out the editor and wires state, commands and input together. It fills its
  * container, so the host decides its size.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange }, ref) {
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, fillVariables }, ref) {
   const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
   const editor = useEditor(initial)
   const canvasRef = useRef<CanvasHandle>(null)
@@ -51,6 +60,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const zoom = useZoom(viewport)
   const [smilesOpen, setSmilesOpen] = useState(false)
   const [enumerateOpen, setEnumerateOpen] = useState(false)
+  const [fillOpen, setFillOpen] = useState(false)
 
   const imports = useImports(editor, viewport)
   const clipboard = selectionClipboard(editor)
@@ -129,6 +139,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               run={editor.run}
               canEnumerate={commands.enumerate.enabled}
               onEnumerate={commands.enumerate.run}
+              onFill={fillVariables ? () => setFillOpen(true) : undefined}
             />
           </div>
 
@@ -143,6 +154,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
 
           <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
           <EnumerateDialog open={enumerateOpen} onOpenChange={setEnumerateOpen} drawing={editor.latest()} colorHetero={editor.colorHetero} />
+          {fillVariables && <FillDialog open={fillOpen} onOpenChange={setFillOpen} drawing={editor.latest()} run={editor.run} fill={fillVariables} />}
           <SmilesDialog
             open={smilesOpen}
             onOpenChange={setSmilesOpen}

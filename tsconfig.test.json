@@ -9,8 +9,8 @@
     /* Node runs the tests directly, stripping types */
     "module": "preserve",
     "moduleResolution": "bundler",
-    // @structura/core is used from its TypeScript sources (the "source" export condition).
-    "customConditions": ["source"],
+    // @structura/core is used from its TypeScript sources (the "structura-source" export condition).
+    "customConditions": ["structura-source"],
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,

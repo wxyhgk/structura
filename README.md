@@ -61,7 +61,7 @@ if (result.ok) console.log(toSdf(enumerate(result.drawing).molecules))
 
 公开的入口写在 `packages/core/package.json` 的 `exports` 里：根入口放常用的，细一些的工具在子路径下（`@structura/core/molecule`、`/draw`、`/markush`、`/ops`、`/types`…）。没列出的内部文件引用不到，TypeScript、Vite 和 Node 都会报错。
 
-- 仓库内（编辑器、测试）通过 `source` 条件直接用 TypeScript 源码，改了立即生效，不用先构建。
+- 仓库内（编辑器、测试）通过 `structura-source` 条件直接用 TypeScript 源码，改了立即生效，不用先构建。
 - 给别的项目用：`cd packages/core && npm run build`，生成 `dist/`（JavaScript 和类型声明）。
 - 核心自己的测试在 `packages/core/tests`，`cd packages/core && npm test` 可以单独跑；根目录的 `npm test` 两边一起跑。
 
@@ -79,3 +79,15 @@ const { molecules, skipped } = usableRecords(smilesRecords(rdkit, "CC(=O)Oc1cccc
 ```
 
 `npm run build` 会先构建 core，再生成自己的 `dist/`。
+
+## AI 填写通式 `@structura/ai`
+
+变量面板里的“从专利文字填写…”：粘贴权利要求中定义变量的文字，Claude（`claude-opus-5-5`）读出每个变量的候选项。回答先经 core 校验：认不出的标签、放不上的候选项、表达不了的部分（取代基范围、“相邻基团可成环”等）都会列出来。逐个勾选后应用，整个填写算一步，可以撤销。
+
+- API key 只在服务器上：在项目根目录的 `.env.local` 里写 `ANTHROPIC_API_KEY=sk-ant-…`，然后重启 `npm run dev`。浏览器端不含 SDK，也拿不到 key。
+- 开发服务器通过 Vite 插件 `structuraAi()`（`@structura/ai/server`）在 `POST /api/ai/variables` 提供接口。别的 Node 服务器可以挂 `fillHandler()`。
+- 嵌入时通过 `<Editor fillVariables={…} />` 指定怎么连到 Claude。不传就不显示这个按钮。
+- 请求被安全分类器拒绝时，会在服务器端自动改用推荐的备用模型（`fallbacks: "default"`）。
+- `@structura/ai` 的根入口可以在浏览器里用：`requestFor` 构建请求，`reviewAnswer` 校验回答，`fillOps` 生成操作。
+
+npm 脚本通过 `NODE_OPTIONS=--conditions=structura-source` 让 Vite 配置直接加载各个包的 TypeScript 源码。

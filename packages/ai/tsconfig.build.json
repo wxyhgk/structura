@@ -1,0 +1,16 @@
+{
+  // Builds dist/ for projects outside this repository, against @structura/core's built dist/.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": null,
+    "types": [],
+    "customConditions": [],
+    "module": "esnext",
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src"]
+}

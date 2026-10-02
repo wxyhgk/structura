@@ -5,8 +5,9 @@ import react from '@vitejs/plugin-react'
 import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
 
 export default defineConfig(({ mode }) => ({
-  // The API key for "AI 填写" is read on the server only (ANTHROPIC_API_KEY, e.g. in .env.local).
-  plugins: [react(), tailwindcss(), structuraAi({ apiKey: loadEnv(mode, import.meta.dirname, 'ANTHROPIC_').ANTHROPIC_API_KEY })],
+  // "AI 填写" runs on this server, with its settings and keys from .env.local or the environment
+  // (AI_PROVIDER, ANTHROPIC_*, OPENAI_*); the browser never sees them.
+  plugins: [react(), tailwindcss(), structuraAi(loadEnv(mode, import.meta.dirname, ['AI_', 'ANTHROPIC_', 'OPENAI_']))],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),

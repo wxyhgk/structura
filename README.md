@@ -82,12 +82,27 @@ const { molecules, skipped } = usableRecords(smilesRecords(rdkit, "CC(=O)Oc1cccc
 
 ## AI 填写通式 `@structura/ai`
 
-变量面板里的“从专利文字填写…”：粘贴权利要求中定义变量的文字，Claude（`claude-opus-5-5`）读出每个变量的候选项。回答先经 core 校验：认不出的标签、放不上的候选项、表达不了的部分（取代基范围、“相邻基团可成环”等）都会列出来。逐个勾选后应用，整个填写算一步，可以撤销。
+变量面板里的“从专利文字填写…”：粘贴权利要求中定义变量的文字，由大模型读出每个变量的候选项。回答先经 core 校验：认不出的标签、放不上的候选项、表达不了的部分（取代基范围、“相邻基团可成环”等）都会列出来。逐个勾选后应用，整个填写算一步，可以撤销。
 
-- API key 只在服务器上：在项目根目录的 `.env.local` 里写 `ANTHROPIC_API_KEY=sk-ant-…`，然后重启 `npm run dev`。浏览器端不含 SDK，也拿不到 key。
-- 开发服务器通过 Vite 插件 `structuraAi()`（`@structura/ai/server`）在 `POST /api/ai/variables` 提供接口。别的 Node 服务器可以挂 `fillHandler()`。
-- 嵌入时通过 `<Editor fillVariables={…} />` 指定怎么连到 Claude。不传就不显示这个按钮。
-- 请求被安全分类器拒绝时，会在服务器端自动改用推荐的备用模型（`fallbacks: "default"`）。
+模型调用只在服务器上进行，key 写在项目根目录的 `.env.local` 里，改完后重启 `npm run dev`：
+
+```sh
+# Claude（默认）
+ANTHROPIC_API_KEY=sk-ant-…
+# ANTHROPIC_BASE_URL=…      # 可选：兼容 Anthropic 接口的中转
+
+# 或 OpenAI Responses API（也可以是任何兼容 Responses API 的服务）
+OPENAI_API_KEY=sk-…
+# OPENAI_BASE_URL=https://…/v1   # 可选：兼容服务的地址
+# OPENAI_MODEL=gpt-5.5           # 可选，默认 gpt-5.5
+
+# 两个 key 都写时默认用 Claude，用这一行指定
+# AI_PROVIDER=openai
+```
+
+- Claude 用 `claude-opus-5-5`，被安全分类器拒绝时服务器端自动改用推荐的备用模型（`fallbacks: "default"`）。OpenAI 用 Responses API 的严格 JSON Schema 输出，并设 `store: false`，专利文字不留在对方服务器上。兼容服务必须支持 `/responses` 和 `json_schema` 严格模式，只支持 Chat Completions 的服务用不了。
+- 浏览器端不含任何 SDK，也拿不到 key。开发服务器通过 Vite 插件 `structuraAi()`（`@structura/ai/server`）在 `POST /api/ai/variables` 提供接口。别的 Node 服务器可以挂 `fillHandler()`。
+- 嵌入时通过 `<Editor fillVariables={…} />` 指定怎么连到模型。不传就不显示这个按钮。
 - `@structura/ai` 的根入口可以在浏览器里用：`requestFor` 构建请求，`reviewAnswer` 校验回答，`fillOps` 生成操作。
 
 npm 脚本通过 `NODE_OPTIONS=--conditions=structura-source` 让 Vite 配置直接加载各个包的 TypeScript 源码。

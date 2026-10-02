@@ -1,11 +1,13 @@
 import type { IncomingMessage, ServerResponse } from "node:http"
-import Anthropic from "@anthropic-ai/sdk"
-import { fillVariables, MAX_TEXT, requestProblem } from "./claude.ts"
+import { MAX_TEXT, requestProblem } from "./check.ts"
+import { providerFrom, type AiEnv } from "./provider.ts"
 import { FILL_PATH, type FillRequest, type FillResult } from "./types.ts"
 
 // The server side: the API key stays here, and the browser only ever sees FillResults.
 
-export { fillVariables, MODEL } from "./claude.ts"
+export { askClaude, CLAUDE_MODEL } from "./claude.ts"
+export { askOpenAI, OPENAI_MODEL } from "./openai.ts"
+export { providerFrom, type AiEnv, type Provider } from "./provider.ts"
 export { FILL_PATH }
 
 async function body(req: IncomingMessage): Promise<string> {
@@ -26,12 +28,11 @@ function send(res: ServerResponse, status: number, result: FillResult) {
 
 /**
  * A Node HTTP handler for POST requests carrying a FillRequest. Mount it on any Node server
- * (Connect, Express, Vite's dev server); `apiKey` defaults to the SDK's own lookup
- * (ANTHROPIC_API_KEY and friends).
+ * (Connect, Express, Vite's dev server). `env` chooses the provider and holds its key (see
+ * AiEnv); it defaults to the process environment.
  */
-export function fillHandler({ apiKey }: { apiKey?: string } = {}) {
-  // Made on first use; without credentials the call itself says so.
-  let client: Anthropic | null = null
+export function fillHandler(env: AiEnv = process.env) {
+  const provider = providerFrom(env)
   return async (req: IncomingMessage, res: ServerResponse) => {
     if (req.method !== "POST") return send(res, 405, { ok: false, error: "只接受 POST" })
     let request: unknown
@@ -42,14 +43,14 @@ export function fillHandler({ apiKey }: { apiKey?: string } = {}) {
     }
     const problem = requestProblem(request)
     if (problem) return send(res, 400, { ok: false, error: problem })
-    client ??= apiKey ? new Anthropic({ apiKey }) : new Anthropic()
-    send(res, 200, await fillVariables(client, request as FillRequest))
+    if ("error" in provider) return send(res, 503, { ok: false, error: provider.error })
+    send(res, 200, await provider.ask(request as FillRequest))
   }
 }
 
 /** A Vite plugin serving fillHandler at FILL_PATH, for `vite` and `vite preview`. */
-export function structuraAi(options: { apiKey?: string } = {}) {
-  const handler = fillHandler(options)
+export function structuraAi(env: AiEnv = process.env) {
+  const handler = fillHandler(env)
   const mount = (server: { middlewares: { use(path: string, handle: typeof handler): unknown } }) => {
     server.middlewares.use(FILL_PATH, handler)
   }

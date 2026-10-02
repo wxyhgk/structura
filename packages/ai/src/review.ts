@@ -3,17 +3,17 @@ import type { Op } from "@structura/core/ops"
 import type { Alternative, Variable } from "@structura/core/types"
 import type { AnswerAlternative, FillAnswer, FillRequest } from "./types.ts"
 
-// Claude's answer checked against what the editor can store, before anything is applied:
+// The model's answer checked against what the editor can store, before anything is applied:
 // each variable's usable definition, and what was dropped and why, for the chemist to read.
 
-/** One variable as Claude read it, checked. */
+/** One variable as the model read it, checked. */
 export type ReviewedVariable = {
   name: string
   /** The sentence that defines it, as quoted. */
   source: string
   /** The definition to apply, or null when nothing usable is left. */
   variable: Variable | null
-  /** Alternatives that were dropped: what Claude wrote and why it cannot be used. */
+  /** Alternatives that were dropped: what the model wrote and why it cannot be used. */
   rejected: Array<{ text: string; why: string }>
   /** Parts of the definition the editor cannot express, as quoted. */
   unrepresented: string[]
@@ -35,7 +35,7 @@ function shown(item: AnswerAlternative): string {
   return item.class
 }
 
-/** Claude's alternative as the editor stores it (nulls left out), or why it cannot be. */
+/** The model's alternative as the editor stores it (nulls left out), or why it cannot be. */
 function converted(item: AnswerAlternative): { add: Alternative[] } | { why: string } {
   if (item.kind === "label") {
     const label: Alternative = { kind: "label", text: item.text.trim() }
@@ -67,7 +67,7 @@ function divalent(alternative: Alternative): boolean {
   return alternative.kind === "class" && GROUP_CLASSES[alternative.class].arity === 2
 }
 
-/** Checks Claude's answer against the editor's rules and the formula it was asked about. */
+/** Checks the model's answer against the editor's rules and the formula it was asked about. */
 export function reviewAnswer(answer: FillAnswer, request: FillRequest): Review {
   const known = new Map(request.variables.map((variable) => [variable.name, variable]))
   const reviewed = answer.variables.map((item): ReviewedVariable => {

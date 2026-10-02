@@ -24,7 +24,7 @@ export function VariablesPanel({
   run: Run
   canEnumerate: boolean
   onEnumerate: () => void
-  /** Opens 从专利文字填写; absent when the host has no way to reach Claude. */
+  /** Opens 从专利文字填写; absent when the host has no way to reach a model. */
   onFill?: () => void
 }) {
   const onDrawing = variableLabels(mol)

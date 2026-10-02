@@ -3,7 +3,7 @@ import { requestFor, reviewAnswer, type FillRequest, type FillResult, type Revie
 import type { Drawing } from "@structura/core/types"
 import { failure } from "@/editor/browser"
 
-/** How the host reaches Claude: the editor hands it the request and checks what comes back. */
+/** How the host reaches the model: the editor hands it the request and checks what comes back. */
 export type FillVariables = (request: FillRequest) => Promise<FillResult>
 
 export type Fill = {

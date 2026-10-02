@@ -40,7 +40,7 @@ export type EditorProps = {
   /** The whole drawing as a Structura document, after every edit, including a generic formula's variables. */
   onDocumentChange?: (document: string) => void
   /**
-   * How to reach Claude for "从专利文字填写": the editor builds the request and checks the
+   * How to reach the model for "从专利文字填写": the editor builds the request and checks the
    * answer; the host sends it to a server holding the API key (@structura/ai/server).
    * Without it the button is not shown.
    */

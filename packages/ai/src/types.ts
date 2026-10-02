@@ -15,14 +15,14 @@ export type FillRequest = {
   }>
 }
 
-/** One alternative as Claude writes it: every field present, null for "not stated". */
+/** One alternative as the model writes it: every field present, null for "not stated". */
 export type AnswerAlternative =
   | { kind: "label"; text: string }
   | { kind: "bond" }
   | { kind: "bridge"; name: string }
   | { kind: "class"; class: GroupClass; min: number | null; max: number | null; substituted: boolean | null }
 
-/** Claude's reading of the text, in the shape of ANSWER_SCHEMA. */
+/** The model's reading of the text, in the shape of ANSWER_SCHEMA. */
 export type FillAnswer = {
   variables: Array<{
     name: string

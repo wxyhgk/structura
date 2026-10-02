@@ -9,7 +9,7 @@ import { describeAlternative } from "./describe.ts"
 import { useFill, type FillVariables } from "./useFill.ts"
 
 /**
- * Patent text in, variable definitions out: Claude reads the text, the answer is checked,
+ * Patent text in, variable definitions out: the model reads the text, the answer is checked,
  * and the chemist ticks what to apply. Nothing changes until 应用, which is one undoable step.
  */
 export function FillDialog({
@@ -58,7 +58,7 @@ export function FillDialog({
       <DialogContent {...overlayMark} className="flex max-h-[88vh] flex-col overflow-hidden sm:max-w-3xl" data-testid="fill-dialog">
         <DialogHeader>
           <DialogTitle>从专利文字填写变量</DialogTitle>
-          <DialogDescription>粘贴权利要求里定义 R1、X、L 等变量的那几段文字，由 Claude 读出每个变量的候选项。应用前可以逐个检查、取舍。</DialogDescription>
+          <DialogDescription>粘贴权利要求里定义 R1、X、L 等变量的那几段文字，由 AI 读出每个变量的候选项。应用前可以逐个检查、取舍。</DialogDescription>
         </DialogHeader>
         <textarea
           className="h-32 w-full shrink-0 resize-y rounded-sm border border-[#d0d0d0] p-2 text-[13px] outline-none focus:border-[#1a73e8]"
@@ -71,7 +71,7 @@ export function FillDialog({
           <Button onClick={start} disabled={!text.trim() || status === "reading"}>
             {status === "reading" ? "正在读取…" : review ? "重新读取" : "读取"}
           </Button>
-          {status === "reading" && <span className="text-[12px] text-[#666]">Claude 正在读，长一点的文字可能要半分钟到一分钟。</span>}
+          {status === "reading" && <span className="text-[12px] text-[#666]">AI 正在读，长一点的文字可能要半分钟到一分钟。</span>}
           {error && <span className="text-[12px] text-[#d1242f]">{error}</span>}
         </div>
         {review && (

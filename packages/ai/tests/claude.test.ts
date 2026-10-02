@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import type Anthropic from "@anthropic-ai/sdk"
-import { fillVariables, MODEL, requestProblem } from "../src/claude.ts"
+import { requestProblem } from "../src/check.ts"
+import { askClaude, CLAUDE_MODEL } from "../src/claude.ts"
 import { SYSTEM_PROMPT, userMessage } from "../src/prompt.ts"
 import { ANSWER_SCHEMA } from "../src/schema.ts"
 import type { FillAnswer, FillRequest } from "../src/types.ts"
@@ -18,9 +19,9 @@ function fakeClient(reply: unknown) {
 test("the answer is asked for in the schema, with the stable prompt cached and the text in the user turn", async () => {
   const answer: FillAnswer = { variables: [], notes: [] }
   const { client, calls } = fakeClient({ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(answer) }] })
-  assert.deepEqual(await fillVariables(client, request), { ok: true, answer })
+  assert.deepEqual(await askClaude(client, request), { ok: true, answer })
   const params = calls[0] as Record<string, any>
-  assert.equal(params.model, MODEL)
+  assert.equal(params.model, CLAUDE_MODEL)
   assert.equal(params.fallbacks, "default")
   assert.deepEqual(params.output_config.format, { type: "json_schema", schema: ANSWER_SCHEMA })
   assert.equal(params.system[0].text, SYSTEM_PROMPT)
@@ -31,7 +32,7 @@ test("the answer is asked for in the schema, with the stable prompt cached and t
 test("a refusal or a cut-off answer is reported, not parsed", async () => {
   for (const stop_reason of ["refusal", "max_tokens"]) {
     const { client } = fakeClient({ stop_reason, content: [] })
-    const result = await fillVariables(client, request)
+    const result = await askClaude(client, request)
     assert.equal(result.ok, false, stop_reason)
   }
 })

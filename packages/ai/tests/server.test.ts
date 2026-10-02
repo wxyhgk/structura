@@ -6,7 +6,7 @@ import { fillHandler } from "../src/server.ts"
 
 /** Serves fillHandler on a free port for the length of `check`. */
 async function serving(check: (url: string) => Promise<void>) {
-  const server = createServer(fillHandler({ apiKey: "sk-ant-test-not-a-key" }))
+  const server = createServer(fillHandler({ ANTHROPIC_API_KEY: "sk-ant-test-not-a-key" }))
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
   try {
     await check(`http://127.0.0.1:${(server.address() as AddressInfo).port}`)

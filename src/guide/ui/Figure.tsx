@@ -10,9 +10,9 @@ const asDrawing = (item: Drawing | Molecule): Drawing => ("molecule" in item ? i
 function Picture({ drawing, caption }: Panel) {
   const src = useMemo(() => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(figureSvg(asDrawing(drawing)))}`, [drawing])
   return (
-    <figure className="flex flex-col items-center gap-1">
-      <img src={src} alt={caption ?? ""} className="max-h-40 max-w-full object-contain" />
-      {caption && <figcaption className="text-center text-[11px] text-[#666]">{caption}</figcaption>}
+    <figure className="flex flex-col items-center gap-2">
+      <img src={src} alt={caption ?? ""} className="max-h-44 max-w-full object-contain" />
+      {caption && <figcaption className="max-w-56 text-center text-[12px] leading-5 text-[#6e6e73]">{caption}</figcaption>}
     </figure>
   )
 }
@@ -23,13 +23,13 @@ function Picture({ drawing, caption }: Panel) {
  */
 export function Figure({ panels, steps }: { panels: Panel[]; steps?: string[] }) {
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-sm border border-[#eee] bg-[#fcfcfc] px-3 py-2">
+    <div className="mb-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-4 rounded-2xl bg-[#f5f5f7] px-6 py-6">
       {panels.map((panel, index) => (
         <Fragment key={index}>
           {index > 0 && steps?.[index - 1] && (
-            <div className="flex flex-col items-center text-[11px] text-[#1a73e8]">
+            <div className="flex flex-col items-center gap-0.5 text-[11px] text-[#6e6e73]">
               <span>{steps[index - 1]}</span>
-              <span className="text-[18px] leading-none">→</span>
+              <span className="text-[20px] leading-none text-[#aeaeb2]">→</span>
             </div>
           )}
           <Picture {...panel} />

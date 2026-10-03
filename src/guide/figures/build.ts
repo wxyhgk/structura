@@ -12,9 +12,12 @@ export function build(ops: Op[], from: Drawing = emptyDrawing()): Drawing {
   return result.drawing
 }
 
-/** A drawing as SVG text, its variable attachments drawn the way the canvas draws them. */
+/**
+ * A drawing as SVG text, its variable attachments drawn the way the canvas draws them, on
+ * no background of its own, so it sits on whatever card the page puts it on.
+ */
 export function figureSvg(drawing: Drawing): string {
-  const svg = sceneToSvg(drawing.molecule, true, drawing.arrows)
+  const svg = sceneToSvg(drawing.molecule, true, drawing.arrows).replace(/<rect [^>]*fill="#ffffff"\s*\/>\n?/, "")
   const atoms = new Map(drawing.molecule.atoms.map((atom) => [atom.id, atom]))
   const lines = (drawing.attachments ?? []).flatMap((attachment) => {
     const from = atoms.get(attachment.atom)

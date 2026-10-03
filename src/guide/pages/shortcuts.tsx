@@ -9,7 +9,7 @@ export const shortcutsPage = definePage({
   body: ({ openShortcuts }) => (
     <>
       <P>所有快捷键分成三组：悬停在原子上、悬停在键上、什么都没悬停（切换工具）。完整的表按当前版本自动生成。</P>
-      <button className="rounded-sm border border-[#9fc3ee] px-2.5 py-1 text-[#1a73e8] hover:bg-[#e8f1fb]" onClick={openShortcuts}>
+      <button className="rounded-full bg-[#0071e3] px-4 py-1.5 text-[13px] text-white hover:bg-[#0077ed]" onClick={openShortcuts}>
         打开完整快捷键表
       </button>
     </>

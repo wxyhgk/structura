@@ -8,17 +8,17 @@ const PLAY_MS = 2600
 
 function Panel({ sketch }: { sketch: PanelSketch }) {
   return (
-    <div className="w-44 shrink-0 self-center rounded-sm border border-[#d0d0d0] bg-[#f7f7f7] p-2 text-[11px]">
-      <div className="mb-1 text-[10px] text-[#888]">通式变量</div>
-      <div className="mb-1 font-[Arial,Helvetica,sans-serif] text-[13px] font-semibold">{sketch.name}</div>
+    <div className="w-44 shrink-0 self-center rounded-xl bg-white p-3 text-[12px] shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+      <div className="mb-1.5 text-[11px] font-medium text-[#8e8e93]">通式变量</div>
+      <div className="mb-1.5 text-[14px] font-semibold">{sketch.name}</div>
       <div className="flex flex-wrap gap-1">
         {sketch.chips.map((chip) => (
-          <span key={chip} className="rounded-sm border border-[#d0d0d0] bg-white px-1.5 py-0.5">
+          <span key={chip} className="rounded-md bg-[#f2f2f7] px-1.5 py-0.5">
             {chip}
           </span>
         ))}
       </div>
-      {sketch.note && <div className="mt-1 text-[#1a73e8]">{sketch.note}</div>}
+      {sketch.note && <div className="mt-1 text-[#8e8e93]">{sketch.note}</div>}
     </div>
   )
 }
@@ -40,34 +40,42 @@ export function Tutorial({ title, steps }: { title: string; steps: TutorialStep[
   }, [playing, at, last])
 
   const step = steps[at]
-  const button = "rounded-sm border border-[#d0d0d0] bg-white px-2 py-0.5 hover:bg-[#f0f0f0] disabled:text-[#bbb] disabled:hover:bg-white"
+  const round = "flex size-8 items-center justify-center rounded-full bg-white text-[18px] leading-none text-[#1d1d1f] shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:bg-[#fafafa] disabled:text-[#c7c7cc] disabled:shadow-none"
   return (
-    <section className="mb-4 rounded-sm border border-[#d8e6f7] bg-[#f8fbff]" data-testid="tutorial">
-      <header className="flex items-center gap-2 border-b border-[#d8e6f7] px-3 py-1.5">
-        <span className="font-semibold text-[#1a4f8f]">跟着做：{title}</span>
-        <span className="ml-auto text-[11px] text-[#5b7fa8]">
-          第 {at + 1} / {steps.length} 步
+    <section className="mb-8 rounded-2xl bg-[#f5f5f7] px-6 pt-5 pb-4" data-testid="tutorial">
+      <header className="flex items-baseline gap-2">
+        <span className="text-[12px] font-medium text-[#8e8e93]">演示</span>
+        <span className="text-[15px] font-semibold">{title}</span>
+        <span className="ml-auto text-[12px] text-[#8e8e93] tabular-nums">
+          {at + 1} / {steps.length}
         </span>
       </header>
-      <div className="flex min-h-48 items-stretch gap-3 px-3 py-2">
-        <div className="flex flex-1 items-center justify-center rounded-sm bg-white">
-          <img src={pictures[at]} alt="" className="max-h-56 max-w-full object-contain" data-testid="tutorial-picture" />
-        </div>
+      <div className="flex min-h-56 items-center justify-center gap-6 py-4">
+        <img src={pictures[at]} alt="" className="max-h-60 max-w-full object-contain" data-testid="tutorial-picture" />
         {step.panel && <Panel sketch={step.panel} />}
       </div>
-      <p className="min-h-10 px-3 pb-2 leading-relaxed" data-testid="tutorial-text">
-        <span className="mr-1 inline-flex size-5 items-center justify-center rounded-full bg-[#1a73e8] text-[11px] font-semibold text-white">{at + 1}</span>
+      <p className="mx-auto min-h-14 max-w-[520px] text-center text-[15px] leading-7" data-testid="tutorial-text">
         <WithKeys text={step.text} />
       </p>
-      <footer className="flex items-center gap-1.5 border-t border-[#d8e6f7] px-3 py-1.5 text-[12px]">
-        <button className={button} disabled={at === 0} onClick={() => setAt(at - 1)}>
-          上一步
+      <footer className="mt-2 flex items-center gap-2">
+        <button className={round} disabled={at === 0} onClick={() => setAt(at - 1)} aria-label="上一步">
+          ‹
         </button>
-        <button className={button} disabled={at === last} onClick={() => setAt(at + 1)}>
-          下一步
+        <button className={round} disabled={at === last} onClick={() => setAt(at + 1)} aria-label="下一步">
+          ›
         </button>
+        <div className="mx-auto flex gap-1.5">
+          {steps.map((_, index) => (
+            <button
+              key={index}
+              className={`h-1.5 rounded-full transition-all ${index === at ? "w-4 bg-[#1d1d1f]" : "w-1.5 bg-[#c7c7cc] hover:bg-[#8e8e93]"}`}
+              onClick={() => setAt(index)}
+              aria-label={`第 ${index + 1} 步`}
+            />
+          ))}
+        </div>
         <button
-          className={button}
+          className="rounded-full bg-white px-3 py-1 text-[12px] text-[#1d1d1f] shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:bg-[#fafafa]"
           onClick={() => {
             if (at === last) setAt(0)
             setPlaying(!playing)
@@ -75,16 +83,6 @@ export function Tutorial({ title, steps }: { title: string; steps: TutorialStep[
         >
           {playing ? "暂停" : at === last ? "从头播放" : "自动播放"}
         </button>
-        <div className="ml-auto flex gap-1">
-          {steps.map((_, index) => (
-            <button
-              key={index}
-              className={`size-2 rounded-full ${index === at ? "bg-[#1a73e8]" : "bg-[#c5d7ee] hover:bg-[#8fb4e3]"}`}
-              onClick={() => setAt(index)}
-              aria-label={`第 ${index + 1} 步`}
-            />
-          ))}
-        </div>
       </footer>
     </section>
   )

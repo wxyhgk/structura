@@ -138,7 +138,6 @@ export function stepPictures(steps: Array<{ drawing: Drawing; marks?: Mark[] }>)
     const marks = (steps[index].marks ?? []).map((mark) => markSvg(steps[index].drawing, mark)).join("")
     return svg
       .replace(/<svg ([^>]*?)width="[^"]*" height="[^"]*" viewBox="[^"]*"/, `<svg $1width="${w}" height="${h}" viewBox="${frame.minX} ${frame.minY} ${w} ${h}"`)
-      .replace(/<rect x="[^"]*" y="[^"]*" width="[^"]*" height="[^"]*" fill="#fff(?:fff)?"\s*\/>/, `<rect x="${frame.minX}" y="${frame.minY}" width="${w}" height="${h}" fill="#fff"/>`)
       .replace("</svg>", `${marks}</svg>`)
   })
 }

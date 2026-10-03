@@ -1,4 +1,6 @@
+import { moveAndTurn } from "../tutorials/drawing.ts"
 import { H, Table } from "../ui/parts.tsx"
+import { Tutorial } from "../ui/Tutorial.tsx"
 import { definePage } from "../types.ts"
 
 export const selectPage = definePage({
@@ -6,13 +8,14 @@ export const selectPage = definePage({
   group: "编辑",
   title: "选择、移动和变换",
   keywords: "选择 套索 框选 全选 双击 移动 旋转 翻转 复制 粘贴 删除 整理 替换 箭头",
-  body: ({ mod }) => (
+  body: (context) => (
     <>
+      <Tutorial title="选中、移动、旋转" steps={moveAndTurn(context)} />
       <H>选择</H>
       <Table
         rows={[
           [`套索 [V] / 框选 [M]`, "拖出范围选中"],
-          [`[${mod}][A]`, "全选"],
+          [`[${context.mod}][A]`, "全选"],
           ["双击键", "选中它所在的整个分子"],
           [`悬停按 [G] / [Tab] / [空格]`, "选中这个原子 / 整个分子"],
           ["选中原子后按键", "每个选中的原子都接上结构（例如全选后按 1）"],
@@ -32,12 +35,12 @@ export const selectPage = definePage({
       <H>编辑</H>
       <Table
         rows={[
-          [`[${mod}][C] / [${mod}][X] / [${mod}][V]`, "复制 / 剪切 / 粘贴（剪贴板里是 MOL 文本）"],
-          [`[${mod}][D]`, "在旁边复制一份"],
+          [`[${context.mod}][C] / [${context.mod}][X] / [${context.mod}][V]`, "复制 / 剪切 / 粘贴（剪贴板里是 MOL 文本）"],
+          [`[${context.mod}][D]`, "在旁边复制一份"],
           [`[Delete] / [Backspace]`, "删除"],
-          [`[${mod}][⇧][K]`, "整理结构（键长、键角、环形状），有选中时只整理选中部分"],
-          [`[${mod}][E]`, "把选中的片段替换成别的基团"],
-          [`[${mod}] + 方向键`, "在选中部分旁加一个反应箭头"],
+          [`[${context.mod}][⇧][K]`, "整理结构（键长、键角、环形状），有选中时只整理选中部分"],
+          [`[${context.mod}][E]`, "把选中的片段替换成别的基团"],
+          [`[${context.mod}] + 方向键`, "在选中部分旁加一个反应箭头"],
         ]}
       />
     </>

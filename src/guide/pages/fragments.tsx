@@ -1,6 +1,8 @@
 import { expanded, pieces } from "../figures/markush.ts"
+import { drawnPiece } from "../tutorials/markush.ts"
 import { Figure } from "../ui/Figure.tsx"
 import { H, P, Steps, Table, Tip } from "../ui/parts.tsx"
+import { Tutorial } from "../ui/Tutorial.tsx"
 import { definePage } from "../types.ts"
 
 export const fragmentsPage = definePage({
@@ -8,8 +10,9 @@ export const fragmentsPage = definePage({
   group: "通式（Markush）",
   title: "画出来的片段",
   keywords: "片段 星号 * 连接点 咔唑 萘撑 嵌套 用选中的结构 NR CMe2",
-  body: () => (
+  body: (context) => (
     <>
+      <Tutorial title="把画出来的片段收进变量" steps={drawnPiece(context)} />
       <P>当候选项是一个具体的结构（咔唑-9-基、2,6-萘撑、N–R5……），缩写表里没有时，就把它画出来。</P>
       <Steps>
         <li>在画布空白处单独画出片段，不要连在通式上。</li>

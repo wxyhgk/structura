@@ -1,6 +1,8 @@
 import { attachment } from "../figures/markush.ts"
+import { anywhereOnRing } from "../tutorials/markush.ts"
 import { Figure } from "../ui/Figure.tsx"
 import { P, Steps, Tip } from "../ui/parts.tsx"
+import { Tutorial } from "../ui/Tutorial.tsx"
 import { definePage } from "../types.ts"
 
 export const attachmentPage = definePage({
@@ -8,8 +10,9 @@ export const attachmentPage = definePage({
   group: "通式（Markush）",
   title: "可变连接（接在环的任意位置）",
   keywords: "可变连接 环中心 任意位置 取代基 虚线 位置",
-  body: ({ mod }) => (
+  body: (context) => (
     <>
+      <Tutorial title="画一个接在环上任意位置的取代基" steps={anywhereOnRing(context)} />
       <P>表示“这个取代基可以接在这个环的任一空位上”。</P>
       <Steps>
         <li>从取代基（或它的起点原子）画一根键，终点拖进环的中心，松开。</li>
@@ -23,7 +26,7 @@ export const attachmentPage = definePage({
         ]}
         steps={["生成", "", ""]}
       />
-      <Tip>想撤掉，按 {mod}Z，或删除这个取代基。</Tip>
+      <Tip>想撤掉，按 {context.mod}Z，或删除这个取代基。</Tip>
     </>
   ),
 })

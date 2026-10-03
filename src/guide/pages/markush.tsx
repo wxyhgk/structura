@@ -1,6 +1,8 @@
 import { formula } from "../figures/markush.ts"
+import { firstVariable } from "../tutorials/markush.ts"
 import { Figure } from "../ui/Figure.tsx"
 import { H, List, P, Steps, Tip } from "../ui/parts.tsx"
+import { Tutorial } from "../ui/Tutorial.tsx"
 import { definePage } from "../types.ts"
 
 export const markushPage = definePage({
@@ -8,8 +10,9 @@ export const markushPage = definePage({
   group: "通式（Markush）",
   title: "变量和候选项",
   keywords: "通式 markush 变量 R1 X L 候选项 卤素 单键 类别 烷基 芳基 共用 相同",
-  body: () => (
+  body: (context) => (
     <>
+      <Tutorial title="定义一个变量并批量生成" steps={firstVariable(context)} />
       <P>专利里的通式：在结构上用 R1、X、L 这类变量占位，再规定每个变量可以是什么。</P>
       <Figure panels={[{ drawing: formula(), caption: "X 在环里，R1 在链的末端，L 在两个原子之间，Ar1 在末端" }]} />
       <H>定义变量</H>

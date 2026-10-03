@@ -30,7 +30,7 @@ export function Tip({ children }: { children: ReactNode }) {
 }
 
 /** Text with keys written in square brackets: "按住 [空格] 拖动" shows 空格 as a key. */
-function WithKeys({ text }: { text: string }) {
+export function WithKeys({ text }: { text: string }) {
   return text.split(/(\[[^\]]+\])/).map((part, index) => (/^\[.+\]$/.test(part) ? <K key={index}>{part.slice(1, -1)}</K> : part))
 }
 

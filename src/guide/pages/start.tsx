@@ -1,6 +1,8 @@
 import { hoverSteps } from "../figures/drawing.ts"
+import { firstMolecule } from "../tutorials/drawing.ts"
 import { Figure } from "../ui/Figure.tsx"
 import { H, K, P, Steps, Table, Tip } from "../ui/parts.tsx"
+import { Tutorial } from "../ui/Tutorial.tsx"
 import { definePage } from "../types.ts"
 
 export const startPage = definePage({
@@ -8,16 +10,17 @@ export const startPage = definePage({
   group: "入门",
   title: "快速上手",
   keywords: "开始 入门 画布 平移 缩放 热点 蓝圈 撤销",
-  body: ({ mod, pressKey }) => (
+  body: (context) => (
     <>
+      <Tutorial title="从空白画布到一个分子" steps={firstMolecule(context)} />
       <P>左边是工具和元素，中间是画布，画了通式变量时右边会出现“通式变量”面板。画布没有边界，视图不会自己移动或缩放。</P>
       <H>移动视图</H>
       <Table
         rows={[
           ["滚轮 / 触控板滑动", "平移"],
           [`按住 [空格] 拖动，或按住中键拖动`, "平移"],
-          [`[${mod}] + 滚轮，或触控板捏合`, "缩放"],
-          [`[${mod}][=] / [${mod}][-] / [${mod}][0]`, "放大 / 缩小 / 实际大小"],
+          [`[${context.mod}] + 滚轮，或触控板捏合`, "缩放"],
+          [`[${context.mod}][=] / [${context.mod}][-] / [${context.mod}][0]`, "放大 / 缩小 / 实际大小"],
         ]}
       />
       <H>最快的画法：悬停再按键</H>
@@ -28,14 +31,14 @@ export const startPage = definePage({
         <li>鼠标移到别的原子上，按键就作用在那里。</li>
       </Steps>
       <Figure
-        panels={hoverSteps(pressKey).map((drawing, index) => ({ drawing, caption: ["单击空白：一根键", "悬停末端按 1", "再悬停新的末端按 A"][index] }))}
+        panels={hoverSteps(context.pressKey).map((drawing, index) => ({ drawing, caption: ["单击空白：一根键", "悬停末端按 1", "再悬停新的末端按 A"][index] }))}
         steps={["按 1", "按 A"]}
       />
       <Tip>屏幕上始终只有一个蓝圈，它就是下一次按键作用的位置：先看鼠标悬停的原子，没有就看热点，再没有就看选中的原子。</Tip>
       <H>出错了</H>
       <Table
         rows={[
-          [`[${mod}][Z] / [${mod}][⇧][Z]`, "撤销 / 重做"],
+          [`[${context.mod}][Z] / [${context.mod}][⇧][Z]`, "撤销 / 重做"],
           ["[Esc]", "取消正在进行的操作 → 取消选中 → 回到套索工具"],
         ]}
       />

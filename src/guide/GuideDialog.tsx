@@ -57,7 +57,7 @@ export function GuideDialog({
             ))}
             {found.length === 0 && <p className="text-[12px] text-[#888]">没有找到。</p>}
           </nav>
-          <article className="min-h-0 flex-1 overflow-y-auto border-l border-[#eee] pl-4 text-[13px] text-[#333]" data-testid="guide-page">
+          <article key={page.id} className="min-h-0 flex-1 overflow-y-auto border-l border-[#eee] pl-4 text-[13px] text-[#333]" data-testid="guide-page">
             <h2 className="mb-3 text-[16px] font-semibold text-[#111]">{page.title}</h2>
             {page.body(host)}
           </article>

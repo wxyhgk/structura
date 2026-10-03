@@ -1,6 +1,8 @@
 import { labelled } from "../figures/drawing.ts"
+import { typingLabels } from "../tutorials/drawing.ts"
 import { Figure } from "../ui/Figure.tsx"
 import { K, P, Table, Tip } from "../ui/parts.tsx"
+import { Tutorial } from "../ui/Tutorial.tsx"
 import { definePage } from "../types.ts"
 
 export const labelsPage = definePage({
@@ -8,8 +10,9 @@ export const labelsPage = definePage({
   group: "绘图",
   title: "原子标签和缩写",
   keywords: "标签 双击 Enter 元素 OH NH2 缩写 Me Ph OMe Boc 同位素 D 13C",
-  body: () => (
+  body: (context) => (
     <>
+      <Tutorial title="输入标签" steps={typingLabels(context)} />
       <P>
         双击原子，或悬停在原子上按 <K>Enter</K>，就能输入标签，回车确定。
       </P>

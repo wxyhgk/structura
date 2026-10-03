@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import type { Op } from "@structura/core/ops"
-import type { Molecule } from "@structura/core/types"
+import type { Drawing, Molecule } from "@structura/core/types"
+import type { Mark } from "./figures/marks.ts"
 
 /** What pressing `key` while hovering atom `atom` does, as ops: the host editor's key table. */
 export type PressKey = (mol: Molecule, atom: number, key: string) => Op[] | null
@@ -36,4 +37,16 @@ export type Page = {
 /** A page, its id kept as the literal it is, so the topics can be typed from the list. */
 export function definePage<const T extends Page>(page: T): T {
   return page
+}
+
+/** A small stand-in for a row of the 通式变量 panel, to show what a step sets there. */
+export type PanelSketch = { name: string; chips: string[]; note?: string }
+
+export type TutorialStep = {
+  /** What to do, in a sentence or two; keys in square brackets ("按 [1]") show as keys. */
+  text: string
+  /** The drawing as it looks once this step is done (or, with marks, just before). */
+  drawing: Drawing
+  marks?: Mark[]
+  panel?: PanelSketch
 }

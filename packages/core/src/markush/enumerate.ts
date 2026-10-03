@@ -1,9 +1,11 @@
 import { elementOf } from "../elements/index.ts"
+import { atomHydrogens } from "../formula.ts"
 import { pointFrom } from "../geometry.ts"
 import { knownLabel } from "../label.ts"
 import { atomById, bondLengthAt, componentOf, neighbors, sproutAngle } from "../molecule.ts"
 import { applyOps, type Op } from "../ops.ts"
 import type { Choice, Drawing, Molecule } from "../types.ts"
+import { validate } from "../validate.ts"
 import { odometer } from "./odometer.ts"
 import { representativesOf } from "./representatives.ts"
 import { siteKind, type SiteKind } from "./sites.ts"
@@ -15,8 +17,15 @@ export type Pick = { name: string; choice: Choice } | { name: string; position: 
 export type Enumeration = {
   /** Concrete molecules, in order, at most `limit` of them. */
   molecules: Molecule[]
+  /** For each molecule, what each variable became and where each attachment went. */
+  picks: Pick[][]
   /** How many combinations the fitting choices allow, generated or not. */
   total: number
+  /**
+   * Attachment placements left out because a candidate position already carries something
+   * other than a placeholder (a ring carbon with a methyl has no hydrogen left to replace).
+   */
+  occupied: number
   /** Per variable, how many class alternatives were left out: all of them, unless representatives stand in. */
   classesLeftOut: Record<string, number>
   /** Per variable, the representatives that stood in for its classes. */
@@ -80,6 +89,20 @@ function leftover(mol: Molecule, defined: Set<string>): string | null {
   return null
 }
 
+/** Atoms with more bonds than their element allows. */
+function overValence(mol: Molecule): Set<number> {
+  return new Set(validate(mol).flatMap((problem) => (problem.code === "valence" ? problem.atoms ?? [] : [])))
+}
+
+/**
+ * Why a built molecule is chemically wrong where the formula was not: an atom over its
+ * valence that was fine before the choices went in. Strain the chemist drew stays theirs.
+ */
+function newlyOverValence(mol: Molecule, before: Set<number>): string | null {
+  const problem = validate(mol).find((item) => item.code === "valence" && item.atoms?.some((id) => !before.has(id)))
+  return problem ? problem.message : null
+}
+
 export type EnumerateOptions = {
   /** Most molecules to build; the total is counted regardless. */
   limit?: number
@@ -87,8 +110,18 @@ export type EnumerateOptions = {
   representatives?: boolean
 }
 
+/** A combination as SD data items: each variable's choice, and each attachment's position. */
+export function pickFields(picks: readonly Pick[]): Record<string, string> {
+  const fields: Record<string, string> = {}
+  for (const pick of picks) {
+    if ("position" in pick) fields[`${pick.name} position`] = pick.position
+    else fields[pick.name] = pick.choice.kind === "label" ? pick.choice.text : pick.choice.kind === "bridge" ? pick.choice.name : "bond"
+  }
+  return fields
+}
+
 /** A way of making every variable attachment's bond, with the placeholders it displaces gone. */
-type Layout = { drawing: Drawing; where: Pick[] } | { error: string; where: Pick[] }
+type Layout = { drawing: Drawing; where: Pick[] } | { error: string; where: Pick[] } | { occupied: true }
 
 /**
  * Every way of placing the variable attachments, one candidate atom each. A candidate
@@ -103,18 +136,18 @@ function* layouts(drawing: Drawing): Generator<Layout> {
     let laid: Drawing = { molecule: drawing.molecule, arrows: [], nextArrowId: drawing.nextArrowId, variables: drawing.variables }
     const where: Pick[] = []
     let error: string | null = null
+    let occupied = false
     for (const [index, attachment] of attachments.entries()) {
       const target = attachment.to[choice[index]]
       const displaced = neighbors(laid.molecule, target).filter((atom) => atom.alias && names.has(atom.alias) && neighbors(laid.molecule, atom.id).length === 1)
       where.push({ name: label(attachment.atom), position: displaced[0]?.alias ?? `#${target}` })
       const placed = attach(laid, attachment.atom, target, displaced.map((atom) => atom.id))
-      if ("error" in placed) {
-        error = placed.error
-        break
-      }
-      laid = placed.drawing
+      if ("occupied" in placed) occupied = true
+      else if ("error" in placed) error = placed.error
+      else laid = placed.drawing
+      if (occupied || error) break
     }
-    yield error ? { error, where } : { drawing: laid, where }
+    yield occupied ? { occupied: true } : error ? { error, where } : { drawing: laid, where }
   }
 }
 
@@ -123,10 +156,12 @@ function* layouts(drawing: Drawing): Generator<Layout> {
  * hub and everything it carries) is carried over to sit one bond out from `target`, the
  * way a substituent would grow there, then bonded and tidied. Nothing else moves.
  */
-function attach(drawing: Drawing, hub: number, target: number, displaced: number[]): { drawing: Drawing } | { error: string } {
+function attach(drawing: Drawing, hub: number, target: number, displaced: number[]): { drawing: Drawing } | { error: string } | { occupied: true } {
   const freed = displaced.length > 0 ? applyOps(drawing, [{ op: "remove", atoms: displaced }]) : { ok: true as const, drawing }
   if (!freed.ok) return { error: freed.error }
   const mol = freed.drawing.molecule
+  // A position is free only while it has a hydrogen to give up.
+  if (atomHydrogens(mol, target).h < 1) return { occupied: true }
   const piece = componentOf(mol, hub)
   if (piece.includes(target)) return { error: `atom #${hub} is already joined to the ring it attaches to` }
   const from = atomById(mol, hub)!
@@ -140,7 +175,7 @@ function attach(drawing: Drawing, hub: number, target: number, displaced: number
 }
 
 /** A laid-out formula ready to build: its sites with the choices that fit, and how many combinations they make. */
-type Plan = { layout: Layout; sites: Site[]; count: number }
+type Plan = { layout: Exclude<Layout, { occupied: true }>; sites: Site[]; count: number }
 
 /**
  * Expands a generic formula into concrete molecules: every placement of each variable
@@ -187,7 +222,9 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
   }
   const result: Enumeration = {
     molecules: [],
+    picks: [],
     total: 0,
+    occupied: 0,
     classesLeftOut,
     represented,
     misfits,
@@ -202,6 +239,11 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
   const unfilled = new Set<string>()
   const plans: Plan[] = []
   for (const layout of layouts(drawing)) {
+    if ("occupied" in layout) {
+      result.occupied++
+      yield result
+      continue
+    }
     if ("error" in layout) {
       result.total++
       plans.push({ layout, sites: [], count: 0 })
@@ -233,6 +275,7 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
       continue
     }
     const laid = layout.drawing
+    const strained = overValence(laid.molecule)
     for (const index of odometer(sites.map((site) => site.choices.length))) {
       if (result.molecules.length + result.failed >= limit) break
       // Relabelling in place first, then links, then swaps, then removals, so no op aims at an
@@ -243,9 +286,11 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
       const ops = [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, choice }) => opsFor(site, choice))
       const picks: Pick[] = [...layout.where, ...chosen.map(({ site, choice }) => ({ name: site.name, choice }))]
       const built = applyOps({ ...laid, variables: undefined }, ops)
-      const wrong = built.ok ? leftover(built.drawing.molecule, defined) : built.error
-      if (built.ok && !wrong) result.molecules.push(built.drawing.molecule)
-      else fail(picks, wrong!)
+      const wrong = built.ok ? (leftover(built.drawing.molecule, defined) ?? newlyOverValence(built.drawing.molecule, strained)) : built.error
+      if (built.ok && !wrong) {
+        result.molecules.push(built.drawing.molecule)
+        result.picks.push(picks)
+      } else fail(picks, wrong!)
       yield result
     }
   }

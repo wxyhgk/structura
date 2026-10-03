@@ -1,9 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "../../src/drawing.ts"
-import { enumerate, enumerateSteps } from "../../src/markush/enumerate.ts"
+import { enumerate, enumerateSteps, pickFields } from "../../src/markush/enumerate.ts"
+import { toSdf } from "../../src/molfile.ts"
 import { applyOps, type Op } from "../../src/ops.ts"
 import type { Drawing, Molecule } from "../../src/types.ts"
+import { validate } from "../../src/validate.ts"
 
 function run(drawing: Drawing, ops: Op[]): Drawing {
   const result = applyOps(drawing, ops)
@@ -55,4 +57,32 @@ test("the total is known before any molecule is built, and stopping keeps what w
   const partial = step.value
   steps.return(partial)
   assert.deepEqual(partial.molecules, whole.molecules.slice(0, 4))
+})
+
+test("an attachment never lands on a ring atom that already carries a group, so no carbon goes over its valence", () => {
+  // Toluene; R1 may sit on any ring atom, the methyl-bearing one included.
+  const drawing = run(emptyDrawing(), [
+    { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" },
+    { op: "add_atom", el: "C", to: 1 },
+    { op: "place_atom", el: "C", at: { x: 200, y: 0 } },
+    { op: "label", atom: 8, text: "R1" },
+    { op: "set_attachment", atom: 8, to: [1, 2, 3, 4, 5, 6] },
+    { op: "set_variable", name: "R1", alternatives: [label("Cl")] },
+  ])
+  const result = enumerate(drawing)
+  assert.equal(result.occupied, 1)
+  assert.equal(result.total, 5)
+  assert.equal(result.molecules.length, 5)
+  assert.equal(result.failed, 0)
+  for (const mol of result.molecules) assert.deepEqual(validate(mol).filter((problem) => problem.code === "valence"), [])
+})
+
+test("each molecule keeps what its variables became, and the SD file carries it", () => {
+  const result = enumerate(formula())
+  assert.equal(result.picks.length, result.molecules.length)
+  const fields = pickFields(result.picks[0])
+  assert.deepEqual(Object.keys(fields).sort(), ["ETU", "L", "L position", "R2"].sort())
+  const sdf = toSdf(result.molecules.slice(0, 1), "Structura", [fields])
+  assert.match(sdf, /> <L position>\n\S+\n\n/)
+  assert.match(sdf, /> <ETU>\nPh\n\n\$\$\$\$\n$/)
 })

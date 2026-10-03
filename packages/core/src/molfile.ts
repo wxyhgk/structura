@@ -97,7 +97,15 @@ export function toMolfile(mol: Molecule, title = "Structura"): string {
   return lines.join("\n")
 }
 
-/** Molecules as one SD file, each record titled with its place in the list ("Structura 1", …). */
-export function toSdf(molecules: readonly Molecule[], title = "Structura"): string {
-  return molecules.map((mol, index) => `${toMolfile(mol, `${title} ${index + 1}`)}$$$$\n`).join("")
+/**
+ * Molecules as one SD file, each record titled with its place in the list ("Structura 1",
+ * …), with `fields[i]` written as record i's data items (> <name> lines).
+ */
+export function toSdf(molecules: readonly Molecule[], title = "Structura", fields: ReadonlyArray<Record<string, string>> = []): string {
+  return molecules
+    .map((mol, index) => {
+      const items = Object.entries(fields[index] ?? {}).map(([name, value]) => `> <${name.replace(/[<>\r\n]/g, " ")}>\n${value.replace(/\r?\n\s*\n/g, "\n")}\n\n`)
+      return `${toMolfile(mol, `${title} ${index + 1}`)}${items.join("")}$$$$\n`
+    })
+    .join("")
 }

@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react"
 import { readDocument, toDocument } from "@structura/core/document"
-import { enumerate, type EnumerateOptions, type Enumeration } from "@structura/core/markush"
+import { enumerate, pickFields, type EnumerateOptions, type Enumeration } from "@structura/core/markush"
 import { toMolfile, toSdf } from "@structura/core/molfile"
 import type { Op, OpsResult } from "@structura/core/ops"
 import { failure } from "@/editor/browser"
@@ -33,7 +33,7 @@ export type EditorHandle = {
    * all or nothing, as one undoable step. Reported to onChange / onDocumentChange like any edit.
    */
   run(ops: Op[]): RunResult
-  /** Expands the generic formula into concrete compounds, with the SD file of those made. */
+  /** Expands the generic formula into concrete compounds, with the SD file of those made (each record carrying its variables' values). */
   enumerate(options?: EnumerateOptions): Enumeration & { sdf: string }
   /** Zooms and pans so the whole drawing is in view. */
   fit(): void
@@ -120,7 +120,7 @@ export function useEditorHandle(
     },
     enumerate(options?: EnumerateOptions) {
       const result = enumerate(editor.latest(), options)
-      return { ...result, sdf: toSdf(result.molecules) }
+      return { ...result, sdf: toSdf(result.molecules, "Structura", result.picks.map(pickFields)) }
     },
     fit,
   }))

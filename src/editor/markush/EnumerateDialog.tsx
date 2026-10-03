@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { sceneToSvg } from "@structura/core/draw"
 import { displayFormula, plainFormula } from "@structura/core/formula"
+import { pickFields } from "@structura/core/markush"
 import { toSdf } from "@structura/core/molfile"
 import type { Drawing, Molecule } from "@structura/core/types"
 import { download } from "@/editor/browser"
@@ -75,7 +76,7 @@ export function EnumerateDialog({
           )}
           <Button
             disabled={!result || result.molecules.length === 0}
-            onClick={() => download("通式展开.sdf", toSdf(result!.molecules), "chemical/x-mdl-sdfile")}
+            onClick={() => download("通式展开.sdf", toSdf(result!.molecules, "Structura", result!.picks.map(pickFields)), "chemical/x-mdl-sdfile")}
           >
             下载 SDF
           </Button>

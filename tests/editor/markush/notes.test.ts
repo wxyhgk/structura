@@ -12,7 +12,9 @@ const named = (text: string) => choiceName(label(text))
 function result(made: number, more: Partial<Enumeration> = {}): Enumeration {
   return {
     molecules: Array.from({ length: made }, () => emptyMolecule()),
+    picks: Array.from({ length: made }, () => []),
     total: made,
+    occupied: 0,
     classesLeftOut: {},
     represented: {},
     misfits: {},

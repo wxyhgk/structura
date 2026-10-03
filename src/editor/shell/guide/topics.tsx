@@ -111,7 +111,7 @@ export const PAGES: Page[] = [
           rows={[
             ["元素", "N、O、S、Cl、Br、Si……"],
             ["带氢的写法", "OH、NH2、SH、HO、H2N 也可以，氢原子数按价态自动计算"],
-            ["缩写", "Me、Et、iPr、tBu、Ph、Bn、Ac、Bz、Boc、Cbz、Fmoc、TMS、TBS、Ts 保留为标签；OMe、CO2Me、CF3、NO2 等其他缩写会展开成原子"],
+            ["缩写", "Me、Et、iPr、tBu、Ph、Bn、Ac、Boc、OMe、CO2Me、CF3、NO2 等，输入后画成真实的原子"],
             ["同位素", "D、T，或在元素前写质量数，如 13C、15N"],
             ["变量（通式）", "R、R1、X、L、Ar1、ETU 这类名字成为占位符，见“通式：变量和候选项”"],
             ["连接点", "* 表示片段接到通式上的位置，见“通式：画出来的片段”"],

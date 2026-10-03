@@ -7,7 +7,7 @@ export const selectPage = definePage({
   id: "select",
   group: "编辑",
   title: "选择、移动和变换",
-  keywords: "选择 套索 框选 全选 双击 移动 旋转 翻转 复制 粘贴 删除 整理 替换 箭头",
+  keywords: "选择 套索 框选 全选 双击 移动 旋转 翻转 复制 粘贴 删除 整理 替换 箭头 连接 合并 吸附 拼接",
   body: (context) => (
     <>
       <Tutorial title="选中、移动、旋转" steps={moveAndTurn(context)} />
@@ -40,6 +40,8 @@ export const selectPage = definePage({
           [`[Delete] / [Backspace]`, "删除"],
           [`[${context.mod}][⇧][K]`, "整理结构（键长、键角、环形状），有选中时只整理选中部分"],
           [`[${context.mod}][E]`, "把选中的片段替换成别的基团"],
+          ["拖到另一个原子上", "拖动原子或键靠近别的原子时会吸附过去（目标出现蓝圈），松开后两个原子合并成一个：键就接上了；把一根键整个放在另一根键上，两根键合并"],
+          [`[${context.mod}][J]`, "选中两个分子各一个原子（或各一根键），连接成一个分子：小的那个移过去，原子合并（键则并在一起）"],
           [`[${context.mod}] + 方向键`, "在选中部分旁加一个反应箭头"],
         ]}
       />

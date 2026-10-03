@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button"
 import { alternativesOf, linkerNames, nestedVariables, variableLabels } from "@structura/core/markush"
 import type { Attachment, Molecule, Variable } from "@structura/core/types"
 import type { Run } from "@/editor/ops"
+import type { GuideTopic } from "@/editor/shell/guide/topics"
+import { HelpLink } from "./HelpLink.tsx"
 import { VariableRow } from "./VariableRow.tsx"
 
 /**
@@ -17,6 +19,7 @@ export function VariablesPanel({
   canEnumerate,
   onEnumerate,
   onFill,
+  onHelp,
 }: {
   mol: Molecule
   /** The selected atoms, which a variable can take in as a drawn piece. */
@@ -28,6 +31,8 @@ export function VariablesPanel({
   onEnumerate: () => void
   /** Opens 从专利文字填写; absent when the host has no way to reach a model. */
   onFill?: () => void
+  /** Opens the user guide on a page. */
+  onHelp: (topic: GuideTopic) => void
 }) {
   const onDrawing = variableLabels(mol)
   const defined = Object.keys(variables ?? {})
@@ -39,7 +44,10 @@ export function VariablesPanel({
   if (names.length === 0) return null
   return (
     <aside className="flex w-64 shrink-0 flex-col border-l border-[#d0d0d0] bg-[#f7f7f7] text-[12px]" data-testid="variables-panel">
-      <header className="border-b border-[#e0e0e0] px-3 py-2 font-medium text-[#333]">通式变量</header>
+      <header className="flex items-center border-b border-[#e0e0e0] px-3 py-2 font-medium text-[#333]">
+        通式变量
+        <HelpLink onClick={() => onHelp("markush")} label="通式变量怎么用" />
+      </header>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {names.map((name) => (
           <VariableRow
@@ -52,6 +60,7 @@ export function VariablesPanel({
             mol={mol}
             selected={selected}
             run={run}
+            onHelp={onHelp}
           />
         ))}
       </div>

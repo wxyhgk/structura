@@ -64,6 +64,7 @@ export function useCommands({
   openFileDialog,
   openSmilesDialog,
   openEnumerate,
+  openGuide,
 }: {
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
@@ -72,6 +73,7 @@ export function useCommands({
   openFileDialog: () => void
   openSmilesDialog: () => void
   openEnumerate: () => void
+  openGuide: () => void
 }) {
   const selected = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
   const perArrow = (make: (direction: Arrow, key: string) => Command) =>
@@ -157,6 +159,7 @@ export function useCommands({
     zoomIn: command("放大", () => viewport.zoomBy(ZOOM_STEP), { keys: [{ key: "=", meta: true }, { key: "+", meta: true }] }),
     zoomOut: command("缩小", () => viewport.zoomBy(1 / ZOOM_STEP), { keys: [{ key: "-", meta: true }] }),
     actualSize: command("实际大小", () => viewport.reset(), { keys: [{ key: "0", meta: true }] }),
+    guide: command("使用说明", openGuide, { keys: [{ key: "F1" }], inFields: true }),
     help: command("快捷键", () => editor.setHelpOpen(true)),
   }
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import {
+  CircleHelp,
   Download,
   FilePlus,
   FlipHorizontal2,
@@ -84,6 +85,10 @@ export function Toolbar({ commands, zoom }: { commands: Commands; zoom: number }
       <Gap />
       <IconButton command={c.remove}>
         <Trash2 />
+      </IconButton>
+      <div className="ml-auto" />
+      <IconButton command={c.guide} label="使用说明 (F1)">
+        <CircleHelp />
       </IconButton>
     </div>
   )

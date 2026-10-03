@@ -93,6 +93,7 @@ export function MenuBar({
         </DropdownMenuCheckboxItem>
       </MenuButton>
       <MenuButton label="帮助">
+        <Item command={c.guide} />
         <Item command={c.help} />
       </MenuButton>
       <div className="ml-auto text-[12px] text-[#777]">未命名</div>

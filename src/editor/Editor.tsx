@@ -13,6 +13,8 @@ import { OverlayScope } from "@/editor/input/overlays"
 import { useEditorInput } from "@/editor/input/useEditorInput"
 import { ToolPalette } from "@/editor/palette/ToolPalette"
 import { HelpDialog } from "@/editor/shell/dialogs/HelpDialog"
+import { GuideDialog } from "@/editor/shell/guide/GuideDialog"
+import type { GuideTopic } from "@/editor/shell/guide/topics"
 import { ImportNotesDialog } from "@/editor/shell/dialogs/ImportNotesDialog"
 import { EnumerateDialog } from "@/editor/markush/EnumerateDialog"
 import { FillDialog } from "@/editor/markush/FillDialog"
@@ -61,6 +63,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const [smilesOpen, setSmilesOpen] = useState(false)
   const [enumerateOpen, setEnumerateOpen] = useState(false)
   const [fillOpen, setFillOpen] = useState(false)
+  const [guide, setGuide] = useState<GuideTopic | null>(null)
 
   const imports = useImports(editor, viewport)
   const clipboard = selectionClipboard(editor)
@@ -72,6 +75,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     openFileDialog: () => fileRef.current?.click(),
     openSmilesDialog: () => setSmilesOpen(true),
     openEnumerate: () => setEnumerateOpen(true),
+    openGuide: () => setGuide("start"),
   })
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
   useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange })
@@ -141,6 +145,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               canEnumerate={commands.enumerate.enabled}
               onEnumerate={commands.enumerate.run}
               onFill={fillVariables ? () => setFillOpen(true) : undefined}
+              onHelp={setGuide}
             />
           </div>
 
@@ -164,6 +169,16 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             loadFailed={imports.rdkitFailed}
           />
           <HelpDialog open={editor.helpOpen} onOpenChange={editor.setHelpOpen} commands={commands} />
+          <GuideDialog
+            topic={guide}
+            onTopic={setGuide}
+            actions={{
+              openShortcuts: () => {
+                setGuide(null)
+                editor.setHelpOpen(true)
+              },
+            }}
+          />
         </div>
       </OverlayScope>
     </TooltipProvider>

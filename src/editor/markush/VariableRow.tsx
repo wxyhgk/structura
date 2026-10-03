@@ -2,9 +2,11 @@ import { useState } from "react"
 import { alternativesFromText, alternativesOf, shareSources, sharers } from "@structura/core/markush"
 import type { Alternative, Molecule, Variable } from "@structura/core/types"
 import type { Run } from "@/editor/ops"
+import type { GuideTopic } from "@/editor/shell/guide/topics"
 import { captureOps } from "./capture.ts"
 import { ClassForm } from "./ClassForm.tsx"
 import { describeAlternative } from "./describe.ts"
+import { HelpLink } from "./HelpLink.tsx"
 import { MoleculeThumb } from "./MoleculeThumb.tsx"
 import { LINKER_PRESETS, PRESETS, shortName } from "./presets.ts"
 
@@ -18,6 +20,7 @@ export function VariableRow({
   mol,
   selected,
   run,
+  onHelp,
 }: {
   name: string
   variables: Record<string, Variable> | undefined
@@ -30,6 +33,7 @@ export function VariableRow({
   mol: Molecule
   selected: number[]
   run: Run
+  onHelp: (topic: GuideTopic) => void
 }) {
   const variable = variables?.[name]
   /** The variable whose list this one shares, if it shares one; its own list is then read-only. */
@@ -182,6 +186,9 @@ export function VariableRow({
               >
                 + 用选中的结构
               </button>
+              <span className="flex items-center">
+                <HelpLink onClick={() => onHelp("fragments")} label="片段怎么画" />
+              </span>
               <button className="rounded-sm px-1.5 py-0.5 text-[#1a73e8] hover:underline" onClick={() => setClassForm("new")}>
                 更多…
               </button>

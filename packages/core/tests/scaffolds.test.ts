@@ -93,3 +93,12 @@ test("a scaffold that cannot go there says why", () => {
   assert.equal(applyOps(emptyDrawing(), [{ op: "add_scaffold", name: "unobtainium" }]).ok, false)
   assert.equal(applyOps(emptyDrawing(), [{ op: "add_scaffold", name: "benzene", as: "a" }, { op: "add_scaffold", name: "benzene", site: "C9", to: "a.C1" }]).ok, false)
 })
+
+test("free sites are the atoms with a hydrogen; the default is the N–H, else the first", async () => {
+  const { defaultSite, freeSites } = await import("../src/scaffolds.ts")
+  assert.equal(defaultSite(scaffoldNamed("carbazole")!), "N9")
+  assert.equal(defaultSite(scaffoldNamed("phenothiazine")!), "N10")
+  assert.equal(defaultSite(scaffoldNamed("dibenzofuran")!), "C1")
+  assert.equal(defaultSite(scaffoldNamed("pyridine")!), "C2")
+  assert.ok(!freeSites(scaffoldNamed("carbazole")!).includes("C4a"))
+})

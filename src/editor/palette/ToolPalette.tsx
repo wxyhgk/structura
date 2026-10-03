@@ -1,11 +1,13 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
+import { scaffoldNamed } from "@structura/core/scaffolds"
 import type { BondStyle, RingKind } from "@structura/core/types"
-import type { ToolId } from "@/editor/tools/types"
+import type { ScaffoldPick, ToolId } from "@/editor/tools/types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { BOND_STYLES, RING_KINDS, sameStyle } from "@/editor/tools/catalog"
 import { keysFor, withKeys } from "@/editor/tools/bindings"
 import { ElementPalette } from "./ElementPalette.tsx"
+import { ScaffoldPicker } from "./ScaffoldPicker.tsx"
 import {
   BondIcon,
   ChainIcon,
@@ -24,10 +26,12 @@ type PaletteProps = {
   bondStyle: BondStyle
   ringKind: RingKind
   atomEl: string
+  scaffold: ScaffoldPick
   onTool: (tool: ToolId) => void
   onBondStyle: (style: BondStyle) => void
   onRingKind: (kind: RingKind) => void
   onElement: (el: string) => void
+  onScaffold: (pick: ScaffoldPick) => void
 }
 
 /** Label with the keys that select this tool, taken from the key table. */
@@ -36,6 +40,7 @@ function toolTitle(label: string, tool: string): string {
 }
 
 export function ToolPalette(props: PaletteProps) {
+  const [pickerOpen, setPickerOpen] = useState(false)
   const simple = (tool: ToolId, label: string, icon: ReactNode) => (
     <ToolButton label={toolTitle(label, tool)} active={props.tool === tool} testId={`tool-${tool}`} onClick={() => props.onTool(tool)}>
       {icon}
@@ -91,6 +96,19 @@ export function ToolPalette(props: PaletteProps) {
           {simple("charge-plus", "正电荷", <ChargePlusIcon />)}
           {simple("charge-minus", "负电荷", <ChargeMinusIcon />)}
         </div>
+        <Separator />
+        <div className="p-1">
+          <button
+            type="button"
+            data-testid="open-scaffolds"
+            className={`mx-0.5 my-1 h-7 w-[calc(100%-4px)] truncate rounded-sm border px-1 text-[12px] ${props.tool === "scaffold" ? "border-[#1a73e8] bg-[#e8f1fb] text-[#1a73e8]" : "border-[#d0d0d0] bg-white hover:bg-[#e8f1fb]"}`}
+            title="模板分子：常用环系，带编号的连接位点"
+            onClick={() => setPickerOpen(true)}
+          >
+            {props.tool === "scaffold" ? scaffoldNamed(props.scaffold.name)?.zh : "模板"}
+          </button>
+        </div>
+        <ScaffoldPicker key={pickerOpen ? "open" : "closed"} open={pickerOpen} onOpenChange={setPickerOpen} current={props.scaffold} onPick={props.onScaffold} />
         <Separator />
         <ElementPalette tool={props.tool} atomEl={props.atomEl} onElement={props.onElement} />
       </ScrollArea>

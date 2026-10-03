@@ -22,7 +22,7 @@ import {
   selectionFromAtoms,
 } from "@structura/core/molecule"
 import type { BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
-import type { ToolId } from "@/editor/tools/types"
+import { DEFAULT_SCAFFOLD, type ScaffoldPick, type ToolId } from "@/editor/tools/types"
 
 export function useEditor(initial: Molecule[] | Drawing = []) {
   const { history, dispatch, latest } = useHistory(initial)
@@ -30,6 +30,7 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
   const [bondStyle, setBondStyle] = useState<BondStyle>({ order: 1, stereo: "none" })
   const [ringKind, setRingKind] = useState<RingKind>("benzene")
   const [atomEl, setAtomEl] = useState("N")
+  const [scaffold, setScaffold] = useState<ScaffoldPick>(DEFAULT_SCAFFOLD)
   const [selection, setSelection] = useState<Selection>(emptySelection())
   const [colorHetero, setColorHetero] = useState(true)
   const [helpOpen, setHelpOpen] = useState(false)
@@ -267,6 +268,7 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
     bondStyle,
     ringKind,
     atomEl,
+    scaffold,
     selection,
     colorHetero,
     helpOpen,
@@ -278,6 +280,11 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
     setBondStyle,
     setRingKind,
     setAtomEl,
+    /** Chooses the scaffold to place, and takes up the template tool. */
+    pickScaffold: (pick: ScaffoldPick) => {
+      setScaffold(pick)
+      setTool("scaffold")
+    },
     setSelection,
     setColorHetero,
     setHelpOpen,

@@ -1,5 +1,5 @@
 import type { Arrow, Attachment, BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
-import type { ToolId } from "@/editor/tools/types"
+import type { ScaffoldPick, ToolId } from "@/editor/tools/types"
 import type { Viewport } from "@/editor/canvas/viewport"
 import type { RingHintShape } from "@/editor/markush/hints"
 import type { Run } from "@/editor/ops"
@@ -27,6 +27,7 @@ export type EditorSlice = {
   tool: ToolId
   bondStyle: BondStyle
   ringKind: RingKind
+  scaffold: ScaffoldPick
   atomEl: string
   selection: Selection
   colorHetero: boolean

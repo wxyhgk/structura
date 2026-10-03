@@ -1,5 +1,6 @@
+import { scaffoldNamed } from "@structura/core/scaffolds"
 import type { BondStyle, RingKind } from "@structura/core/types"
-import type { ToolId } from "@/editor/tools/types"
+import type { ScaffoldPick, ToolId } from "@/editor/tools/types"
 
 // The tools the palette offers: bond styles, ring kinds and their labels.
 export const BOND_STYLES: { style: BondStyle; label: string }[] = [
@@ -27,7 +28,8 @@ export const RING_KINDS: { kind: RingKind; label: string }[] = (
   ["benzene", "cyclohexane", "cyclopentane", "cyclobutane", "cyclopropane", "cycloheptane", "cyclooctane"] as const
 ).map((kind) => ({ kind, label: RING_NAMES[kind] }))
 
-export function toolLabel(tool: ToolId, bond: BondStyle, ring: RingKind, el: string): string {
+export function toolLabel(tool: ToolId, bond: BondStyle, ring: RingKind, el: string, scaffold?: ScaffoldPick): string {
+  if (tool === "scaffold") return `模板 ${scaffoldNamed(scaffold?.name ?? "")?.zh ?? ""}`
   if (tool === "lasso") return "套索"
   if (tool === "marquee") return "框选"
   if (tool === "chain") return "碳链"

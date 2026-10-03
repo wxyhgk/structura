@@ -7,7 +7,7 @@ import { toSdf } from "@structura/core/molfile"
 import type { Drawing, Molecule } from "@structura/core/types"
 import { download } from "@/editor/browser"
 import { useOverlayMark } from "@/editor/input/overlays"
-import { MoleculeThumb } from "./MoleculeThumb.tsx"
+import { MoleculeThumb } from "@/editor/common/MoleculeThumb"
 import { notesOf } from "./notes.ts"
 import { useEnumeration, type EnumerationRun } from "./useEnumeration.ts"
 

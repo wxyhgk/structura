@@ -6,7 +6,7 @@ import { HelpLink, type GuideTopic } from "@/guide"
 import { captureOps } from "./capture.ts"
 import { ClassForm } from "./ClassForm.tsx"
 import { describeAlternative } from "./describe.ts"
-import { MoleculeThumb } from "./MoleculeThumb.tsx"
+import { MoleculeThumb } from "@/editor/common/MoleculeThumb"
 import { LINKER_PRESETS, PRESETS, shortName } from "./presets.ts"
 
 /** One variable in the panel: its alternatives, and the ways to add, share or remove them. */

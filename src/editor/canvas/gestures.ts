@@ -115,6 +115,14 @@ export function pointerDown(host: PointerHost, event: { button: number; clientX:
     else if (!hit) run([{ op: "place_atom", el: atomEl, at: world }])
     return
   }
+  if (tool === "scaffold") {
+    // Empty canvas: put it there; an atom: join it by its site; a bond: fuse it by its edge.
+    const { name, site, edge } = host.props.scaffold
+    if (hit?.type === "atom") run([{ op: "add_scaffold", name, site, to: hit.id }])
+    else if (hit?.type === "bond") run([{ op: "add_scaffold", name, edge, onto: hit.id }])
+    else run([{ op: "add_scaffold", name, at: world }])
+    return
+  }
   if (tool === "ring") {
     if (hit?.type === "atom") {
       run([{ op: "add_ring", atom: hit.id, kind: ringKind }])

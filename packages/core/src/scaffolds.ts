@@ -1,6 +1,7 @@
 // Scaffold templates: common ring systems with IUPAC-numbered sites, for placing whole,
 // joining at an atom (carbazole's N9 to benzene's C1) or fusing at a lettered bond. An
 // agent that reads a structure off a picture can rebuild it as a few add_scaffold ops.
+import { atomHydrogens } from "./formula.ts"
 import { buildScaffold, type Scaffold } from "./scaffolds/build.ts"
 import { SCAFFOLD_SPECS } from "./scaffolds/catalog.ts"
 
@@ -35,4 +36,17 @@ export function scaffoldCatalog(): string {
       return `${scaffold.name} (${scaffold.zh}): atoms ${locants.map(([locant]) => locant).join(" ")}; bonds ${edges.join(" ")}`
     })
     .join("\n")
+}
+
+/** Locants of atoms that can take a substituent (they still carry a hydrogen), in numbering order. */
+export function freeSites(scaffold: Scaffold): string[] {
+  return Object.entries(scaffold.atoms)
+    .filter(([, atom]) => atomHydrogens(scaffold.molecule, atom).h > 0)
+    .map(([locant]) => locant)
+}
+
+/** Where it joins when nothing else is said: its N–H if it has one (carbazole's N9), else its first free site. */
+export function defaultSite(scaffold: Scaffold): string {
+  const sites = freeSites(scaffold)
+  return sites.find((locant) => !locant.startsWith("C")) ?? sites[0]
 }

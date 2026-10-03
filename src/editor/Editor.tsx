@@ -114,6 +114,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               bondStyle={editor.bondStyle}
               ringKind={editor.ringKind}
               atomEl={editor.atomEl}
+              scaffold={editor.scaffold}
+              onScaffold={editor.pickScaffold}
               onTool={editor.setTool}
               onBondStyle={editor.setBondStyle}
               onRingKind={editor.setRingKind}
@@ -126,6 +128,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               tool={editor.tool}
               bondStyle={editor.bondStyle}
               ringKind={editor.ringKind}
+              scaffold={editor.scaffold}
               atomEl={editor.atomEl}
               selection={editor.selection}
               colorHetero={editor.colorHetero}
@@ -150,7 +153,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
           </div>
 
           <StatusBar
-            toolLabel={toolLabel(editor.tool, editor.bondStyle, editor.ringKind, editor.atomEl)}
+            toolLabel={toolLabel(editor.tool, editor.bondStyle, editor.ringKind, editor.atomEl, editor.scaffold)}
             formula={editor.formula}
             weight={editor.weight}
             valenceErrors={editor.valenceErrors}

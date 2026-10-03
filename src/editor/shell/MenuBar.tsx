@@ -80,6 +80,7 @@ export function MenuBar({
         <DropdownMenuSeparator />
         <Item command={c.clean} />
         <Item command={c.replace} />
+        <Item command={c.join} />
         <DropdownMenuSeparator />
         <Item command={c.enumerate} />
       </MenuButton>

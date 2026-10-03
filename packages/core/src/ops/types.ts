@@ -75,7 +75,18 @@ export type Op =
    */
   | { op: "replace"; atoms: Ref[]; with: Replacement; as?: string }
   | { op: "duplicate"; atoms: Ref[] }
-  | { op: "move"; atoms: Ref[]; dx: number; dy: number; ringPointer?: boolean }
+  /**
+   * With `join` (as dragging does), a moved atom that comes down on an atom that stayed
+   * becomes that atom: a bond's end dropped on an atom connects there, a bond laid on a
+   * bond fuses with it.
+   */
+  | { op: "move"; atoms: Ref[]; dx: number; dy: number; ringPointer?: boolean; join?: boolean }
+  /**
+   * Joins two pieces into one: at an atom each (the smaller piece moves so its atom lands
+   * on the other's), or at a bond each (the bonds fuse, the smaller piece on the far side).
+   */
+  | { op: "join"; atoms: [Ref, Ref] }
+  | { op: "join"; bonds: [BondRef, BondRef] }
   | { op: "rotate"; atoms: Ref[]; angle: number; center?: Point }
   | { op: "flip"; atoms: Ref[]; axis: "horizontal" | "vertical" }
   | { op: "scale"; atoms: Ref[]; sx: number; sy: number; center?: Point }

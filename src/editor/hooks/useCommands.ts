@@ -9,6 +9,7 @@ import type { CanvasHandle } from "@/editor/canvas/types"
 import { ROTATE_STEP, ZOOM_STEP } from "@/editor/canvas/view"
 import type { Viewport } from "@/editor/canvas/viewport"
 import { keyLabel, type KeyMatch } from "@/editor/input/keymap"
+import { joinOps } from "@/editor/ops"
 import type { EditorState } from "@/editor/useEditor"
 
 /** One thing the user can do, however it is reached: menu, toolbar or keyboard. */
@@ -127,6 +128,11 @@ export function useCommands({
       // Only a fragment joined to the rest by one bond (or a whole molecule) can be swapped.
       { keys: [{ key: "e", meta: true }], enabled: selected && bondsLeaving(editor.mol, atomIdsOfSelection(editor.mol, editor.selection)).length <= 1 },
     ),
+    // Two atoms (or two bonds) of two pieces selected: join the pieces there.
+    join: command("连接选中的两个原子 / 两根键", () => editor.run(joinOps(editor.mol, editor.selection) ?? []), {
+      keys: [{ key: "j", meta: true }],
+      enabled: joinOps(editor.mol, editor.selection) != null,
+    }),
     enumerate: command("批量生成化合物…", openEnumerate, {
       enabled: placeholders({ molecule: editor.mol, arrows: editor.arrows, nextArrowId: 0, variables: editor.variables }).length > 0,
     }),

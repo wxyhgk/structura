@@ -22,6 +22,7 @@ import {
   scaleAtoms,
   selectionFromAtoms,
 } from "@structura/core/molecule"
+import { snappedMove } from "./moveSnap.ts"
 import { bondEnd, clampScale, dragIds, frameAt, handleCursor, hitOf, hoverOf, selectionFrame } from "./targeting.ts"
 import type { Gesture, PointerHost } from "./types.ts"
 
@@ -306,9 +307,10 @@ export function pointerMove(host: PointerHost, event: { clientX: number; clientY
     return
   }
   if (current.kind === "move") {
-    const dx = world.x - current.origin.x
-    const dy = world.y - current.origin.y
+    // Near an atom that stays, the drag snaps onto it: letting go joins them.
+    const { dx, dy, target } = snappedMove(current.mol, current.ids, world.x - current.origin.x, world.y - current.origin.y, zoom)
     host.setDraft(moveAtoms(current.mol, current.ids, dx, dy))
+    host.assignHover(target != null ? { type: "atom", id: target } : null)
     // A line's end dragged into a ring will attach there.
     const end = current.ids.length === 1 ? atomById(current.mol, current.ids[0]) : undefined
     const positions = end ? ringPointerAt(current.mol, end.id, { x: end.x + dx, y: end.y + dy }) : null
@@ -412,9 +414,8 @@ export function pointerUp(host: PointerHost, event: { clientX: number; clientY: 
     return
   }
   if (current.kind === "move") {
-    const dx = world.x - current.origin.x
-    const dy = world.y - current.origin.y
-    if (dx !== 0 || dy !== 0) run([{ op: "move", atoms: current.ids, dx, dy, ringPointer: true }], { keepSelection: true })
+    const { dx, dy } = snappedMove(current.mol, current.ids, world.x - current.origin.x, world.y - current.origin.y, host.zoom())
+    if (dx !== 0 || dy !== 0) run([{ op: "move", atoms: current.ids, dx, dy, ringPointer: true, join: true }], { keepSelection: true })
     host.setDraft(null)
     return
   }

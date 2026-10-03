@@ -1,4 +1,6 @@
 import {
+  bondById,
+  bondLengthAt,
   boundsCenter,
   commitChain,
   connectPoints,
@@ -11,9 +13,13 @@ import {
   scaleAtoms,
   sprout,
 } from "../molecule.ts"
+import { joinAtoms, joinBonds, landings, mergeLandings } from "../molecule/join.ts"
 import type { Molecule } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"
 import type { Op } from "./types.ts"
+
+/** How close (in bond lengths) a dragged atom must come down on another to become it. */
+const JOIN_REACH = 0.3
 
 /**
  * Ops that move atoms, or draw where the pointer says (joining nearby atoms the way the
@@ -21,8 +27,19 @@ import type { Op } from "./types.ts"
  */
 export function drawingOp(mol: Molecule, op: Op, ctx: Context): Step | null {
   switch (op.op) {
-    case "move":
-      return { mol: moveAtoms(mol, op.atoms.map(ctx.atom), op.dx, op.dy) }
+    case "move": {
+      const ids = op.atoms.map(ctx.atom)
+      const moved = moveAtoms(mol, ids, op.dx, op.dy)
+      return { mol: op.join ? mergeLandings(moved, landings(moved, ids, bondLengthAt(mol) * JOIN_REACH)) : moved }
+    }
+    case "join": {
+      const joined =
+        "bonds" in op
+          ? joinBonds(mol, bondById(mol, ctx.bond(op.bonds[0]))!, bondById(mol, ctx.bond(op.bonds[1]))!)
+          : joinAtoms(mol, ctx.atom(op.atoms[0]), ctx.atom(op.atoms[1]))
+      if ("error" in joined) throw new OpError(`cannot join: ${joined.error}`)
+      return { mol: joined, next: null }
+    }
     case "rotate": {
       const ids = op.atoms.map(ctx.atom)
       const center = op.center ?? boundsCenter(mol, ids)

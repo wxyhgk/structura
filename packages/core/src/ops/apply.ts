@@ -24,7 +24,14 @@ function step(drawing: Drawing, op: Op, ctx: Context, depth: Map<number, number>
  */
 function pointerEnds(op: Op, drawing: Drawing, before: number, ctx: Context): number[] {
   if ((op.op === "draw_bond" || op.op === "draw_chain") && op.ringPointer) return drawing.molecule.atoms.filter((atom) => atom.id >= before).map((atom) => atom.id)
-  if (op.op === "move" && op.ringPointer && op.atoms.length === 1) return [ctx.atom(op.atoms[0])]
+  // A dragged atom that joined another is gone; it points into no ring.
+  if (op.op === "move" && op.ringPointer && op.atoms.length === 1) {
+    try {
+      return [ctx.atom(op.atoms[0])]
+    } catch {
+      return []
+    }
+  }
   return []
 }
 

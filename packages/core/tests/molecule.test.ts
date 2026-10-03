@@ -317,3 +317,55 @@ test("a fused ring never overfills a heteroatom at the ring junction", () => {
   const ammonium = bumpCharge(amine, [junction.id], 1)
   assert.notEqual(fuseRingAt(ammonium, edge.id, "cyclopropane", 1).mol, ammonium, "an ammonium nitrogen does")
 })
+
+test("an atom dragged onto another becomes it: a bond's end dropped on an atom connects there", async () => {
+  const { applyOps } = await import("../src/ops.ts")
+  const { emptyDrawing } = await import("../src/drawing.ts")
+  // Two separate bonds: 1–2 and 3–4. Drag atom 2 onto atom 3.
+  const start = applyOps(emptyDrawing(), [
+    { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
+    { op: "add_atom", el: "C", to: 1, angle: 0 },
+    { op: "place_atom", el: "C", at: { x: 100, y: 0 } },
+    { op: "add_atom", el: "C", to: 3, angle: 0 },
+  ])
+  assert.ok(start.ok)
+  const two = start.drawing.molecule.atoms.find((atom) => atom.id === 2)!
+  const moved = applyOps(start.drawing, [{ op: "move", atoms: [2], dx: 100 - two.x + 3, dy: 2, join: true, ringPointer: true }])
+  assert.ok(moved.ok, moved.ok ? "" : moved.error)
+  assert.equal(moved.drawing.molecule.atoms.length, 3)
+  assert.equal(moved.drawing.molecule.bonds.length, 2)
+  assert.ok(moved.drawing.molecule.bonds.some((bond) => (bond.a === 1 && bond.b === 3) || (bond.a === 3 && bond.b === 1)), "atom 1 is now bonded to atom 3")
+  // Without join, the same drag leaves two atoms on top of each other.
+  const apart = applyOps(start.drawing, [{ op: "move", atoms: [2], dx: 100 - two.x + 3, dy: 2 }])
+  assert.ok(apart.ok)
+  assert.equal(apart.drawing.molecule.atoms.length, 4)
+})
+
+test("a bond laid on another fuses with it, and two pieces join at an atom or a bond", async () => {
+  const { applyOps } = await import("../src/ops.ts")
+  const { emptyDrawing } = await import("../src/drawing.ts")
+  const { plainFormula } = await import("../src/formula.ts")
+  const rings = applyOps(emptyDrawing(), [
+    { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" },
+    { op: "add_ring", at: { x: 300, y: 0 }, kind: "cyclohexane" },
+  ])
+  assert.ok(rings.ok)
+  // Fuse the cyclohexane's bond 7–8 onto benzene's bond 1–2: a bicyclic piece of ten atoms.
+  const fused = applyOps(rings.drawing, [{ op: "join", bonds: [{ between: [1, 2] }, { between: [7, 8] }] }])
+  assert.ok(fused.ok, fused.ok ? "" : fused.error)
+  assert.equal(fused.drawing.molecule.atoms.length, 10)
+  assert.equal(fused.drawing.molecule.bonds.length, 11)
+  assert.equal(plainFormula(fused.drawing.molecule), "C10H12")
+  // Join at an atom: a methyl's carbon onto a ring atom makes toluene's skeleton (spiro-free, one shared atom).
+  const atoms = applyOps(emptyDrawing(), [
+    { op: "add_ring", at: { x: 0, y: 0 }, kind: "cyclohexane" },
+    { op: "place_atom", el: "C", at: { x: 200, y: 0 } },
+    { op: "add_atom", el: "O", to: 7 },
+  ])
+  assert.ok(atoms.ok)
+  const joined = applyOps(atoms.drawing, [{ op: "join", atoms: [1, 7] }])
+  assert.ok(joined.ok, joined.ok ? "" : joined.error)
+  assert.equal(plainFormula(joined.drawing.molecule), "C6H12O")
+  const same = applyOps(atoms.drawing, [{ op: "join", atoms: [1, 2] }])
+  assert.equal(same.ok, false)
+})

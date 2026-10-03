@@ -53,6 +53,8 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
       }
       dispatch({ type: "commit", drawing: result.drawing })
       if (!options.keepSelection) setSelection(emptySelection())
+      // Kept, but only what is still there: a dragged atom that joined another is gone.
+      else setSelection((now) => stillThere(now, result.drawing.molecule))
       return result
     },
     [dispatch, latest],
@@ -306,3 +308,10 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
 
 /** Everything the editor state hook exposes; shell components and hooks take this. */
 export type EditorState = ReturnType<typeof useEditor>
+
+/** The part of a selection whose atoms and bonds the molecule still has. */
+function stillThere(selection: Selection, mol: Molecule): Selection {
+  const atoms = selection.atoms.filter((id) => mol.atoms.some((atom) => atom.id === id))
+  const bonds = selection.bonds.filter((id) => mol.bonds.some((bond) => bond.id === id))
+  return atoms.length === selection.atoms.length && bonds.length === selection.bonds.length ? selection : { atoms, bonds }
+}

@@ -1,6 +1,6 @@
-import { bondById } from "@structura/core/molecule"
+import { bondById, componentOf } from "@structura/core/molecule"
 import type { Op, OpsResult } from "@structura/core/ops"
-import type { BondStyle, Molecule } from "@structura/core/types"
+import type { BondStyle, Molecule, Selection } from "@structura/core/types"
 
 export type RunOptions = {
   keepSelection?: boolean
@@ -25,4 +25,20 @@ export function paintOps(mol: Molecule, bondId: number, style: BondStyle): Op[] 
     return [{ op: "set_bond", bond: bondId, order: bond.order === 1 ? 2 : bond.order === 2 ? 3 : 1 }]
   }
   return [{ op: "set_bond", bond: bondId, order: style.order, stereo: style.stereo, look: style.look ?? null }]
+}
+
+/**
+ * Joining two pieces at what is selected, as ChemDraw does: two bonds of two pieces fuse,
+ * two atoms of two pieces become one. Null for any other selection, or one inside one piece.
+ */
+export function joinOps(mol: Molecule, selection: Selection): Op[] | null {
+  const apart = (a: number, b: number) => !componentOf(mol, a).includes(b)
+  if (selection.bonds.length === 2) {
+    const [first, second] = selection.bonds.map((id) => bondById(mol, id))
+    return first && second && apart(first.a, second.a) ? [{ op: "join", bonds: [first.id, second.id] }] : null
+  }
+  if (selection.bonds.length === 0 && selection.atoms.length === 2 && apart(selection.atoms[0], selection.atoms[1])) {
+    return [{ op: "join", atoms: [selection.atoms[0], selection.atoms[1]] }]
+  }
+  return null
 }

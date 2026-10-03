@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useOverlayMark } from "@/editor/input/overlays"
-import { PAGES, pageOf, type GuideActions, type GuideTopic } from "./topics.tsx"
+import { PAGES, pageOf, type GuideTopic } from "./pages/index.ts"
+import type { GuideHost } from "./types.ts"
 
 /**
  * The user guide, beside the drawing: topics on the left, the chosen page on the right.
@@ -10,14 +10,13 @@ import { PAGES, pageOf, type GuideActions, type GuideTopic } from "./topics.tsx"
 export function GuideDialog({
   topic,
   onTopic,
-  actions,
+  host,
 }: {
   /** The page shown; null when closed. */
   topic: GuideTopic | null
   onTopic: (topic: GuideTopic | null) => void
-  actions: GuideActions
+  host: GuideHost
 }) {
-  const overlayMark = useOverlayMark()
   const [query, setQuery] = useState("")
   const words = query.trim().toLowerCase()
   const found = words ? PAGES.filter((page) => `${page.title} ${page.group} ${page.keywords}`.toLowerCase().includes(words)) : PAGES
@@ -26,7 +25,7 @@ export function GuideDialog({
 
   return (
     <Dialog open={topic != null} onOpenChange={(open) => onTopic(open ? (topic ?? "start") : null)}>
-      <DialogContent {...overlayMark} className="flex h-[80vh] flex-col gap-3 overflow-hidden sm:max-w-4xl" data-testid="guide">
+      <DialogContent {...host.contentProps} className="flex h-[80vh] flex-col gap-3 overflow-hidden sm:max-w-4xl" data-testid="guide">
         <DialogHeader>
           <DialogTitle>使用说明</DialogTitle>
           <DialogDescription>怎么画、怎么改、怎么做通式。左边选主题，或输入关键词查找。</DialogDescription>
@@ -60,7 +59,7 @@ export function GuideDialog({
           </nav>
           <article className="min-h-0 flex-1 overflow-y-auto border-l border-[#eee] pl-4 text-[13px] text-[#333]" data-testid="guide-page">
             <h2 className="mb-3 text-[16px] font-semibold text-[#111]">{page.title}</h2>
-            {page.body(actions)}
+            {page.body(host)}
           </article>
         </div>
       </DialogContent>

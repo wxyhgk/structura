@@ -1,6 +1,6 @@
 import { Fragment, useMemo } from "react"
 import type { Drawing, Molecule } from "@structura/core/types"
-import { figureSvg } from "./figures.ts"
+import { figureSvg } from "../figures/build.ts"
 
 export type Panel = { drawing: Drawing | Molecule; caption?: string }
 

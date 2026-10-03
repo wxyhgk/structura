@@ -13,8 +13,8 @@ import { OverlayScope } from "@/editor/input/overlays"
 import { useEditorInput } from "@/editor/input/useEditorInput"
 import { ToolPalette } from "@/editor/palette/ToolPalette"
 import { HelpDialog } from "@/editor/shell/dialogs/HelpDialog"
-import { GuideDialog } from "@/editor/shell/guide/GuideDialog"
-import type { GuideTopic } from "@/editor/shell/guide/topics"
+import { EditorGuide } from "@/editor/shell/EditorGuide"
+import type { GuideTopic } from "@/guide"
 import { ImportNotesDialog } from "@/editor/shell/dialogs/ImportNotesDialog"
 import { EnumerateDialog } from "@/editor/markush/EnumerateDialog"
 import { FillDialog } from "@/editor/markush/FillDialog"
@@ -169,14 +169,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             loadFailed={imports.rdkitFailed}
           />
           <HelpDialog open={editor.helpOpen} onOpenChange={editor.setHelpOpen} commands={commands} />
-          <GuideDialog
+          <EditorGuide
             topic={guide}
             onTopic={setGuide}
-            actions={{
-              openShortcuts: () => {
-                setGuide(null)
-                editor.setHelpOpen(true)
-              },
+            openShortcuts={() => {
+              setGuide(null)
+              editor.setHelpOpen(true)
             }}
           />
         </div>

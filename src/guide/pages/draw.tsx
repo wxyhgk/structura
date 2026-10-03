@@ -1,0 +1,31 @@
+import { bondKinds, ringWays } from "../figures/drawing.ts"
+import { Figure } from "../ui/Figure.tsx"
+import { Table, Tip } from "../ui/parts.tsx"
+import { definePage } from "../types.ts"
+
+export const drawPage = definePage({
+  id: "draw",
+  group: "绘图",
+  title: "画键、环和链",
+  keywords: "键 单键 双键 三键 楔形 环 苯 碳链 橡皮 电荷 元素 周期表",
+  body: () => (
+    <>
+      <Table
+        rows={[
+          [`键 [B] [X] [1]`, "单击空白画一根水平键；从原子拖出新键；单击已有的键，在单、双、三键之间切换"],
+          [`双键 [2]、三键 [3] [Z]、楔形 [W]、虚楔 [⇧W]、波浪 [Y]`, "同上，画出对应的键（工具栏“键”按钮下也能选）"],
+          [`碳链 [K]`, "按住拖动，画出锯齿形碳链，松开时的长度就是链长"],
+          [`环 [R]`, "单击空白放一个环，单击原子接上一个环，单击键并上一个环；苯 J / A，环丙烷 T，4–8 元环按数字"],
+          [`橡皮 [E]`, "点原子或键删除"],
+          ["正 / 负电荷", "点原子加一个正 / 负电荷"],
+          ["元素面板、周期表", "先点元素，再点空白放原子，或点原子把它换成这种元素"],
+        ]}
+      />
+      <Figure panels={[{ drawing: bondKinds(), caption: "单键、双键、三键、楔形键、虚楔键" }]} />
+      <Figure
+        panels={ringWays().map((drawing, index) => ({ drawing, caption: ["环工具点链的末端：接上一个环", "点键：并环", "点环上的原子：螺环"][index] }))}
+      />
+      <Tip>没有悬停在原子或键上、也没有热点时，单个字母键用来切换工具；悬停在原子上时，同样的键是在这里接结构。完整对照见“快捷键”。</Tip>
+    </>
+  ),
+})

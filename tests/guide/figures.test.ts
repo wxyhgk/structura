@@ -1,10 +1,17 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { plainFormula } from "@structura/core/formula"
-import * as figures from "../../../src/editor/shell/guide/figures.ts"
+import { figureSvg } from "../../src/guide/figures/build.ts"
+import * as drawing from "../../src/guide/figures/drawing.ts"
+import * as markush from "../../src/guide/figures/markush.ts"
+import { hotkeyOps } from "../../src/editor/hotkeys/lookup.ts"
+import type { PressKey } from "../../src/guide/types.ts"
+
+const figures = { ...drawing, ...markush, figureSvg }
+const pressKey: PressKey = (mol, atom, key) => hotkeyOps(mol, { type: "atom", id: atom }, key)
 
 test("every guide figure is built by the real ops, and shows what it says", () => {
-  assert.deepEqual(figures.hoverSteps().map((drawing) => drawing.molecule.atoms.length), [2, 3, 8])
+  assert.deepEqual(figures.hoverSteps(pressKey).map((drawing) => drawing.molecule.atoms.length), [2, 3, 8])
   assert.equal(figures.bondKinds().molecule.bonds.length, 6)
   assert.deepEqual(figures.ringWays().map((drawing) => plainFormula(drawing.molecule)), ["C12H16", "C10H8", "C10H18"])
   assert.equal(plainFormula(figures.labelled().molecule), "C8H11NO2")

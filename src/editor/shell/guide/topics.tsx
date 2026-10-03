@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 import { MOD } from "@/editor/browser"
+import { Figure } from "./Figure.tsx"
+import { attachment, bondKinds, expanded, formula, hoverSteps, labelled, pieces, ringWays } from "./figures.ts"
 import { H, K, List, P, Steps, Table, Tip } from "./parts.tsx"
 
 // The guide's pages: how to do things in the editor, in the order a newcomer needs them.
@@ -54,6 +56,10 @@ export const PAGES: Page[] = [
           <li>刚接上的结构末端会成为“热点”，蓝圈留在那里，鼠标不动可以连按。</li>
           <li>鼠标移到别的原子上，按键就作用在那里。</li>
         </Steps>
+        <Figure
+          panels={hoverSteps().map((drawing, index) => ({ drawing, caption: ["单击空白：一根键", "悬停末端按 1", "再悬停新的末端按 A"][index] }))}
+          steps={["按 1", "按 A"]}
+        />
         <Tip>屏幕上始终只有一个蓝圈，它就是下一次按键作用的位置：先看鼠标悬停的原子，没有就看热点，再没有就看选中的原子。</Tip>
         <H>出错了</H>
         <Table
@@ -83,6 +89,10 @@ export const PAGES: Page[] = [
             ["元素面板、周期表", "先点元素，再点空白放原子，或点原子把它换成这种元素"],
           ]}
         />
+        <Figure panels={[{ drawing: bondKinds(), caption: "单键、双键、三键、楔形键、虚楔键" }]} />
+        <Figure
+          panels={ringWays().map((drawing, index) => ({ drawing, caption: ["环工具点链的末端：接上一个环", "点键：并环", "点环上的原子：螺环"][index] }))}
+        />
         <Tip>没有悬停在原子或键上、也没有热点时，单个字母键用来切换工具；悬停在原子上时，同样的键是在这里接结构。完整对照见“快捷键”。</Tip>
       </>
     ),
@@ -107,6 +117,7 @@ export const PAGES: Page[] = [
             ["连接点", "* 表示片段接到通式上的位置，见“通式：画出来的片段”"],
           ]}
         />
+        <Figure panels={[{ drawing: labelled(), caption: "在苯环的四个取代位上依次输入 OH、NH2、Me、OMe 的结果" }]} />
         <Tip>Ar 是氩元素，不能当变量名；写成 Ar1、Ar2。</Tip>
       </>
     ),
@@ -194,6 +205,7 @@ export const PAGES: Page[] = [
     body: () => (
       <>
         <P>专利里的通式：在结构上用 R1、X、L 这类变量占位，再规定每个变量可以是什么。</P>
+        <Figure panels={[{ drawing: formula(), caption: "X 在环里，R1 在链的末端，L 在两个原子之间，Ar1 在末端" }]} />
         <H>定义变量</H>
         <Steps>
           <li>双击原子，输入变量名（R、R1、X、L、Ar1、ETU……），右边出现“通式变量”面板。</li>
@@ -226,6 +238,13 @@ export const PAGES: Page[] = [
           <li>拖动时会提示可接的位置；画好后用细线连到这些位置。</li>
           <li>批量生成时会逐个位置展开；已经接了别的基团的位置自动跳过。</li>
         </Steps>
+        <Figure
+          panels={[
+            { drawing: attachment().drawing, caption: "R1（= Cl）可接在环的任一空位" },
+            ...attachment().products.map((drawing) => ({ drawing })),
+          ]}
+          steps={["生成", "", ""]}
+        />
         <Tip>想撤掉，按 {MOD}Z，或删除这个取代基。</Tip>
       </>
     ),
@@ -252,9 +271,19 @@ export const PAGES: Page[] = [
             ["环里的原子（X = N–R5、CMe2、SiPh2）", "两个 *，都接在同一个原子上，这个原子会占住环里的位置"],
           ]}
         />
+        <Figure
+          panels={[
+            { drawing: pieces().carbazolyl, caption: "咔唑-9-基：一个 *" },
+            { drawing: pieces().naphthylene, caption: "2,6-萘撑：两端各一个 *" },
+            { drawing: pieces().nR5, caption: "N–R5：两个 * 都在 N 上" },
+          ]}
+        />
         <H>片段里还可以有变量</H>
         <P>片段里的 R5 也是变量，面板里会出现它（标“在片段里”），照常定义。批量生成时一起展开，最多嵌套 4 层；变量不能通过片段包含自己。</P>
         <Tip>选得不对时，面板会说明原因：没有 *、还连着通式、不是一整块等。</Tip>
+        <H>效果</H>
+        <P>上面的通式里 X = O 或 N–R5（R5 = Ph），L = 单键或 2,6-萘撑，Ar1 = 咔唑-9-基，生成：</P>
+        <Figure panels={expanded().map((drawing) => ({ drawing }))} />
       </>
     ),
   },
@@ -271,6 +300,7 @@ export const PAGES: Page[] = [
           <li>选择最多生成多少个（100 / 500 / 2000），组合太多时可以随时点“停止”。</li>
           <li>点“下载 SDF”：每条记录带着各变量的取值和连接位置，可以在其他软件里筛选。</li>
         </Steps>
+        <Figure panels={[{ drawing: formula(), caption: "通式" }, { drawing: expanded()[0], caption: "其中一个化合物" }]} steps={["批量生成"]} />
         <Tip>对话框上方的提示会说明哪些候选项放不下被跳过、哪些位置已被占用、哪些组合生成失败及原因。</Tip>
       </>
     ),

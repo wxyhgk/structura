@@ -80,6 +80,11 @@
       "types": "./dist/sdf.d.ts",
       "default": "./dist/sdf.js"
     },
+    "./scaffolds": {
+      "structura-source": "./src/scaffolds.ts",
+      "types": "./dist/scaffolds.d.ts",
+      "default": "./dist/scaffolds.js"
+    },
     "./templates": {
       "structura-source": "./src/templates.ts",
       "types": "./dist/templates.d.ts",

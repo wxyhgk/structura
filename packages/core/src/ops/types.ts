@@ -63,6 +63,13 @@ export type Op =
       as?: string
     }
   | { op: "add_group"; to: Ref; name: string; as?: string }
+  /**
+   * A scaffold template (carbazole, dibenzofuran, pyridine…, see scaffolds.ts) with
+   * IUPAC-numbered sites: standing free at `at`; joined by its atom `site` ("N9", "C3") to
+   * the atom `to`; or fused by its lettered bond `edge` ("b") onto the bond `onto`. With
+   * `as`, its atoms are named `as` (the first) and `as.C3`, `as.N9`… for later ops.
+   */
+  | { op: "add_scaffold"; name: string; at?: Point; site?: string; to?: Ref; edge?: string; onto?: BondRef; as?: string }
   /** A named group built from an atom: nitro, tert-butyl, carbonyl… (see molecule/recipes.ts). */
   | { op: "add_recipe"; to: Ref; name: RecipeName; as?: string }
   | { op: "label"; atom: Ref; text: string }

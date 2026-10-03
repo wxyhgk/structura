@@ -26,6 +26,7 @@ import { RECIPES } from "../molecule/recipes.ts"
 import { templateFor } from "../templates.ts"
 import type { HotTarget, Molecule } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"
+import { addScaffold } from "./scaffold.ts"
 import { replaceFragment } from "./replace.ts"
 import type { Op } from "./types.ts"
 
@@ -136,6 +137,8 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       ctx.name(op.as, placed.id)
       return { mol: placed.mol, next: { type: "atom", id: placed.id } }
     }
+    case "add_scaffold":
+      return addScaffold(mol, op, ctx)
     case "add_recipe": {
       if (!Object.hasOwn(RECIPES, op.name)) {
         throw new OpError(`"${op.name}" is not a known recipe (${Object.keys(RECIPES).join(", ")})`)

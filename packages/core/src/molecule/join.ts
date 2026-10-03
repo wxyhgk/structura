@@ -71,12 +71,15 @@ function place(mol: Molecule, ids: number[], pivot: Point, angle: number, shift:
   }
 }
 
-/** The two pieces: the one that stays (the larger) and the one that moves, or why they cannot be joined. */
-function pieces(mol: Molecule, a: number, b: number): { stay: number; move: number; moving: number[] } | { error: string } {
+/**
+ * The two pieces: the one that stays and the one that moves, or why they cannot be joined.
+ * The larger stays, or `a`'s with `keepFirst` (a template fused onto a drawing moves, never the drawing).
+ */
+function pieces(mol: Molecule, a: number, b: number, keepFirst = false): { stay: number; move: number; moving: number[] } | { error: string } {
   const sideA = componentOf(mol, a)
   if (sideA.includes(b)) return { error: "they are already in one piece" }
   const sideB = componentOf(mol, b)
-  return sideA.length >= sideB.length ? { stay: a, move: b, moving: sideB } : { stay: b, move: a, moving: sideA }
+  return keepFirst || sideA.length >= sideB.length ? { stay: a, move: b, moving: sideB } : { stay: b, move: a, moving: sideA }
 }
 
 /** Joins two pieces at an atom each: the smaller piece moves so its atom lands on the other's, and the two become one. */
@@ -93,7 +96,21 @@ export function joinAtoms(mol: Molecule, a: number, b: number): Molecule | { err
  * its bond lies on the other's, on the far side of it, and both pairs of atoms merge.
  */
 export function joinBonds(mol: Molecule, a: { a: number; b: number }, b: { a: number; b: number }): Molecule | { error: string } {
-  const split = pieces(mol, a.a, b.a)
+  const fused = fuseBonds(mol, a, b)
+  return "error" in fused ? fused : fused.mol
+}
+
+/**
+ * joinBonds, saying which atom went into which ([moved, stayed] pairs). With `keepFirst`,
+ * `a`'s piece stays put whatever the sizes.
+ */
+export function fuseBonds(
+  mol: Molecule,
+  a: { a: number; b: number },
+  b: { a: number; b: number },
+  keepFirst = false,
+): { mol: Molecule; pairs: Array<[number, number]> } | { error: string } {
+  const split = pieces(mol, a.a, b.a, keepFirst)
   if ("error" in split) return split
   const [stayBond, moveBond] = split.stay === a.a ? [a, b] : [b, a]
   const at = (id: number) => atomById(mol, id)!
@@ -114,5 +131,11 @@ export function joinBonds(mol: Molecule, a: { a: number; b: number }, b: { a: nu
     return { m1, m2, laid, across: stayingSide === 0 || side(centre(rest, laid), t1, t2) !== stayingSide }
   })
   const chosen = tries.find((option) => option.across) ?? tries[0]
-  return mergeAtoms(mergeAtoms(chosen.laid, stayBond.a, chosen.m1), stayBond.b, chosen.m2)
+  return {
+    mol: mergeAtoms(mergeAtoms(chosen.laid, stayBond.a, chosen.m1), stayBond.b, chosen.m2),
+    pairs: [
+      [chosen.m1, stayBond.a],
+      [chosen.m2, stayBond.b],
+    ],
+  }
 }

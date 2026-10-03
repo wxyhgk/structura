@@ -159,3 +159,17 @@ test("selected atoms become a piece of their own, renumbered and centred", () =>
   assert.ok(Math.abs(made.atoms.reduce((sum, atom) => sum + atom.x, 0) / 7) < BOND_LENGTH)
   assert.deepEqual(fragmentVariables(made), [])
 })
+
+test("a formula with drawn pieces survives a save and an open", async () => {
+  const { readDocument, toDocument } = await import("../../src/document.ts")
+  const drawing = run(emptyDrawing(), [
+    { op: "add_ring", at: { x: 0, y: 0 }, size: 5 },
+    { op: "label", atom: 1, text: "X" },
+    { op: "set_variable", name: "R5", alternatives: [label("Me")] },
+    { op: "set_variable", name: "X", alternatives: [label("O"), nR5()] },
+  ])
+  const read = readDocument(toDocument(drawing))
+  assert.ok("drawing" in read, "error" in read ? read.error : "")
+  assert.deepEqual(read.drawing.variables, JSON.parse(JSON.stringify(drawing.variables)))
+  assert.deepEqual(enumerate(read.drawing).molecules.length, 2)
+})

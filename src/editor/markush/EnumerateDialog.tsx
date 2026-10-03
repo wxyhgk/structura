@@ -1,13 +1,13 @@
-import { memo, useMemo, useState } from "react"
+import { memo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { sceneToSvg } from "@structura/core/draw"
 import { displayFormula, plainFormula } from "@structura/core/formula"
 import { pickFields } from "@structura/core/markush"
 import { toSdf } from "@structura/core/molfile"
 import type { Drawing, Molecule } from "@structura/core/types"
 import { download } from "@/editor/browser"
 import { useOverlayMark } from "@/editor/input/overlays"
+import { MoleculeThumb } from "./MoleculeThumb.tsx"
 import { notesOf } from "./notes.ts"
 import { useEnumeration, type EnumerationRun } from "./useEnumeration.ts"
 
@@ -99,12 +99,11 @@ function progressText({ result, status }: EnumerationRun, limit: number): string
   return `共 ${result.total} 种组合，已生成 ${made} 个${shown}${status === "stopped" ? "（已停止）" : ""}。`
 }
 
-/** One generated compound; drawn once, since the molecule it shows never changes. */
+/** One generated compound, numbered, with its formula. */
 const Thumbnail = memo(function Thumbnail({ mol, number, colorHetero }: { mol: Molecule; number: number; colorHetero: boolean }) {
-  const src = useMemo(() => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(sceneToSvg(mol, colorHetero))}`, [mol, colorHetero])
   return (
     <figure className="rounded-sm border border-[#e0e0e0] bg-white p-1 text-center">
-      <img src={src} alt="" className="mx-auto h-24 w-full object-contain" />
+      <MoleculeThumb mol={mol} colorHetero={colorHetero} className="mx-auto h-24 w-full object-contain" />
       <figcaption className="text-[11px] text-[#666]">
         {number}. {displayFormula(plainFormula(mol))}
       </figcaption>

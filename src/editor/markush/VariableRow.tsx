@@ -1,9 +1,11 @@
 import { useState } from "react"
 import { alternativesFromText, alternativesOf, shareSources, sharers } from "@structura/core/markush"
-import type { Alternative, Variable } from "@structura/core/types"
+import type { Alternative, Molecule, Variable } from "@structura/core/types"
 import type { Run } from "@/editor/ops"
+import { captureOps } from "./capture.ts"
 import { ClassForm } from "./ClassForm.tsx"
 import { describeAlternative } from "./describe.ts"
+import { MoleculeThumb } from "./MoleculeThumb.tsx"
 import { LINKER_PRESETS, PRESETS, shortName } from "./presets.ts"
 
 /** One variable in the panel: its alternatives, and the ways to add, share or remove them. */
@@ -11,14 +13,22 @@ export function VariableRow({
   name,
   variables,
   onDrawing,
+  nested,
   linker,
+  mol,
+  selected,
   run,
 }: {
   name: string
   variables: Record<string, Variable> | undefined
   onDrawing: boolean
+  /** A placeholder inside one of the variables' pieces (R5 in Ar = N–R5). */
+  nested: boolean
   /** It sits between two atoms (like L), so it offers a bond and divalent rings. */
   linker: boolean
+  /** The drawing and the atoms selected on it, for taking a drawn piece into the list. */
+  mol: Molecule
+  selected: number[]
   run: Run
 }) {
   const variable = variables?.[name]
@@ -31,6 +41,8 @@ export function VariableRow({
   const [unknown, setUnknown] = useState<string[]>([])
   /** The class form: adding a new class, or editing the one at this index. */
   const [classForm, setClassForm] = useState<"new" | number | null>(null)
+  /** Why the selection could not be taken in as a piece, until the next try. */
+  const [captureProblem, setCaptureProblem] = useState<string | null>(null)
   const alternatives = alternativesOf(variables, name)
 
   /** Shares another variable's list, or (with "") takes a copy of the shared list as its own. */
@@ -54,6 +66,14 @@ export function VariableRow({
     setText(rejected.join(", "))
   }
 
+  /** Moves the selected piece off the canvas into this variable's list, as one step. */
+  function capture() {
+    const result = captureOps(name, alternatives, mol, selected)
+    if ("problem" in result) return setCaptureProblem(result.problem)
+    setCaptureProblem(null)
+    run(result.ops)
+  }
+
   function addClass(item: Alternative) {
     const same = alternatives.some((other) => JSON.stringify(other) === JSON.stringify(item))
     if (!same) save([...alternatives, item])
@@ -64,7 +84,7 @@ export function VariableRow({
       <div className="mb-1 flex items-center gap-2">
         <span className="font-[Arial,Helvetica,sans-serif] text-[14px] font-semibold">{name}</span>
         {!variable && <span className="text-[#b26a00]">未定义</span>}
-        {!onDrawing && <span className="text-[#888]">图上没有</span>}
+        {!onDrawing && <span className="text-[#888]">{nested ? "在片段里" : "图上没有"}</span>}
         {variable && !shared && sharedBy.length === 0 && (
           <button className="ml-auto text-[#888] hover:text-[#d1242f]" onClick={() => save([])} aria-label={`删除 ${name}`}>
             清空
@@ -93,6 +113,7 @@ export function VariableRow({
       <div className="mb-1.5 flex flex-wrap gap-1">
         {alternatives.map((item, index) => (
           <span key={index} className="inline-flex items-center gap-1 rounded-sm border border-[#d0d0d0] bg-white px-1.5 py-0.5" data-testid="alternative">
+            {item.kind === "fragment" && <MoleculeThumb mol={item.molecule} className="h-12 w-16 object-contain" />}
             {item.kind === "class" && !shared ? (
               <button className="hover:text-[#1a73e8]" onClick={() => setClassForm(index)} title="点击修改范围">
                 {describeAlternative(item)}
@@ -125,6 +146,7 @@ export function VariableRow({
             }}
             aria-label={`${name} 的候选项`}
           />
+          {captureProblem && <p className="mt-1 text-[#b26a00]">{captureProblem}</p>}
           {unknown.length > 0 && (
             <p className="mt-1 text-[#b26a00]">
               看不懂：{unknown.join("、")}。只能填元素或缩写（如 H、Cl、CN、Me、Ph）；烷基、芳基这类范围请用下面的类别。
@@ -152,6 +174,14 @@ export function VariableRow({
                   + {shortName(preset)}
                 </button>
               ))}
+              <button
+                className="rounded-sm border border-dashed border-[#9fc3ee] px-1.5 py-0.5 text-[#1a73e8] hover:bg-[#e8f1fb] disabled:border-[#ddd] disabled:text-[#aaa] disabled:hover:bg-transparent"
+                disabled={selected.length === 0}
+                onClick={capture}
+                title="在画布上单独画出片段，用 * 标出接到通式上的位置（双击原子输入 *；连接基画两个 *），选中整个片段后点这里"
+              >
+                + 用选中的结构
+              </button>
               <button className="rounded-sm px-1.5 py-0.5 text-[#1a73e8] hover:underline" onClick={() => setClassForm("new")}>
                 更多…
               </button>

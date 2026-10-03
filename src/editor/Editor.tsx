@@ -134,6 +134,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             />
             <VariablesPanel
               mol={editor.mol}
+              selected={editor.selection.atoms}
               variables={editor.variables}
               attachments={editor.attachments}
               run={editor.run}

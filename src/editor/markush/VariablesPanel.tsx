@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { linkerNames, variableLabels } from "@structura/core/markush"
+import { alternativesOf, linkerNames, nestedVariables, variableLabels } from "@structura/core/markush"
 import type { Attachment, Molecule, Variable } from "@structura/core/types"
 import type { Run } from "@/editor/ops"
 import { VariableRow } from "./VariableRow.tsx"
@@ -10,6 +10,7 @@ import { VariableRow } from "./VariableRow.tsx"
  */
 export function VariablesPanel({
   mol,
+  selected,
   variables,
   attachments,
   run,
@@ -18,6 +19,8 @@ export function VariablesPanel({
   onFill,
 }: {
   mol: Molecule
+  /** The selected atoms, which a variable can take in as a drawn piece. */
+  selected: number[]
   variables: Record<string, Variable> | undefined
   attachments: Attachment[] | undefined
   run: Run
@@ -27,15 +30,29 @@ export function VariablesPanel({
   onFill?: () => void
 }) {
   const onDrawing = variableLabels(mol)
-  const linkers = linkerNames({ molecule: mol, arrows: [], nextArrowId: 0, attachments })
-  const names = [...new Set([...onDrawing, ...Object.keys(variables ?? {})])]
+  const defined = Object.keys(variables ?? {})
+  /** Placeholders inside the variables' pieces (R5 in Ar = N–R5), which need defining too. */
+  const nested = new Set(defined.flatMap((name) => nestedVariables(variables, name)))
+  const pieces = defined.flatMap((name) => alternativesOf(variables, name).flatMap((item) => (item.kind === "fragment" ? [item.molecule] : [])))
+  const linkers = new Set([mol, ...pieces].flatMap((molecule) => [...linkerNames({ molecule, arrows: [], nextArrowId: 0, attachments: molecule === mol ? attachments : undefined })]))
+  const names = [...new Set([...onDrawing, ...defined, ...nested])]
   if (names.length === 0) return null
   return (
     <aside className="flex w-64 shrink-0 flex-col border-l border-[#d0d0d0] bg-[#f7f7f7] text-[12px]" data-testid="variables-panel">
       <header className="border-b border-[#e0e0e0] px-3 py-2 font-medium text-[#333]">通式变量</header>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {names.map((name) => (
-          <VariableRow key={name} name={name} variables={variables} onDrawing={onDrawing.includes(name)} linker={linkers.has(name)} run={run} />
+          <VariableRow
+            key={name}
+            name={name}
+            variables={variables}
+            onDrawing={onDrawing.includes(name)}
+            nested={nested.has(name)}
+            linker={linkers.has(name)}
+            mol={mol}
+            selected={selected}
+            run={run}
+          />
         ))}
       </div>
       <footer className="space-y-1.5 border-t border-[#e0e0e0] p-2">

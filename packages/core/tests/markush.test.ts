@@ -166,6 +166,20 @@ test("L, ETU and Ar1 are variable names; elements and abbreviations are not", ()
   for (const name of ["Me", "Ph", "Cl", "Y", "Ar", "D", "OMe"]) assert.ok(!isVariableName(name), name)
 })
 
+test("OH, NH2, SH, HO and H2N are the element with its hydrogens, not placeholders", () => {
+  for (const name of ["OH", "NH2", "SH", "HO", "H2N"]) assert.ok(!isVariableName(name), name)
+  const typed = applyOps(emptyDrawing(), [
+    { op: "add_atom", el: "C", as: "c" },
+    { op: "add_atom", el: "C", to: "c", as: "o" },
+    { op: "label", atom: "o", text: "OH" },
+    { op: "add_atom", el: "C", to: "c", as: "n" },
+    { op: "label", atom: "n", text: "NH2" },
+  ])
+  assert.ok(typed.ok)
+  assert.deepEqual(typed.drawing.molecule.atoms.map((atom) => [atom.el, atom.alias ?? null]), [["C", null], ["O", null], ["N", null]])
+  assert.equal(plainFormula(typed.drawing.molecule), "CH5NO")
+})
+
 test("a choice that cannot go where its placeholder sits is skipped and reported, never built wrong", () => {
   const cases: Array<[string, Op[], string]> = [
     ["a bond at a branch end", [{ op: "set_variable", name: "R1", alternatives: [label("H"), { kind: "bond" }] }], "R1"],

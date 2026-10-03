@@ -17,12 +17,22 @@ function isotopeLabel(text: string): { el: string; isotope: number } | null {
 }
 
 /**
- * Whether a label means a definite atom or group: an element, a hydrogen isotope or mass
- * number, or a known abbreviation. Anything else would only ever be a placeholder.
+ * "OH", "NH2", "SH", "HO", "H2N": an element written with its hydrogens, as chemists type
+ * a heteroatom. The atom is that element; its hydrogens stay implicit, counted from valence.
+ */
+function hydrideElement(text: string): string | null {
+  const match = /^([A-Z][a-z]?)H\d?$/.exec(text) ?? /^H\d?([A-Z][a-z]?)$/.exec(text)
+  return match && match[1] !== "H" && elementOf(match[1]) ? match[1] : null
+}
+
+/**
+ * Whether a label means a definite atom or group: an element (bare or with its hydrogens),
+ * a hydrogen isotope or mass number, or a known abbreviation. Anything else would only
+ * ever be a placeholder.
  */
 export function knownLabel(text: string): boolean {
   const trimmed = text.trim()
-  return Boolean(templateFor(trimmed) || elementOf(trimmed) || HYDROGEN_ISOTOPES[trimmed] || isotopeLabel(trimmed))
+  return Boolean(templateFor(trimmed) || elementOf(trimmed) || hydrideElement(trimmed) || HYDROGEN_ISOTOPES[trimmed] || isotopeLabel(trimmed))
 }
 
 export function setAtomLabel(mol: Molecule, id: number, text: string): Molecule {
@@ -31,6 +41,9 @@ export function setAtomLabel(mol: Molecule, id: number, text: string): Molecule 
   const template = templateFor(trimmed)
   if (template && GROUP_FIRST.has(trimmed)) return insertGroup(mol, id, template, trimmed)?.mol ?? mol
   if (elementOf(trimmed)) return setElement(mol, [id], trimmed)
+  // A group's own spelling (CH3 for Me) wins over reading it as an element with hydrogens.
+  const hydride = template ? null : hydrideElement(trimmed)
+  if (hydride) return setElement(mol, [id], hydride)
   const heavy = HYDROGEN_ISOTOPES[trimmed] ?? isotopeLabel(trimmed)
   if (heavy) return setIsotope(setElement(mol, [id], heavy.el), [id], heavy.isotope)
   return groupOrAlias(mol, id, trimmed).mol

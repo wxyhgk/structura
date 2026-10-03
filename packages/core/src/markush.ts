@@ -1,5 +1,6 @@
 // Generic (Markush) formulas: what the variables may stand for, and expanding them into compounds.
-export { enumerate, enumerateSteps, pickFields } from "./markush/enumerate.ts"
+export { choiceText, enumerate, enumerateSteps, pickFields } from "./markush/enumerate.ts"
+export { fragmentEnds, fragmentFits, fragmentFormula, fragmentFrom, fragmentProblem, fragmentVariables, placeFragment, STAR } from "./markush/fragments.ts"
 export type { EnumerateOptions, Enumeration, Pick } from "./markush/enumerate.ts"
 export { BRIDGES } from "./markush/bridges.ts"
 export { alternativesFromText } from "./markush/parse.ts"
@@ -11,6 +12,7 @@ export {
   alternativesOf,
   GROUP_CLASSES,
   isVariableName,
+  nestedVariables,
   placeholders,
   shareSources,
   sharers,

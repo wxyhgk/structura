@@ -1,6 +1,10 @@
 import { knownLabel } from "../label.ts"
 import { BRIDGES } from "./bridges.ts"
+import { fragmentProblem, fragmentVariables } from "./fragments.ts"
+import { isVariableName } from "./names.ts"
 import type { Alternative, Drawing, GroupClass, Molecule, Variable } from "../types.ts"
+
+export { isVariableName }
 
 /**
  * How each class's size is counted, and how many atoms a member bonds to: 1 for a group
@@ -22,16 +26,6 @@ export const GROUP_CLASSES: Record<GroupClass, { size: "carbons" | "members"; ar
   heteroarylene: { size: "members", arity: 2 },
 }
 
-/**
- * How a variable's label may look: R, R1, R', X, L, Ar1, ETU… A short name starting with a
- * capital, optionally numbered, that is no element and no known abbreviation, so typing
- * it on an atom makes a placeholder rather than an atom or a group.
- */
-const VARIABLE_SHAPE = /^[A-Z][A-Za-z]{0,3}\d{0,3}'{0,2}$/
-
-export function isVariableName(text: string): boolean {
-  return VARIABLE_SHAPE.test(text) && !knownLabel(text)
-}
 
 /** A variable's list, following "same as" to the variable that holds it; empty if undefined. */
 export function alternativesOf(variables: Record<string, Variable> | undefined, name: string): Alternative[] {
@@ -78,13 +72,39 @@ export function variableProblem(name: string, variable: Variable, others: Record
     const problem = alternativeProblem(alternative)
     if (problem) return `${name}: ${problem}`
   }
+  const loop = containing({ ...others, [name]: variable }, name)
+  if (loop) return `${name} would contain itself (${loop.join(" → ")})`
   return null
+}
+
+/** The variables placeholders inside a variable's pieces stand for (R5 in Ar = N–R5), following "same as". */
+export function nestedVariables(variables: Record<string, Variable> | undefined, name: string): string[] {
+  return [...new Set(alternativesOf(variables, name).flatMap((item) => (item.kind === "fragment" ? fragmentVariables(item.molecule) : [])))]
+}
+
+/** A chain of pieces leading from `name` back to itself (R1 → R5 → R1), or null when there is none. */
+function containing(variables: Record<string, Variable>, name: string): string[] | null {
+  const walk = (current: string, path: string[]): string[] | null => {
+    for (const inner of nestedVariables(variables, current)) {
+      if (inner === name) return [...path, inner]
+      if (!path.includes(inner)) {
+        const found = walk(inner, [...path, inner])
+        if (found) return found
+      }
+    }
+    return null
+  }
+  return walk(name, [name])
 }
 
 /** Why one alternative is not usable, or null: what the editor's class form checks too. */
 export function alternativeProblem(alternative: Alternative): string | null {
   if (alternative.kind === "bond") return null
   if (alternative.kind === "bridge") return Object.hasOwn(BRIDGES, alternative.name) ? null : `unknown bridge "${alternative.name}" (${Object.keys(BRIDGES).join(", ")})`
+  if (alternative.kind === "fragment") {
+    if (alternative.name != null && (typeof alternative.name !== "string" || alternative.name.length > 60)) return "a piece's name is text of at most 60 characters"
+    return fragmentProblem(alternative.molecule)
+  }
   if (alternative.kind === "label") {
     const text = alternative.text.trim()
     if (!text || text.length > 32 || /[\r\n]/.test(text)) return "a label is one line of 1 to 32 characters"
@@ -106,11 +126,12 @@ export function placeholders(drawing: Drawing): Array<{ atom: number; name: stri
   return drawing.molecule.atoms.flatMap((atom) => (atom.alias && Object.hasOwn(variables, atom.alias) ? [{ atom: atom.id, name: atom.alias }] : []))
 }
 
-/** Labels on atoms that look like variables but have no definition yet, in drawing order. */
+/** Labels that look like variables but have no definition yet: on atoms in drawing order, then inside pieces. */
 export function undefinedVariables(drawing: Drawing): string[] {
   const variables = drawing.variables ?? {}
-  const names = drawing.molecule.atoms.flatMap((atom) => (atom.alias && isVariableName(atom.alias) && !Object.hasOwn(variables, atom.alias) ? [atom.alias] : []))
-  return [...new Set(names)]
+  const drawn = drawing.molecule.atoms.flatMap((atom) => (atom.alias && isVariableName(atom.alias) ? [atom.alias] : []))
+  const inPieces = Object.keys(variables).flatMap((name) => nestedVariables(variables, name))
+  return [...new Set([...drawn, ...inPieces])].filter((name) => !Object.hasOwn(variables, name))
 }
 
 /** A molecule's placeholder atoms, whatever the variable table says: any label shaped like a variable. */

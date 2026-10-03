@@ -1,4 +1,5 @@
-import { GROUP_CLASSES } from "@structura/core/markush"
+import { displayFormula } from "@structura/core/formula"
+import { fragmentFormula, GROUP_CLASSES } from "@structura/core/markush"
 import type { Alternative, BridgeName, Choice, GroupClass } from "@structura/core/types"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.
@@ -27,11 +28,12 @@ export const BRIDGE_NAMES: Record<BridgeName, string> = {
   "2,5-pyridinediyl": "2,5-亚吡啶基",
 }
 
-/** "取代或未取代的 (C1–C30) 烷基", as a claim would put it; a label is itself. */
+/** "取代或未取代的 (C1–C30) 烷基", as a claim would put it; a label is itself, a piece its name or formula. */
 export function describeAlternative(alternative: Alternative): string {
   if (alternative.kind === "label") return alternative.text
   if (alternative.kind === "bond") return "单键"
   if (alternative.kind === "bridge") return BRIDGE_NAMES[alternative.name]
+  if (alternative.kind === "fragment") return alternative.name ?? `片段 ${displayFormula(fragmentFormula(alternative.molecule))}`
   const { min, max } = alternative
   const range = min != null || max != null ? `${min ?? 1}–${max ?? "∞"}` : ""
   const size = range ? (GROUP_CLASSES[alternative.class].size === "members" ? `(${range} 元)` : `(C${range.replace("–", "–C")})`) : ""

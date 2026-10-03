@@ -105,6 +105,13 @@ export type Alternative =
   /** A divalent ring joining the two atoms a placeholder sits between: "L is p-phenylene". */
   | { kind: "bridge"; name: BridgeName }
   | { kind: "class"; class: GroupClass; min?: number; max?: number; substituted?: boolean }
+  /**
+   * A drawn piece: carbazol-9-yl for Ar, 2,6-naphthylene for L, N–R5 for a ring's X. Atoms
+   * labelled "*" mark where it joins the formula, one per bond of the placeholder: the atom
+   * bonded to a "*" takes that bond (both "*" on one atom: it takes both, as X in a ring).
+   * Placeholders inside it (R5) are variables too. `name` is how it is shown, if given.
+   */
+  | { kind: "fragment"; molecule: Molecule; name?: string }
 
 /** The divalent rings a linker can be (see markush/bridges.ts for how each is built). */
 export type BridgeName = "p-phenylene" | "m-phenylene" | "4,4'-biphenylene" | "2,5-pyridinediyl"

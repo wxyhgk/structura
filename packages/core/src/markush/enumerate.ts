@@ -6,6 +6,7 @@ import { atomById, bondLengthAt, componentOf, neighbors, sproutAngle } from "../
 import { applyOps, type Op } from "../ops.ts"
 import type { Choice, Drawing, Molecule } from "../types.ts"
 import { validate } from "../validate.ts"
+import { fragmentFits, fragmentFormula, fragmentVariables } from "./fragments.ts"
 import { odometer } from "./odometer.ts"
 import { representativesOf } from "./representatives.ts"
 import { siteKind, type SiteKind } from "./sites.ts"
@@ -54,8 +55,10 @@ const same = (a: Choice, b: Choice) => JSON.stringify(a) === JSON.stringify(b)
  * Whether a choice can go where a placeholder sits. A branch end takes a group or an atom
  * (never a bond or a divalent ring); a ring position takes an element; a linker takes a
  * bond, a divalent ring or an element such as O or S, never a group that ends a branch.
+ * A drawn piece goes wherever its "*" marks match the placeholder's bonds (see fragmentFits).
  */
-function fits(where: SiteKind, choice: Choice): boolean {
+function fits(drawing: Drawing, atom: number, where: SiteKind, choice: Choice): boolean {
+  if (choice.kind === "fragment") return fragmentFits(drawing.molecule, atom, choice.molecule)
   if (where === "end") return choice.kind === "label"
   const element = choice.kind === "label" && elementOf(choice.text) != null
   if (where === "ring") return element
@@ -68,12 +71,27 @@ function fits(where: SiteKind, choice: Choice): boolean {
  * linker becomes a bond or a divalent ring joining its two neighbours, or an element in place.
  */
 function opsFor(site: Site, choice: Choice): Op[] {
+  if (choice.kind === "fragment") return [{ op: "replace", atoms: [site.atom], with: { fragment: choice.molecule } }]
   if (choice.kind === "bond") return [{ op: "replace", atoms: [site.atom], with: { bond: true } }]
   if (choice.kind === "bridge") return [{ op: "replace", atoms: [site.atom], with: { bridge: choice.name } }]
   if (site.where !== "end") return [{ op: "label", atom: site.atom, text: choice.text }]
   if (choice.text === "H") return [{ op: "remove", atoms: [site.atom] }]
   return [{ op: "replace", atoms: [site.atom], with: { label: choice.text } }]
 }
+
+/**
+ * The ops that put each chosen choice on its site, relabelling in place first, then links,
+ * then swaps, then removals, so no op aims at an atom already gone and a link is made
+ * before the branch ends it carries are swapped.
+ */
+function opsForAll(chosen: Array<{ site: Site; choice: Choice }>): Op[] {
+  const order = ({ site, choice }: (typeof chosen)[number]) =>
+    site.where === "ring" ? 0 : site.where === "link" ? 1 : choice.kind === "label" && choice.text === "H" ? 3 : 2
+  return [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, choice }) => opsFor(site, choice))
+}
+
+/** How deep pieces may sit inside pieces (Ar = N–R5, R5 = …) before the rest is left out. */
+const NESTING = 4
 
 /**
  * A label a built molecule must not keep: a defined variable's placeholder, or text that is
@@ -110,12 +128,20 @@ export type EnumerateOptions = {
   representatives?: boolean
 }
 
+/** A choice in a word: the label, the ring's name, "bond", or a piece's name or formula. */
+export function choiceText(choice: Choice): string {
+  if (choice.kind === "label") return choice.text
+  if (choice.kind === "bridge") return choice.name
+  if (choice.kind === "fragment") return choice.name ?? fragmentFormula(choice.molecule)
+  return "bond"
+}
+
 /** A combination as SD data items: each variable's choice, and each attachment's position. */
 export function pickFields(picks: readonly Pick[]): Record<string, string> {
   const fields: Record<string, string> = {}
   for (const pick of picks) {
     if ("position" in pick) fields[`${pick.name} position`] = pick.position
-    else fields[pick.name] = pick.choice.kind === "label" ? pick.choice.text : pick.choice.kind === "bridge" ? pick.choice.name : "bond"
+    else fields[pick.name] = choiceText(pick.choice)
   }
   return fields
 }
@@ -207,8 +233,26 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
   const misfits: Record<string, Choice[]> = {}
   /** Each variable's choices, counting its classes once however many atoms carry it. */
   const choicesOf = new Map<string, Choice[]>()
-  for (const { name } of placeholders(drawing)) {
-    if (choicesOf.has(name)) continue
+  /** For a piece made concrete, what the placeholders inside it became. */
+  const inside = new WeakMap<Choice, Pick[]>()
+  const misfit = (name: string, choice: Choice) => {
+    if (!(misfits[name] ?? []).some((other) => same(other, choice))) misfits[name] = [...(misfits[name] ?? []), choice]
+  }
+  /** The sites of `drawing`'s placeholders, each with the choices that fit there (misfits noted). */
+  const sitesOf = (drawing: Drawing, stack: string[]): Site[] =>
+    placeholders(drawing).map(({ atom, name }) => {
+      const where = siteKind(drawing, atom)
+      const all = stack.includes(name) ? [] : choicesFor(name, stack)
+      for (const choice of all) if (!fits(drawing, atom, where, choice)) misfit(name, choice)
+      return { atom, name, where, choices: all.filter((choice) => fits(drawing, atom, where, choice)) }
+    })
+  /**
+   * A variable's concrete choices: its own, representatives for its classes when asked, and
+   * each piece with placeholders inside (Ar = N–R5) made concrete every way they can be.
+   */
+  function choicesFor(name: string, stack: string[] = []): Choice[] {
+    const known = choicesOf.get(name)
+    if (known) return known
     const alternatives = alternativesOf(variables, name)
     const choices: Choice[] = alternatives.flatMap((item) => (item.kind === "class" ? [] : [item]))
     for (const item of alternatives) {
@@ -218,8 +262,29 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
       choices.push(...standIns)
       if (standIns.length > 0) represented[name] = [...(represented[name] ?? []), ...standIns]
     }
-    choicesOf.set(name, choices)
+    const concrete = choices.flatMap((choice) =>
+      choice.kind === "fragment" && fragmentVariables(choice.molecule).some((inner) => defined.has(inner)) ? filled(choice, [...stack, name]) : [choice],
+    )
+    choicesOf.set(name, concrete)
+    return concrete
   }
+  /** Every concrete version of a piece, its inner placeholders filled with the choices that fit them. */
+  function filled(piece: Extract<Choice, { kind: "fragment" }>, stack: string[]): Choice[] {
+    if (stack.length > NESTING) return []
+    const drawing: Drawing = { molecule: piece.molecule, arrows: [], nextArrowId: 1, variables }
+    const sites = sitesOf(drawing, stack)
+    const versions: Choice[] = []
+    for (const index of odometer(sites.map((site) => site.choices.length))) {
+      const chosen = sites.map((site, at) => ({ site, choice: site.choices[index[at]] }))
+      const built = applyOps({ ...drawing, variables: undefined }, opsForAll(chosen))
+      if (!built.ok) continue
+      const version: Choice = { kind: "fragment", molecule: built.drawing.molecule, ...(piece.name != null ? { name: piece.name } : {}) }
+      inside.set(version, chosen.flatMap(({ site, choice }) => [{ name: site.name, choice }, ...(inside.get(choice) ?? [])]))
+      versions.push(version)
+    }
+    return versions
+  }
+  for (const { name } of placeholders(drawing)) choicesFor(name)
   const result: Enumeration = {
     molecules: [],
     picks: [],
@@ -233,7 +298,8 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     failures: [],
     failed: 0,
   }
-  const bare = [...choicesOf].flatMap(([name, choices]) => (choices.length === 0 ? [name] : []))
+  const top = new Set(placeholders(drawing).map(({ name }) => name))
+  const bare = [...top].filter((name) => choicesOf.get(name)!.length === 0)
   if (bare.length > 0) return { ...result, onlyClasses: bare }
 
   const unfilled = new Set<string>()
@@ -250,14 +316,7 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
       yield result
       continue
     }
-    const laid = layout.drawing
-    const sites: Site[] = placeholders(laid).map(({ atom, name }) => {
-      const where = siteKind(laid, atom)
-      const all = choicesOf.get(name)!
-      const skipped = all.filter((choice) => !fits(where, choice))
-      for (const choice of skipped) if (!(misfits[name] ?? []).some((other) => same(other, choice))) misfits[name] = [...(misfits[name] ?? []), choice]
-      return { atom, name, where, choices: all.filter((choice) => fits(where, choice)) }
-    })
+    const sites = sitesOf(layout.drawing, [])
     for (const site of sites) if (site.choices.length === 0) unfilled.add(site.name)
     const count = sites.reduce((product, site) => product * site.choices.length, 1)
     result.total += count
@@ -278,14 +337,9 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     const strained = overValence(laid.molecule)
     for (const index of odometer(sites.map((site) => site.choices.length))) {
       if (result.molecules.length + result.failed >= limit) break
-      // Relabelling in place first, then links, then swaps, then removals, so no op aims at an
-      // atom already gone and a link is made before the branch ends it carries are swapped.
       const chosen = sites.map((site, at) => ({ site, choice: site.choices[index[at]] }))
-      const order = ({ site, choice }: (typeof chosen)[number]) =>
-        site.where === "ring" ? 0 : site.where === "link" ? 1 : choice.kind === "label" && choice.text === "H" ? 3 : 2
-      const ops = [...chosen].sort((a, b) => order(a) - order(b)).flatMap(({ site, choice }) => opsFor(site, choice))
-      const picks: Pick[] = [...layout.where, ...chosen.map(({ site, choice }) => ({ name: site.name, choice }))]
-      const built = applyOps({ ...laid, variables: undefined }, ops)
+      const picks: Pick[] = [...layout.where, ...chosen.flatMap(({ site, choice }) => [{ name: site.name, choice }, ...(inside.get(choice) ?? [])])]
+      const built = applyOps({ ...laid, variables: undefined }, opsForAll(chosen))
       const wrong = built.ok ? (leftover(built.drawing.molecule, defined) ?? newlyOverValence(built.drawing.molecule, strained)) : built.error
       if (built.ok && !wrong) {
         result.molecules.push(built.drawing.molecule)

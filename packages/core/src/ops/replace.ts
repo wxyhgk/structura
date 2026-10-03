@@ -3,6 +3,7 @@ import { angleTo } from "../geometry.ts"
 import { setAtomLabel } from "../label.ts"
 import { addAtom, atomById, attachRingAt, bondsLeaving, centroidOf, deleteSelection, neighbors, placeRing, relax, sproutAt } from "../molecule.ts"
 import { BRIDGES, bridge } from "../markush/bridges.ts"
+import { placeFragment } from "../markush/fragments.ts"
 import { RECIPES } from "../molecule/recipes.ts"
 import type { Molecule, Point } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"
@@ -12,7 +13,7 @@ import type { Op, Replacement } from "./types.ts"
 type Built = { mol: Molecule; head: number }
 
 /** The pieces that hang off one atom (a bond or a bridge joins two instead). */
-type Hanging = Exclude<Replacement, { bond: true } | { bridge: unknown }>
+type Hanging = Exclude<Replacement, { bond: true } | { bridge: unknown } | { fragment: unknown }>
 
 /** The atom `before` did not have that is now bonded to `anchor`: where a grown piece starts. */
 function newNeighbour(before: Molecule, after: Molecule, anchor: number): number {
@@ -82,6 +83,13 @@ export function replaceFragment(mol: Molecule, op: Extract<Op, { op: "replace" }
   if (ids.size === 0) throw new OpError("give the atoms to replace")
   const joins = bondsLeaving(mol, ids)
   if ("bond" in op.with || "bridge" in op.with) return linkAcross(mol, op, ids, joins, ctx)
+  if ("fragment" in op.with) {
+    if (ids.size !== 1) throw new OpError("a drawn piece replaces one placeholder atom")
+    const placed = placeFragment(mol, [...ids][0], op.with.fragment)
+    if ("error" in placed) throw new OpError(placed.error)
+    ctx.name(op.as, placed.head)
+    return { mol: placed.mol, next: null }
+  }
   const piece: Hanging = op.with
   if (joins.length > 1) {
     throw new OpError(`the fragment is joined to the rest by ${joins.length} bonds; only a fragment joined by one bond (or none) can be replaced, or one joined by two with a bond or a bridge`)

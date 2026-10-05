@@ -50,3 +50,29 @@ export function defaultSite(scaffold: Scaffold): string {
   const sites = freeSites(scaffold)
   return sites.find((locant) => !locant.startsWith("C")) ?? sites[0]
 }
+
+/**
+ * Bonds it can fuse by: outer bonds between two carbons that both still carry a hydrogen.
+ * A heteroatom would turn into the drawing's atom, and a fusion atom has no room left.
+ */
+export function fusableEdges(scaffold: Scaffold): string[] {
+  const free = new Set(freeSites(scaffold).map((locant) => scaffold.atoms[locant]))
+  const carbon = (id: number) => scaffold.molecule.atoms.find((atom) => atom.id === id)?.el === "C"
+  return Object.entries(scaffold.edges)
+    .filter(([, ends]) => ends.every((id) => free.has(id) && carbon(id)))
+    .map(([letter]) => letter)
+}
+
+/** The bond it fuses by when nothing else is said: its first fusable one (furan's b, pyridine's b, benzene's a). */
+export function defaultEdge(scaffold: Scaffold): string {
+  return fusableEdges(scaffold)[0] ?? "a"
+}
+
+/** Scaffolds whose English or Chinese name contains `text`, those starting with it first. */
+export function matchScaffolds(text: string): Scaffold[] {
+  const words = text.trim().toLowerCase()
+  if (!words) return scaffolds()
+  const starts = (item: Scaffold) => item.name.startsWith(words) || item.zh.startsWith(words)
+  const hits = scaffolds().filter((item) => item.name.includes(words) || item.zh.includes(words))
+  return [...hits.filter(starts), ...hits.filter((item) => !starts(item))]
+}

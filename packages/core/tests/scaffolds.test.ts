@@ -102,3 +102,40 @@ test("free sites are the atoms with a hydrogen; the default is the N–H, else t
   assert.equal(defaultSite(scaffoldNamed("pyridine")!), "C2")
   assert.ok(!freeSites(scaffoldNamed("carbazole")!).includes("C4a"))
 })
+
+test("the names as.C3, as.N9… point at those very atoms, and a joined template keeps its regular rings", () => {
+  const result = applyOps(emptyDrawing(), [
+    { op: "add_scaffold", name: "carbazole", as: "cz" },
+    { op: "add_scaffold", name: "benzene", site: "C1", to: "cz.C3", as: "ph" },
+  ])
+  assert.ok(result.ok, result.ok ? "" : result.error)
+  const mol = result.drawing.molecule
+  const { names } = result
+  const neighbours = (id: number) => mol.bonds.flatMap((bond) => (bond.a === id ? [bond.b] : bond.b === id ? [bond.a] : []))
+  assert.equal(mol.atoms.find((atom) => atom.id === names["cz.N9"])!.el, "N")
+  assert.equal(neighbours(names["cz.C4a"]).length, 3, "C4a is a fusion atom")
+  assert.ok(neighbours(names["cz.C3"]).includes(names["cz.C4"]) && neighbours(names["cz.C4"]).includes(names["cz.C4a"]), "C3–C4–C4a in a row")
+  assert.ok(neighbours(names["cz.C3"]).includes(names["ph.C1"]), "the phenyl's C1 is on C3")
+  // The phenyl ring is still a regular hexagon: all six bonds the same length.
+  const ring = ["C1", "C2", "C3", "C4", "C5", "C6"].map((locant) => mol.atoms.find((atom) => atom.id === names[`ph.${locant}`])!)
+  const lengths = ring.map((atom, index) => Math.hypot(atom.x - ring[(index + 1) % 6].x, atom.y - ring[(index + 1) % 6].y))
+  assert.ok(Math.max(...lengths) - Math.min(...lengths) < 0.01, lengths.join(", "))
+})
+
+test("fusing goes by carbon–carbon outer bonds only; the default is the first such bond", async () => {
+  const { defaultEdge, fusableEdges, matchScaffolds } = await import("../src/scaffolds.ts")
+  assert.equal(defaultEdge(scaffoldNamed("benzene")!), "a")
+  assert.equal(defaultEdge(scaffoldNamed("furan")!), "b")
+  assert.equal(defaultEdge(scaffoldNamed("pyridine")!), "b")
+  assert.ok(!fusableEdges(scaffoldNamed("naphthalene")!).includes("d"), "C4–C4a holds a fusion atom")
+  const onHetero = applyOps(emptyDrawing(), [
+    { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" },
+    { op: "add_scaffold", name: "furan", edge: "a", onto: { between: [1, 2] } },
+  ])
+  assert.equal(onHetero.ok, false)
+  assert.match(onHetero.ok ? "" : onHetero.error, /heteroatom/)
+  assert.equal(matchScaffolds("咔唑")[0].name, "carbazole")
+  assert.deepEqual(matchScaffolds("thio").map((item) => item.name), ["thiophene", "benzothiophene", "dibenzothiophene"])
+  assert.equal(matchScaffolds("").length, scaffolds().length)
+  assert.deepEqual(matchScaffolds("xyz"), [])
+})

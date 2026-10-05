@@ -111,7 +111,8 @@ function rejoin(mol: Molecule, bond: Bond, from: number, to: number): Molecule {
   return addBond(mol, from, to, { order: bond.order, stereo, look: bond.look })?.mol ?? mol
 }
 
-export type Placed = { mol: Molecule; added: number[]; head: number }
+/** The placed piece: the molecule, the new atoms, the atom that took the bond, and each piece atom's new id. */
+export type Placed = { mol: Molecule; added: number[]; head: number; ids: Map<number, number> }
 
 /**
  * Puts the piece where the placeholder atom `site` is, bonded the way it was. A piece with
@@ -158,7 +159,7 @@ function placeOnOne(mol: Molecule, site: number, piece: Molecule, ends: ReturnTy
   const added = [...ids.values()]
   const free = added.filter((id) => id !== newHead)
   if (free.length > 0) next = relax(next, { atoms: free, locked: [newHead] })
-  return { mol: next, added, head: newHead }
+  return { mol: next, added, head: newHead, ids }
 }
 
 function placeBetween(mol: Molecule, site: number, piece: Molecule, ends: ReturnType<typeof fragmentEnds>): Placed {
@@ -194,7 +195,7 @@ function placeBetween(mol: Molecule, site: number, piece: Molecule, ends: Return
   next = rejoin(next, links[moving].bond, movingAtom, ids.get(plan.toMoving.head)!)
   const rest = sides[moving].filter((id) => id !== movingAtom)
   if (!sameSide && rest.length > 0) next = relax(next, { atoms: rest, locked: [movingAtom] })
-  return { mol: next, added: [...ids.values()], head: ids.get(plan.toFixed.head)! }
+  return { mol: next, added: [...ids.values()], head: ids.get(plan.toFixed.head)!, ids }
 }
 
 /**

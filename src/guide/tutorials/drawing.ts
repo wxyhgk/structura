@@ -67,18 +67,17 @@ export const moveAndTurn = perHost(() => {
 /** Templates: carbazole placed, a benzene joined at its N9, a furan fused onto a bond. */
 export const templates = perHost(() => {
   const walk = new Walk()
-  walk.step(`点左边工具栏的“模板”，在列表里选“咔唑”。右边的大图上，N9 已经选好（接到原子时用它）。点“使用咔唑”。`)
+  walk.step(`点左边工具栏的“模板”，在列表里选“咔唑”。右边大图上蓝色的 N9 已经选好（接到原子时用它），按回车或点“使用咔唑”。`)
   walk.act([{ op: "add_scaffold", name: "carbazole", at: { x: 0, y: 0 }, as: "cz" }])
   walk.step(`在画布空白处单击，放下一个咔唑。`, [{ kind: "click", at: { x: 0, y: 0 } }])
   const n9 = walk.drawing.molecule.atoms.find((atom) => atom.el === "N")!.id
   walk.step(`再打开“模板”，选“苯”（默认用 C1 接上去），点“使用苯”。然后单击咔唑的 N9。`, [{ kind: "click", at: n9 }])
-  const phenyl = walk.act([{ op: "add_scaffold", name: "benzene", site: "C1", to: n9, as: "ph" }])
+  const ring = walk.act([{ op: "add_scaffold", name: "benzene", site: "C1", to: n9 }])
   walk.step(`苯环用 C1 接到了 N9 上：N-苯基咔唑。`)
-  const ring = phenyl.slice(0, 6)
   const bottom = [...ring].sort((a, b) => walk.drawing.molecule.atoms.find((atom) => atom.id === b)!.y - walk.drawing.molecule.atoms.find((atom) => atom.id === a)!.y).slice(0, 2)
   const at = (id: number) => walk.drawing.molecule.atoms.find((atom) => atom.id === id)!
   const mid = { x: (at(bottom[0]).x + at(bottom[1]).x) / 2, y: (at(bottom[0]).y + at(bottom[1]).y) / 2 }
-  walk.step(`想在苯环上并一个呋喃：打开“模板”选“呋喃”，切到“并到键：点字母”，点 b，再点“使用呋喃”。然后单击苯环下面那根键。`, [{ kind: "click", at: mid }])
+  walk.step(`想在苯环上并一个呋喃：打开“模板”选“呋喃”，大图上橙色的 b 已经选好（并到键时用它），按回车。然后单击苯环下面那根键。`, [{ kind: "click", at: mid }])
   walk.act([{ op: "add_scaffold", name: "furan", edge: "b", onto: { between: [bottom[0], bottom[1]] } }])
   walk.step(`呋喃的 b 边（C2–C3）并到了这根键上，双键自动重新排好。`)
   return walk.steps

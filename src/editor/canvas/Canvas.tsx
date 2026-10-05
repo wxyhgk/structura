@@ -2,14 +2,12 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type Poin
 import { atomById, bondById, bondsLeaving, componentOf, selectionFromAtoms } from "@structura/core/molecule"
 import type { Drawing, Molecule, Point, Selection } from "@structura/core/types"
 import { AtomLabelInput } from "@/editor/canvas/AtomLabelInput"
-import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
 import { SceneView } from "@/editor/canvas/SceneView"
-import { defaultPick, doubleClickAction, hitOf, hotkeyOps, hoverOf, keyOf, sameHover, scaffoldOps } from "@structura/engine"
+import { defaultPick, doubleClickAction, hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type RingHintShape, sameHover, scaffoldOps } from "@structura/engine"
 import { QuickScaffold } from "@/editor/canvas/QuickScaffold"
 import type { CanvasHandle, EditorSlice, Gesture, HoverTarget, PointerHost, Preview } from "@/editor/canvas/types"
 import { useHotspot } from "@/editor/canvas/useHotspot"
 import { useViewport } from "@/editor/canvas/useViewport"
-import type { RingHintShape } from "@/editor/markush/hints"
 
 /** Two presses this close in time (ms) and space (px) make a double click. */
 const DOUBLE_CLICK_MS = 500
@@ -216,6 +214,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
               y: event.clientY,
             }
           }
+          // The canvas keeps the pointer while a drag goes on, even off its edge.
+          if (event.button === 0 || event.button === 1) event.currentTarget.setPointerCapture(event.pointerId)
           pointerDown(host, event)
         }}
         onPointerMove={(event) => {

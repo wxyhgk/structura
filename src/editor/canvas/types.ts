@@ -1,6 +1,5 @@
-import type { Arrow, Attachment, BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
+import type { Arrow, Attachment, BondStyle, Drawing, Molecule, RingKind, Selection } from "@structura/core/types"
 import type { HoverTarget, Run, ScaffoldPick, ToolId, Viewport } from "@structura/engine"
-import type { RingHintShape } from "@/editor/markush/hints"
 
 export type CanvasHandle = {
   /** Hover hotkeys; returns whether the key was used. */
@@ -43,59 +42,5 @@ export type EditorSlice = {
   viewport: Viewport
 }
 
-export type Gesture =
-  | { kind: "idle" }
-  | {
-      kind: "bond"
-      mol: Molecule
-      fromId: number | null
-      origin: Point
-      clientX: number
-      clientY: number
-      moved: boolean
-      style: BondStyle
-    }
-  | { kind: "chain"; mol: Molecule; fromId: number | null; origin: Point }
-  | { kind: "move"; mol: Molecule; ids: number[]; origin: Point }
-  | { kind: "marquee"; origin: Point; base: Selection; additive: boolean }
-  | { kind: "lasso"; points: Point[]; base: Selection; additive: boolean }
-  | { kind: "pan"; clientX: number; clientY: number; pan: Point }
-  | { kind: "rotate"; mol: Molecule; ids: number[]; center: Point; startAngle: number }
-  | {
-      kind: "scale"
-      mol: Molecule
-      ids: number[]
-      center: Point
-      anchor: "n" | "s" | "e" | "w" | "nw" | "ne" | "se" | "sw"
-      origin: Point
-    }
-
-export type Preview =
-  | null
-  | { kind: "bond"; a: Point; b: Point; style: BondStyle }
-  | { kind: "chain"; points: Point[] }
-  | { kind: "ring"; points: Point[]; doubles: boolean; anchor?: Point }
-  | { kind: "marquee"; a: Point; b: Point }
-  | { kind: "lasso"; points: Point[] }
-  /** A bond dragged into a ring: it will attach at any of `positions`, meeting the ring at `centre`. */
-  | { kind: "attachment"; a: Point; centre: Point; positions: Point[] }
-
+export type { Gesture, PointerHost, Preview } from "@structura/engine"
 export type { HoverTarget }
-
-export type PointerHost = {
-  props: EditorSlice
-  gesture: { current: Gesture }
-  space: { current: boolean }
-  zoom: () => number
-  pan: () => Point
-  toWorld: (clientX: number, clientY: number) => Point
-  setView: (zoom: number, pan: Point) => void
-  setPreview: (preview: Preview) => void
-  setDraft: (mol: Molecule | null) => void
-  setPanning: (panning: boolean) => void
-  assignHover: (hover: HoverTarget) => void
-  setCursor: (cursor: string | null) => void
-  setRotating: (rotating: boolean) => void
-  /** Where a line being drawn into a ring will attach, or null. */
-  setRingHint: (hint: RingHintShape | null) => void
-}

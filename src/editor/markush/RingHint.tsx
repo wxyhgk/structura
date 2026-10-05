@@ -1,4 +1,4 @@
-import type { RingHintShape } from "./hints.ts"
+import type { RingHintShape } from "@structura/engine"
 
 /**
  * Shown while drawing: letting go here makes a variable attachment, "any free position of

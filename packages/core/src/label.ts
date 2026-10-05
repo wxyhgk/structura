@@ -1,6 +1,7 @@
 import { elementOf } from "./elements/index.ts"
 import { groupOrAlias, insertGroup } from "./molecule/abbreviate.ts"
 import { setAlias, setElement, setIsotope } from "./molecule/graph.ts"
+import { bondsOf } from "./molecule/lookup.ts"
 import { GROUP_FIRST, templateFor } from "./templates.ts"
 import type { Molecule } from "./types.ts"
 
@@ -26,12 +27,20 @@ function hydrideElement(text: string): string | null {
 }
 
 /**
+ * "Ar" typed in a drawing is the aryl placeholder of patents (Ar, Ar1, Ar'), not argon, so
+ * it is no definite label. Only a lone atom typed Ar stays argon; the element tools and the
+ * periodic table set argon anywhere.
+ */
+const ARYL = "Ar"
+
+/**
  * Whether a label means a definite atom or group: an element (bare or with its hydrogens),
  * a hydrogen isotope or mass number, or a known abbreviation. Anything else would only
  * ever be a placeholder.
  */
 export function knownLabel(text: string): boolean {
   const trimmed = text.trim()
+  if (trimmed === ARYL) return false
   return Boolean(templateFor(trimmed) || elementOf(trimmed) || hydrideElement(trimmed) || HYDROGEN_ISOTOPES[trimmed] || isotopeLabel(trimmed))
 }
 
@@ -40,6 +49,7 @@ export function setAtomLabel(mol: Molecule, id: number, text: string): Molecule 
   if (!trimmed) return setAlias(mol, id, undefined)
   const template = templateFor(trimmed)
   if (template && GROUP_FIRST.has(trimmed)) return insertGroup(mol, id, template, trimmed)?.mol ?? mol
+  if (trimmed === ARYL && bondsOf(mol, id).length > 0) return setAlias(setElement(mol, [id], "C"), id, ARYL)
   if (elementOf(trimmed)) return setElement(mol, [id], trimmed)
   // A group's own spelling (CH3 for Me) wins over reading it as an element with hydrogens.
   const hydride = template ? null : hydrideElement(trimmed)

@@ -22,12 +22,12 @@ export const labelsPage = definePage({
           ["带氢的写法", "OH、NH2、SH、HO、H2N 也可以，氢原子数按价态自动计算"],
           ["缩写", "Me、Et、iPr、tBu、Ph、Bn、Ac、Boc、OMe、CO2Me、CF3、NO2 等，输入后画成真实的原子"],
           ["同位素", "D、T，或在元素前写质量数，如 13C、15N"],
-          ["变量（通式）", "R、R1、X、L、Ar1、ETU 这类名字成为占位符，见“通式：变量和候选项”"],
+          ["变量（通式）", "R、R1、X、L、Ar、Ar1、ETU 这类名字成为占位符，见“通式：变量和候选项”"],
           ["连接点", "* 表示片段接到通式上的位置，见“通式：画出来的片段”"],
         ]}
       />
       <Figure panels={[{ drawing: labelled(), caption: "在苯环的四个取代位上依次输入 OH、NH2、Me、OMe 的结果" }]} />
-      <Tip>Ar 是氩元素，不能当变量名；写成 Ar1、Ar2。</Tip>
+      <Tip>接在键上的 Ar 是芳基变量（和 Ar1、Ar' 一样），不是氩；要画氩原子，用元素周期表选 Ar，或给没有连键的单个原子输入 Ar。</Tip>
     </>
   ),
 })

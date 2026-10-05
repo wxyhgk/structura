@@ -3,6 +3,7 @@ import test from "node:test"
 import { emptyDrawing } from "../src/drawing.ts"
 import { plainFormula } from "../src/formula.ts"
 import { enumerate } from "../src/markush/enumerate.ts"
+import { toMolfile } from "../src/molfile.ts"
 import { alternativesOf, isVariableName, undefinedVariables } from "../src/markush/variables.ts"
 import { applyOps, type Op } from "../src/ops.ts"
 import type { Choice, Drawing } from "../src/types.ts"
@@ -162,8 +163,29 @@ test("with representatives, typical members inside each class's range stand in f
 })
 
 test("L, ETU and Ar1 are variable names; elements and abbreviations are not", () => {
-  for (const name of ["R", "R12", "R'", "X", "L", "ETU", "Ar1"]) assert.ok(isVariableName(name), name)
-  for (const name of ["Me", "Ph", "Cl", "Y", "Ar", "D", "OMe"]) assert.ok(!isVariableName(name), name)
+  for (const name of ["R", "R12", "R'", "X", "L", "ETU", "Ar", "Ar1", "Ar2", "Ar'", "Ar''"]) assert.ok(isVariableName(name), name)
+  for (const name of ["Me", "Ph", "Cl", "Y", "Kr", "D", "OMe"]) assert.ok(!isVariableName(name), name)
+})
+
+test("Ar typed on a bonded atom is the aryl placeholder; argon comes from a lone atom or the element tools", () => {
+  const typed = run(emptyDrawing(), [
+    { op: "add_atom", el: "C", as: "c" },
+    { op: "add_atom", el: "C", to: "c", as: "ar" },
+    { op: "label", atom: "ar", text: "Ar" },
+    { op: "add_atom", el: "C", to: "c", as: "ar1" },
+    { op: "label", atom: "ar1", text: "Ar1" },
+    { op: "add_atom", el: "C", to: "c", as: "prime" },
+    { op: "label", atom: "prime", text: "Ar'" },
+    { op: "add_atom", el: "C", to: "c", as: "picked" },
+    { op: "set_element", atom: "picked", el: "Ar" },
+    { op: "add_atom", el: "C", as: "lone" },
+    { op: "label", atom: "lone", text: "Ar" },
+  ])
+  const atoms = typed.molecule.atoms.map((atom) => [atom.el, atom.alias ?? null])
+  assert.deepEqual(atoms, [["C", null], ["C", "Ar"], ["C", "Ar1"], ["C", "Ar'"], ["Ar", null], ["Ar", null]])
+  assert.deepEqual(undefinedVariables(typed).sort(), ["Ar", "Ar'", "Ar1"])
+  const molfile = toMolfile(typed.molecule)
+  assert.match(molfile, /^A {2}\s*2\nAr$/m, "Ar is exported as an alias")
 })
 
 test("OH, NH2, SH, HO and H2N are the element with its hydrogens, not placeholders", () => {

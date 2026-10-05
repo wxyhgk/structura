@@ -1,3 +1,4 @@
+import { withGroupMembers } from "../molecule/collapse.ts"
 import {
   bondById,
   bondLengthAt,
@@ -28,7 +29,7 @@ const JOIN_REACH = 0.3
 export function drawingOp(mol: Molecule, op: Op, ctx: Context): Step | null {
   switch (op.op) {
     case "move": {
-      const ids = op.atoms.map(ctx.atom)
+      const ids = withGroupMembers(mol, op.atoms.map(ctx.atom))
       const moved = moveAtoms(mol, ids, op.dx, op.dy)
       return { mol: op.join ? mergeLandings(moved, landings(moved, ids, bondLengthAt(mol) * JOIN_REACH)) : moved }
     }
@@ -41,18 +42,18 @@ export function drawingOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       return { mol: joined, next: null }
     }
     case "rotate": {
-      const ids = op.atoms.map(ctx.atom)
+      const ids = withGroupMembers(mol, op.atoms.map(ctx.atom))
       const center = op.center ?? boundsCenter(mol, ids)
       return { mol: center ? rotateAtoms(mol, ids, center, op.angle) : mol }
     }
     case "scale": {
       if (!(op.sx > 0 && op.sy > 0)) throw new OpError("scale factors must be positive")
-      const ids = op.atoms.map(ctx.atom)
+      const ids = withGroupMembers(mol, op.atoms.map(ctx.atom))
       const center = op.center ?? boundsCenter(mol, ids)
       return { mol: center ? scaleAtoms(mol, ids, center, op.sx, op.sy) : mol }
     }
     case "flip":
-      return { mol: flipAtoms(mol, op.atoms.map(ctx.atom), op.axis) }
+      return { mol: flipAtoms(mol, withGroupMembers(mol, op.atoms.map(ctx.atom)), op.axis) }
     case "clean": {
       const atoms = op.atoms ? op.atoms.map(ctx.atom) : mol.atoms.map((atom) => atom.id)
       return { mol: relax(mol, { atoms, locked: (op.lock ?? []).map(ctx.atom) }) }

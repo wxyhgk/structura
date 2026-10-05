@@ -4,7 +4,8 @@ import type { Molecule, Selection } from "@structura/core/types"
 
 /** The status bar's figures: formula and weight of the selection (or everything), and valence problems. */
 export function statusOf(mol: Molecule, selection: Selection) {
-  const source = selection.atoms.length > 0 ? selection.atoms : undefined
+  // A selected label counts its whole group (Ph is C6H5, not one carbon).
+  const source = selection.atoms.length > 0 ? atomIdsOfSelection(mol, { atoms: selection.atoms, bonds: [] }) : undefined
   const formula = plainFormula(mol, source)
   return {
     formula: displayFormula(formula),

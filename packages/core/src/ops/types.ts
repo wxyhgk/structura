@@ -82,6 +82,8 @@ export type Op =
    */
   | { op: "replace"; atoms: Ref[]; with: Replacement; as?: string }
   | { op: "duplicate"; atoms: Ref[] }
+  /** Shows abbreviations (Ph, Boc…) as labels, or draws them out: the groups touching `atoms`, or every group. */
+  | { op: "set_collapsed"; atoms?: Ref[]; collapsed: boolean }
   /**
    * With `join` (as dragging does), a moved atom that comes down on an atom that stayed
    * becomes that atom: a bond's end dropped on an atom connects there, a bond laid on a

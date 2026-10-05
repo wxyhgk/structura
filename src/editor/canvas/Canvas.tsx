@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
-import { atomById, bondById, bondsLeaving, componentOf, selectionFromAtoms } from "@structura/core/molecule"
+import { atomById, bondById, bondsLeaving, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
 import type { Drawing, Molecule, Point, Selection } from "@structura/core/types"
 import { AtomLabelInput } from "@/editor/canvas/AtomLabelInput"
 import { SceneView } from "@/editor/canvas/SceneView"
@@ -33,8 +33,11 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   /** Where the pointer last was over the canvas, in client coordinates. */
   const lastPointer = useRef<{ x: number; y: number } | null>(null)
   const [labelEdit, setLabelEdit] = useState<{ id: number; initial: string; replace?: number[] } | null>(null)
-  /** The molecule as of the last edit, ahead of the re-render when keys come fast. */
-  const current = () => props.latest().molecule
+  /**
+   * The molecule as of the last edit, ahead of the re-render when keys come fast, as shown:
+   * collapsed abbreviations are their labels, so nothing behind a label can be pointed at.
+   */
+  const current = () => displayMolecule(props.latest().molecule)
   /** What the last press hit and the drawing before it, to spot a double click. */
   const firstClick = useRef<{ hit: HoverTarget; before: Drawing; selection: Selection; time: number; x: number; y: number } | null>(null)
 

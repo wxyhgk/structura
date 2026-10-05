@@ -1,3 +1,4 @@
+import { groupsTouching, setCollapsed, withGroupMembers } from "../molecule/collapse.ts"
 import { RING_SHAPES, ringKindFor } from "../constants.ts"
 import { setAtomLabel } from "../label.ts"
 import {
@@ -110,7 +111,7 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
     }
     case "remove":
       return {
-        mol: deleteSelection(mol, { atoms: (op.atoms ?? []).map(ctx.atom), bonds: (op.bonds ?? []).map(ctx.bond) }),
+        mol: deleteSelection(mol, { atoms: withGroupMembers(mol, (op.atoms ?? []).map(ctx.atom)), bonds: (op.bonds ?? []).map(ctx.bond) }),
         next: null,
       }
     case "add_ring": {
@@ -156,8 +157,12 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
     }
     case "replace":
       return replaceFragment(mol, op, ctx)
+    case "set_collapsed": {
+      const ids = op.atoms ? op.atoms.map(ctx.atom) : null
+      return { mol: setCollapsed(mol, groupsTouching(mol, ids), op.collapsed), next: null }
+    }
     case "duplicate": {
-      const copy = duplicateAtoms(mol, op.atoms.map(ctx.atom))
+      const copy = duplicateAtoms(mol, withGroupMembers(mol, op.atoms.map(ctx.atom)))
       return { mol: copy.mol, next: null }
     }
     default:

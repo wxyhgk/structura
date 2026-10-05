@@ -53,6 +53,7 @@ export {
   sprout,
 } from "./molecule/pointer.ts"
 export { insertGroup } from "./molecule/abbreviate.ts"
+export { displayMolecule, groupsTouching, hiddenAtoms, setCollapsed, withGroupMembers } from "./molecule/collapse.ts"
 export { duplicateAtoms, placeBeside, sideBySide, spotBeside } from "./molecule/arrange.ts"
 export { relax } from "./molecule/relax.ts"
 export { joinAtoms, joinBonds, landings, mergeAtoms, mergeLandings } from "./molecule/join.ts"

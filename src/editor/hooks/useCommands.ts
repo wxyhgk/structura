@@ -2,7 +2,7 @@ import type { RefObject } from "react"
 import { toDocument } from "@structura/core/document"
 import { sceneToSvg } from "@structura/core/draw"
 import { placeholders, variableLabels } from "@structura/core/markush"
-import { atomIdsOfSelection, bondsLeaving, emptySelection } from "@structura/core/molecule"
+import { atomIdsOfSelection, bondsLeaving, emptySelection, groupsTouching } from "@structura/core/molecule"
 import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
@@ -45,6 +45,13 @@ export function useCommands({
   openFill?: () => void
 }) {
   const selected = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
+  /** The abbreviations the expand/collapse commands act on that are now collapsed (or not). */
+  const groupsIn = (collapsed: boolean) => {
+    const ids = new Set(groupsTouching(editor.mol, selected ? atomIdsOfSelection(editor.mol, editor.selection) : null))
+    return editor.mol.groups.filter((group) => ids.has(group.id) && group.collapsed === collapsed)
+  }
+  const setCollapsed = (collapsed: boolean) =>
+    editor.run([{ op: "set_collapsed", ...(selected ? { atoms: atomIdsOfSelection(editor.mol, editor.selection) } : {}), collapsed }], { keepSelection: true })
   const perArrow = (make: (direction: Arrow, key: string) => Command) =>
     Object.fromEntries(arrows.map((name) => [name.toLowerCase(), make(name.toLowerCase() as Arrow, `Arrow${name}`)])) as Record<Arrow, Command>
 
@@ -99,6 +106,9 @@ export function useCommands({
       keys: [{ key: "k", meta: true, shift: true }],
       enabled: editor.mol.atoms.length > 0,
     }),
+    // Abbreviations (Ph, Boc…): the selected ones, or all of them with nothing selected.
+    expandGroups: command(selected ? "展开选中的缩写" : "展开全部缩写", () => setCollapsed(false), { enabled: groupsIn(true).length > 0 }),
+    collapseGroups: command(selected ? "收起选中的缩写" : "收起全部缩写", () => setCollapsed(true), { enabled: groupsIn(false).length > 0 }),
     replace: command(
       "替换选中部分…",
       () => {

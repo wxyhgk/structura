@@ -85,6 +85,8 @@ export function MenuBar({
         <Item command={c.flipVertical} />
         <DropdownMenuSeparator />
         <Item command={c.clean} />
+        <Item command={c.expandGroups} />
+        <Item command={c.collapseGroups} />
         <Item command={c.replace} />
         <Item command={c.join} />
         <Item command={c.quickScaffold} />

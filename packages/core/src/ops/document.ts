@@ -1,3 +1,4 @@
+import { withGroupMembers } from "../molecule/collapse.ts"
 import { addReactionArrow } from "../drawing.ts"
 import { attachmentProblem } from "../markush/attachments.ts"
 import { sharers, variableProblem } from "../markush/variables.ts"
@@ -28,7 +29,7 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
     case "tumble": {
       if (!Number.isFinite(op.angle)) throw new OpError(`angle ${op.angle} is not a number`)
       const mol = drawing.molecule
-      const ids = op.atoms.map(ctx.atom)
+      const ids = withGroupMembers(mol, op.atoms.map(ctx.atom))
       const center = op.center ?? boundsCenter(mol, ids)
       if (!center) return { drawing }
       const given = op.depth ? new Map(Object.entries(op.depth).map(([id, z]) => [Number(id), z])) : depth

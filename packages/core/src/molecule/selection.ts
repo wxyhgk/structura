@@ -1,3 +1,4 @@
+import { withGroupMembers } from "./collapse.ts"
 import type { Molecule, Selection } from "../types.ts"
 import { bondById } from "./graph.ts"
 
@@ -12,7 +13,8 @@ export function atomIdsOfSelection(mol: Molecule, selection: Selection): number[
     ids.add(bond.a)
     ids.add(bond.b)
   }
-  return [...ids]
+  // A collapsed label stands for its whole group.
+  return withGroupMembers(mol, ids)
 }
 
 export function selectAll(mol: Molecule): Selection {

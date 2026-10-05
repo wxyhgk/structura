@@ -1,4 +1,5 @@
-import { forwardRef, useRef, useState } from "react"
+import { forwardRef, useMemo, useRef, useState } from "react"
+import { displayMolecule } from "@structura/core/molecule"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Canvas } from "@/editor/canvas/Canvas"
 import type { CanvasHandle } from "@/editor/canvas/types"
@@ -70,6 +71,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const [smilesOpen, setSmilesOpen] = useState(false)
   const [enumerateOpen, setEnumerateOpen] = useState(false)
   const [fillOpen, setFillOpen] = useState(false)
+  /** The molecule as the canvas shows it: collapsed abbreviations as labels. */
+  const shownMol = useMemo(() => displayMolecule(editor.mol), [editor.mol])
   const [recognizeOpen, setRecognizeOpen] = useState(false)
   const [guide, setGuide] = useState<GuideTopic | null>(null)
 
@@ -133,7 +136,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             />
             <Canvas
               ref={canvasRef}
-              mol={editor.mol}
+              mol={shownMol}
               arrows={editor.arrows}
               tool={editor.tool}
               bondStyle={editor.bondStyle}

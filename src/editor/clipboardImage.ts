@@ -1,3 +1,5 @@
+import { clipboardBlocked } from "@/editor/browser"
+
 /** Copy as image: an exported SVG put on the clipboard as a picture Word and PowerPoint paste. */
 
 /** Three times the drawing's size, so the picture stays sharp when it is enlarged in a slide. */
@@ -29,10 +31,20 @@ export async function svgToPng(svg: string, scale = SCALE): Promise<Blob> {
  * both (Chromium 124+). The PNG is handed over as a promise, so the write starts while the
  * click or key press still counts as the user's.
  */
+/** The picture as a PNG file instead, for when the clipboard is out of reach. */
+export async function downloadImage(svg: string, filename = "结构.png"): Promise<void> {
+  const url = URL.createObjectURL(await svgToPng(svg))
+  const link = document.createElement("a")
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 export async function writeImage(svg: string): Promise<void> {
-  if (!window.isSecureContext || !navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
-    throw new Error("这个浏览器不支持把图片放进剪贴板")
-  }
+  const blocked = clipboardBlocked()
+  if (blocked) throw new Error(blocked)
+  if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") throw new Error("这个浏览器不支持把图片放进剪贴板")
   const items: Record<string, Promise<Blob>> = { "image/png": svgToPng(svg) }
   if (ClipboardItem.supports?.("image/svg+xml")) items["image/svg+xml"] = Promise.resolve(new Blob([svg], { type: "image/svg+xml" }))
   await navigator.clipboard.write([new ClipboardItem(items)])

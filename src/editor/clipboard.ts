@@ -1,5 +1,5 @@
 import { failure, writeClipboard } from "@/editor/browser"
-import { writeImage } from "@/editor/clipboardImage"
+import { downloadImage, writeImage } from "@/editor/clipboardImage"
 import { pictureSvg } from "@/editor/pictureSvg"
 import type { EditorState } from "@/editor/useEditor"
 
@@ -33,7 +33,14 @@ export function selectionClipboard(
     },
     copyImage() {
       const svg = pictureSvg(editor.latest(), editor.selection, editor.colorHetero)
-      if (svg) writeImage(svg).catch((error) => report(`图片没有放进剪贴板：${failure(error)}`))
+      // Where the clipboard refuses, the picture is still worth having: it is downloaded instead.
+      if (svg)
+        writeImage(svg).catch((error) =>
+          downloadImage(svg).then(
+            () => report(`图片没有放进剪贴板，已改为下载“结构.png”。原因：${failure(error)}`),
+            () => report(`图片没有放进剪贴板：${failure(error)}`),
+          ),
+        )
     },
   }
 }

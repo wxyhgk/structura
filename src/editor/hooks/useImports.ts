@@ -3,7 +3,7 @@ import { isDocument, readDocument } from "@structura/core/document"
 import { usableRecords } from "@structura/core/import"
 import type { Molecule } from "@structura/core/types"
 import { looksLikeSmiles, smilesLines, smilesRecords } from "@structura/rdkit"
-import { failure, MOD, readClipboard } from "@/editor/browser"
+import { clipboardBlocked, failure, MOD, readClipboard } from "@/editor/browser"
 import type { Viewport } from "@structura/engine"
 import { importNotes, type ImportNotes } from "@/editor/imports/notes"
 import { readMolText } from "@/editor/imports/read"
@@ -105,7 +105,8 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
     try {
       text = await readClipboard()
     } catch {
-      setNotes({ opened: false, title: "粘贴", lines: [`浏览器没有允许读取剪贴板。请直接在画布上按 ${MOD}V，或在网站设置里允许访问剪贴板。`] })
+      const blocked = clipboardBlocked()
+      setNotes({ opened: false, title: "粘贴", lines: [blocked ? `请直接在画布上按 ${MOD}V。${blocked}` : `浏览器没有允许读取剪贴板。请直接在画布上按 ${MOD}V，或在网站设置里允许访问剪贴板。`] })
       return
     }
     if (!pasteText(text)) setNotes({ opened: false, title: "粘贴", lines: ["剪贴板里没有可以粘贴的结构（MOL 或 SMILES 文本）。"] })

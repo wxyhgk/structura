@@ -27,6 +27,15 @@ export function writeClipboard(text: string) {
 }
 
 /** The clipboard's text, for the Edit menu's paste; throws when the browser will not give it. */
+/**
+ * Why the page cannot use the clipboard API at all, or null. Browsers keep it to secure
+ * pages (https, localhost); a dev server opened by LAN address over http is not one.
+ */
+export function clipboardBlocked(): string | null {
+  if (window.isSecureContext) return null
+  return `当前地址 ${location.origin} 是 http，浏览器只在 https 或 localhost 下允许网页读写剪贴板。可以用 localhost 打开，或在 Edge 打开 edge://flags/#unsafely-treat-insecure-origin-as-secure，启用并填入 ${location.origin} 后重启浏览器。`
+}
+
 export async function readClipboard(): Promise<string> {
   if (!window.isSecureContext || !navigator.clipboard?.readText) throw new Error("clipboard unavailable")
   return navigator.clipboard.readText()

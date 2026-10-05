@@ -1,6 +1,8 @@
 import type { IncomingMessage, ServerResponse } from "node:http"
 import { MAX_TEXT, requestProblem } from "./check.ts"
 import { providerFrom, type AiEnv } from "./provider.ts"
+import { structureHandler } from "./structure/handler.ts"
+import { STRUCTURE_PATH } from "./structure/types.ts"
 import { FILL_PATH, type FillRequest, type FillResult } from "./types.ts"
 
 // The server side: the API key stays here, and the browser only ever sees FillResults.
@@ -8,7 +10,8 @@ import { FILL_PATH, type FillRequest, type FillResult } from "./types.ts"
 export { askClaude, CLAUDE_MODEL } from "./claude.ts"
 export { askOpenAI, OPENAI_MODEL } from "./openai.ts"
 export { providerFrom, type AiEnv, type Provider } from "./provider.ts"
-export { FILL_PATH }
+export { structureHandler } from "./structure/handler.ts"
+export { FILL_PATH, STRUCTURE_PATH }
 
 async function body(req: IncomingMessage): Promise<string> {
   let text = ""
@@ -48,11 +51,13 @@ export function fillHandler(env: AiEnv = process.env) {
   }
 }
 
-/** A Vite plugin serving fillHandler at FILL_PATH, for `vite` and `vite preview`. */
+/** A Vite plugin serving fillHandler at FILL_PATH and structureHandler at STRUCTURE_PATH, for `vite` and `vite preview`. */
 export function structuraAi(env: AiEnv = process.env) {
   const handler = fillHandler(env)
+  const structure = structureHandler(providerFrom(env))
   const mount = (server: { middlewares: { use(path: string, handle: typeof handler): unknown } }) => {
     server.middlewares.use(FILL_PATH, handler)
+    server.middlewares.use(STRUCTURE_PATH, structure)
   }
   return { name: "structura-ai", configureServer: mount, configurePreviewServer: mount }
 }

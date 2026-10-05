@@ -19,6 +19,8 @@ import { ImportNotesDialog } from "@/editor/shell/dialogs/ImportNotesDialog"
 import { EnumerateDialog } from "@/editor/markush/EnumerateDialog"
 import { FillDialog } from "@/editor/markush/FillDialog"
 import type { FillVariables } from "@/editor/markush/useFill"
+import { StructureDialog } from "@/editor/vision/StructureDialog"
+import type { RecognizeStructure } from "@/editor/vision/useRecognition"
 import { VariablesPanel } from "@/editor/markush/VariablesPanel"
 import { SmilesDialog } from "@/editor/shell/dialogs/SmilesDialog"
 import { MenuBar } from "@/editor/shell/MenuBar"
@@ -30,6 +32,7 @@ export type { EditorHandle, RunResult } from "@/editor/hooks/useEditorHandle"
 export type { EnumerateOptions, Enumeration } from "@structura/core/markush"
 export type { Op } from "@structura/core/ops"
 export type { FillVariables } from "@/editor/markush/useFill"
+export type { RecognizeStructure } from "@/editor/vision/useRecognition"
 
 export type EditorProps = {
   /** Molfile or SD text to start with; read once, when the editor mounts. */
@@ -46,13 +49,18 @@ export type EditorProps = {
    * Without it the button is not shown.
    */
   fillVariables?: FillVariables
+  /**
+   * How to reach the model for "从图片识别结构": the host streams the agent's steps back
+   * (see @structura/ai/server's structureHandler). Without it the menu item is not shown.
+   */
+  recognizeStructure?: RecognizeStructure
 }
 
 /**
  * Lays out the editor and wires state, commands and input together. It fills its
  * container, so the host decides its size.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, fillVariables }, ref) {
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, fillVariables, recognizeStructure }, ref) {
   const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
   const editor = useEditor(initial)
   const canvasRef = useRef<CanvasHandle>(null)
@@ -62,6 +70,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const [smilesOpen, setSmilesOpen] = useState(false)
   const [enumerateOpen, setEnumerateOpen] = useState(false)
   const [fillOpen, setFillOpen] = useState(false)
+  const [recognizeOpen, setRecognizeOpen] = useState(false)
   const [guide, setGuide] = useState<GuideTopic | null>(null)
 
   const imports = useImports(editor, viewport)
@@ -75,6 +84,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     openSmilesDialog: () => setSmilesOpen(true),
     openEnumerate: () => setEnumerateOpen(true),
     openGuide: () => setGuide("start"),
+    openRecognize: recognizeStructure ? () => setRecognizeOpen(true) : undefined,
   })
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
   useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange })
@@ -162,6 +172,19 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
 
           <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
           <EnumerateDialog open={enumerateOpen} onOpenChange={setEnumerateOpen} drawing={editor.latest()} colorHetero={editor.colorHetero} />
+          {recognizeStructure && (
+            <StructureDialog
+              open={recognizeOpen}
+              onOpenChange={setRecognizeOpen}
+              recognize={recognizeStructure}
+              onApply={(drawing) => {
+                // On an empty page the whole drawing goes in (variable attachments too); beside a drawing, its molecule.
+                const now = editor.latest()
+                if (now.molecule.atoms.length === 0 && now.arrows.length === 0) editor.loadDrawing(drawing)
+                else editor.appendMolecules([drawing.molecule], viewport.centre())
+              }}
+            />
+          )}
           {fillVariables && <FillDialog open={fillOpen} onOpenChange={setFillOpen} drawing={editor.latest()} run={editor.run} fill={fillVariables} />}
           <SmilesDialog
             open={smilesOpen}

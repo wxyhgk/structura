@@ -36,7 +36,7 @@ export async function askOpenAI(client: OpenAI, request: FillRequest, model = OP
 }
 
 /** What went wrong with the call, for the chemist. */
-function failure(error: unknown): string {
+export function failure(error: unknown): string {
   if (error instanceof OpenAI.AuthenticationError) return "API key 无效，请检查服务器上的 OPENAI_API_KEY。"
   if (error instanceof OpenAI.PermissionDeniedError) return "这个 API key 没有权限使用该模型。"
   if (error instanceof OpenAI.NotFoundError) return `找不到模型或接口（${error.message}）。请检查 OPENAI_MODEL，以及 OPENAI_BASE_URL 是否支持 Responses API。`

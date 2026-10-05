@@ -56,6 +56,7 @@ export function MenuBar({
         <Item command={c.newDocument} />
         <Item command={c.open} />
         <Item command={c.importSmiles} />
+        {c.recognizeImage.enabled && <Item command={c.recognizeImage} />}
         <DropdownMenuSeparator />
         <Item command={c.save} />
         <Item command={c.exportSvg} />

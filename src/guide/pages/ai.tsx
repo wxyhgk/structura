@@ -3,7 +3,7 @@ import { definePage } from "../types.ts"
 
 export const aiPage = definePage({
   id: "ai",
-  group: "通式（Markush）",
+  group: "AI 助手",
   title: "从专利文字填写",
   keywords: "AI 专利 文字 自动 填写 Claude OpenAI key",
   body: () => (

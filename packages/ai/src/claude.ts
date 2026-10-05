@@ -32,7 +32,7 @@ export async function askClaude(client: Anthropic, request: FillRequest): Promis
 }
 
 /** What went wrong with the call, for the chemist. */
-function failure(error: unknown): string {
+export function failure(error: unknown): string {
   if (error instanceof Anthropic.AuthenticationError) return "API key 无效，请检查服务器上的 ANTHROPIC_API_KEY。"
   if (error instanceof Anthropic.PermissionDeniedError) return "这个 API key 没有权限使用该模型。"
   if (error instanceof Anthropic.RateLimitError) return "请求太频繁，请稍后再试。"

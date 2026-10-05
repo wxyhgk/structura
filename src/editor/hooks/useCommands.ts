@@ -28,6 +28,7 @@ export function useCommands({
   openSmilesDialog,
   openEnumerate,
   openGuide,
+  openRecognize,
 }: {
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
@@ -37,6 +38,8 @@ export function useCommands({
   openSmilesDialog: () => void
   openEnumerate: () => void
   openGuide: () => void
+  /** Absent when the host has no way to reach a model. */
+  openRecognize?: () => void
 }) {
   const selected = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
   const perArrow = (make: (direction: Arrow, key: string) => Command) =>
@@ -46,6 +49,7 @@ export function useCommands({
     newDocument: command("新建", editor.newDocument, { keys: [{ key: "n", meta: true }], inFields: true }),
     open: command("打开…", openFileDialog, { keys: [{ key: "o", meta: true }], inFields: true }),
     importSmiles: command("导入 SMILES…", openSmilesDialog),
+    recognizeImage: command("从图片识别结构…", () => openRecognize?.(), { enabled: openRecognize != null }),
     save: command("保存", () => download("未命名.structura", toDocument(editor.latest()), "application/json"), {
       keys: [{ key: "s", meta: true }],
       inFields: true,

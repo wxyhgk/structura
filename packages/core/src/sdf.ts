@@ -61,6 +61,17 @@ function propertyPairs(line: string): Array<[number, number]> {
   return pairs
 }
 
+/**
+ * Atom symbols other programs use for an R-group: R# (numbered by an `M  RGP` line), and
+ * R or * as RDKit writes `[*:1]`, numbered by the atom-atom mapping field. They become a
+ * labelled carbon, the same as typing R1 on an atom; a bare one is plain R.
+ */
+const R_GROUP_SYMBOLS = new Set(["R#", "R", "*"])
+
+function rGroupLabel(number: number): string {
+  return number > 0 ? `R${number}` : "R"
+}
+
 function stereoFor(code: number): BondStereo {
   if (code === 1) return "up"
   if (code === 6) return "down"
@@ -95,6 +106,8 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
   }
 
   const atoms: Atom[] = []
+  // R-group atoms still labelled from their symbol alone, which RGP or ISO lines may number.
+  const unnumbered = new Set<number>()
   let depth = false
   for (let index = 0; index < atomCount; index++) {
     const line = lines[4 + index] ?? ""
@@ -110,6 +123,10 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
     if (symbol === "D" || symbol === "T") {
       atom.el = "H"
       atom.isotope = symbol === "D" ? 2 : 3
+    } else if (R_GROUP_SYMBOLS.has(symbol)) {
+      atom.el = "C"
+      atom.alias = rGroupLabel(int(line.slice(60, 63)))
+      if (atom.alias === "R") unnumbered.add(index + 1)
     } else if (!elementOf(symbol)) {
       atom.el = "C"
       atom.alias = symbol
@@ -169,13 +186,20 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
       for (const [number, mass] of propertyPairs(line)) {
         const atom = atoms[number - 1]
         if (!atom) continue
+        // RDKit writes the SMILES [1*] as an isotope on the R-group atom.
+        if (unnumbered.has(number)) {
+          atom.alias = rGroupLabel(mass)
+          unnumbered.delete(number)
+          continue
+        }
         if (mass >= 1 && mass <= 999) atom.isotope = mass
         else note("bad-molfile", `atom ${number} has mass number ${mass}; ignored`)
       }
     } else if (line.startsWith("M  RGP")) {
       for (const [number, group] of propertyPairs(line)) {
         const atom = atoms[number - 1]
-        if (atom && (!atom.alias || atom.alias === "R#")) atom.alias = `R${group}`
+        if (atom && (!atom.alias || unnumbered.has(number))) atom.alias = rGroupLabel(group)
+        unnumbered.delete(number)
       }
     } else if (line.startsWith("M  RAD")) {
       charges ??= []
@@ -183,7 +207,10 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
     } else if (line.startsWith("A  ")) {
       const atom = atoms[int(line.slice(3, 6)) - 1]
       const label = (lines[index + 1] ?? "").trim()
-      if (atom && label) atom.alias = label
+      if (atom && label) {
+        atom.alias = label
+        unnumbered.delete(int(line.slice(3, 6)))
+      }
       index++
     } else if (/^M {2}S(TY|LB|ST|AL|BL|SL|MT|DI|AP|CN|BV|DS|PA|NN)/.test(line)) {
       sgroups.add(line.slice(3, 6))

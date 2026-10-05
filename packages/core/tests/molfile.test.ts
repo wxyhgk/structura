@@ -116,6 +116,40 @@ test("an R# atom from another program gets its group number as the label", () =>
     .replace(/ C   0(.*)\n(\s+\S+\s+\S+\s+\S+) C   0/, " C   0$1\n$2 R#  0")
     .replace("M  END", "M  RGP  1   2   5\nM  END")
   assert.equal(readMolfile(text).mol.atoms[1].alias, "R5")
+  assert.deepEqual(readMolfile(text).problems, [])
+})
+
+test("R-group atoms read as variables without a notice, numbered however the file numbers them", () => {
+  const base = toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE))
+  /** The file with the second atom given another symbol and atom-atom mapping number. */
+  const second = (symbol: string, map = 0) => {
+    const lines = base.split("\n")
+    lines[5] = `${lines[5].slice(0, 31)}${symbol.padEnd(3, " ")}${lines[5].slice(34, 60)}${String(map).padStart(3, " ")}${lines[5].slice(63)}`
+    return lines.join("\n")
+  }
+  const read = (text: string) => {
+    const result = readMolfile(text)
+    assert.deepEqual(result.problems, [], text)
+    return result.mol.atoms[1]
+  }
+  assert.equal(read(second("R#")).alias, "R", "R# without M  RGP")
+  assert.equal(read(second("R", 2)).alias, "R2", "RDKit's [*:2]")
+  assert.equal(read(second("*", 3)).alias, "R3")
+  assert.equal(read(second("*")).alias, "R", "a bare *")
+  const isotope = read(second("R").replace("M  END", "M  ISO  1   2   4\nM  END"))
+  assert.equal(isotope.alias, "R4", "RDKit's [4*]")
+  assert.equal(isotope.isotope, undefined)
+})
+
+test("a drawing with R and R1 round-trips through MOL", () => {
+  let mol = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  mol = setAtomLabel(mol, mol.atoms[0].id, "R")
+  mol = setAtomLabel(mol, mol.atoms[1].id, "R1")
+  const text = toMolfile(mol)
+  const read = readMolfile(text)
+  assert.deepEqual(read.problems, [])
+  assert.deepEqual(read.mol.atoms.map((atom) => atom.alias), ["R", "R1"])
+  assert.equal(toMolfile(read.mol), text)
 })
 
 test("metals state their valence so readers add no hydrogens we did not draw", () => {

@@ -5,7 +5,7 @@ export const filesPage = definePage({
   id: "files",
   group: "文件",
   title: "保存、打开和导出",
-  keywords: "保存 打开 导出 SVG MOL SDF SMILES 粘贴 拖入 structura",
+  keywords: "保存 打开 导出 SVG MOL SDF SMILES 粘贴 拖入 structura R-group R#",
   body: ({ mod }) => (
     <>
       <Table
@@ -13,7 +13,7 @@ export const filesPage = definePage({
           [`[${mod}][S] 保存`, "存成 .structura 文件，通式变量、可变连接、片段都在里面"],
           [`[${mod}][O] 打开`, "打开 .structura、MOL 或 SDF；也可以把文件直接拖进页面"],
           ["导出 SVG / MOL", "文件菜单；MOL 只含分子本身，不含通式变量的定义"],
-          ["导入 SMILES", "文件菜单，或把 SMILES 文本直接粘贴到画布上；第一次会下载 RDKit（约 2.4 MB）"],
+          ["导入 SMILES", "文件菜单，或把 SMILES 文本直接粘贴到画布上；第一次会下载 RDKit（约 2.4 MB）。接点 *:1、*:2（写在方括号里）读成变量 R1、R2，不带编号的 * 读成 R；MOL 里的 R# 也一样"],
           [`[${mod}][N] 新建`, "清空画布（可以撤销）"],
         ]}
       />

@@ -3,6 +3,7 @@ import test from "node:test"
 import initRDKitModule from "@rdkit/rdkit"
 import { plainFormula } from "@structura/core/formula"
 import { usableRecords } from "@structura/core/import"
+import { placeholders } from "@structura/core/markush"
 import { toMolfile } from "@structura/core/molfile"
 import { readMolfile } from "@structura/core/sdf"
 import { looksLikeSmiles, smilesLines, smilesRecords, smilesToMolfile } from "../src/index.ts"
@@ -87,4 +88,16 @@ test("SMILES text becomes named records, and a bad line a record core leaves out
   const usable = usableRecords(records)
   assert.equal(usable.molecules.length, 2)
   assert.equal(usable.skipped, 1)
+})
+
+test("[*:1] becomes the variable R1, as if typed on the atom, and a bare * becomes R", () => {
+  const records = smilesRecords(rdkit, "c1ccccc1[*:1]\n[*:2]CC[*:1]\nc1ccccc1*")
+  for (const record of records) assert.deepEqual(record.problems, [], record.title)
+  const labels = records.map((record) => record.mol.atoms.flatMap((atom) => (atom.alias ? [atom.alias] : [])))
+  assert.deepEqual(labels, [["R1"], ["R2", "R1"], ["R"]])
+  assert.equal(plainFormula(records[0].mol), "C6H5", "the placeholder is not counted as carbon")
+
+  const R = { alternatives: [{ kind: "label" as const, text: "Me" }] }
+  const drawing = { molecule: records[1].mol, arrows: [], nextArrowId: 1, variables: { R1: R, R2: R } }
+  assert.deepEqual(placeholders(drawing).map((item) => item.name).sort(), ["R1", "R2"])
 })

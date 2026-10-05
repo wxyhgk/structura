@@ -123,9 +123,9 @@ test("files the editor cannot hold are reported, not guessed at", () => {
   const cut = "x\n  y\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0\n"
   assert.equal(readMolfile(cut).problems[0]?.severity, "error")
 
-  const rgroup = toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)).replace(/ C   0/, " R#  0")
-  const read = readMolfile(rgroup)
-  assert.equal(read.mol.atoms[0].alias, "R#")
+  const unknown = toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)).replace(/ C   0/, " Q   0")
+  const read = readMolfile(unknown)
+  assert.equal(read.mol.atoms[0].alias, "Q")
   assert.equal(read.problems[0]?.code, "unsupported-mol-feature")
 
   const radical = toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)).replace("M  END", "M  RAD  1   1   2\nM  END")

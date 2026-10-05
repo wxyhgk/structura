@@ -1,8 +1,11 @@
 import type { MolRecord } from "@structura/core/sdf"
 import type { Problem } from "@structura/core/validate"
 
-/** What the import dialog shows: whether anything was opened, and one line per problem. */
-export type ImportNotes = { opened: boolean; lines: string[] }
+/**
+ * What the import dialog shows: whether anything was opened, and one line per problem.
+ * `title` replaces the import heading for messages about something else, such as the clipboard.
+ */
+export type ImportNotes = { opened: boolean; lines: string[]; title?: string }
 
 const PROBLEM_TEXT: Partial<Record<Problem["code"], string>> = {
   "bad-molfile": "无法读取",

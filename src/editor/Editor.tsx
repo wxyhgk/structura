@@ -79,7 +79,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     editor,
     canvas: canvasRef,
     viewport,
-    clipboard,
+    clipboard: { ...clipboard, paste: () => void imports.pasteClipboard() },
     openFileDialog: () => fileRef.current?.click(),
     openSmilesDialog: () => setSmilesOpen(true),
     openEnumerate: () => setEnumerateOpen(true),

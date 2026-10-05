@@ -26,6 +26,12 @@ export function writeClipboard(text: string) {
   area.remove()
 }
 
+/** The clipboard's text, for the Edit menu's paste; throws when the browser will not give it. */
+export async function readClipboard(): Promise<string> {
+  if (!window.isSecureContext || !navigator.clipboard?.readText) throw new Error("clipboard unavailable")
+  return navigator.clipboard.readText()
+}
+
 export function isMac() {
   return /Mac|iPhone|iPad/.test(navigator.userAgent)
 }

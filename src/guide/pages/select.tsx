@@ -35,7 +35,7 @@ export const selectPage = definePage({
       <H>编辑</H>
       <Table
         rows={[
-          [`[${context.mod}][C] / [${context.mod}][X] / [${context.mod}][V]`, "复制 / 剪切 / 粘贴（剪贴板里是 MOL 文本）"],
+          [`[${context.mod}][C] / [${context.mod}][X] / [${context.mod}][V]`, "复制 / 剪切 / 粘贴（剪贴板里是 MOL 文本，也能粘贴 SMILES）；编辑菜单里也有，从菜单粘贴时浏览器会先询问是否允许读取剪贴板"],
           [`[${context.mod}][D]`, "在旁边复制一份"],
           [`[Delete] / [Backspace]`, "删除"],
           [`[${context.mod}][⇧][K]`, "整理结构（键长、键角、环形状），有选中时只整理选中部分"],

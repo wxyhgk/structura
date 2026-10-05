@@ -3,7 +3,7 @@ import { isDocument, readDocument } from "@structura/core/document"
 import { usableRecords } from "@structura/core/import"
 import type { Molecule } from "@structura/core/types"
 import { looksLikeSmiles, smilesLines, smilesRecords } from "@structura/rdkit"
-import { failure } from "@/editor/browser"
+import { failure, MOD, readClipboard } from "@/editor/browser"
 import type { Viewport } from "@structura/engine"
 import { importNotes, type ImportNotes } from "@/editor/imports/notes"
 import { readMolText } from "@/editor/imports/read"
@@ -70,11 +70,12 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
     }
   }
 
-  /** Pasted molfile or SMILES text lands beside the drawing; other text is left alone. */
-  function paste(event: ClipboardEvent) {
-    const text = event.clipboardData?.getData("text/plain") ?? ""
+  /**
+   * Molfile or SMILES text lands beside the drawing; returns false, doing nothing, for
+   * other text.
+   */
+  function pasteText(text: string): boolean {
     if (/^\s*M {2}END/m.test(text)) {
-      event.preventDefault()
       try {
         const { molecules, lines } = readMolText(text)
         addBeside(molecules)
@@ -82,12 +83,32 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
       } catch (error) {
         setNotes({ opened: false, lines: [`粘贴的内容无法读取：${failure(error)}`] })
       }
-    } else if (looksLikeSmiles(text)) {
-      event.preventDefault()
+      return true
+    }
+    if (looksLikeSmiles(text)) {
       void importSmiles(text)
         .then(({ lines, skipped }) => lines.length > 0 && setNotes({ opened: skipped < smilesLines(text).length, lines }))
         .catch(() => setNotes({ opened: false, lines: [RDKIT_FAILED] }))
+      return true
     }
+    return false
+  }
+
+  /** ⌘V: the editor takes the paste only for text it can read. */
+  function paste(event: ClipboardEvent) {
+    if (pasteText(event.clipboardData?.getData("text/plain") ?? "")) event.preventDefault()
+  }
+
+  /** 编辑 → 粘贴: the same, reading the clipboard itself, which the browser may refuse. */
+  async function pasteClipboard() {
+    let text: string
+    try {
+      text = await readClipboard()
+    } catch {
+      setNotes({ opened: false, title: "粘贴", lines: [`浏览器没有允许读取剪贴板。请直接在画布上按 ${MOD}V，或在网站设置里允许访问剪贴板。`] })
+      return
+    }
+    if (!pasteText(text)) setNotes({ opened: false, title: "粘贴", lines: ["剪贴板里没有可以粘贴的结构（MOL 或 SMILES 文本）。"] })
   }
 
   return {
@@ -97,6 +118,7 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
     openText,
     openFile,
     paste,
+    pasteClipboard,
     importSmiles,
     rdkitFailed: RDKIT_FAILED,
   }

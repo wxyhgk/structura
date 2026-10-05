@@ -70,6 +70,7 @@ export function MenuBar({
         <DropdownMenuSeparator />
         <Item command={c.copy} />
         <Item command={c.cut} />
+        <Item command={c.paste} />
         <Item command={c.duplicate} />
         <Item command={c.remove} />
         <Item command={c.selectAll} />

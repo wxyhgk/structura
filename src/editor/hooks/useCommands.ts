@@ -34,7 +34,7 @@ export function useCommands({
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
   viewport: Viewport
-  clipboard: { copy: () => void; cut: () => void }
+  clipboard: { copy: () => void; cut: () => void; paste: () => void }
   openFileDialog: () => void
   openSmilesDialog: () => void
   openEnumerate: () => void
@@ -73,6 +73,8 @@ export function useCommands({
     }),
     copy: command("复制", clipboard.copy, { hint: { key: "c", meta: true }, enabled: selected }),
     cut: command("剪切", clipboard.cut, { hint: { key: "x", meta: true }, enabled: selected }),
+    // The browser's own ⌘V pastes on the canvas; the menu reads the clipboard itself.
+    paste: command("粘贴", clipboard.paste, { hint: { key: "v", meta: true } }),
     duplicate: command("重复", editor.duplicateSelection, { keys: [{ key: "d", meta: true }], enabled: selected }),
     remove: command("删除", editor.removeSelection, { keys: [{ key: "Backspace" }, { key: "Delete" }] }),
     selectAll: command("全选", editor.selectEverything, { keys: [{ key: "a", meta: true }] }),

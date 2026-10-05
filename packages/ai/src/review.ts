@@ -1,4 +1,4 @@
-import { alternativeProblem, alternativesFromText, GROUP_CLASSES, isVariableName, variableProblem } from "@structura/core/markush"
+import { alternativeProblem, alternativesFromText, GROUP_CLASSES, isVariableName, variableProblem } from "@structura/markush"
 import type { Op } from "@structura/core/ops"
 import type { Alternative, Variable } from "@structura/core/types"
 import type { AnswerAlternative, FillAnswer, FillRequest } from "./types.ts"

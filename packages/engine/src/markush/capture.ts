@@ -1,4 +1,4 @@
-import { fragmentEnds, fragmentFrom, fragmentProblem } from "@structura/core/markush"
+import { fragmentEnds, fragmentFrom, fragmentProblem } from "@structura/markush"
 import { componentOf } from "@structura/core/molecule"
 import type { Op } from "@structura/core/ops"
 import type { Alternative, Molecule } from "@structura/core/types"

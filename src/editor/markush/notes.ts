@@ -1,4 +1,4 @@
-import type { Enumeration } from "@structura/core/markush"
+import type { Enumeration } from "@structura/markush"
 import { choiceName } from "./describe.ts"
 
 /**

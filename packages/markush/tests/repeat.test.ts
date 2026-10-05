@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { readDocument, toDocument } from "../../src/document.ts"
-import { emptyDrawing } from "../../src/drawing.ts"
-import { plainFormula } from "../../src/formula.ts"
-import { enumerate, pickFields } from "../../src/markush/enumerate.ts"
-import { applyOps, type Op } from "../../src/ops.ts"
-import type { Drawing, Repeat } from "../../src/types.ts"
+import { readDocument, toDocument } from "@structura/core/document"
+import { emptyDrawing } from "@structura/core/drawing"
+import { plainFormula } from "@structura/core/formula"
+import { enumerate, pickFields } from "../src/enumerate.ts"
+import { applyOps, type Op } from "@structura/core/ops"
+import type { Drawing, Repeat } from "@structura/core/types"
 
 function run(drawing: Drawing, ops: Op[]): Drawing {
   const result = applyOps(drawing, ops)
@@ -78,7 +78,7 @@ test("deleting ring positions shrinks the count with them", () => {
 })
 
 test("exported SVG draws the attachment line and (R1)m, and canvas and export share the geometry", async () => {
-  const { sceneToSvg, attachmentMarks, buildScene } = await import("../../src/draw.ts")
+  const { sceneToSvg, attachmentMarks, buildScene } = await import("@structura/core/draw")
   const drawing = formula({ min: 0, max: 4, name: "m" })
   const svg = sceneToSvg(drawing.molecule, false, [], drawing.attachments)
   const marks = attachmentMarks(drawing.molecule, drawing.attachments, buildScene(drawing.molecule, false).labels)

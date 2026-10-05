@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { alternativesFromText, alternativesOf, shareSources, sharers } from "@structura/core/markush"
+import { alternativesFromText, alternativesOf, shareSources, sharers } from "@structura/markush"
 import type { Alternative, Molecule, Variable } from "@structura/core/types"
 import { captureOps, type Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"

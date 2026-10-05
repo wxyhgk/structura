@@ -1,4 +1,4 @@
-import { ringPositionsAt } from "@structura/core/markush"
+import { ringPositionsAt } from "@structura/markush"
 import { atomById, bondLengthAt, chainCount, chainPoints } from "@structura/core/molecule"
 import { angleTo, snapAngle } from "@structura/core/geometry"
 import type { Point } from "@structura/core/types"

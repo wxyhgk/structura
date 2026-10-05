@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { alternativeProblem, GROUP_CLASSES } from "@structura/core/markush"
+import { alternativeProblem, GROUP_CLASSES } from "@structura/markush"
 import type { Alternative, GroupClass } from "@structura/core/types"
 import { CLASS_NAMES } from "./describe.ts"
 

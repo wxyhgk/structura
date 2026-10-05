@@ -1,22 +1,9 @@
-// Generic (Markush) formulas: what the variables may stand for, and expanding them into compounds.
-export { choiceText, enumerate, enumerateSteps, pickFields } from "./markush/enumerate.ts"
-export { fragmentEnds, fragmentFits, fragmentFormula, fragmentFrom, fragmentProblem, fragmentVariables, placeFragment, STAR } from "./markush/fragments.ts"
-export type { EnumerateOptions, Enumeration, Pick } from "./markush/enumerate.ts"
+// The generic (Markush) formula as part of the drawing: what makes variables, attachments and
+// drawn pieces valid, and the drawing conventions the ops keep them by. Expanding a formula
+// into compounds, and the questions the editor asks about it, are @structura/markush.
+export { attachmentProblem, pruneAttachments, repeatProblem } from "./markush/attachments.ts"
 export { BRIDGES } from "./markush/bridges.ts"
-export { alternativesFromText } from "./markush/parse.ts"
+export { fragmentEnds, fragmentFits, fragmentFormula, fragmentFrom, fragmentProblem, fragmentVariables, placeFragment, STAR } from "./markush/fragments.ts"
+export type { Placed } from "./markush/fragments.ts"
 export { absorbRingPointers, ringPointerAt, ringPositionsAt } from "./markush/pointer.ts"
-export { linkerNames, siteKind } from "./markush/sites.ts"
-export type { SiteKind } from "./markush/sites.ts"
-export {
-  alternativeProblem,
-  alternativesOf,
-  GROUP_CLASSES,
-  isVariableName,
-  nestedVariables,
-  placeholders,
-  shareSources,
-  sharers,
-  undefinedVariables,
-  variableLabels,
-  variableProblem,
-} from "./markush/variables.ts"
+export { alternativeProblem, alternativesOf, GROUP_CLASSES, isVariableName, nestedVariables, sharers, variableProblem } from "./markush/variables.ts"

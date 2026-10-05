@@ -1,5 +1,5 @@
 import { displayFormula } from "@structura/core/formula"
-import { fragmentFormula, GROUP_CLASSES } from "@structura/core/markush"
+import { fragmentFormula, GROUP_CLASSES } from "@structura/markush"
 import type { Alternative, BridgeName, Choice, GroupClass } from "@structura/core/types"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.

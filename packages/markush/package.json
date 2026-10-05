@@ -1,8 +1,8 @@
 {
-  "name": "@structura/engine",
+  "name": "@structura/markush",
   "version": "0.1.0",
   "private": true,
-  "description": "Structura 的交互引擎：快捷键、命中检测、吸附、工具、视图换算和每个用户动作对应的操作。不依赖 React 和浏览器。",
+  "description": "Structura 的通式（Markush）：把通式展开成具体化合物（批量生成、代表结构）、从文字读出候选项、关于变量和位点的查询。通式的数据模型和校验在 @structura/core。",
   "type": "module",
   "exports": {
     ".": {
@@ -16,11 +16,10 @@
     "src"
   ],
   "scripts": {
-    "build": "npm run build -w @structura/core && npm run build -w @structura/markush && tsc -p tsconfig.build.json",
+    "build": "npm run build -w @structura/core && tsc -p tsconfig.build.json",
     "test": "node --experimental-strip-types --conditions=structura-source --test \"tests/**/*.test.ts\""
   },
   "dependencies": {
-    "@structura/core": "*",
-    "@structura/markush": "*"
+    "@structura/core": "*"
   }
 }

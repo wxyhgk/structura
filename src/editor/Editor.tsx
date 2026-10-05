@@ -30,7 +30,7 @@ import { Toolbar } from "@/editor/shell/Toolbar"
 import { useEditor } from "@/editor/useEditor"
 
 export type { EditorHandle, RunResult } from "@/editor/hooks/useEditorHandle"
-export type { EnumerateOptions, Enumeration } from "@structura/core/markush"
+export type { EnumerateOptions, Enumeration } from "@structura/markush"
 export type { Op } from "@structura/core/ops"
 export type { FillVariables } from "@/editor/markush/useFill"
 export type { RecognizeStructure } from "@/editor/vision/useRecognition"

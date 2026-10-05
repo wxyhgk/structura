@@ -1,13 +1,13 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { readDocument, toDocument } from "../src/document.ts"
-import { emptyDrawing } from "../src/drawing.ts"
-import { plainFormula } from "../src/formula.ts"
-import { ringPositionsAt } from "../src/markush/pointer.ts"
-import { linkerNames, siteKind } from "../src/markush/sites.ts"
-import { enumerate } from "../src/markush/enumerate.ts"
-import { applyOps, type Op } from "../src/ops.ts"
-import type { Drawing } from "../src/types.ts"
+import { readDocument, toDocument } from "@structura/core/document"
+import { emptyDrawing } from "@structura/core/drawing"
+import { plainFormula } from "@structura/core/formula"
+import { ringPositionsAt } from "@structura/core/markush"
+import { linkerNames, siteKind } from "../src/sites.ts"
+import { enumerate } from "../src/enumerate.ts"
+import { applyOps, type Op } from "@structura/core/ops"
+import type { Drawing } from "@structura/core/types"
 
 function run(drawing: Drawing, ops: Op[]): Drawing {
   const result = applyOps(drawing, ops)

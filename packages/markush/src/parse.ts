@@ -1,5 +1,5 @@
-import { knownLabel } from "../label.ts"
-import type { Alternative, BridgeName } from "../types.ts"
+import { knownLabel } from "@structura/core"
+import type { Alternative, BridgeName } from "@structura/core/types"
 
 // What text typed for a variable means, shared by the editor and anything else filling a
 // formula (an agent reading a claim): "H, D, 卤素、CN" → H, D, F, Cl, Br, I, CN.

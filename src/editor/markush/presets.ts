@@ -1,4 +1,4 @@
-import { GROUP_CLASSES } from "@structura/core/markush"
+import { GROUP_CLASSES } from "@structura/markush"
 import type { Alternative } from "@structura/core/types"
 import { CLASS_NAMES, describeAlternative } from "./describe.ts"
 

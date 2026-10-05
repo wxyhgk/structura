@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { alternativesFromText } from "../src/markush/parse.ts"
+import { alternativesFromText } from "../src/parse.ts"
 
 const label = (text: string) => ({ kind: "label" as const, text })
 

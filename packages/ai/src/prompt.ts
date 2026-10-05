@@ -1,4 +1,4 @@
-import { BRIDGES, GROUP_CLASSES } from "@structura/core/markush"
+import { BRIDGES, GROUP_CLASSES } from "@structura/markush"
 import { abbreviationList } from "@structura/core/templates"
 import type { FillRequest } from "./types.ts"
 

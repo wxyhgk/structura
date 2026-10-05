@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react"
 import { readDocument, toDocument } from "@structura/core/document"
-import { enumerate, pickFields, type EnumerateOptions, type Enumeration } from "@structura/core/markush"
+import { enumerate, pickFields, type EnumerateOptions, type Enumeration } from "@structura/markush"
 import { toMolfile, toSdf } from "@structura/core/molfile"
 import type { Op, OpsResult } from "@structura/core/ops"
 import { failure } from "@/editor/browser"

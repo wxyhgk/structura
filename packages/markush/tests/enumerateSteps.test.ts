@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { emptyDrawing } from "../../src/drawing.ts"
-import { enumerate, enumerateSteps, pickFields } from "../../src/markush/enumerate.ts"
-import { toSdf } from "../../src/molfile.ts"
-import { applyOps, type Op } from "../../src/ops.ts"
-import type { Drawing, Molecule } from "../../src/types.ts"
-import { validate } from "../../src/validate.ts"
+import { emptyDrawing } from "@structura/core/drawing"
+import { enumerate, enumerateSteps, pickFields } from "../src/enumerate.ts"
+import { toSdf } from "@structura/core/molfile"
+import { applyOps, type Op } from "@structura/core/ops"
+import type { Drawing, Molecule } from "@structura/core/types"
+import { validate } from "@structura/core/validate"
 
 function run(drawing: Drawing, ops: Op[]): Drawing {
   const result = applyOps(drawing, ops)

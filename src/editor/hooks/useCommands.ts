@@ -1,7 +1,7 @@
 import type { RefObject } from "react"
 import { toDocument } from "@structura/core/document"
 import { sceneToSvg } from "@structura/core/draw"
-import { placeholders, variableLabels } from "@structura/core/markush"
+import { placeholders, variableLabels } from "@structura/markush"
 import { atomIdsOfSelection, bondsLeaving, emptySelection, groupsTouching } from "@structura/core/molecule"
 import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "@/editor/browser"

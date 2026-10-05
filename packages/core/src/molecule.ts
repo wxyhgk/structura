@@ -37,6 +37,7 @@ export {
   spiroRing,
 } from "./molecule/rings.ts"
 export { fuseRingAt } from "./molecule/fusion.ts"
+export { ringMembership } from "./molecule/cycles.ts"
 export { attachChairAt, fuseChairAt } from "./molecule/chair.ts"
 export {
   ATOM_HIT,

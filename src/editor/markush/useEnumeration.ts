@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { enumerateSteps, type EnumerateOptions, type Enumeration } from "@structura/core/markush"
+import { enumerateSteps, type EnumerateOptions, type Enumeration } from "@structura/markush"
 import type { Drawing } from "@structura/core/types"
 
 /** Work done per slice before the page gets to paint and handle input again. */

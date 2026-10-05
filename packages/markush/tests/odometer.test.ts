@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { odometer } from "../../src/markush/odometer.ts"
+import { odometer } from "../src/odometer.ts"
 
 test("the odometer turns the last wheel fastest and visits every combination once", () => {
   assert.deepEqual([...odometer([2, 3])], [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]])

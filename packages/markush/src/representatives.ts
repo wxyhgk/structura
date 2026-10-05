@@ -1,4 +1,4 @@
-import type { Alternative, BridgeName, Choice, GroupClass } from "../types.ts"
+import type { Alternative, BridgeName, Choice, GroupClass } from "@structura/core/types"
 
 /**
  * A typical member of a class, for generating example compounds from a claim that names

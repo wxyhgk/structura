@@ -1,13 +1,13 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { BOND_LENGTH } from "../../src/constants.ts"
-import { emptyDrawing } from "../../src/drawing.ts"
-import { plainFormula } from "../../src/formula.ts"
-import { enumerate, pickFields } from "../../src/markush/enumerate.ts"
-import { fragmentFrom, fragmentProblem, fragmentVariables } from "../../src/markush/fragments.ts"
-import { applyOps, type Op } from "../../src/ops.ts"
-import type { Alternative, Drawing, Molecule } from "../../src/types.ts"
-import { validate } from "../../src/validate.ts"
+import { BOND_LENGTH } from "@structura/core/constants"
+import { emptyDrawing } from "@structura/core/drawing"
+import { plainFormula } from "@structura/core/formula"
+import { enumerate, pickFields } from "../src/enumerate.ts"
+import { fragmentFrom, fragmentProblem, fragmentVariables } from "@structura/core/markush"
+import { applyOps, type Op } from "@structura/core/ops"
+import type { Alternative, Drawing, Molecule } from "@structura/core/types"
+import { validate } from "@structura/core/validate"
 
 function run(drawing: Drawing, ops: Op[]): Drawing {
   const result = applyOps(drawing, ops)
@@ -161,7 +161,7 @@ test("selected atoms become a piece of their own, renumbered and centred", () =>
 })
 
 test("a formula with drawn pieces survives a save and an open", async () => {
-  const { readDocument, toDocument } = await import("../../src/document.ts")
+  const { readDocument, toDocument } = await import("@structura/core/document")
   const drawing = run(emptyDrawing(), [
     { op: "add_ring", at: { x: 0, y: 0 }, size: 5 },
     { op: "label", atom: 1, text: "X" },

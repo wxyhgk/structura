@@ -1,4 +1,4 @@
-import { linkerNames, variableLabels } from "@structura/core/markush"
+import { linkerNames, variableLabels } from "@structura/markush"
 import type { Drawing } from "@structura/core/types"
 import type { FillRequest } from "./types.ts"
 

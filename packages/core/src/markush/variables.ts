@@ -2,7 +2,7 @@ import { knownLabel } from "../label.ts"
 import { BRIDGES } from "./bridges.ts"
 import { fragmentProblem, fragmentVariables } from "./fragments.ts"
 import { isVariableName } from "./names.ts"
-import type { Alternative, Drawing, GroupClass, Molecule, Variable } from "../types.ts"
+import type { Alternative, GroupClass, Variable } from "../types.ts"
 
 export { isVariableName }
 
@@ -26,7 +26,6 @@ export const GROUP_CLASSES: Record<GroupClass, { size: "carbons" | "members"; ar
   heteroarylene: { size: "members", arity: 2 },
 }
 
-
 /** A variable's list, following "same as" to the variable that holds it; empty if undefined. */
 export function alternativesOf(variables: Record<string, Variable> | undefined, name: string): Alternative[] {
   const variable = variables?.[name]
@@ -36,15 +35,6 @@ export function alternativesOf(variables: Record<string, Variable> | undefined, 
     return source && "alternatives" in source ? source.alternatives : []
   }
   return variable.alternatives
-}
-
-/**
- * The variables `name` could share a list with: those with a list of their own. None when
- * others already share `name`'s list, since then it must keep its own (no chains).
- */
-export function shareSources(variables: Record<string, Variable> | undefined, name: string): string[] {
-  if (sharers(variables, name).length > 0) return []
-  return Object.entries(variables ?? {}).flatMap(([other, variable]) => (other !== name && "alternatives" in variable ? [other] : []))
 }
 
 /** The variables whose list is "same as" this one. */
@@ -118,23 +108,4 @@ export function alternativeProblem(alternative: Alternative): string | null {
   }
   if (min != null && max != null && min > max) return `size ${min} is above ${max}`
   return null
-}
-
-/** The atoms standing for a variable of the drawing: those whose label names one. */
-export function placeholders(drawing: Drawing): Array<{ atom: number; name: string }> {
-  const variables = drawing.variables ?? {}
-  return drawing.molecule.atoms.flatMap((atom) => (atom.alias && Object.hasOwn(variables, atom.alias) ? [{ atom: atom.id, name: atom.alias }] : []))
-}
-
-/** Labels that look like variables but have no definition yet: on atoms in drawing order, then inside pieces. */
-export function undefinedVariables(drawing: Drawing): string[] {
-  const variables = drawing.variables ?? {}
-  const drawn = drawing.molecule.atoms.flatMap((atom) => (atom.alias && isVariableName(atom.alias) ? [atom.alias] : []))
-  const inPieces = Object.keys(variables).flatMap((name) => nestedVariables(variables, name))
-  return [...new Set([...drawn, ...inPieces])].filter((name) => !Object.hasOwn(variables, name))
-}
-
-/** A molecule's placeholder atoms, whatever the variable table says: any label shaped like a variable. */
-export function variableLabels(mol: Molecule): string[] {
-  return [...new Set(mol.atoms.flatMap((atom) => (atom.alias && isVariableName(atom.alias) ? [atom.alias] : [])))]
 }

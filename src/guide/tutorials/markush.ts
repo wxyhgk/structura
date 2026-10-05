@@ -1,4 +1,4 @@
-import { enumerate, fragmentFrom } from "@structura/core/markush"
+import { enumerate, fragmentFrom } from "@structura/markush"
 import type { Alternative } from "@structura/core/types"
 import { perHost, press, Walk } from "./walk.ts"
 

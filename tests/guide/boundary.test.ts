@@ -15,8 +15,8 @@ function sources(dir: string): string[] {
 
 const importsOf = (file: string) => [...readFileSync(file, "utf8").matchAll(/from\s+"([^"]+)"/g)].map((match) => match[1])
 
-test("the guide uses only core, React and the UI kit: never the editor", () => {
-  const allowed = (spec: string) => spec.startsWith(".") || spec === "react" || spec.startsWith("@structura/core") || spec.startsWith("@/components/")
+test("the guide uses only core, markush, React and the UI kit: never the editor", () => {
+  const allowed = (spec: string) => spec.startsWith(".") || spec === "react" || spec.startsWith("@structura/core") || spec === "@structura/markush" || spec.startsWith("@/components/")
   const outside = sources(join(SRC, "guide")).flatMap((file) => importsOf(file).filter((spec) => !allowed(spec)).map((spec) => `${relative(SRC, file)} → ${spec}`))
   assert.deepEqual(outside, [])
 })

@@ -1,7 +1,7 @@
-import { ringMembership } from "../molecule/cycles.ts"
-import { neighbors } from "../molecule/graph.ts"
-import type { Drawing } from "../types.ts"
-import { isVariableName } from "./names.ts"
+import { ringMembership } from "@structura/core/molecule"
+import { neighbors } from "@structura/core/molecule"
+import type { Drawing } from "@structura/core/types"
+import { isVariableName } from "@structura/core/markush"
 
 /**
  * How a placeholder sits, which decides what it can become: inside a ring (an atom such as

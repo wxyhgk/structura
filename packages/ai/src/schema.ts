@@ -1,4 +1,4 @@
-import { GROUP_CLASSES } from "@structura/core/markush"
+import { GROUP_CLASSES } from "@structura/markush"
 
 // The JSON schema Claude's answer is held to (structured outputs): every property required,
 // nullable where "not stated" is a real answer, nothing extra.

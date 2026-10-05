@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@structura/core": "*",
+    "@structura/markush": "*",
     "@structura/engine": "*",
     "@structura/ai": "*",
     "@structura/rdkit": "*",

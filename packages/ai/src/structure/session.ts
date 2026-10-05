@@ -1,6 +1,6 @@
 import { emptyDrawing } from "@structura/core"
 import { plainFormula } from "@structura/core/formula"
-import { isVariableName } from "@structura/core/markush"
+import { isVariableName } from "@structura/markush"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing, Molecule } from "@structura/core/types"
 import { validate } from "@structura/core/validate"

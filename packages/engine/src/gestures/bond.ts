@@ -1,4 +1,4 @@
-import { ringPositionsAt } from "@structura/core/markush"
+import { ringPositionsAt } from "@structura/markush"
 import { SNAP_ATOM, atomById, nearestAtom } from "@structura/core/molecule"
 import type { Op } from "@structura/core/ops"
 import type { Molecule, Point } from "@structura/core/types"

@@ -1,4 +1,4 @@
-import { enumerate } from "@structura/core/markush"
+import { enumerate } from "@structura/markush"
 import type { Alternative, Drawing } from "@structura/core/types"
 import { build, label, once, star } from "./build.ts"
 

@@ -21,13 +21,14 @@
     "src"
   ],
   "scripts": {
-    "build": "npm run build -w @structura/core && tsc -p tsconfig.build.json",
+    "build": "npm run build -w @structura/core && npm run build -w @structura/markush && tsc -p tsconfig.build.json",
     "test": "node --experimental-strip-types --conditions=structura-source --test \"tests/**/*.test.ts\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
     "@resvg/resvg-js": "^2.6.2",
     "@structura/core": "*",
+    "@structura/markush": "*",
     "openai": "^7.27.0"
   }
 }

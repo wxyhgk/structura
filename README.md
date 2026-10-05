@@ -47,7 +47,7 @@ function Host({ saved }: { saved?: string }) {
 
 ## 化学核心 `@structura/core`
 
-`packages/core` 是不带界面的化学核心：分子模型、操作层（ops）、MOL / SDF / `.structura` 读写、出图（SVG）、通式变量和批量生成。它只依赖自己的文件，不依赖 React 或浏览器，Node 里可以直接用（量标签宽度时有 canvas 就用，没有就估算）。
+`packages/core` 是不带界面的化学核心：分子模型、操作层（ops）、MOL / SDF / `.structura` 读写、出图（SVG），以及通式的数据模型和校验（变量、可变连接、片段必须合法，操作层据此检查）。它只依赖自己的文件，不依赖 React 或浏览器，Node 里可以直接用（量标签宽度时有 canvas 就用，没有就估算）。
 
 ```ts
 import { applyOps, emptyDrawing, enumerate, toSdf } from "@structura/core"
@@ -59,15 +59,19 @@ const result = applyOps(emptyDrawing(), [
 if (result.ok) console.log(toSdf(enumerate(result.drawing).molecules))
 ```
 
-公开的入口写在 `packages/core/package.json` 的 `exports` 里：根入口放常用的，细一些的工具在子路径下（`@structura/core/molecule`、`/draw`、`/markush`、`/ops`、`/types`…）。没列出的内部文件引用不到，TypeScript、Vite 和 Node 都会报错。
+公开的入口写在 `packages/core/package.json` 的 `exports` 里：根入口放常用的，细一些的工具在子路径下（`@structura/core/molecule`、`/draw`、`/ops`、`/types`…；`/markush` 只给 `@structura/markush` 用）。没列出的内部文件引用不到，TypeScript、Vite 和 Node 都会报错。
 
 - 仓库内（编辑器、测试）通过 `structura-source` 条件直接用 TypeScript 源码，改了立即生效，不用先构建。
 - 给别的项目用：`cd packages/core && npm run build`，生成 `dist/`（JavaScript 和类型声明）。
 - 核心自己的测试在 `packages/core/tests`，`cd packages/core && npm test` 可以单独跑；根目录的 `npm test` 两边一起跑。
 
+## 通式 `@structura/markush`
+
+`packages/markush` 在 core 的通式数据模型之上做事：把通式展开成具体化合物（批量生成、代表结构、(R1)m 的位置组合）、从专利文字读出候选项、关于变量和位点的查询。它只依赖 core；core 反过来不依赖它，`packages/markush/tests/boundary.test.ts` 会检查这两点。core 里的通式模型也从这里导出，所以界面、engine、ai 只从 `@structura/markush` 导入通式相关的东西。
+
 ## 交互引擎 `@structura/engine`
 
-`packages/engine` 是编辑器的“行为”，不含界面：编辑器状态（撤销历史、选中、工具设置，`createEditor()`，可订阅）、对选中部分的全部动作、鼠标手势（按下、移动、松开 → 预览和操作）、热点和悬停规则、按键路由和命令、悬停快捷键表、工具和它们的按键、命中检测、拖动吸附、双击的含义、视图的缩放平移换算，以及每个用户动作对应的操作（ops）。它只依赖 core，不依赖 React 和浏览器，`packages/engine/tests/boundary.test.ts` 会检查这一点。前端（`src/editor`）只负责渲染、菜单和对话框，把鼠标和键盘事件交给它。以后嵌进 3D 编辑器，或让 agent 模拟用户操作，都用同一套规则。
+`packages/engine` 是编辑器的“行为”，不含界面：编辑器状态（撤销历史、选中、工具设置，`createEditor()`，可订阅）、对选中部分的全部动作、鼠标手势（按下、移动、松开 → 预览和操作）、热点和悬停规则、按键路由和命令、悬停快捷键表、工具和它们的按键、命中检测、拖动吸附、双击的含义、视图的缩放平移换算，以及每个用户动作对应的操作（ops）。它只依赖 core 和 markush，不依赖 React 和浏览器，`packages/engine/tests/boundary.test.ts` 会检查这一点。前端（`src/editor`）只负责渲染、菜单和对话框，把鼠标和键盘事件交给它。以后嵌进 3D 编辑器，或让 agent 模拟用户操作，都用同一套规则。
 
 ## RDKit 桥 `@structura/rdkit`
 

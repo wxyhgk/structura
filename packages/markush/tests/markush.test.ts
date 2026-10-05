@@ -1,13 +1,14 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { emptyDrawing } from "../src/drawing.ts"
-import { plainFormula } from "../src/formula.ts"
-import { enumerate } from "../src/markush/enumerate.ts"
-import { toMolfile } from "../src/molfile.ts"
-import { alternativesOf, isVariableName, undefinedVariables } from "../src/markush/variables.ts"
-import { applyOps, type Op } from "../src/ops.ts"
-import type { Choice, Drawing } from "../src/types.ts"
-import { errorsOf, validate } from "../src/validate.ts"
+import { emptyDrawing } from "@structura/core/drawing"
+import { plainFormula } from "@structura/core/formula"
+import { enumerate } from "../src/enumerate.ts"
+import { toMolfile } from "@structura/core/molfile"
+import { alternativesOf, isVariableName } from "@structura/core/markush"
+import { undefinedVariables } from "../src/queries.ts"
+import { applyOps, type Op } from "@structura/core/ops"
+import type { Choice, Drawing } from "@structura/core/types"
+import { errorsOf, validate } from "@structura/core/validate"
 
 function run(drawing: Drawing, ops: Op[]): Drawing {
   const result = applyOps(drawing, ops)

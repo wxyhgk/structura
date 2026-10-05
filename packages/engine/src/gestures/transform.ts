@@ -1,4 +1,4 @@
-import { ringPointerAt } from "@structura/core/markush"
+import { ringPointerAt } from "@structura/markush"
 import { atomById, moveAtoms, rotateAtoms, scaleAtoms } from "@structura/core/molecule"
 import { angleTo, dist, signedDelta, snapAngle } from "@structura/core/geometry"
 import type { Point } from "@structura/core/types"

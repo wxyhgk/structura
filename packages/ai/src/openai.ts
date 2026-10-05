@@ -7,18 +7,21 @@ import type { FillRequest, FillResult } from "./types.ts"
 /** Used when OPENAI_MODEL does not name one. */
 export const OPENAI_MODEL = "gpt-5.5"
 
+/** How hard a reasoning model thinks before answering. */
+export type Effort = "low" | "medium" | "high"
+
 /**
  * Asks an OpenAI model, or any server speaking the OpenAI Responses API, to read the
  * variable definitions. The answer is held to ANSWER_SCHEMA (strict structured output);
  * the patent text is not stored on the provider's side.
  */
-export async function askOpenAI(client: OpenAI, request: FillRequest, model = OPENAI_MODEL): Promise<FillResult> {
+export async function askOpenAI(client: OpenAI, request: FillRequest, model = OPENAI_MODEL, effort: Effort = "high"): Promise<FillResult> {
   try {
     const response = await client.responses.create({
       model,
       instructions: SYSTEM_PROMPT,
       input: userMessage(request),
-      reasoning: { effort: "high" },
+      reasoning: { effort },
       max_output_tokens: 32000,
       store: false,
       text: { format: { type: "json_schema", name: "variable_definitions", schema: ANSWER_SCHEMA, strict: true } },

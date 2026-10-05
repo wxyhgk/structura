@@ -77,9 +77,12 @@ test("a model that never says done stops after the step limit, keeping what it b
 })
 
 test("an API failure or a stop ends the run with what was built", async () => {
+  let tries = 0
   const failed = await recognize({ image: PICTURE }, async () => {
+    tries++
     throw new Error("网关忙")
   }, () => {})
+  assert.equal(tries, 2, "a failed turn is tried once more")
   assert.deepEqual(failed.ok ? null : failed.error, "网关忙")
   const stop = new AbortController()
   stop.abort()

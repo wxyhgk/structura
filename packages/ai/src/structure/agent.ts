@@ -18,7 +18,16 @@ export const MOST_STEPS = 16
  * it says done or runs out of steps. Each step is reported as it happens; the result is the
  * drawing it ended with.
  */
-export async function recognize(request: StructureRequest, ask: Ask, onStep: (step: StructureStep) => void, signal?: AbortSignal): Promise<StructureResult> {
+export async function recognize(request: StructureRequest, askOnce: Ask, onStep: (step: StructureStep) => void, signal?: AbortSignal): Promise<StructureResult> {
+  // A model now and then answers with nothing usable (an empty or cut-off reply); one more try usually does it.
+  const ask: Ask = async (turns, format) => {
+    try {
+      return await askOnce(turns, format)
+    } catch {
+      if (signal?.aborted) throw new Error("已停止。")
+      return askOnce(turns, format)
+    }
+  }
   const session = createSession()
   const turns: Turn[] = [{ role: "user", text: startText(request.hint), images: [request.image] }]
   const stopped = (): StructureResult => ({ ok: false, error: "已停止。", drawing: session.drawing() })

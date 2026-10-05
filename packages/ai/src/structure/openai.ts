@@ -1,15 +1,18 @@
 import type OpenAI from "openai"
+import type { Effort } from "../openai.ts"
 import type { Ask } from "./agent.ts"
 import { STRUCTURE_PROMPT } from "./prompt.ts"
 import { firstObject } from "./json.ts"
 
 /** The agent's turns through the OpenAI Responses API (or any server speaking it): strict JSON, nothing stored. */
-export function openaiAsk(client: OpenAI, model: string): Ask {
+export function openaiAsk(client: OpenAI, model: string, effort?: Effort): Ask {
   return async (turns, format) => {
     const response = await client.responses.create({
       model,
       instructions: STRUCTURE_PROMPT,
       store: false,
+      // Left out, the server picks; reading a picture's locants needs real thought.
+      ...(effort ? { reasoning: { effort } } : {}),
       input: turns.map((turn) =>
         turn.role === "assistant"
           ? { type: "message" as const, role: "assistant" as const, content: turn.text }

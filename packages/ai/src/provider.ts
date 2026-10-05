@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import { KEY_HINT } from "./check.ts"
 import { askClaude, CLAUDE_MODEL, failure as claudeFailure } from "./claude.ts"
-import { askOpenAI, failure as openaiFailure, OPENAI_MODEL } from "./openai.ts"
+import { askOpenAI, failure as openaiFailure, OPENAI_MODEL, type Effort } from "./openai.ts"
 import { recognize, type Ask } from "./structure/agent.ts"
 import { claudeAsk } from "./structure/claude.ts"
 import { openaiAsk } from "./structure/openai.ts"
@@ -22,6 +22,8 @@ export type AiEnv = {
   /** Any server speaking the OpenAI Responses API. */
   OPENAI_BASE_URL?: string
   OPENAI_MODEL?: string
+  /** low, medium or high: how hard a reasoning model thinks. Left out: high for filling, medium for pictures. */
+  OPENAI_REASONING_EFFORT?: string
 }
 
 export type Provider = {
@@ -50,6 +52,8 @@ export function providerFrom(env: AiEnv): Provider | { error: string } {
   const choice = env.AI_PROVIDER?.trim().toLowerCase() || (env.OPENAI_API_KEY && !env.ANTHROPIC_API_KEY ? "openai" : "anthropic")
   if (choice === "openai") {
     const model = env.OPENAI_MODEL?.trim() || OPENAI_MODEL
+    const asked = env.OPENAI_REASONING_EFFORT?.trim().toLowerCase()
+    const effort = asked === "low" || asked === "medium" || asked === "high" ? (asked as Effort) : undefined
     let client: OpenAI | null = null
     const connect = (): OpenAI | { error: string } => {
       try {
@@ -65,11 +69,11 @@ export function providerFrom(env: AiEnv): Provider | { error: string } {
       model,
       ask: async (request) => {
         const ready = connect()
-        return "error" in ready ? { ok: false, error: ready.error } : askOpenAI(ready, request, model)
+        return "error" in ready ? { ok: false, error: ready.error } : askOpenAI(ready, request, model, effort ?? "high")
       },
       recognize: async (request, onStep, signal) => {
         const ready = connect()
-        return "error" in ready ? { ok: false, error: ready.error } : recognize(request, explained(openaiAsk(ready, model), openaiFailure), onStep, signal)
+        return "error" in ready ? { ok: false, error: ready.error } : recognize(request, explained(openaiAsk(ready, model, effort ?? "medium"), openaiFailure), onStep, signal)
       },
     }
   }

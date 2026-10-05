@@ -1,6 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
 import { atomById, bondById, bondsLeaving, componentOf, selectionFromAtoms } from "@structura/core/molecule"
-import { defaultSite } from "@structura/core/scaffolds"
 import type { Drawing, Molecule, Point, Selection } from "@structura/core/types"
 import { AtomLabelInput } from "@/editor/canvas/AtomLabelInput"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
@@ -14,6 +13,8 @@ import { useViewport } from "@/editor/canvas/useViewport"
 import type { RingHintShape } from "@/editor/markush/hints"
 import { hotkeyOps } from "@/editor/hotkeys/lookup"
 import { keyOf } from "@/editor/input/keymap"
+import { scaffoldOps } from "@/editor/ops"
+import { defaultPick } from "@/editor/tools/scaffoldPick"
 
 /** Two presses this close in time (ms) and space (px) make a double click. */
 const DOUBLE_CLICK_MS = 500
@@ -281,10 +282,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
           onCancel={() => setQuick(null)}
           onPick={(scaffold) => {
             setQuick(null)
-            const { target, world } = quick
-            if (target?.type === "atom") props.run([{ op: "add_scaffold", name: scaffold.name, site: defaultSite(scaffold), to: target.id }])
-            else if (target?.type === "bond") props.run([{ op: "add_scaffold", name: scaffold.name, edge: "a", onto: target.id }])
-            else props.run([{ op: "add_scaffold", name: scaffold.name, at: world }])
+            props.run(scaffoldOps(defaultPick(scaffold.name), quick.target, quick.world))
           }}
         />
       )}

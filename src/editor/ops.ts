@@ -1,6 +1,7 @@
 import { bondById, componentOf } from "@structura/core/molecule"
 import type { Op, OpsResult } from "@structura/core/ops"
-import type { BondStyle, Molecule, Selection } from "@structura/core/types"
+import type { BondStyle, HotTarget, Molecule, Point, Selection } from "@structura/core/types"
+import type { ScaffoldPick } from "@/editor/tools/types"
 
 export type RunOptions = {
   keepSelection?: boolean
@@ -41,4 +42,15 @@ export function joinOps(mol: Molecule, selection: Selection): Op[] | null {
     return [{ op: "join", atoms: [selection.atoms[0], selection.atoms[1]] }]
   }
   return null
+}
+
+/**
+ * What placing the chosen scaffold does where the user acts: on an atom it joins by its
+ * site, on a bond it fuses by its edge, on empty canvas it stands at that spot. The
+ * template tool and the quick template field both build their ops here.
+ */
+export function scaffoldOps(pick: ScaffoldPick, target: HotTarget | null, at: Point): Op[] {
+  if (target?.type === "atom") return [{ op: "add_scaffold", name: pick.name, site: pick.site, to: target.id }]
+  if (target?.type === "bond") return [{ op: "add_scaffold", name: pick.name, edge: pick.edge, onto: target.id }]
+  return [{ op: "add_scaffold", name: pick.name, at }]
 }

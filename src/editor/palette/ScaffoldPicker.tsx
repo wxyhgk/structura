@@ -1,9 +1,10 @@
 import { useState } from "react"
-import { defaultSite, scaffoldNamed, scaffolds } from "@structura/core/scaffolds"
+import { matchScaffolds, scaffoldNamed, scaffolds } from "@structura/core/scaffolds"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { MoleculeThumb } from "@/editor/common/MoleculeThumb"
 import { useOverlayMark } from "@/editor/input/overlays"
+import { defaultPick } from "@/editor/tools/scaffoldPick"
 import type { ScaffoldPick } from "@/editor/tools/types"
 import { ScaffoldSites } from "./ScaffoldSites.tsx"
 
@@ -25,15 +26,11 @@ export function ScaffoldPicker({
   const overlayMark = useOverlayMark()
   const [pick, setPick] = useState<ScaffoldPick>(current)
   const [query, setQuery] = useState("")
-  const words = query.trim().toLowerCase()
-  const shown = scaffolds().filter((item) => !words || item.name.includes(words) || item.zh.includes(words))
+  const shown = matchScaffolds(query)
   const groups = [...new Set(shown.map((item) => item.group))]
   const scaffold = scaffoldNamed(pick.name) ?? scaffolds()[0]
 
-  const choose = (name: string) => {
-    const next = scaffoldNamed(name)!
-    setPick({ name, site: defaultSite(next), edge: "a" })
-  }
+  const choose = (name: string) => setPick(defaultPick(name))
   const use = (chosen: ScaffoldPick) => {
     onPick(chosen)
     onOpenChange(false)
@@ -78,7 +75,7 @@ export function ScaffoldPicker({
                           key={item.name}
                           className={`flex flex-col items-center gap-0.5 rounded-md border p-1 text-[11px] ${item.name === scaffold.name ? "border-[#1a73e8] bg-[#e8f1fb]" : "border-transparent hover:bg-black/5"}`}
                           onClick={() => choose(item.name)}
-                          onDoubleClick={() => use({ name: item.name, site: defaultSite(item), edge: "a" })}
+                          onDoubleClick={() => use(defaultPick(item.name))}
                           data-testid={`scaffold-${item.name}`}
                         >
                           <MoleculeThumb mol={item.molecule} className="h-14 w-full object-contain" />

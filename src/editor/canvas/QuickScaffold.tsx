@@ -1,6 +1,5 @@
 import { useState } from "react"
-import { defaultSite, type Scaffold } from "@structura/core/scaffolds"
-import { matchScaffolds } from "./scaffoldSearch.ts"
+import { defaultEdge, defaultSite, matchScaffolds, type Scaffold } from "@structura/core/scaffolds"
 
 /**
  * The quick template field `/` opens by the pointer: type part of a name, ↑↓ to choose,
@@ -25,7 +24,7 @@ export function QuickScaffold({
   const [index, setIndex] = useState(0)
   const found = matchScaffolds(text).slice(0, 8)
   const chosen = found[Math.min(index, found.length - 1)]
-  const how = target === "atom" ? "接到这个原子上" : target === "bond" ? "并到这根键上（a 边）" : "放在这里"
+  const how = target === "atom" ? "接到这个原子上" : target === "bond" ? "并到这根键上" : "放在这里"
 
   return (
     <div className="absolute z-20 w-56 rounded-lg border border-[#d0d0d0] bg-white p-1.5 text-[12px] shadow-lg" style={{ left: left + 14, top: top + 10 }} data-testid="quick-scaffold">
@@ -61,7 +60,7 @@ export function QuickScaffold({
             >
               <span>{item.zh}</span>
               <span className="text-[11px] text-[#888]">{item.name}</span>
-              {target === "atom" && <span className="ml-auto text-[11px] text-[#888]">{defaultSite(item)}</span>}
+              {target != null && <span className="ml-auto text-[11px] text-[#888]">{target === "atom" ? defaultSite(item) : `${defaultEdge(item)} 边`}</span>}
             </button>
           </li>
         ))}

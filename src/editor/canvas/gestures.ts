@@ -1,7 +1,7 @@
 import { RING_SIZE } from "@structura/core/constants"
 import { ringPointerAt, ringPositionsAt } from "@structura/core/markush"
 import { ringHint } from "@/editor/markush/hints"
-import { paintOps } from "@/editor/ops"
+import { paintOps, scaffoldOps } from "@/editor/ops"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@structura/core/geometry"
 import {
   SNAP_ATOM,
@@ -116,11 +116,7 @@ export function pointerDown(host: PointerHost, event: { button: number; clientX:
     return
   }
   if (tool === "scaffold") {
-    // Empty canvas: put it there; an atom: join it by its site; a bond: fuse it by its edge.
-    const { name, site, edge } = host.props.scaffold
-    if (hit?.type === "atom") run([{ op: "add_scaffold", name, site, to: hit.id }])
-    else if (hit?.type === "bond") run([{ op: "add_scaffold", name, edge, onto: hit.id }])
-    else run([{ op: "add_scaffold", name, at: world }])
+    run(scaffoldOps(host.props.scaffold, hit, world))
     return
   }
   if (tool === "ring") {

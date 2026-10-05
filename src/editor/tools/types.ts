@@ -17,5 +17,3 @@ export type ToolId =
  * clicking an atom joins it there by `site` ("N9"), clicking a bond fuses it by `edge` ("b").
  */
 export type ScaffoldPick = { name: string; site: string; edge: string }
-
-export const DEFAULT_SCAFFOLD: ScaffoldPick = { name: "benzene", site: "C1", edge: "a" }

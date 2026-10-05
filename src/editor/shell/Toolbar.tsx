@@ -15,7 +15,8 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import type { Command, Commands } from "@/editor/hooks/useCommands"
+import type { Commands } from "@/editor/hooks/useCommands"
+import type { Command } from "@structura/engine"
 
 function IconButton({ command, label = command.label, children }: { command: Command; label?: string; children: ReactNode }) {
   return (

@@ -6,46 +6,11 @@ import { atomIdsOfSelection, bondsLeaving, emptySelection } from "@structura/cor
 import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
-import { joinOps, keyLabel, type KeyMatch, ROTATE_STEP, type Viewport, ZOOM_STEP } from "@structura/engine"
+import { command as engineCommand, type Command, type CommandOptions, joinOps, ROTATE_STEP, type Viewport, ZOOM_STEP } from "@structura/engine"
 import type { EditorState } from "@/editor/useEditor"
 
-/** One thing the user can do, however it is reached: menu, toolbar or keyboard. */
-export type Command = {
-  label: string
-  run: () => void
-  enabled: boolean
-  /** Combinations that trigger it from the keyboard. */
-  keys: KeyMatch[]
-  /** Shown next to the command, e.g. ⌘Z. */
-  shortcut?: string
-  /** Checked at key time, for conditions that live outside React state. */
-  when?: () => boolean
-  /** Its keys work even while typing in a field (⌘S, ⌘O), as they have nothing to do with text. */
-  inFields?: boolean
-}
-
-type Options = {
-  keys?: KeyMatch[]
-  /** A combination shown but handled elsewhere (⌘C / ⌘X use the browser's copy events). */
-  hint?: KeyMatch
-  enabled?: boolean
-  when?: () => boolean
-  inFields?: boolean
-}
-
-function command(label: string, run: () => void, options: Options = {}): Command {
-  const keys = options.keys ?? []
-  const shown = options.hint ?? keys[0]
-  return {
-    label,
-    run,
-    keys,
-    enabled: options.enabled ?? true,
-    shortcut: shown ? keyLabel(shown, MOD) : undefined,
-    when: options.when,
-    inFields: options.inFields,
-  }
-}
+/** A command, its shortcut written the way this platform does (⌘ or Ctrl). */
+const command = (label: string, run: () => void, options?: CommandOptions): Command => engineCommand(label, run, options, MOD)
 
 const arrows = ["Left", "Right", "Up", "Down"] as const
 type Arrow = Lowercase<(typeof arrows)[number]>
@@ -170,8 +135,3 @@ export function useCommands({
 }
 
 export type Commands = ReturnType<typeof useCommands>
-
-/** Every command, including the per-arrow ones, for key routing and the help page. */
-export function allCommands(commands: Commands): Command[] {
-  return Object.values(commands).flatMap((entry) => ("run" in entry ? [entry as Command] : Object.values(entry)))
-}

@@ -1,12 +1,13 @@
 import { useId, useRef, type RefObject } from "react"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { editorKeysBlocked, inTextField, keepFocusOffToolbar } from "@/editor/input/guards"
-import { matches } from "@structura/engine"
+import { allCommands, type CommandTable, type KeyRoutes, matches, routeFieldKey, routeKey } from "@structura/engine"
 import { useOwnership } from "@/editor/input/ownership"
-import { routeFieldKey, routeKey, type KeyRoutes } from "@/editor/input/router"
 import { useWindowListener } from "@/editor/input/useWindowListener"
 
-type Input = Omit<KeyRoutes, "canvas"> & {
+type Input = {
+  editor: KeyRoutes["editor"]
+  commands: CommandTable
   canvas: RefObject<CanvasHandle | null>
   /** A paste the editor owns; it takes the event only for text it can read. */
   onPaste: (event: ClipboardEvent) => void
@@ -20,7 +21,7 @@ type Input = Omit<KeyRoutes, "canvas"> & {
  * reach the import and clipboard handlers. Returns the props for the editor's root element
  * and the scope id its dialogs and menus carry.
  */
-export function useEditorInput({ onPaste, onCopy, canvas, ...routes }: Input) {
+export function useEditorInput({ onPaste, onCopy, canvas, editor, commands: table }: Input) {
   const overlayScope = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const { owns, mark } = useOwnership()
@@ -30,13 +31,14 @@ export function useEditorInput({ onPaste, onCopy, canvas, ...routes }: Input) {
     if (!owns(event)) return
     // ⌘A never selects the page's text, not even while a menu is open; fields keep it.
     if (matches(event, { key: "a", meta: true }) && !inTextField(event)) event.preventDefault()
-    if (inTextField(event) && routeFieldKey(event, routes.commands)) return
+    const commands = allCommands(table)
+    if (inTextField(event) && routeFieldKey(event, commands)) return
     if (editorKeysBlocked(event, overlayScope)) return
     if (event.code === "Space" && !event.repeat) {
       canvas.current?.holdSpace()
       event.preventDefault()
     }
-    routeKey(event, { ...routes, canvas: canvas.current })
+    routeKey(event, { editor, commands, canvas: canvas.current })
   })
   useWindowListener("keyup", (event) => {
     if (event.code === "Space") canvas.current?.releaseSpace()

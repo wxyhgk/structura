@@ -67,7 +67,7 @@ if (result.ok) console.log(toSdf(enumerate(result.drawing).molecules))
 
 ## 交互引擎 `@structura/engine`
 
-`packages/engine` 是编辑器的“行为”，不含界面：悬停快捷键表（哪个键对哪个原子做什么）、工具和它们的按键、按键匹配、命中检测、拖动吸附、双击的含义、视图的缩放平移换算，以及每个用户动作对应的操作（ops）。它只依赖 core，不依赖 React 和浏览器，`packages/engine/tests/boundary.test.ts` 会检查这一点。前端（`src/editor`）只负责渲染、菜单和对话框，把鼠标和键盘事件交给它。以后嵌进 3D 编辑器，或让 agent 模拟用户操作，都用同一套规则。
+`packages/engine` 是编辑器的“行为”，不含界面：编辑器状态（撤销历史、选中、工具设置，`createEditor()`，可订阅）、对选中部分的全部动作、热点和悬停规则、按键路由和命令、悬停快捷键表、工具和它们的按键、命中检测、拖动吸附、双击的含义、视图的缩放平移换算，以及每个用户动作对应的操作（ops）。它只依赖 core，不依赖 React 和浏览器，`packages/engine/tests/boundary.test.ts` 会检查这一点。前端（`src/editor`）只负责渲染、菜单和对话框，把鼠标和键盘事件交给它。以后嵌进 3D 编辑器，或让 agent 模拟用户操作，都用同一套规则。
 
 ## RDKit 桥 `@structura/rdkit`
 

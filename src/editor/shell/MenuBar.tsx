@@ -8,7 +8,8 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { Command, Commands } from "@/editor/hooks/useCommands"
+import type { Commands } from "@/editor/hooks/useCommands"
+import type { Command } from "@structura/engine"
 import { LogoMark } from "@/editor/palette/icons"
 import { useOverlayMark } from "@/editor/input/overlays"
 

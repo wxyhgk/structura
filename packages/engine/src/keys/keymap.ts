@@ -1,7 +1,7 @@
 /** A key combination. `meta` means ⌘ on a Mac and Ctrl elsewhere. */
 export type KeyMatch = { key: string; meta?: boolean; shift?: boolean; alt?: boolean }
 
-type KeyEventLike = { key: string; code?: string; metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean }
+export type KeyEventLike = { key: string; code?: string; metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean }
 
 const CODE_KEYS: Record<string, [string, string]> = { Minus: ["-", "_"], Equal: ["=", "+"] }
 

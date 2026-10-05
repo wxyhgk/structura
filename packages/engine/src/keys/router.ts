@@ -1,21 +1,26 @@
 import { shortcutToElement } from "@structura/core/elements"
-import type { CanvasHandle } from "@/editor/canvas/types"
-import { allCommands, type Commands } from "@/editor/hooks/useCommands"
-import { keyOf, matches, toolForKey } from "@structura/engine"
-import type { EditorState } from "@/editor/useEditor"
+import type { Command } from "../commands/command.ts"
+import type { HoverTarget } from "../pointer/types.ts"
+import type { Editor } from "../state/editor.ts"
+import { toolForKey } from "../tools/bindings.ts"
+import { keyOf, matches, type KeyEventLike } from "./keymap.ts"
 
+/** A key press as the router needs it: which key, with which modifiers, and a way to keep it from the page. */
+export type KeyEvent = KeyEventLike & { preventDefault(): void }
+
+/** What a key can reach: the editor's actions, the canvas under the pointer (if any), and the commands. */
 export type KeyRoutes = {
-  editor: Pick<EditorState, "selection" | "hotkeySelection" | "applyBondOrder" | "setBondStyle" | "setRingKind" | "setTool" | "applyElement">
-  canvas: CanvasHandle | null
-  commands: Commands
+  editor: Pick<Editor, "get" | "hotkeySelection" | "applyBondOrder" | "setBondStyle" | "setRingKind" | "setTool" | "applyElement">
+  canvas: { pointed(): HoverTarget; handleKey(event: KeyEvent): boolean; hasGesture(): boolean } | null
+  commands: Command[]
 }
 
 /**
  * A key pressed while typing in a field: the field keeps it (⌘A, ⌘C, ⌘Z act on the text)
  * unless a command says it works anywhere, like ⌘S. Returns whether a command ran.
  */
-export function routeFieldKey(event: KeyboardEvent, commands: Commands): boolean {
-  const command = allCommands(commands).find((item) => item.inFields && item.enabled && item.keys.some((match) => matches(event, match)))
+export function routeFieldKey(event: KeyEvent, commands: Command[]): boolean {
+  const command = commands.find((item) => item.inFields && item.enabled && item.keys.some((match) => matches(event, match)))
   if (!command) return false
   event.preventDefault()
   command.run()
@@ -33,11 +38,12 @@ export function routeFieldKey(event: KeyboardEvent, commands: Commands): boolean
  * 5. a tool key,
  * 6. an element key.
  */
-export function routeKey(event: KeyboardEvent, { editor, canvas, commands }: KeyRoutes): void {
+export function routeKey(event: KeyEvent, { editor, canvas, commands }: KeyRoutes): void {
   const key = keyOf(event)
   const plain = !event.metaKey && !event.ctrlKey && !event.altKey
   const pointed = canvas?.pointed() ?? null
-  const onSelection = pointed != null && (pointed.type === "atom" ? editor.selection.atoms : editor.selection.bonds).includes(pointed.id)
+  const { selection } = editor.get()
+  const onSelection = pointed != null && (pointed.type === "atom" ? selection.atoms : selection.bonds).includes(pointed.id)
   const idle = plain && !canvas?.hasGesture()
   if (idle && onSelection && editor.hotkeySelection(key)) {
     event.preventDefault()
@@ -52,7 +58,7 @@ export function routeKey(event: KeyboardEvent, { editor, canvas, commands }: Key
     event.preventDefault()
     return
   }
-  const command = allCommands(commands).find(
+  const command = commands.find(
     (item) => item.enabled && item.keys.some((match) => matches(event, match)) && (item.when?.() ?? true),
   )
   if (command) {

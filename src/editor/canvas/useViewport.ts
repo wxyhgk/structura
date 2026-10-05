@@ -1,6 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from "react"
-import { ZOOM_STEP } from "@/editor/canvas/view"
-import type { Viewport } from "@/editor/canvas/viewport"
+import { type Viewport, ZOOM_STEP } from "@structura/engine"
 
 /**
  * Binds the viewport to the canvas's svg: its box is the canvas on screen, the wheel pans

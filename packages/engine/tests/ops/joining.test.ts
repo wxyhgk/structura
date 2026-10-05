@@ -3,9 +3,9 @@ import test from "node:test"
 import { emptyDrawing } from "@structura/core"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
-import { snappedMove } from "../../src/editor/canvas/moveSnap.ts"
-import { joinOps, scaffoldOps } from "../../src/editor/ops.ts"
-import { defaultPick } from "../../src/editor/tools/scaffoldPick.ts"
+import { snappedMove } from "../../src/pointer/moveSnap.ts"
+import { joinOps, scaffoldOps } from "../../src/ops/builders.ts"
+import { defaultPick } from "../../src/tools/scaffoldPick.ts"
 
 function run(drawing: Drawing, ops: Op[]): Drawing {
   const result = applyOps(drawing, ops)

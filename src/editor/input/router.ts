@@ -1,8 +1,7 @@
 import { shortcutToElement } from "@structura/core/elements"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { allCommands, type Commands } from "@/editor/hooks/useCommands"
-import { keyOf, matches } from "@/editor/input/keymap"
-import { toolForKey } from "@/editor/tools/bindings"
+import { keyOf, matches, toolForKey } from "@structura/engine"
 import type { EditorState } from "@/editor/useEditor"
 
 export type KeyRoutes = {

@@ -1,7 +1,7 @@
 import { useId, useRef, type RefObject } from "react"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { editorKeysBlocked, inTextField, keepFocusOffToolbar } from "@/editor/input/guards"
-import { matches } from "@/editor/input/keymap"
+import { matches } from "@structura/engine"
 import { useOwnership } from "@/editor/input/ownership"
 import { routeFieldKey, routeKey, type KeyRoutes } from "@/editor/input/router"
 import { useWindowListener } from "@/editor/input/useWindowListener"

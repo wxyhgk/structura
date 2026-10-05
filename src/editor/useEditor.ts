@@ -8,10 +8,8 @@ import {
 import { emptyDrawing } from "@structura/core/drawing"
 import { toMolfile } from "@structura/core/molfile"
 import { applyOps, type Op } from "@structura/core/ops"
-import { ROTATE_STEP } from "@/editor/canvas/view"
+import { defaultPick, ROTATE_STEP, type Run, type RunOptions, type ScaffoldPick, selectionHotkeyOps, selectionTips, type ToolId } from "@structura/engine"
 import { useHistory } from "@/editor/hooks/useHistory"
-import { selectionHotkeyOps, selectionTips } from "@/editor/hotkeys/lookup"
-import type { Run, RunOptions } from "@/editor/ops"
 import {
   atomIdsOfSelection,
   subMolecule,
@@ -22,8 +20,6 @@ import {
   selectionFromAtoms,
 } from "@structura/core/molecule"
 import type { BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
-import { defaultPick } from "@/editor/tools/scaffoldPick"
-import type { ScaffoldPick, ToolId } from "@/editor/tools/types"
 
 export function useEditor(initial: Molecule[] | Drawing = []) {
   const { history, dispatch, latest } = useHistory(initial)

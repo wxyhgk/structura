@@ -1,7 +1,7 @@
 import { bondById, componentOf } from "@structura/core/molecule"
 import type { Op, OpsResult } from "@structura/core/ops"
 import type { BondStyle, HotTarget, Molecule, Point, Selection } from "@structura/core/types"
-import type { ScaffoldPick } from "@/editor/tools/types"
+import type { ScaffoldPick } from "../tools/types.ts"
 
 export type RunOptions = {
   keepSelection?: boolean

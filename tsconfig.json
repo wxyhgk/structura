@@ -6,7 +6,8 @@
     { "path": "./tsconfig.test.json" },
     { "path": "./packages/core" },
     { "path": "./packages/rdkit" },
-    { "path": "./packages/ai" }
+    { "path": "./packages/ai" },
+    { "path": "./packages/engine" }
   ],
   "compilerOptions": {
     "paths": {

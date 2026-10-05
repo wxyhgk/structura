@@ -1,8 +1,6 @@
 import type { Arrow, Attachment, BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
-import type { ScaffoldPick, ToolId } from "@/editor/tools/types"
-import type { Viewport } from "@/editor/canvas/viewport"
+import type { HoverTarget, Run, ScaffoldPick, ToolId, Viewport } from "@structura/engine"
 import type { RingHintShape } from "@/editor/markush/hints"
-import type { Run } from "@/editor/ops"
 
 export type CanvasHandle = {
   /** Hover hotkeys; returns whether the key was used. */
@@ -82,7 +80,7 @@ export type Preview =
   /** A bond dragged into a ring: it will attach at any of `positions`, meeting the ring at `centre`. */
   | { kind: "attachment"; a: Point; centre: Point; positions: Point[] }
 
-export type HoverTarget = { type: "atom" | "bond"; id: number } | null
+export type { HoverTarget }
 
 export type PointerHost = {
   props: EditorSlice

@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { MoleculeThumb } from "@/editor/common/MoleculeThumb"
 import { useOverlayMark } from "@/editor/input/overlays"
-import { defaultPick } from "@/editor/tools/scaffoldPick"
-import type { ScaffoldPick } from "@/editor/tools/types"
+import { defaultPick, type ScaffoldPick } from "@structura/engine"
 import { ScaffoldSites } from "./ScaffoldSites.tsx"
 
 /**

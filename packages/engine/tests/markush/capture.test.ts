@@ -3,7 +3,7 @@ import test from "node:test"
 import { emptyDrawing } from "@structura/core"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
-import { captureOps } from "../../../src/editor/markush/capture.ts"
+import { captureOps } from "../../src/markush/capture.ts"
 
 function run(drawing: Drawing, ops: Op[]): Drawing {
   const result = applyOps(drawing, ops)

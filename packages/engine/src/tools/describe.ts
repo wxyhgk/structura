@@ -1,6 +1,6 @@
-import type { AtomAction, BondAction } from "@/editor/hotkeys/lookup"
+import type { AtomAction, BondAction } from "../hotkeys/lookup.ts"
 import type { BondStyle } from "@structura/core/types"
-import { BOND_STYLES, RING_NAMES, sameStyle } from "@/editor/tools/catalog"
+import { BOND_STYLES, RING_NAMES, sameStyle } from "./catalog.ts"
 
 // What the hover keys do, in words, worked out from the key tables so the help never drifts.
 

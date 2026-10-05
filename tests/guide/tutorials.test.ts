@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { hotkeyOps } from "../../src/editor/hotkeys/lookup.ts"
+import { hotkeyOps } from "@structura/engine"
 import { stepPictures } from "../../src/guide/figures/marks.ts"
 import * as drawing from "../../src/guide/tutorials/drawing.ts"
 import * as markush from "../../src/guide/tutorials/markush.ts"

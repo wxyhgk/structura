@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { alternativesOf, linkerNames, nestedVariables, variableLabels } from "@structura/core/markush"
 import type { Attachment, Molecule, Variable } from "@structura/core/types"
-import type { Run } from "@/editor/ops"
+import type { Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"
 import { VariableRow } from "./VariableRow.tsx"
 

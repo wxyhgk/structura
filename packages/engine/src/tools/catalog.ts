@@ -1,6 +1,6 @@
 import { scaffoldNamed } from "@structura/core/scaffolds"
 import type { BondStyle, RingKind } from "@structura/core/types"
-import type { ScaffoldPick, ToolId } from "@/editor/tools/types"
+import type { ScaffoldPick, ToolId } from "./types.ts"
 
 // The tools the palette offers: bond styles, ring kinds and their labels.
 export const BOND_STYLES: { style: BondStyle; label: string }[] = [

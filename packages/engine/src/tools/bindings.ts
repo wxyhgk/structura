@@ -1,5 +1,5 @@
 import type { BondStyle, RingKind } from "@structura/core/types"
-import type { ToolId } from "@/editor/tools/types"
+import type { ToolId } from "./types.ts"
 
 /**
  * What a key does when the pointer is not over an atom or bond: pick a tool, and for the

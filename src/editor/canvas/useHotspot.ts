@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { atomById } from "@structura/core/molecule"
 import type { HotTarget, Molecule } from "@structura/core/types"
-import { sameHover } from "@/editor/canvas/targeting"
+import { sameHover } from "@structura/engine"
 import type { HoverTarget } from "@/editor/canvas/types"
 
 /** How far the pointer may drift before a pinned hotspot lets go, in screen pixels. */

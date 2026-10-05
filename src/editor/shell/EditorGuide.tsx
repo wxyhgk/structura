@@ -1,6 +1,6 @@
 import { GuideDialog, type GuideTopic, type PressKey } from "@/guide"
 import { MOD } from "@/editor/browser"
-import { hotkeyOps } from "@/editor/hotkeys/lookup"
+import { hotkeyOps } from "@structura/engine"
 import { useOverlayMark } from "@/editor/input/overlays"
 
 /** This editor's key table, as the guide pictures key presses; one function, so its pictures are drawn once. */

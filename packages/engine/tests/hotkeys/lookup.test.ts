@@ -6,7 +6,7 @@ import { dist } from "@structura/core/geometry"
 import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors } from "@structura/core/molecule"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { HotTarget, Molecule } from "@structura/core/types"
-import { ATOM_KEYS, BOND_KEYS, hasHotkey, hotkeyOps, selectionHotkeyOps, selectionTips } from "../../../src/editor/hotkeys/lookup.ts"
+import { ATOM_KEYS, BOND_KEYS, hasHotkey, hotkeyOps, selectionHotkeyOps, selectionTips } from "../../src/hotkeys/lookup.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 

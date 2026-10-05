@@ -6,10 +6,7 @@ import { atomIdsOfSelection, bondsLeaving, emptySelection } from "@structura/cor
 import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
-import { ROTATE_STEP, ZOOM_STEP } from "@/editor/canvas/view"
-import type { Viewport } from "@/editor/canvas/viewport"
-import { keyLabel, type KeyMatch } from "@/editor/input/keymap"
-import { joinOps } from "@/editor/ops"
+import { joinOps, keyLabel, type KeyMatch, ROTATE_STEP, type Viewport, ZOOM_STEP } from "@structura/engine"
 import type { EditorState } from "@/editor/useEditor"
 
 /** One thing the user can do, however it is reached: menu, toolbar or keyboard. */

@@ -1,11 +1,9 @@
 import { useState, type ReactNode } from "react"
 import { scaffoldNamed } from "@structura/core/scaffolds"
 import type { BondStyle, RingKind } from "@structura/core/types"
-import type { ScaffoldPick, ToolId } from "@/editor/tools/types"
+import { BOND_STYLES, keysFor, RING_KINDS, sameStyle, type ScaffoldPick, type ToolId, withKeys } from "@structura/engine"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { BOND_STYLES, RING_KINDS, sameStyle } from "@/editor/tools/catalog"
-import { keysFor, withKeys } from "@/editor/tools/bindings"
 import { ElementPalette } from "./ElementPalette.tsx"
 import { ScaffoldPicker } from "./ScaffoldPicker.tsx"
 import {

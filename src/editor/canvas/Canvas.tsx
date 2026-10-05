@@ -4,17 +4,12 @@ import type { Drawing, Molecule, Point, Selection } from "@structura/core/types"
 import { AtomLabelInput } from "@/editor/canvas/AtomLabelInput"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
 import { SceneView } from "@/editor/canvas/SceneView"
-import { doubleClickAction } from "@/editor/canvas/doubleClick"
+import { defaultPick, doubleClickAction, hitOf, hotkeyOps, hoverOf, keyOf, sameHover, scaffoldOps } from "@structura/engine"
 import { QuickScaffold } from "@/editor/canvas/QuickScaffold"
-import { hitOf, hoverOf, sameHover } from "@/editor/canvas/targeting"
 import type { CanvasHandle, EditorSlice, Gesture, HoverTarget, PointerHost, Preview } from "@/editor/canvas/types"
 import { useHotspot } from "@/editor/canvas/useHotspot"
 import { useViewport } from "@/editor/canvas/useViewport"
 import type { RingHintShape } from "@/editor/markush/hints"
-import { hotkeyOps } from "@/editor/hotkeys/lookup"
-import { keyOf } from "@/editor/input/keymap"
-import { scaffoldOps } from "@/editor/ops"
-import { defaultPick } from "@/editor/tools/scaffoldPick"
 
 /** Two presses this close in time (ms) and space (px) make a double click. */
 const DOUBLE_CLICK_MS = 500

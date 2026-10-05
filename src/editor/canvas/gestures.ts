@@ -1,7 +1,7 @@
 import { RING_SIZE } from "@structura/core/constants"
 import { ringPointerAt, ringPositionsAt } from "@structura/core/markush"
 import { ringHint } from "@/editor/markush/hints"
-import { paintOps, scaffoldOps } from "@/editor/ops"
+import { bondEnd, clampScale, dragIds, frameAt, handleCursor, hitOf, hoverOf, paintOps, scaffoldOps, selectionFrame, snappedMove } from "@structura/engine"
 import { angleTo, dist, pointInPolygon, signedDelta, snapAngle } from "@structura/core/geometry"
 import {
   SNAP_ATOM,
@@ -22,8 +22,6 @@ import {
   scaleAtoms,
   selectionFromAtoms,
 } from "@structura/core/molecule"
-import { snappedMove } from "./moveSnap.ts"
-import { bondEnd, clampScale, dragIds, frameAt, handleCursor, hitOf, hoverOf, selectionFrame } from "./targeting.ts"
 import type { Gesture, PointerHost } from "./types.ts"
 
 function scaleFactors(gesture: Extract<Gesture, { kind: "scale" }>, pointer: { x: number; y: number }): [number, number] {

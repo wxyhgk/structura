@@ -4,7 +4,7 @@ import { plainFormula } from "@structura/core/formula"
 import { figureSvg } from "../../src/guide/figures/build.ts"
 import * as drawing from "../../src/guide/figures/drawing.ts"
 import * as markush from "../../src/guide/figures/markush.ts"
-import { hotkeyOps } from "../../src/editor/hotkeys/lookup.ts"
+import { hotkeyOps } from "@structura/engine"
 import type { PressKey } from "../../src/guide/types.ts"
 
 const figures = { ...drawing, ...markush, figureSvg }

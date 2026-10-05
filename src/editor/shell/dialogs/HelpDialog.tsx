@@ -1,10 +1,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ATOM_KEYS, BOND_KEYS } from "@/editor/hotkeys/lookup"
+import { ATOM_KEYS, BOND_KEYS, describeAtomAction, describeBondAction, hotkeyLabel, keyLabel, TOOL_KEYS } from "@structura/engine"
 import { MOD } from "@/editor/browser"
 import { allCommands, type Commands } from "@/editor/hooks/useCommands"
-import { keyLabel } from "@/editor/input/keymap"
-import { TOOL_KEYS } from "@/editor/tools/bindings"
-import { describeAtomAction, describeBondAction, hotkeyLabel } from "@/editor/tools/describe"
 import { useOverlayMark } from "@/editor/input/overlays"
 
 function Shortcut({ keys, action }: { keys: string; action: string }) {

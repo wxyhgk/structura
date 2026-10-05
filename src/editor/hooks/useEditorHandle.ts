@@ -4,7 +4,7 @@ import { enumerate, pickFields, type EnumerateOptions, type Enumeration } from "
 import { toMolfile, toSdf } from "@structura/core/molfile"
 import type { Op, OpsResult } from "@structura/core/ops"
 import { failure } from "@/editor/browser"
-import { drawingPoints, type Viewport } from "@/editor/canvas/viewport"
+import { drawingPoints, type Viewport } from "@structura/engine"
 import type { Imports } from "@/editor/hooks/useImports"
 import type { EditorState } from "@/editor/useEditor"
 

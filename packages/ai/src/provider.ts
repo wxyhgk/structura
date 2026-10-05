@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk"
 import OpenAI from "openai"
+import { askChat } from "./chat.ts"
 import { KEY_HINT } from "./check.ts"
 import { askClaude, CLAUDE_MODEL, failure as claudeFailure } from "./claude.ts"
 import { askOpenAI, failure as openaiFailure, OPENAI_MODEL, type Effort } from "./openai.ts"
@@ -25,7 +26,7 @@ export type AiEnv = {
   OPENAI_MODEL?: string
   /** low, medium or high: how hard a reasoning model thinks. Left out: high for filling, medium for pictures. */
   OPENAI_REASONING_EFFORT?: string
-  /** "responses" (the default) or "chat", for servers offering only Chat Completions. Picture recognition only, for now. */
+  /** "responses" (the default) or "chat", for servers offering only Chat Completions. */
   OPENAI_API?: string
 }
 
@@ -72,7 +73,7 @@ export function providerFrom(env: AiEnv): Provider | { error: string } {
       model,
       ask: async (request) => {
         const ready = connect()
-        return "error" in ready ? { ok: false, error: ready.error } : askOpenAI(ready, request, model, effort ?? "high")
+        return "error" in ready ? { ok: false, error: ready.error } : (env.OPENAI_API?.trim().toLowerCase() === "chat" ? askChat : askOpenAI)(ready, request, model, effort ?? "high")
       },
       recognize: async (request, onStep, signal) => {
         const ready = connect()

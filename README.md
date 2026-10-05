@@ -105,7 +105,7 @@ OPENAI_API_KEY=sk-…
 ```
 
 - Claude 用 `claude-opus-5-5`，被安全分类器拒绝时服务器端自动改用推荐的备用模型（`fallbacks: "default"`）。OpenAI 用 Responses API 的严格 JSON Schema 输出，并设 `store: false`，专利文字不留在对方服务器上。兼容服务必须支持 `/responses` 和 `json_schema` 严格模式，只支持 Chat Completions 的服务用不了。
-- **从图片识别结构**（文件 → 从图片识别结构…）：AI 以 agent 方式工作，每一轮返回一个动作（搭建 / 查看 / 重来 / 完成），服务器执行后把结果（查看时附渲染图）发回，直到完成或达到步数上限，每一步实时显示在对话框里。每轮只用普通消息和严格 JSON 输出，不依赖模型或网关的工具调用，所以兼容 Responses API 的网关都能用；网关过载（429/5xx）时自动重试。推理模型的思考强度可用 `OPENAI_REASONING_EFFORT`（low / medium / high）设置，不设时填写通式用 high、识别图片用 medium。只支持 Chat Completions 的服务器（如智谱 `https://open.bigmodel.cn/api/paas/v4`）设 `OPENAI_API=chat`，目前只用于识别图片。接口是 `POST /api/ai/structure`，按行返回 JSON 事件。
+- **从图片识别结构**（文件 → 从图片识别结构…）：AI 以 agent 方式工作，每一轮返回一个动作（搭建 / 查看 / 重来 / 完成），服务器执行后把结果（查看时附渲染图）发回，直到完成或达到步数上限，每一步实时显示在对话框里。每轮只用普通消息和严格 JSON 输出，不依赖模型或网关的工具调用，所以兼容 Responses API 的网关都能用；网关过载（429/5xx）时自动重试。推理模型的思考强度可用 `OPENAI_REASONING_EFFORT`（low / medium / high）设置，不设时填写通式用 high、识别图片用 medium。只支持 Chat Completions 的服务器（如智谱 `https://open.bigmodel.cn/api/paas/v4`）设 `OPENAI_API=chat`（填写通式和识别图片都适用）。接口是 `POST /api/ai/structure`，按行返回 JSON 事件。
 - 浏览器端不含任何 SDK，也拿不到 key。开发服务器通过 Vite 插件 `structuraAi()`（`@structura/ai/server`）在 `POST /api/ai/variables` 提供接口。别的 Node 服务器可以挂 `fillHandler()`。
 - 嵌入时通过 `<Editor fillVariables={…} />` 指定怎么连到模型。不传就不显示这个按钮。
 - `@structura/ai` 的根入口可以在浏览器里用：`requestFor` 构建请求，`reviewAnswer` 校验回答，`fillOps` 生成操作。

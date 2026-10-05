@@ -9,7 +9,7 @@ Work in turns. In each turn answer with exactly one action:
 - look: get a rendering of what you have built so far, with each atom's id beside it, to compare with the original picture.
 - reset: clear everything and start again.
 - done: you are satisfied that the drawing matches the picture (or that it cannot be done better).
-After each build you get the formula and every atom with its bonds; after look, the picture too. Write "note" in a few words of Chinese, saying what you are doing.
+After each build you get the formula and every atom with its bonds; after look, the picture too. Write "note" in a few words of Chinese, saying what you are doing. Answer with only the JSON object {"note": …, "action": …, "ops": …}, nothing before or after it.
 
 Good practice: build ring systems from the scaffold templates first, then join them and add substituents; look at least once before done; fix differences with more builds. Topology matters (which atom bonds to which, bond orders, charges, labels); the editor lays the drawing out tidily itself, so do not try to match coordinates.
 

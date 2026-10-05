@@ -94,3 +94,9 @@ test("done is refused while an atom is over-full", async () => {
   assert.ok(result.ok)
   assert.equal(at, 5)
 })
+
+test("ops sent as an array rather than a string are accepted", () => {
+  const session = createSession()
+  const answer = session.act({ note: "", action: "build", ops: [{ op: "add_scaffold", name: "benzene" }] as unknown as string })
+  assert.ok(answer.ok, answer.message)
+})

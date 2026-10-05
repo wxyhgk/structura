@@ -14,8 +14,10 @@ export function openaiNext(client: OpenAI, model: string): NextAction {
       store: false,
       input: turns.map((turn) =>
         turn.role === "assistant"
-          ? { role: "assistant" as const, content: turn.text }
+          ? { type: "message" as const, role: "assistant" as const, content: turn.text }
           : {
+              // The type is optional for OpenAI, but some compatible servers insist on it.
+              type: "message" as const,
               role: "user" as const,
               content: [{ type: "input_text" as const, text: turn.text }, ...(turn.images ?? []).map((url) => ({ type: "input_image" as const, image_url: url, detail: "high" as const }))],
             },

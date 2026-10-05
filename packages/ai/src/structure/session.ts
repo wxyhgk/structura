@@ -61,7 +61,9 @@ export function createSession() {
       if (action.action !== "build") return { ok: true, message: describe(drawing.molecule, names) }
       let ops: Op[]
       try {
-        ops = JSON.parse(action.ops)
+        // Servers that do not enforce the schema let some models send the array itself.
+        const raw: unknown = action.ops
+        ops = typeof raw === "string" ? JSON.parse(raw) : raw
         if (!Array.isArray(ops)) throw new Error("not an array")
       } catch (error) {
         return { ok: false, message: `ops must be a JSON array of ops (${error instanceof Error ? error.message : String(error)}). Nothing changed.` }

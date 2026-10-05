@@ -40,8 +40,11 @@ export function MenuBar({
   commands,
   colorHetero,
   onColorHetero,
+  hasFill,
 }: {
   commands: Commands
+  /** Whether the host can reach a model for filling (the menu item may still be disabled for want of variables). */
+  hasFill: boolean
   colorHetero: boolean
   onColorHetero: (on: boolean) => void
 }) {
@@ -56,7 +59,6 @@ export function MenuBar({
         <Item command={c.newDocument} />
         <Item command={c.open} />
         <Item command={c.importSmiles} />
-        {c.recognizeImage.enabled && <Item command={c.recognizeImage} />}
         <DropdownMenuSeparator />
         <Item command={c.save} />
         <Item command={c.exportSvg} />
@@ -87,6 +89,13 @@ export function MenuBar({
         <DropdownMenuSeparator />
         <Item command={c.enumerate} />
       </MenuButton>
+      {(c.recognizeImage.enabled || hasFill) && (
+        <MenuButton label="AI">
+          <Item command={c.recognizeImage} />
+          <Item command={c.fillFromText} />
+          {!c.fillFromText.enabled && <div className="px-2 pb-1.5 text-[11px] leading-snug text-[#888]">先在结构上画出 R1、X 等变量，才能从专利文字填写</div>}
+        </MenuButton>
+      )}
       <MenuButton label="查看">
         <Item command={c.zoomIn} />
         <Item command={c.zoomOut} />

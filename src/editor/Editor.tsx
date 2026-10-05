@@ -85,6 +85,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     openEnumerate: () => setEnumerateOpen(true),
     openGuide: () => setGuide("start"),
     openRecognize: recognizeStructure ? () => setRecognizeOpen(true) : undefined,
+    openFill: fillVariables ? () => setFillOpen(true) : undefined,
   })
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
   useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange })
@@ -114,7 +115,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               if (file) void imports.openFile(file)
             }}
           />
-          <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} />
+          <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} hasFill={fillVariables != null} />
           <Toolbar commands={commands} zoom={zoom} />
 
           <div className="flex min-h-0 flex-1">

@@ -1,7 +1,7 @@
 import type { RefObject } from "react"
 import { toDocument } from "@structura/core/document"
 import { sceneToSvg } from "@structura/core/draw"
-import { placeholders } from "@structura/core/markush"
+import { placeholders, variableLabels } from "@structura/core/markush"
 import { atomIdsOfSelection, bondsLeaving, emptySelection } from "@structura/core/molecule"
 import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "@/editor/browser"
@@ -29,6 +29,7 @@ export function useCommands({
   openEnumerate,
   openGuide,
   openRecognize,
+  openFill,
 }: {
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
@@ -40,6 +41,8 @@ export function useCommands({
   openGuide: () => void
   /** Absent when the host has no way to reach a model. */
   openRecognize?: () => void
+  /** 从专利文字填写; absent when the host has no way to reach a model. */
+  openFill?: () => void
 }) {
   const selected = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
   const perArrow = (make: (direction: Arrow, key: string) => Command) =>
@@ -50,6 +53,10 @@ export function useCommands({
     open: command("打开…", openFileDialog, { keys: [{ key: "o", meta: true }], inFields: true }),
     importSmiles: command("导入 SMILES…", openSmilesDialog),
     recognizeImage: command("从图片识别结构…", () => openRecognize?.(), { enabled: openRecognize != null }),
+    // Filling needs variables to fill: labels such as R1, X on the formula, or ones already defined (as the variables panel shows them).
+    fillFromText: command("从专利文字填写变量…", () => openFill?.(), {
+      enabled: openFill != null && (variableLabels(editor.mol).length > 0 || Object.keys(editor.variables ?? {}).length > 0),
+    }),
     save: command("保存", () => download("未命名.structura", toDocument(editor.latest()), "application/json"), {
       keys: [{ key: "s", meta: true }],
       inFields: true,

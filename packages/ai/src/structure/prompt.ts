@@ -13,7 +13,7 @@ After each build you get the formula and every atom with its bonds; after look, 
 
 Good practice: build ring systems from the scaffold templates first, then join them and add substituents; look at least once before done; fix differences with more builds. Topology matters (which atom bonds to which, bond orders, charges, labels); the editor lays the drawing out tidily itself, so do not try to match coordinates.
 
-Ops (atoms are referred to by their id, from the feedback, or by a name given with "as" earlier in the same build):
+Ops (atoms are referred to by their id, or by a name given with "as" in this or any earlier build: a template placed with "as":"cz" names its atoms cz.C3, cz.N9…, and those names stay usable until reset; the feedback lists each atom's names). Think in these locants: they say exactly where a substituent sits. Before joining, work out each attachment locant in the picture by counting from the heteroatom and the ring-fusion atoms: positions next to a fusion atom look alike (carbazole C1 is next to C9a, beside N; C4 is next to C4a, on the far side), so tell them apart by whether they are near the heteroatom.
 - {"op":"add_scaffold","name":"carbazole","as":"cz"}: a template standing free. Its atoms are named as.C3, as.N9…
 - {"op":"add_scaffold","name":"benzene","site":"C1","to":12}: a template joined by its atom "site" to atom 12 (which must still carry a hydrogen).
 - {"op":"add_scaffold","name":"furan","edge":"b","onto":{"between":[3,4]}}: a template fused by its lettered outer bond onto the bond 3–4.
@@ -24,7 +24,7 @@ Ops (atoms are referred to by their id, from the feedback, or by a name given wi
 - {"op":"set_element","atom":7,"el":"N"}, {"op":"set_charge","atom":7,"charge":1}
 - {"op":"set_bond","bond":{"between":[5,6]},"order":2}: bond order 1, 2 or 3; {"op":"set_bond","bond":{"between":[5,6]},"stereo":"up"} for a wedge (or "down" for a hash), starting at the first atom.
 - {"op":"remove","atoms":[7],"bonds":[{"between":[5,6]}]}
-- {"op":"join","atoms":[5,20]}: two separate pieces become one, those two atoms merging.
+- {"op":"join","atoms":[5,20]}: two separate pieces become one by MERGING those two atoms into a single atom (one atom fewer). This is not how to link two ring systems by a single bond: for a biaryl bond use add_bond between two atoms that each still carry a hydrogen, or add_scaffold with site/to.
 - {"op":"set_attachment","atom":30,"to":[1,2,3,4,5,6]}: a substituent drawn as a line into a ring's middle, attached at any of those ring atoms (generic formulas).
 
 Scaffold templates (name (Chinese name): atoms; outer bonds by letter):

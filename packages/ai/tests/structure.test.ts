@@ -10,18 +10,20 @@ import { structureProblem } from "../src/structure/types.ts"
 const build = (ops: unknown[], note = "搭"): Action => ({ note, action: "build", ops: JSON.stringify(ops) })
 const PICTURE = "data:image/png;base64,iVBORw0KGgo="
 
-test("a session builds all or nothing, names last only within a build, and reset starts over", () => {
+test("a session builds all or nothing, keeps the names it was given for later builds, and reset starts over", () => {
   const session = createSession()
   const first = session.act(build([{ op: "add_scaffold", name: "carbazole", as: "cz" }]))
   assert.ok(first.ok)
-  assert.match(first.message, /cz\.N9=\d+/)
+  assert.match(first.message, /\d+ N \((?:cz\.N9)\)/, "each atom shows its names")
   assert.match(first.message, /Formula C12H9N/)
-  const n9 = Number(/cz\.N9=(\d+)/.exec(first.message)![1])
-  const bad = session.act(build([{ op: "add_scaffold", name: "benzene", site: "C1", to: "cz.N9" }]))
-  assert.equal(bad.ok, false, "the name cz is gone in a new build")
-  assert.match(bad.message, /Nothing changed/)
-  assert.ok(session.act(build([{ op: "add_scaffold", name: "benzene", site: "C1", to: n9 }])).ok)
+  // A later build still knows cz.N9.
+  const later = session.act(build([{ op: "add_scaffold", name: "benzene", site: "C1", to: "cz.N9", as: "ph" }]))
+  assert.ok(later.ok, later.message)
   assert.equal(plainFormula(session.drawing().molecule), "C18H13N")
+  assert.match(later.message, /ph\.C1/)
+  const bad = session.act(build([{ op: "add_atom", el: "C", to: "nobody" }]))
+  assert.equal(bad.ok, false)
+  assert.match(bad.message, /Nothing changed/)
   assert.equal(session.act({ note: "", action: "build", ops: "not json" }).ok, false)
   session.act({ note: "", action: "reset", ops: "" })
   assert.equal(session.drawing().molecule.atoms.length, 0)
@@ -74,4 +76,21 @@ test("pictures from the browser are checked before anything is sent", () => {
   assert.ok(structureProblem({ image: "data:text/plain;base64,aGk=" }))
   assert.ok(structureProblem({ image: PICTURE, hint: "x".repeat(3000) }))
   assert.ok(structureProblem(null))
+})
+
+test("done is refused while an atom is over-full", async () => {
+  const script: Action[] = [
+    build([{ op: "add_atom", el: "C", as: "c" }, ...[1, 2, 3, 4, 5].map(() => ({ op: "add_atom", el: "C", to: "c" }))]),
+    { note: "", action: "done", ops: "" },
+    { note: "", action: "reset", ops: "" },
+    build([{ op: "add_atom", el: "C" }]),
+    { note: "", action: "done", ops: "" },
+  ]
+  const steps: StructureStep[] = []
+  let at = 0
+  const result = await recognize({ image: PICTURE }, async () => script[at++], (step) => steps.push(step))
+  assert.equal(steps[1].ok, false)
+  assert.match(steps[1].message, /valence/)
+  assert.ok(result.ok)
+  assert.equal(at, 5)
 })

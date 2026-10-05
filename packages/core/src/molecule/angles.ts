@@ -1,17 +1,36 @@
-import { angleTo, norm, signedDelta } from "../geometry.ts"
-import type { Molecule } from "../types.ts"
+import { angleTo, norm, pointFrom, pointInPolygon, signedDelta } from "../geometry.ts"
+import type { Atom, Molecule } from "../types.ts"
+import { ringMembership } from "./cycles.ts"
 import { atomById, neighbors } from "./graph.ts"
 
-/** The widest empty sector between bonds, as sorted directions go round: where it starts and how wide. */
-function widestGap(directions: number[]): { start: number; gap: number } {
+type Gap = { start: number; gap: number }
+
+/** The empty sectors between bonds, as sorted directions go round: where each starts and how wide. */
+function gaps(directions: number[]): Gap[] {
   const angles = [...directions].sort((a, b) => a - b)
-  let best = { start: 0, gap: -1 }
-  for (let index = 0; index < angles.length; index++) {
-    const start = angles[index]
+  return angles.map((start, index) => {
     const end = angles[(index + 1) % angles.length] + (index === angles.length - 1 ? Math.PI * 2 : 0)
-    if (end - start > best.gap) best = { start, gap: end - start }
-  }
-  return best
+    return { start, gap: end - start }
+  })
+}
+
+/** Whether a sector opens into one of the atom's rings, as the inside angle of a ring does. */
+function insideRing(mol: Molecule, atom: Atom, { start, gap }: Gap): boolean {
+  const probe = pointFrom(atom, start + gap / 2, 1)
+  const at = new Map(mol.atoms.map((item) => [item.id, item]))
+  return ringMembership(mol).rings.some((ring) => ring.includes(atom.id) && pointInPolygon(probe, ring.map((id) => at.get(id)!)))
+}
+
+/**
+ * The widest empty sector around a branched atom that does not open into one of its rings,
+ * so a ring-fusion atom, whose three sectors may be equal, still sprouts outward; the
+ * widest of all when every sector is inside a ring.
+ */
+function widestGap(mol: Molecule, atom: Atom, directions: number[]): Gap {
+  const all = gaps(directions)
+  const widest = (list: Gap[]) => list.reduce((best, item) => (item.gap > best.gap ? item : best), { start: 0, gap: -1 })
+  const open = (ringMembership(mol).count.get(atom.id) ?? 0) > 0 ? all.filter((item) => !insideRing(mol, atom, item)) : all
+  return widest(open.length > 0 ? open : all)
 }
 
 /**
@@ -32,7 +51,7 @@ export function sproutAngle(mol: Molecule, atomId: number): number {
     const lastTurn = signedDelta(previous, incoming)
     return norm(incoming - lastTurn)
   }
-  const { start, gap } = widestGap(bonded.map((item) => angleTo(atom, item)))
+  const { start, gap } = widestGap(mol, atom, bonded.map((item) => angleTo(atom, item)))
   return norm(start + gap / 2)
 }
 
@@ -53,7 +72,7 @@ export function branchAngles(mol: Molecule, id: number): [number, number] {
     const away = angleTo(atom, bonded[0])
     return [away + (2 * Math.PI) / 3, away - (2 * Math.PI) / 3]
   }
-  const { start, gap } = widestGap(bonded.map((item) => angleTo(atom, item)))
+  const { start, gap } = widestGap(mol, atom, bonded.map((item) => angleTo(atom, item)))
   const spread = Math.min(Math.PI / 3, Math.max(0.35, (gap - 0.5) / 2))
   const mid = start + gap / 2
   return [mid - spread, mid + spread]

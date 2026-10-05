@@ -114,3 +114,35 @@ test("the eraser removes what it is pressed on; hovering shows what the pointer 
   click({ x: first.x, y: first.y })
   assert.equal(atoms(editor).length, 5)
 })
+
+test("the bond tool dragged from a ring's middle out into the open makes a substituent with a variable attachment, in one step", () => {
+  const { editor, drag, shown, host } = withTool("bond")
+  editor.run([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }])
+  const ring = atoms(editor)
+  const centre = { x: ring.reduce((sum, atom) => sum + atom.x, 0) / 6, y: ring.reduce((sum, atom) => sum + atom.y, 0) / 6 }
+  const out = { x: centre.x + 110, y: centre.y - 40 }
+  pointerDown(host, { button: 0, clientX: centre.x, clientY: centre.y, shiftKey: false, altKey: false })
+  pointerMove(host, { button: 0, clientX: out.x, clientY: out.y, shiftKey: false, altKey: false })
+  assert.equal(shown.preview?.kind, "attachment", "the preview shows the attachment on the way")
+  pointerUp(host, { button: 0, clientX: out.x, clientY: out.y, shiftKey: false, altKey: false })
+  const drawing = editor.latest()
+  assert.equal(drawing.molecule.atoms.length, 7)
+  assert.equal(drawing.molecule.bonds.length, 6, "no ordinary bond is drawn")
+  const made = drawing.molecule.atoms.at(-1)!
+  assert.deepEqual({ x: Math.round(made.x), y: Math.round(made.y) }, { x: Math.round(out.x), y: Math.round(out.y) })
+  assert.equal(made.alias, "R1", "it is an R group straight away")
+  assert.equal(drawing.attachments?.[0].atom, made.id)
+  assert.equal(drawing.attachments?.[0].to.length, 6)
+  // One step: a single undo takes it all away.
+  editor.undo()
+  assert.equal(editor.latest().molecule.atoms.length, 6)
+  // With R1 taken, the next one is R2.
+  assert.ok(editor.run([{ op: "add_atom", el: "C", as: "taken" }, { op: "label", atom: "taken", text: "R1" }]))
+  drag(centre, { x: centre.x - 60, y: centre.y + 60 }, out)
+  assert.equal(editor.latest().molecule.atoms.at(-1)!.alias, "R2")
+  editor.undo()
+  editor.undo()
+  // A short drag that stays inside the ring is no attachment.
+  drag(centre, { x: centre.x + 8, y: centre.y + 2 }, { x: centre.x + 10, y: centre.y + 2 })
+  assert.equal(editor.latest().attachments, undefined)
+})

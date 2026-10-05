@@ -1,10 +1,12 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
-import { atomById, bondsLeaving, componentOf, selectionFromAtoms } from "@structura/core/molecule"
-import type { Drawing, Molecule, Selection } from "@structura/core/types"
+import { atomById, bondById, bondsLeaving, componentOf, selectionFromAtoms } from "@structura/core/molecule"
+import { defaultSite } from "@structura/core/scaffolds"
+import type { Drawing, Molecule, Point, Selection } from "@structura/core/types"
 import { AtomLabelInput } from "@/editor/canvas/AtomLabelInput"
 import { pointerDown, pointerMove, pointerUp } from "@/editor/canvas/gestures"
 import { SceneView } from "@/editor/canvas/SceneView"
 import { doubleClickAction } from "@/editor/canvas/doubleClick"
+import { QuickScaffold } from "@/editor/canvas/QuickScaffold"
 import { hitOf, hoverOf, sameHover } from "@/editor/canvas/targeting"
 import type { CanvasHandle, EditorSlice, Gesture, HoverTarget, PointerHost, Preview } from "@/editor/canvas/types"
 import { useHotspot } from "@/editor/canvas/useHotspot"
@@ -32,6 +34,10 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const [handleCursor, setHandleCursor] = useState<string | null>(null)
   const [rotating, setRotating] = useState(false)
   /** The label field: on one atom, or on a selected fragment to replace (`replace` lists its atoms). */
+  /** The quick template field `/` opened: what it acts on (fixed when it opened) and where it shows. */
+  const [quick, setQuick] = useState<{ target: HoverTarget; world: Point; screen: Point } | null>(null)
+  /** Where the pointer last was over the canvas, in client coordinates. */
+  const lastPointer = useRef<{ x: number; y: number } | null>(null)
   const [labelEdit, setLabelEdit] = useState<{ id: number; initial: string; replace?: number[] } | null>(null)
   /** The molecule as of the last edit, ahead of the re-render when keys come fast. */
   const current = () => props.latest().molecule
@@ -154,6 +160,18 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     hotspot: () => hotspot.active(current()),
     pointed: () => hotspot.under(),
     focusAtom: hotspot.pin,
+    quickScaffold() {
+      // What it will act on is fixed now: the pointer's atom or bond, else the hotspot, else
+      // the spot under the pointer, so moving the pointer while typing changes nothing.
+      const mol = current()
+      const target = hotspot.under() ?? hotspot.active(mol)
+      const { zoom: scale, pan: shift } = viewport.get()
+      const client = lastPointer.current
+      const world = client ? viewport.toWorld(client.x, client.y) : viewport.centre()
+      const anchor = target?.type === "atom" ? atomById(mol, target.id) : target?.type === "bond" ? bondMiddle(mol, target.id) : world
+      if (target?.type === "atom") hotspot.pin(target.id)
+      setQuick({ target, world, screen: { x: shift.x + (anchor ?? world).x * scale, y: shift.y + (anchor ?? world).y * scale } })
+    },
     replaceFragment(ids: number[]) {
       const mol = current()
       // The field sits on the atom that joins the fragment to the rest, where the new piece goes.
@@ -205,6 +223,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
           pointerDown(host, event)
         }}
         onPointerMove={(event) => {
+          lastPointer.current = { x: event.clientX, y: event.clientY }
           hotspot.track(event.clientX, event.clientY, () => hoverOf(current(), viewport.toWorld(event.clientX, event.clientY), viewport.get().zoom))
           pointerMove(host, event)
         }}
@@ -254,6 +273,21 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
           }}
         />
       )}
+      {quick && (
+        <QuickScaffold
+          left={quick.screen.x}
+          top={quick.screen.y}
+          target={quick.target?.type ?? null}
+          onCancel={() => setQuick(null)}
+          onPick={(scaffold) => {
+            setQuick(null)
+            const { target, world } = quick
+            if (target?.type === "atom") props.run([{ op: "add_scaffold", name: scaffold.name, site: defaultSite(scaffold), to: target.id }])
+            else if (target?.type === "bond") props.run([{ op: "add_scaffold", name: scaffold.name, edge: "a", onto: target.id }])
+            else props.run([{ op: "add_scaffold", name: scaffold.name, at: world }])
+          }}
+        />
+      )}
       {shown.atoms.length === 0 && preview == null && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-[14px] leading-6 text-[#9a9a9a]">
           在空白处点击，画一条键
@@ -264,3 +298,10 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     </div>
   )
 })
+
+/** The middle of a bond, where the quick template field shows when it will fuse there. */
+function bondMiddle(mol: Molecule, id: number): Point | undefined {
+  const bond = bondById(mol, id)
+  const [a, b] = bond ? [atomById(mol, bond.a), atomById(mol, bond.b)] : []
+  return a && b ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } : undefined
+}

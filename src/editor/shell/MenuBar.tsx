@@ -81,6 +81,7 @@ export function MenuBar({
         <Item command={c.clean} />
         <Item command={c.replace} />
         <Item command={c.join} />
+        <Item command={c.quickScaffold} />
         <DropdownMenuSeparator />
         <Item command={c.enumerate} />
       </MenuButton>

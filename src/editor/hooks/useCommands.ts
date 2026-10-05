@@ -128,6 +128,8 @@ export function useCommands({
       // Only a fragment joined to the rest by one bond (or a whole molecule) can be swapped.
       { keys: [{ key: "e", meta: true }], enabled: selected && bondsLeaving(editor.mol, atomIdsOfSelection(editor.mol, editor.selection)).length <= 1 },
     ),
+    // A field by the pointer: no single key per template, so none clashes with the hover keys.
+    quickScaffold: command("快速放模板…", () => canvas.current?.quickScaffold(), { keys: [{ key: "/" }] }),
     // Two atoms (or two bonds) of two pieces selected: join the pieces there.
     join: command("连接选中的两个原子 / 两根键", () => editor.run(joinOps(editor.mol, editor.selection) ?? []), {
       keys: [{ key: "j", meta: true }],

@@ -24,7 +24,6 @@ export function ScaffoldPicker({
 }) {
   const overlayMark = useOverlayMark()
   const [pick, setPick] = useState<ScaffoldPick>(current)
-  const [mode, setMode] = useState<"site" | "edge">("site")
   const [query, setQuery] = useState("")
   const words = query.trim().toLowerCase()
   const shown = scaffolds().filter((item) => !words || item.name.includes(words) || item.zh.includes(words))
@@ -42,10 +41,21 @@ export function ScaffoldPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent {...overlayMark} className="flex h-[78vh] flex-col gap-3 overflow-hidden sm:max-w-4xl" data-testid="scaffold-picker">
+      <DialogContent
+        {...overlayMark}
+        className="flex h-[78vh] flex-col gap-3 overflow-hidden sm:max-w-4xl"
+        data-testid="scaffold-picker"
+        onKeyDown={(event) => {
+          // Enter takes the template as chosen, wherever the focus is (not mid-way through an IME word).
+          if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+            event.preventDefault()
+            use(pick)
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>模板分子</DialogTitle>
-          <DialogDescription>选一个环系，再在右边点它的编号（接到原子上）或边的字母（并到键上）。</DialogDescription>
+          <DialogDescription>选一个环系，在右边大图上点蓝色编号（接到原子上用哪个原子）和橙色字母（并到键上用哪条边），回车使用。画布上按 / 也能直接搜模板。</DialogDescription>
         </DialogHeader>
         <div className="flex min-h-0 flex-1 gap-4">
           <div className="flex min-h-0 w-[56%] flex-col gap-2">
@@ -85,20 +95,18 @@ export function ScaffoldPicker({
             <div className="text-[15px] font-semibold">
               {scaffold.zh} <span className="text-[12px] font-normal text-[#888]">{scaffold.name}</span>
             </div>
-            <div className="flex gap-1 text-[12px]">
-              {(["site", "edge"] as const).map((item) => (
-                <button
-                  key={item}
-                  className={`rounded-full px-2.5 py-0.5 ${mode === item ? "bg-[#1a73e8] text-white" : "bg-black/5 hover:bg-black/10"}`}
-                  onClick={() => setMode(item)}
-                >
-                  {item === "site" ? "接到原子：点编号" : "并到键：点字母"}
-                </button>
-              ))}
+            <div className="flex gap-3 text-[11px] text-[#666]">
+              <span className="flex items-center gap-1">
+                <span className="inline-block size-3 rounded-full border border-[#1a73e8]" />
+                接到原子的位点
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="inline-block size-3 rounded-[2px] border border-[#e8710a]" />
+                并到键的边
+              </span>
             </div>
             <ScaffoldSites
               scaffold={scaffold}
-              mode={mode}
               site={pick.site}
               edge={pick.edge}
               onSite={(site) => setPick({ ...pick, site })}

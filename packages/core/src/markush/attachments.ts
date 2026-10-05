@@ -1,5 +1,17 @@
 import { atomById } from "../molecule/graph.ts"
-import type { Attachment, Drawing, Molecule } from "../types.ts"
+import type { Attachment, Drawing, Molecule, Repeat } from "../types.ts"
+
+/** How a repeat count may be written: a lower-case letter, optionally numbered (m, n, p1, n'). */
+const COUNT_NAME = /^[a-z]\d{0,2}'?$/
+
+/** Why a repeat cannot be on an attachment with `positions` candidates, or null when it can. */
+export function repeatProblem(repeat: Repeat, positions: number): string | null {
+  if (!COUNT_NAME.test(repeat.name)) return `"${repeat.name}" cannot name a count: use a lower-case letter such as m or n`
+  if (!Number.isInteger(repeat.min) || !Number.isInteger(repeat.max)) return "a repeat count must be whole numbers"
+  if (repeat.min < 0 || repeat.min > repeat.max) return `a repeat from ${repeat.min} to ${repeat.max} is not a range`
+  if (repeat.max > positions) return `it can appear at most ${positions} times: there are only ${positions} positions`
+  return null
+}
 
 /** Why an attachment cannot be made, or null when it can. */
 export function attachmentProblem(mol: Molecule, attachment: Attachment): string | null {
@@ -7,7 +19,7 @@ export function attachmentProblem(mol: Molecule, attachment: Attachment): string
   if (to.size < 2) return "a variable attachment needs at least two atoms to choose from"
   if (to.has(attachment.atom)) return `atom #${attachment.atom} cannot be one of its own candidates`
   for (const id of [attachment.atom, ...to]) if (!atomById(mol, id)) return `there is no atom #${id}`
-  return null
+  return attachment.repeat ? repeatProblem(attachment.repeat, to.size) : null
 }
 
 /** The drawing without attachments that refer to atoms since deleted; one left with fewer than two candidates goes. */
@@ -17,7 +29,11 @@ export function pruneAttachments(drawing: Drawing): Drawing {
   const kept = drawing.attachments.flatMap((attachment) => {
     if (!atomById(mol, attachment.atom)) return []
     const to = attachment.to.filter((id) => atomById(mol, id))
-    return to.length >= 2 ? [to.length === attachment.to.length ? attachment : { ...attachment, to }] : []
+    if (to.length < 2) return []
+    if (to.length === attachment.to.length) return [attachment]
+    // Fewer positions than the count allowed: the count shrinks with them.
+    const repeat = attachment.repeat && { ...attachment.repeat, max: Math.min(attachment.repeat.max, to.length), min: Math.min(attachment.repeat.min, to.length) }
+    return [{ ...attachment, to, ...(repeat ? { repeat } : {}) }]
   })
   const unchanged = kept.length === drawing.attachments.length && kept.every((item, index) => item === drawing.attachments![index])
   if (unchanged) return drawing

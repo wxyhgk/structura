@@ -84,7 +84,13 @@ export type Drawing = {
  * position of this ring". Drawn as one line into the middle of the candidates; the bond
  * is only made when the formula is expanded into concrete compounds.
  */
-export type Attachment = { atom: number; to: number[] }
+export type Attachment = { atom: number; to: number[]; repeat?: Repeat }
+
+/**
+ * "(R1)m, m = 0–4": the attached piece appears `min` to `max` times, each copy on a
+ * different candidate atom and each choosing on its own. `name` is the count as drawn (m, n).
+ */
+export type Repeat = { min: number; max: number; name: string }
 
 /**
  * What a placeholder may stand for: its own list, or the same list as another variable

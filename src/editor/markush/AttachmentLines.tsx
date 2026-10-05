@@ -15,9 +15,29 @@ function leaveBox(from: Point, to: Point, label: AtomLabel | undefined): number 
   return Math.max(0, Math.min(1, ...exits))
 }
 
+/** "(R1)m": brackets around the attached label, the count written small after it. */
+function RepeatMarks({ label, name }: { label: AtomLabel; name: string }) {
+  const { size, y } = label.runs[0]
+  const text = { fill: label.color, fontFamily: "Arial, Helvetica, sans-serif", dominantBaseline: "central" as const }
+  return (
+    <g data-testid="repeat-marks">
+      <text {...text} x={label.box.left + size * 0.18} y={y} fontSize={size} textAnchor="end">
+        (
+      </text>
+      <text {...text} x={label.box.right - size * 0.18} y={y} fontSize={size} textAnchor="start">
+        )
+      </text>
+      <text {...text} x={label.box.right + size * 0.16} y={y + size * 0.38} fontSize={size * 0.7} fontStyle="italic" textAnchor="start">
+        {name}
+      </text>
+    </g>
+  )
+}
+
 /**
  * Variable points of attachment: one line from the atom into the middle of its candidate
- * atoms (a ring's centre), the way patents draw "attached at any free position".
+ * atoms (a ring's centre), the way patents draw "attached at any free position"; a repeated one
+ * is written (R1)m.
  */
 export const AttachmentLines = memo(function AttachmentLines({
   mol,
@@ -37,8 +57,14 @@ export const AttachmentLines = memo(function AttachmentLines({
         const targets = attachment.to.flatMap((id) => atoms.get(id) ?? [])
         if (!from || targets.length === 0) return null
         const to = { x: targets.reduce((sum, atom) => sum + atom.x, 0) / targets.length, y: targets.reduce((sum, atom) => sum + atom.y, 0) / targets.length }
-        const t = leaveBox(from, to, labels.find((label) => label.atomId === from.id))
-        return <line key={attachment.atom} x1={from.x + (to.x - from.x) * t} y1={from.y + (to.y - from.y) * t} x2={to.x} y2={to.y} stroke="#222" strokeWidth={1.55} strokeLinecap="round" />
+        const label = labels.find((item) => item.atomId === from.id)
+        const t = leaveBox(from, to, label)
+        return (
+          <g key={attachment.atom}>
+            <line x1={from.x + (to.x - from.x) * t} y1={from.y + (to.y - from.y) * t} x2={to.x} y2={to.y} stroke="#222" strokeWidth={1.55} strokeLinecap="round" />
+            {attachment.repeat && label && <RepeatMarks label={label} name={attachment.repeat.name} />}
+          </g>
+        )
       })}
     </g>
   )

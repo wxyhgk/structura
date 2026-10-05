@@ -3,6 +3,7 @@ import { alternativesOf, linkerNames, nestedVariables, variableLabels } from "@s
 import type { Attachment, Molecule, Variable } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"
+import { AttachmentRow } from "./AttachmentRow.tsx"
 import { VariableRow } from "./VariableRow.tsx"
 
 /**
@@ -62,6 +63,14 @@ export function VariablesPanel({
             onHelp={onHelp}
           />
         ))}
+        {attachments && attachments.length > 0 && (
+          <>
+            <div className="border-b border-[#e0e0e0] bg-[#f0f0f0] px-3 py-1 text-[11px] text-[#777]">可变连接</div>
+            {attachments.map((attachment) => (
+              <AttachmentRow key={attachment.atom} attachment={attachment} mol={mol} run={run} />
+            ))}
+          </>
+        )}
       </div>
       <footer className="space-y-1.5 border-t border-[#e0e0e0] p-2">
         {onFill && (

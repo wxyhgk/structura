@@ -2,9 +2,9 @@ import { elementOf } from "../elements/index.ts"
 import { atomHydrogens } from "../formula.ts"
 import { pointFrom } from "../geometry.ts"
 import { knownLabel } from "../label.ts"
-import { atomById, bondLengthAt, componentOf, neighbors, sproutAngle } from "../molecule.ts"
+import { atomById, bondLengthAt, componentOf, deleteSelection, duplicateAtoms, neighbors, sproutAngle, subMolecule } from "../molecule.ts"
 import { applyOps, type Op } from "../ops.ts"
-import type { Choice, Drawing, Molecule } from "../types.ts"
+import type { Attachment, Choice, Drawing, Molecule } from "../types.ts"
 import { validate } from "../validate.ts"
 import { fragmentFits, fragmentFormula, fragmentVariables } from "./fragments.ts"
 import { odometer } from "./odometer.ts"
@@ -149,28 +149,63 @@ export function pickFields(picks: readonly Pick[]): Record<string, string> {
 /** A way of making every variable attachment's bond, with the placeholders it displaces gone. */
 type Layout = { drawing: Drawing; where: Pick[] } | { error: string; where: Pick[] } | { occupied: true }
 
+/** Every set of `size` items from `items`, in order. */
+function* subsets<T>(items: readonly T[], size: number, from = 0): Generator<T[]> {
+  if (size === 0) return yield []
+  for (let at = from; at <= items.length - size; at++) for (const rest of subsets(items, size - 1, at + 1)) yield [items[at], ...rest]
+}
+
 /**
- * Every way of placing the variable attachments, one candidate atom each. A candidate
- * that carries a placeholder (R10 on the ring carbon –L– lands on) loses it: the
- * attachment takes that position.
+ * The ways one attachment can be made: each candidate atom on its own, or for "(R1)m" every
+ * set of min to max different candidates, one copy of the piece on each (none for 0).
+ */
+function placements(attachment: Attachment): number[][] {
+  if (!attachment.repeat) return attachment.to.map((id) => [id])
+  const all: number[][] = []
+  for (let size = attachment.repeat.min; size <= attachment.repeat.max; size++) all.push(...subsets(attachment.to, size))
+  return all
+}
+
+/**
+ * Every way of placing the variable attachments. A candidate that carries a placeholder
+ * (R10 on the ring carbon –L– lands on) loses it: the attachment takes that position. A
+ * repeated piece is copied once per extra position, and goes altogether when it appears
+ * no times.
  */
 function* layouts(drawing: Drawing): Generator<Layout> {
   const attachments = drawing.attachments ?? []
   const names = new Set(Object.keys(drawing.variables ?? {}))
-  const label = (id: number) => drawing.molecule.atoms.find((atom) => atom.id === id)?.alias ?? `#${id}`
-  for (const choice of odometer(attachments.map((attachment) => attachment.to.length))) {
+  const label = (mol: Molecule, id: number) => mol.atoms.find((atom) => atom.id === id)?.alias ?? `#${id}`
+  const ways = attachments.map(placements)
+  for (const choice of odometer(ways.map((list) => list.length))) {
     let laid: Drawing = { molecule: drawing.molecule, arrows: [], nextArrowId: drawing.nextArrowId, variables: drawing.variables }
     const where: Pick[] = []
     let error: string | null = null
     let occupied = false
     for (const [index, attachment] of attachments.entries()) {
-      const target = attachment.to[choice[index]]
-      const displaced = neighbors(laid.molecule, target).filter((atom) => atom.alias && names.has(atom.alias) && neighbors(laid.molecule, atom.id).length === 1)
-      where.push({ name: label(attachment.atom), position: displaced[0]?.alias ?? `#${target}` })
-      const placed = attach(laid, attachment.atom, target, displaced.map((atom) => atom.id))
-      if ("occupied" in placed) occupied = true
-      else if ("error" in placed) error = placed.error
-      else laid = placed.drawing
+      const targets = ways[index][choice[index]]
+      const name = label(drawing.molecule, attachment.atom)
+      // The copies go in first, while the piece still stands where it was drawn.
+      const hubs = [attachment.atom]
+      const piece = componentOf(laid.molecule, attachment.atom)
+      if (targets.length === 0) laid = { ...laid, molecule: deleteSelection(laid.molecule, { atoms: piece, bonds: [] }) }
+      for (let copy = 1; copy < targets.length; copy++) {
+        const order = subMolecule(laid.molecule, piece).atoms.map((atom) => atom.id)
+        const copied = duplicateAtoms(laid.molecule, order)
+        laid = { ...laid, molecule: copied.mol }
+        hubs.push(copied.ids[order.indexOf(attachment.atom)])
+      }
+      const positions: string[] = []
+      for (const [at, target] of targets.entries()) {
+        const displaced = neighbors(laid.molecule, target).filter((atom) => atom.alias && names.has(atom.alias) && neighbors(laid.molecule, atom.id).length === 1)
+        positions.push(displaced[0]?.alias ?? `#${target}`)
+        const placed = attach(laid, hubs[at], target, displaced.map((atom) => atom.id))
+        if ("occupied" in placed) occupied = true
+        else if ("error" in placed) error = placed.error
+        else laid = placed.drawing
+        if (occupied || error) break
+      }
+      where.push({ name, position: attachment.repeat ? (positions.length > 0 ? positions.join(", ") : "none") : positions[0] })
       if (occupied || error) break
     }
     yield occupied ? { occupied: true } : error ? { error, where } : { drawing: laid, where }

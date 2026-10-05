@@ -1,4 +1,4 @@
-import type { Alternative, BondEmphasis, BridgeName, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, RingKind } from "../types.ts"
+import type { Alternative, BondEmphasis, BridgeName, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, Repeat, RingKind } from "../types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
@@ -117,7 +117,9 @@ export type Op =
    * A variable point of attachment: `atom` is bonded to one of `to`, whichever, as when a
    * line is drawn into a ring's middle. Replaces any earlier one from the same atom.
    */
-  | { op: "set_attachment"; atom: Ref; to: Ref[] }
+  | { op: "set_attachment"; atom: Ref; to: Ref[]; repeat?: Repeat }
+  /** "(R1)m": how many times the piece on `atom`'s attachment appears; null makes it once again. */
+  | { op: "set_repeat"; atom: Ref; repeat: Repeat | null }
   | { op: "remove_attachment"; atom: Ref }
   /** A reaction arrow beside these atoms, pointing away from them. */
   | { op: "add_arrow"; atoms: Ref[]; direction: "left" | "right" | "up" | "down" }

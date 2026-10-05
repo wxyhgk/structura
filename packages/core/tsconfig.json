@@ -9,6 +9,8 @@
 
     "module": "preserve",
     "moduleResolution": "bundler",
+    // Workspace packages (the testkit its tests use, and core itself by name) from their TypeScript sources.
+    "customConditions": ["structura-source"],
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,

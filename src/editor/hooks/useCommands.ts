@@ -62,7 +62,7 @@ export function useCommands({
       inFields: true,
     }),
     exportSvg: command("导出 SVG", () => {
-      const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows)
+      const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows, editor.attachments)
       if (svg) download("未命名.svg", svg, "image/svg+xml")
     }),
     exportMol: command("导出 MOL", () => download("未命名.mol", toMolfile(editor.mol), "chemical/x-mdl-molfile")),

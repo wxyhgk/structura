@@ -1,4 +1,5 @@
-import type { Arrow, Molecule } from "../types.ts"
+import type { Arrow, Attachment, Molecule } from "../types.ts"
+import { attachmentMarks, markTextExtent, type MarkText } from "./attachments.ts"
 import type { AtomLabel } from "./labels.ts"
 import type { Figure } from "./primitives.ts"
 import { buildScene } from "./scene.ts"
@@ -29,9 +30,19 @@ function labelSvg(label: AtomLabel): string {
     .join("")
 }
 
-export function sceneToSvg(mol: Molecule, colorHetero: boolean, arrowList: Arrow[] = []): string {
+function markTextSvg(text: MarkText): string {
+  const italic = text.italic ? ` font-style="italic"` : ""
+  return `<text x="${text.x.toFixed(2)}" y="${text.y.toFixed(2)}" fill="${text.color}" font-family="Arial, Helvetica, sans-serif" font-size="${text.size.toFixed(2)}"${italic} text-anchor="${text.anchor}" dominant-baseline="central">${escapeXml(text.text)}</text>`
+}
+
+/**
+ * The molecule as a standalone SVG, with its arrows and a generic formula's variable points
+ * of attachment ("(R1)m" included), fitted with a margin on a white ground.
+ */
+export function sceneToSvg(mol: Molecule, colorHetero: boolean, arrowList: Arrow[] = [], attachments?: readonly Attachment[]): string {
   if (mol.atoms.length === 0) return ""
   const scene = buildScene(mol, colorHetero)
+  const marks = attachmentMarks(mol, attachments, scene.labels)
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity
@@ -47,6 +58,14 @@ export function sceneToSvg(mol: Molecule, colorHetero: boolean, arrowList: Arrow
     minY = Math.min(minY, label.box.top)
     maxX = Math.max(maxX, label.box.right)
     maxY = Math.max(maxY, label.box.bottom)
+  }
+  for (const mark of marks) {
+    for (const extent of [{ left: mark.to.x, right: mark.to.x, top: mark.to.y, bottom: mark.to.y }, ...mark.texts.map(markTextExtent)]) {
+      minX = Math.min(minX, extent.left)
+      minY = Math.min(minY, extent.top)
+      maxX = Math.max(maxX, extent.right)
+      maxY = Math.max(maxY, extent.bottom)
+    }
   }
   for (const arrow of arrowList) {
     minX = Math.min(minX, arrow.x1, arrow.x2)
@@ -72,6 +91,13 @@ export function sceneToSvg(mol: Molecule, colorHetero: boolean, arrowList: Arrow
       return `<line x1="${arrow.x1.toFixed(2)}" y1="${arrow.y1.toFixed(2)}" x2="${arrow.x2.toFixed(2)}" y2="${arrow.y2.toFixed(2)}" stroke="#222" stroke-width="1.6"/><polygon points="${arrow.x2.toFixed(2)},${arrow.y2.toFixed(2)} ${wingA} ${wingB}" fill="#222"/>`
     })
     .join("")
-  const body = scene.figures.map(figureSvg).join("") + scene.labels.map(labelSvg).join("") + arrows
+  const attached = marks
+    .map(
+      (mark) =>
+        `<line x1="${mark.from.x.toFixed(2)}" y1="${mark.from.y.toFixed(2)}" x2="${mark.to.x.toFixed(2)}" y2="${mark.to.y.toFixed(2)}" stroke="#222" stroke-width="1.55" stroke-linecap="round"/>` +
+        mark.texts.map(markTextSvg).join(""),
+    )
+    .join("")
+  const body = scene.figures.map(figureSvg).join("") + scene.labels.map(labelSvg).join("") + attached + arrows
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width.toFixed(1)}" height="${height.toFixed(1)}" viewBox="${x.toFixed(1)} ${y.toFixed(1)} ${width.toFixed(1)} ${height.toFixed(1)}">\n<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${width.toFixed(1)}" height="${height.toFixed(1)}" fill="#ffffff"/>\n${body}\n</svg>\n`
 }

@@ -76,3 +76,17 @@ test("deleting ring positions shrinks the count with them", () => {
   assert.deepEqual(fewer.attachments?.[0].to, [1, 2, 3, 4])
   assert.equal(fewer.attachments?.[0].repeat?.max, 4)
 })
+
+test("exported SVG draws the attachment line and (R1)m, and canvas and export share the geometry", async () => {
+  const { sceneToSvg, attachmentMarks, buildScene } = await import("../../src/draw.ts")
+  const drawing = formula({ min: 0, max: 4, name: "m" })
+  const svg = sceneToSvg(drawing.molecule, false, [], drawing.attachments)
+  const marks = attachmentMarks(drawing.molecule, drawing.attachments, buildScene(drawing.molecule, false).labels)
+  assert.equal(marks.length, 1)
+  assert.deepEqual(marks[0].texts.map((text) => text.text), ["(", ")", "m"])
+  assert.ok(svg.includes(`x2="${marks[0].to.x.toFixed(2)}"`), "the line into the ring is in the SVG")
+  assert.ok(/font-style="italic"[^>]*>m</.test(svg), "the count is written in italics")
+  assert.ok(svg.includes(">(<") && svg.includes(">)<"))
+  // Without attachments passed, nothing extra is drawn.
+  assert.ok(!sceneToSvg(drawing.molecule, false).includes(">(<"))
+})

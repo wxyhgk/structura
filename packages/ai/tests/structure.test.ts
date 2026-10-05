@@ -4,11 +4,25 @@ import { plainFormula } from "@structura/core/formula"
 import { MOST_STEPS, recognize } from "../src/structure/agent.ts"
 import { firstObject } from "../src/structure/json.ts"
 import { createSession } from "../src/structure/session.ts"
+import { READING, type Format } from "../src/structure/schema.ts"
 import type { Action, StructureStep, Turn } from "../src/structure/types.ts"
 import { structureProblem } from "../src/structure/types.ts"
 
 const build = (ops: unknown[], note = "搭"): Action => ({ note, action: "build", ops: JSON.stringify(ops) })
 const PICTURE = "data:image/png;base64,iVBORw0KGgo="
+const READ = { note: "看图", name: "benzene", description: "one benzene ring" }
+
+/** A model that reads first, then answers with the scripted actions in turn; `calls` counts every turn. */
+function scripted(actions: Action[] | ((index: number) => Action)) {
+  const seen: Turn[][] = []
+  const ask = async (turns: Turn[], format: Format) => {
+    seen.push(turns.map((turn) => ({ ...turn })))
+    if (format === READING) return READ
+    const index = seen.length - 2
+    return typeof actions === "function" ? actions(index) : actions[index]
+  }
+  return { ask, seen }
+}
 
 test("a session builds all or nothing, keeps the names it was given for later builds, and reset starts over", () => {
   const session = createSession()
@@ -36,27 +50,29 @@ test("the answer's first whole JSON object is taken, even when another follows",
   assert.throws(() => firstObject('{"cut":'))
 })
 
-test("the loop acts step by step, shows the model its drawing on look, and ends on done", async () => {
+test("the loop reads first, acts step by step, shows the model its drawing on look, and ends on done", async () => {
   const script: Action[] = [
     build([{ op: "add_scaffold", name: "benzene" }]),
     { note: "看", action: "look", ops: "" },
     { note: "好了", action: "done", ops: "" },
   ]
-  const seen: Turn[][] = []
+  const { ask, seen } = scripted(script)
   const steps: StructureStep[] = []
-  const result = await recognize({ image: PICTURE }, async (turns) => (seen.push(turns.map((turn) => ({ ...turn }))), script[seen.length - 1]), (step) => steps.push(step))
+  const result = await recognize({ image: PICTURE }, ask, (step) => steps.push(step))
   assert.ok(result.ok)
   assert.equal(plainFormula(result.ok ? result.drawing.molecule : steps[0].drawing.molecule), "C6H6")
-  assert.deepEqual(steps.map((step) => step.action), ["build", "look", "done"])
+  assert.deepEqual(steps.map((step) => step.action), ["read", "build", "look", "done"])
+  assert.match(steps[0].message, /benzene/)
   assert.deepEqual(seen[0][0].images, [PICTURE], "the first turn carries the picture")
-  const afterLook = seen[2].at(-1)!
+  assert.equal(seen[1][1].text, JSON.stringify(READ), "the reading stays in the conversation")
+  const afterLook = seen[3].at(-1)!
   assert.ok(afterLook.images?.[0].startsWith("data:image/png;base64,"), "look sends the rendering back")
 })
 
 test("a model that never says done stops after the step limit, keeping what it built", async () => {
-  let calls = 0
-  const result = await recognize({ image: PICTURE }, async () => (calls++, calls === 1 ? build([{ op: "add_scaffold", name: "pyridine" }]) : { note: "", action: "look", ops: "" }), () => {})
-  assert.equal(calls, MOST_STEPS)
+  const { ask, seen } = scripted((index) => (index === 0 ? build([{ op: "add_scaffold", name: "pyridine" }]) : { note: "", action: "look", ops: "" }))
+  const result = await recognize({ image: PICTURE }, ask, () => {})
+  assert.equal(seen.length, MOST_STEPS)
   assert.ok(result.ok)
 })
 
@@ -67,7 +83,7 @@ test("an API failure or a stop ends the run with what was built", async () => {
   assert.deepEqual(failed.ok ? null : failed.error, "网关忙")
   const stop = new AbortController()
   stop.abort()
-  const stopped = await recognize({ image: PICTURE }, async () => build([]), () => {}, stop.signal)
+  const stopped = await recognize({ image: PICTURE }, scripted([]).ask, () => {}, stop.signal)
   assert.equal(stopped.ok, false)
 })
 
@@ -87,12 +103,12 @@ test("done is refused while an atom is over-full", async () => {
     { note: "", action: "done", ops: "" },
   ]
   const steps: StructureStep[] = []
-  let at = 0
-  const result = await recognize({ image: PICTURE }, async () => script[at++], (step) => steps.push(step))
-  assert.equal(steps[1].ok, false)
-  assert.match(steps[1].message, /valence/)
+  const { ask, seen } = scripted(script)
+  const result = await recognize({ image: PICTURE }, ask, (step) => steps.push(step))
+  assert.equal(steps[2].ok, false)
+  assert.match(steps[2].message, /valence/)
   assert.ok(result.ok)
-  assert.equal(at, 5)
+  assert.equal(seen.length, 6)
 })
 
 test("ops sent as an array rather than a string are accepted", () => {

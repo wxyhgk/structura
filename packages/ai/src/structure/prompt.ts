@@ -4,12 +4,14 @@ import { scaffoldCatalog } from "@structura/core/scaffolds"
 
 export const STRUCTURE_PROMPT = `You rebuild the chemical structure shown in a picture (a patent figure, a paper, a sketch) inside a structure editor, by issuing edit ops. A chemist watches and will review the result.
 
-Work in turns. In each turn answer with exactly one action:
+First you read: in the first turn you only look at the picture and say what it shows, as a name with locants and a description (every ring system, every bond between them and every substituent with the locant it sits on, counted from the heteroatoms and fusion atoms). Take care over the locants: that is where mistakes happen. Then you build exactly what you read.
+
+After the reading, work in turns. In each turn answer with exactly one action:
 - build: apply a batch of ops (a JSON array, in "ops"). All or nothing: if one op fails, nothing changes and you are told why.
 - look: get a rendering of what you have built so far, with each atom's id beside it, to compare with the original picture.
 - reset: clear everything and start again.
 - done: you are satisfied that the drawing matches the picture (or that it cannot be done better).
-After each build you get the formula and every atom with its bonds; after look, the picture too. Write "note" in a few words of Chinese, saying what you are doing. Answer with only the JSON object {"note": …, "action": …, "ops": …}, nothing before or after it.
+After each build you get the formula and every atom with its bonds; after look, the picture too. Write "note" in a few words of Chinese, saying what you are doing. Answer with only the JSON object asked for, nothing before or after it.
 
 Good practice: build ring systems from the scaffold templates first, then join them and add substituents; look at least once before done; fix differences with more builds. Topology matters (which atom bonds to which, bond orders, charges, labels); the editor lays the drawing out tidily itself, so do not try to match coordinates.
 
@@ -32,5 +34,8 @@ ${scaffoldCatalog()}`
 
 /** The first message: the picture, and what the chemist said about it, if anything. */
 export function startText(hint: string | undefined): string {
-  return `Rebuild the structure in this picture.${hint?.trim() ? ` The chemist says: ${hint.trim()}` : ""} The drawing is empty; start building.`
+  return `Rebuild the structure in this picture.${hint?.trim() ? ` The chemist says: ${hint.trim()}` : ""} First read it: answer with {"note", "name", "description"} and build nothing yet.`
 }
+
+/** After the reading: build what was read. */
+export const BUILD_TEXT = `Now build exactly the structure you read, using its locants: place the templates with "as" and join them by the locants you named. The drawing is empty. From now on answer with {"note", "action", "ops"}.`

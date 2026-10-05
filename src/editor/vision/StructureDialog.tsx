@@ -8,7 +8,7 @@ import { useOverlayMark } from "@/editor/input/overlays"
 import { firstPicture, pictureFrom } from "./image.ts"
 import { useRecognition, type RecognizeStructure } from "./useRecognition.ts"
 
-const ACTION_NAMES = { build: "搭建", look: "查看", reset: "重来", done: "完成" } as const
+const ACTION_NAMES = { read: "识别", build: "搭建", look: "查看", reset: "重来", done: "完成" } as const
 
 /**
  * A picture in, a structure out: the model rebuilds what it sees step by step (building,
@@ -118,7 +118,10 @@ export function StructureDialog({
               {run.steps.map((step, index) => (
                 <li key={index} className="flex gap-2">
                   <span className={`shrink-0 rounded px-1.5 ${step.ok ? "bg-[#eef3fd] text-[#1a73e8]" : "bg-[#fdecea] text-[#d1242f]"}`}>{ACTION_NAMES[step.action]}</span>
-                  <span>{step.note}</span>
+                  <span>
+                    {step.note}
+                    {step.action === "read" && step.message && <span className="mt-0.5 block whitespace-pre-line text-[#666]">{step.message}</span>}
+                  </span>
                 </li>
               ))}
               {run.result && !run.result.ok && <li className="text-[#d1242f]">{run.result.error}</li>}

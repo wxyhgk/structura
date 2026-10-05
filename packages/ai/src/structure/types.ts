@@ -12,8 +12,11 @@ export type Action = {
   ops: string
 }
 
-/** Something to tell the chemist while the agent works: a step taken, with the drawing as it now is. */
-export type StructureStep = { note: string; action: Action["action"]; ok: boolean; message: string; drawing: Drawing }
+/** The first turn's answer: what the model reads in the picture, before it builds. */
+export type Reading = { note: string; name: string; description: string }
+
+/** Something to tell the chemist while the agent works: a step taken (read is the first), with the drawing as it now is. */
+export type StructureStep = { note: string; action: Action["action"] | "read"; ok: boolean; message: string; drawing: Drawing }
 
 /** How a recognition run ended. */
 export type StructureResult = { ok: true; drawing: Drawing; steps: number } | { ok: false; error: string; drawing?: Drawing }

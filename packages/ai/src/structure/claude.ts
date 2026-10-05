@@ -1,10 +1,8 @@
 import type Anthropic from "@anthropic-ai/sdk"
 import { CLAUDE_MODEL } from "../claude.ts"
-import type { NextAction } from "./agent.ts"
+import type { Ask } from "./agent.ts"
 import { STRUCTURE_PROMPT } from "./prompt.ts"
-import { ACTION_SCHEMA } from "./schema.ts"
 import { firstObject } from "./json.ts"
-import type { Action } from "./types.ts"
 
 /** "data:image/png;base64,…" as Claude's image block. */
 function imageBlock(url: string) {
@@ -14,14 +12,14 @@ function imageBlock(url: string) {
 }
 
 /** The agent's turns through Claude: strict JSON, the fixed prompt cached across turns. */
-export function claudeNext(client: Anthropic): NextAction {
-  return async (turns) => {
+export function claudeAsk(client: Anthropic): Ask {
+  return async (turns, format) => {
     const response = await client.beta.messages.create({
       model: CLAUDE_MODEL,
       max_tokens: 16000,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      output_config: { effort: "medium", format: { type: "json_schema", schema: ACTION_SCHEMA } },
+      output_config: { effort: "medium", format: { type: "json_schema", schema: format.schema } },
       system: [{ type: "text", text: STRUCTURE_PROMPT, cache_control: { type: "ephemeral" } }],
       messages: turns.map((turn) =>
         turn.role === "assistant" ? { role: "assistant" as const, content: turn.text } : { role: "user" as const, content: [{ type: "text" as const, text: turn.text }, ...(turn.images ?? []).map(imageBlock)] },
@@ -29,6 +27,6 @@ export function claudeNext(client: Anthropic): NextAction {
     })
     if (response.stop_reason === "refusal") throw new Error("Claude 拒绝了这张图。")
     if (response.stop_reason === "max_tokens") throw new Error("Claude 的回答被截断了。")
-    return firstObject(response.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join("")) as Action
+    return firstObject(response.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join(""))
   }
 }

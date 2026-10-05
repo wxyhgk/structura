@@ -3,9 +3,9 @@ import OpenAI from "openai"
 import { KEY_HINT } from "./check.ts"
 import { askClaude, CLAUDE_MODEL, failure as claudeFailure } from "./claude.ts"
 import { askOpenAI, failure as openaiFailure, OPENAI_MODEL } from "./openai.ts"
-import { recognize, type NextAction } from "./structure/agent.ts"
-import { claudeNext } from "./structure/claude.ts"
-import { openaiNext } from "./structure/openai.ts"
+import { recognize, type Ask } from "./structure/agent.ts"
+import { claudeAsk } from "./structure/claude.ts"
+import { openaiAsk } from "./structure/openai.ts"
 import type { StructureRequest, StructureResult, StructureStep } from "./structure/types.ts"
 import type { FillRequest, FillResult } from "./types.ts"
 
@@ -34,9 +34,9 @@ export type Provider = {
 }
 
 /** API errors in a turn, as the chemist should read them. */
-const explained = (next: NextAction, explain: (error: unknown) => string): NextAction => async (turns) => {
+const explained = (ask: Ask, explain: (error: unknown) => string): Ask => async (turns, format) => {
   try {
-    return await next(turns)
+    return await ask(turns, format)
   } catch (error) {
     throw new Error(explain(error))
   }
@@ -69,7 +69,7 @@ export function providerFrom(env: AiEnv): Provider | { error: string } {
       },
       recognize: async (request, onStep, signal) => {
         const ready = connect()
-        return "error" in ready ? { ok: false, error: ready.error } : recognize(request, explained(openaiNext(ready, model), openaiFailure), onStep, signal)
+        return "error" in ready ? { ok: false, error: ready.error } : recognize(request, explained(openaiAsk(ready, model), openaiFailure), onStep, signal)
       },
     }
   }
@@ -80,7 +80,7 @@ export function providerFrom(env: AiEnv): Provider | { error: string } {
       name: "anthropic",
       model: CLAUDE_MODEL,
       ask: (request) => askClaude(connect(), request),
-      recognize: (request, onStep, signal) => recognize(request, explained(claudeNext(connect()), claudeFailure), onStep, signal),
+      recognize: (request, onStep, signal) => recognize(request, explained(claudeAsk(connect()), claudeFailure), onStep, signal),
     }
   }
   return { error: `AI_PROVIDER 只能是 anthropic 或 openai，不是 "${env.AI_PROVIDER}"` }

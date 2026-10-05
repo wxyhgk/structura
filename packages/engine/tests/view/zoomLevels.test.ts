@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { createViewport } from "../../src/view/viewport.ts"
-import { steppedZoom, ZOOM_LEVELS } from "../../src/view/zoomLevels.ts"
+import { ZOOM_LEVELS, createViewport, steppedZoom } from "@structura/engine"
 
 test("zoom steps walk the preset ladder one level at a time", () => {
   assert.equal(steppedZoom(1, 1), 1.25)

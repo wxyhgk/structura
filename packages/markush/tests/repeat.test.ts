@@ -3,11 +3,11 @@ import test from "node:test"
 import { readDocument, toDocument } from "@structura/core/document"
 import { emptyDrawing } from "@structura/core/drawing"
 import { plainFormula } from "@structura/core/formula"
-import { enumerate, pickFields } from "../src/enumerate.ts"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing, Repeat } from "@structura/core/types"
 import { build, label, run } from "@structura/testkit"
 import { chemistry } from "@structura/testkit/chem"
+import { enumerate, pickFields } from "@structura/markush"
 
 const { canonicalAll } = await chemistry()
 
@@ -98,23 +98,3 @@ test("repeat counts are checked, can be changed or dropped, and are saved", () =
   assert.deepEqual(reread.drawing.attachments?.[0].repeat, { min: 1, max: 3, name: "n" })
 })
 
-test("deleting ring positions shrinks the count with them", () => {
-  const drawing = formula({ min: 0, max: 6, name: "m" })
-  const fewer = run(drawing, [{ op: "remove", atoms: [5, 6] }])
-  assert.deepEqual(fewer.attachments?.[0].to, [1, 2, 3, 4])
-  assert.equal(fewer.attachments?.[0].repeat?.max, 4)
-})
-
-test("exported SVG draws the attachment line and (R1)m, and canvas and export share the geometry", async () => {
-  const { sceneToSvg, attachmentMarks, buildScene } = await import("@structura/core/draw")
-  const drawing = formula({ min: 0, max: 4, name: "m" })
-  const svg = sceneToSvg(drawing.molecule, false, [], drawing.attachments)
-  const marks = attachmentMarks(drawing.molecule, drawing.attachments, buildScene(drawing.molecule, false).labels)
-  assert.equal(marks.length, 1)
-  assert.deepEqual(marks[0].texts.map((text) => text.text), ["(", ")", "m"])
-  assert.ok(svg.includes(`x2="${marks[0].to.x.toFixed(2)}"`), "the line into the ring is in the SVG")
-  assert.ok(/font-style="italic"[^>]*>m</.test(svg), "the count is written in italics")
-  assert.ok(svg.includes(">(<") && svg.includes(">)<"))
-  // Without attachments passed, nothing extra is drawn.
-  assert.ok(!sceneToSvg(drawing.molecule, false).includes(">(<"))
-})

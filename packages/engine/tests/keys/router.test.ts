@@ -1,9 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { command } from "../../src/commands/command.ts"
-import { routeFieldKey, routeKey, type KeyEvent } from "../../src/keys/router.ts"
-import type { HoverTarget } from "../../src/pointer/types.ts"
-import { createEditor } from "../../src/state/editor.ts"
+import { command, createEditor, routeFieldKey, routeKey, type HoverTarget, type KeyEvent } from "@structura/engine"
 
 /** A key press as the browser would send it; `prevented` says whether the router claimed it. */
 function key(name: string, mods: Partial<Pick<KeyEvent, "metaKey" | "shiftKey" | "altKey">> = {}) {

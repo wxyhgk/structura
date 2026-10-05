@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { ATOM_KEYS, BOND_KEYS } from "../../src/hotkeys/lookup.ts"
-import { describeAtomAction, describeBondAction, hotkeyLabel } from "../../src/tools/describe.ts"
+import { ATOM_KEYS, BOND_KEYS, describeAtomAction, describeBondAction, hotkeyLabel } from "@structura/engine"
 
 test("every hover key has a description", () => {
   for (const [key, action] of Object.entries(ATOM_KEYS)) {

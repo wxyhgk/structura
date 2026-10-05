@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { clampZoom, createViewport, fittedView, zoomedAt } from "../../src/view/viewport.ts"
+import { clampZoom, createViewport, fittedView, zoomedAt } from "@structura/engine"
 
 const box = { getBoundingClientRect: () => ({ left: 100, top: 50, width: 800, height: 600 }) }
 

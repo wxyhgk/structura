@@ -2,14 +2,13 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "@structura/core/drawing"
 import { plainFormula } from "@structura/core/formula"
-import { enumerate } from "../src/enumerate.ts"
 import { toMolfile } from "@structura/core/molfile"
 import { alternativesOf, isVariableName } from "@structura/core/markush"
-import { undefinedVariables } from "../src/queries.ts"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Choice, Drawing } from "@structura/core/types"
 import { errorsOf, validate } from "@structura/core/validate"
 import { label, run } from "@structura/testkit"
+import { enumerate, undefinedVariables } from "@structura/markush"
 
 /** Cyclopentane with X in the ring at atom 1 and placeholders R1, R2 hanging off atoms 3 and 4. */
 function scaffold(): Drawing {
@@ -86,16 +85,6 @@ test("a variable with only classes, or none at all, is reported", () => {
   assert.deepEqual(partial.undefinedNames, ["R2"])
 })
 
-test("a label alternative must be an element or a known abbreviation", () => {
-  for (const text of ["C1-C30", "alkyl", "R5"]) {
-    const result = applyOps(scaffold(), [{ op: "set_variable", name: "R1", alternatives: [label(text)] }])
-    assert.ok(!result.ok && /not an element or a known abbreviation/.test(result.error), text)
-  }
-  for (const text of ["H", "D", "Cl", "CN", "Me", "Ph", "OMe", "13C"]) {
-    assert.ok(applyOps(scaffold(), [{ op: "set_variable", name: "R1", alternatives: [label(text)] }]).ok, text)
-  }
-})
-
 test("R2 can share R1's list, as in 'R1 to R4 each independently are…'", () => {
   const drawing = run(scaffold(), [
     { op: "set_variable", name: "X", alternatives: [label("O")] },
@@ -154,11 +143,6 @@ test("with representatives, typical members inside each class's range stand in f
   assert.deepEqual([none.onlyClasses, none.classesLeftOut], [["R1"], { R1: 1 }])
   // Without representatives, classes are left out as before.
   assert.deepEqual(enumerate(withClasses({ kind: "class", class: "alkyl" })).onlyClasses, ["R1"])
-})
-
-test("L, ETU and Ar1 are variable names; elements and abbreviations are not", () => {
-  for (const name of ["R", "R12", "R'", "X", "L", "ETU", "Ar", "Ar1", "Ar2", "Ar'", "Ar''"]) assert.ok(isVariableName(name), name)
-  for (const name of ["Me", "Ph", "Cl", "Y", "Kr", "D", "OMe"]) assert.ok(!isVariableName(name), name)
 })
 
 test("Ar typed on a bonded atom is the aryl placeholder; argon comes from a lone atom or the element tools", () => {

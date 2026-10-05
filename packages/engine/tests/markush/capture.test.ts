@@ -3,8 +3,8 @@ import test from "node:test"
 import { emptyDrawing } from "@structura/core"
 import type { Op } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
-import { captureOps } from "../../src/markush/capture.ts"
 import { run } from "@structura/testkit"
+import { captureOps } from "@structura/engine"
 
 /** Benzene with R1, and apart from it a pyridine-like ring carrying a "*". */
 function drawing(star = true): Drawing {

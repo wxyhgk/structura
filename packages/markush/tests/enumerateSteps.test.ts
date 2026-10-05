@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "@structura/core/drawing"
-import { enumerate, enumerateSteps, pickFields } from "../src/enumerate.ts"
 import { toSdf } from "@structura/core/molfile"
 import type { Drawing, Molecule } from "@structura/core/types"
 import { validate } from "@structura/core/validate"
 import { label, run } from "@structura/testkit"
+import { enumerate, enumerateSteps, pickFields } from "@structura/markush"
 
 /** Benzene with R2 on atom 2, and –L–ETU attached to any of atoms 1–3; Me cannot be a linker. */
 function formula(): Drawing {

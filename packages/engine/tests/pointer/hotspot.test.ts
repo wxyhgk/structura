@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "@structura/core"
 import { applyOps } from "@structura/core/ops"
-import { createHotspot } from "../../src/pointer/hotspot.ts"
+import { createHotspot } from "@structura/engine"
 
 const mol = (() => {
   const result = applyOps(emptyDrawing(), [

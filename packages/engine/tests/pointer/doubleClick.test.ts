@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "@structura/core/drawing"
 import { applyOps } from "@structura/core/ops"
-import { doubleClickAction } from "../../src/pointer/doubleClick.ts"
+import { doubleClickAction } from "@structura/engine"
 
 test("double clicks act as in ChemDraw: a bond selects its molecule, an atom edits its label", () => {
   const built = applyOps(emptyDrawing(), [

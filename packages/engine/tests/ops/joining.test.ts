@@ -1,10 +1,8 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "@structura/core"
-import { snappedMove } from "../../src/pointer/moveSnap.ts"
-import { joinOps, scaffoldOps } from "../../src/ops/builders.ts"
-import { defaultPick } from "../../src/tools/scaffoldPick.ts"
 import { run } from "@structura/testkit"
+import { defaultPick, joinOps, scaffoldOps, snappedMove } from "@structura/engine"
 
 /** Two separate bonds: 1–2 and 3–4. */
 const twoBonds = () =>

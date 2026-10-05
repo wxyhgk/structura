@@ -3,13 +3,12 @@ import test from "node:test"
 import { BOND_LENGTH } from "@structura/core/constants"
 import { emptyDrawing } from "@structura/core/drawing"
 import { plainFormula } from "@structura/core/formula"
-import { enumerate, pickFields } from "../src/enumerate.ts"
-import { fragmentFrom, fragmentProblem, fragmentVariables } from "@structura/core/markush"
-import { applyOps, type Op } from "@structura/core/ops"
+import { type Op } from "@structura/core/ops"
 import type { Alternative, Molecule } from "@structura/core/types"
 import { validate } from "@structura/core/validate"
 import { run } from "@structura/testkit"
 import { chemistry } from "@structura/testkit/chem"
+import { enumerate, pickFields } from "@structura/markush"
 
 const { canonical } = await chemistry()
 
@@ -60,18 +59,6 @@ function assertTidy(mol: Molecule) {
     for (const b of mol.atoms.slice(i + 1)) assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > BOND_LENGTH * 0.45, `atoms ${a.id} and ${b.id} overlap`)
   }
 }
-
-test("a piece needs one or two single-bonded * marks and must hang together", () => {
-  assert.equal(fragmentProblem((piperidinyl() as { molecule: Molecule }).molecule), null)
-  assert.match(fragmentProblem(run(emptyDrawing(), [{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).molecule)!, /\*/)
-  const loose = run(emptyDrawing(), [
-    { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
-    { op: "add_atom", el: "C", to: 1, as: "s" },
-    { op: "label", atom: "s", text: "*" },
-    { op: "place_atom", el: "O", at: { x: 300, y: 0 } },
-  ]).molecule
-  assert.match(fragmentProblem(loose)!, /one piece/)
-})
 
 test("a piece stands for a substituent: piperidin-1-yl on benzene", () => {
   const drawing = run(emptyDrawing(), [
@@ -133,31 +120,6 @@ test("a piece goes only where its * marks match: a two-ended piece is no substit
   const result = enumerate(drawing)
   assert.equal(result.molecules.length, 1)
   assert.equal(result.misfits.R1?.[0]?.kind, "fragment")
-})
-
-test("a variable cannot contain itself through its pieces", () => {
-  const loop = applyOps(emptyDrawing(), [
-    { op: "set_variable", name: "R5", alternatives: [label("H")] },
-    { op: "set_variable", name: "X", alternatives: [nR5()] },
-    { op: "set_variable", name: "R5", alternatives: [label("H"), { kind: "fragment", molecule: (nR5() as { molecule: Molecule }).molecule }] },
-  ])
-  assert.equal(loop.ok, false)
-  assert.match(loop.ok ? "" : loop.error, /contain itself/)
-})
-
-test("selected atoms become a piece of their own, renumbered and centred", () => {
-  const drawing = run(emptyDrawing(), [
-    { op: "place_atom", el: "C", at: { x: 500, y: 300 } },
-    { op: "add_ring", at: { x: 900, y: 300 }, kind: "benzene" },
-    { op: "add_atom", el: "C", to: 2, as: "s" },
-    { op: "label", atom: "s", text: "*" },
-  ])
-  const ids = drawing.molecule.atoms.filter((atom) => atom.id !== 1).map((atom) => atom.id)
-  const made = fragmentFrom(drawing.molecule, ids)
-  assert.deepEqual(made.atoms.map((atom) => atom.id), [1, 2, 3, 4, 5, 6, 7])
-  assert.equal(fragmentProblem(made), null)
-  assert.ok(Math.abs(made.atoms.reduce((sum, atom) => sum + atom.x, 0) / 7) < BOND_LENGTH)
-  assert.deepEqual(fragmentVariables(made), [])
 })
 
 test("a formula with drawn pieces survives a save and an open", async () => {

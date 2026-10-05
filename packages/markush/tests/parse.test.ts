@@ -1,8 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { alternativesFromText } from "../src/parse.ts"
-
-const label = (text: string) => ({ kind: "label" as const, text })
+import { label } from "@structura/testkit"
 
 test("typed alternatives: labels, shorthands, a bond and divalent rings, without repeats", () => {
   assert.deepEqual(alternativesFromText("H, D，卤素、CN  Me"), {

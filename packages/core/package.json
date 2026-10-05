@@ -108,5 +108,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "node --experimental-strip-types --conditions=structura-source --test \"tests/**/*.test.ts\""
+  },
+  "devDependencies": {
+    "@structura/testkit": "*"
   }
 }

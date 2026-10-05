@@ -4,14 +4,8 @@ import { sceneToSvg } from "../src/draw.ts"
 import { emptyDrawing } from "../src/drawing.ts"
 import { plainFormula } from "../src/formula.ts"
 import { atomIdsOfSelection, displayMolecule } from "../src/molecule.ts"
-import { applyOps, type Op } from "../src/ops.ts"
 import type { Drawing } from "../src/types.ts"
-
-function run(drawing: Drawing, ops: Op[]): Drawing {
-  const result = applyOps(drawing, ops)
-  assert.ok(result.ok, result.ok ? "" : `op ${result.index}: ${result.error}`)
-  return result.drawing
-}
+import { run } from "@structura/testkit"
 
 /** A methyl carbon (atom 1) with Ph typed on a second carbon: toluene, the phenyl kept as a label. */
 function toluene(): Drawing {

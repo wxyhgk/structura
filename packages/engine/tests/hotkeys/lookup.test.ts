@@ -7,6 +7,7 @@ import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors
 import { applyOps, type Op } from "@structura/core/ops"
 import type { HotTarget, Molecule } from "@structura/core/types"
 import { ATOM_KEYS, BOND_KEYS, hasHotkey, hotkeyOps, selectionHotkeyOps, selectionTips } from "../../src/hotkeys/lookup.ts"
+import { seeded } from "@structura/testkit"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 
@@ -326,19 +327,11 @@ test("bond keys set the whole look, emphasis included, and fuse chairs", () => {
 })
 
 /** Small deterministic generator so a failure always replays the same way. */
-function random(seed: number) {
-  let state = seed >>> 0
-  return () => {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
-    return state / 2 ** 32
-  }
-}
-
 test("random key presses never break the molecule", () => {
   const atomKeys = Object.keys(ATOM_KEYS)
   const bondKeys = Object.keys(BOND_KEYS)
   for (let seed = 1; seed <= 30; seed++) {
-    const next = random(seed)
+    const next = seeded(seed)
     const pick = <T,>(list: T[]): T => list[Math.floor(next() * list.length)]
     let mol = ethane().mol
     for (let step = 0; step < 60; step++) {

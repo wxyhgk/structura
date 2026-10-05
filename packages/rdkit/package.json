@@ -24,6 +24,7 @@
     "@structura/core": "*"
   },
   "devDependencies": {
-    "@structura/markush": "*"
+    "@structura/markush": "*",
+    "@structura/testkit": "*"
   }
 }

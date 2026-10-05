@@ -8,7 +8,8 @@
     { "path": "./packages/markush" },
     { "path": "./packages/rdkit" },
     { "path": "./packages/ai" },
-    { "path": "./packages/engine" }
+    { "path": "./packages/engine" },
+    { "path": "./packages/testkit" }
   ],
   "compilerOptions": {
     "paths": {

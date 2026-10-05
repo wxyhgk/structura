@@ -9,12 +9,7 @@ import { undefinedVariables } from "../src/queries.ts"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Choice, Drawing } from "@structura/core/types"
 import { errorsOf, validate } from "@structura/core/validate"
-
-function run(drawing: Drawing, ops: Op[]): Drawing {
-  const result = applyOps(drawing, ops)
-  assert.ok(result.ok, result.ok ? "" : `op ${result.index}: ${result.error}`)
-  return result.drawing
-}
+import { label, run } from "@structura/testkit"
 
 /** Cyclopentane with X in the ring at atom 1 and placeholders R1, R2 hanging off atoms 3 and 4. */
 function scaffold(): Drawing {
@@ -27,8 +22,6 @@ function scaffold(): Drawing {
     { op: "label", atom: "r2", text: "R2" },
   ])
 }
-
-const label = (text: string) => ({ kind: "label" as const, text })
 
 test("variables are checked when they are defined, and can be removed", () => {
   const drawing = scaffold()

@@ -1,26 +1,14 @@
 import assert from "node:assert/strict"
-import { readdirSync, readFileSync } from "node:fs"
-import { dirname, join, relative, resolve } from "node:path"
+import { dirname, relative, resolve } from "node:path"
 import test from "node:test"
 import { fileURLToPath } from "node:url"
+import { importsOf, sources } from "@structura/testkit/arch"
 
 const CHEM = resolve(dirname(fileURLToPath(import.meta.url)), "../src")
 
-function sources(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) return sources(path)
-    return entry.name.endsWith(".ts") && !entry.name.endsWith(".test.ts") ? [path] : []
-  })
-}
-
-/** Every import in the core, as paths relative to its src (or the bare package name). */
+/** Every import in the core, in every form, as paths relative to its src (or the bare package name). */
 const imports = sources(CHEM).map((file) => {
-  const text = readFileSync(file, "utf8")
-  const targets = [...text.matchAll(/from\s+"([^"]+)"/g)].map((match) => {
-    const spec = match[1]
-    return spec.startsWith(".") ? relative(CHEM, resolve(dirname(file), spec)) : spec
-  })
+  const targets = importsOf(file).map((spec) => (spec.startsWith(".") ? relative(CHEM, resolve(dirname(file), spec)) : spec))
   return { file: relative(CHEM, file), targets }
 })
 

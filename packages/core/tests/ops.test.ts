@@ -6,6 +6,7 @@ import { addAtom, atomById, bondById, boundsCenter, createBondAt, emptyMolecule,
 import { applyOps, type Op } from "../src/ops.ts"
 import type { Molecule } from "../src/types.ts"
 import { validate } from "../src/validate.ts"
+import { seeded } from "@structura/testkit"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 
@@ -104,17 +105,9 @@ test("warnings come back but do not stop the edit", () => {
 })
 
 /** Small deterministic generator so a failure always replays the same way. */
-function random(seed: number) {
-  let state = seed >>> 0
-  return () => {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
-    return state / 2 ** 32
-  }
-}
-
 test("random batches either apply cleanly or change nothing", () => {
   for (let seed = 1; seed <= 30; seed++) {
-    const next = random(seed)
+    const next = seeded(seed)
     const pick = <T,>(list: T[]): T => list[Math.floor(next() * list.length)]
     let mol = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
     for (let step = 0; step < 40; step++) {

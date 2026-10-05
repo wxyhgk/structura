@@ -9,6 +9,7 @@ import { relax } from "../src/molecule/relax.ts"
 import { applyOps, type Op } from "../src/ops.ts"
 import { readMolfile } from "../src/sdf.ts"
 import type { Molecule } from "../src/types.ts"
+import { closestPair } from "@structura/testkit"
 
 function build(ops: Op[], start = emptyMolecule()): Molecule {
   const result = applyOps({ ...emptyDrawing(), molecule: start }, ops)
@@ -58,12 +59,6 @@ function angle(mol: Molecule, a: number, centre: number, b: number): number {
   const q = atomById(mol, b)!
   const turn = Math.atan2(q.y - c.y, q.x - c.x) - Math.atan2(p.y - c.y, p.x - c.x)
   return (Math.abs(Math.atan2(Math.sin(turn), Math.cos(turn))) * 180) / Math.PI
-}
-
-function closestPair(mol: Molecule): number {
-  let best = Infinity
-  for (const [index, a] of mol.atoms.entries()) for (const b of mol.atoms.slice(index + 1)) best = Math.max(0, Math.min(best, dist(a, b)))
-  return best
 }
 
 test("a scrambled chain comes back to even bonds and 120° angles", () => {

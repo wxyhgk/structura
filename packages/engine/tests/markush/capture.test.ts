@@ -1,15 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "@structura/core"
-import { applyOps, type Op } from "@structura/core/ops"
+import type { Op } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
 import { captureOps } from "../../src/markush/capture.ts"
-
-function run(drawing: Drawing, ops: Op[]): Drawing {
-  const result = applyOps(drawing, ops)
-  assert.ok(result.ok, result.ok ? "" : result.error)
-  return result.drawing
-}
+import { run } from "@structura/testkit"
 
 /** Benzene with R1, and apart from it a pyridine-like ring carrying a "*". */
 function drawing(star = true): Drawing {

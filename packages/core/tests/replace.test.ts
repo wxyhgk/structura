@@ -2,10 +2,11 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "../src/drawing.ts"
 import { plainFormula } from "../src/formula.ts"
-import { angleTo, dist } from "../src/geometry.ts"
+import { angleTo } from "../src/geometry.ts"
 import { atomById } from "../src/molecule.ts"
 import { applyOps, type Op, type Replacement } from "../src/ops.ts"
 import type { Molecule } from "../src/types.ts"
+import { closestPair } from "@structura/testkit"
 
 function build(ops: Op[], start: Molecule | null = null) {
   const result = applyOps(start ? { ...emptyDrawing(), molecule: start } : emptyDrawing(), ops)
@@ -20,12 +21,6 @@ function toluene() {
     { op: "add_atom", el: "C", to: 1, as: "me" },
   ])
   return { mol: result.drawing.molecule, me: result.names.me, ipso: 1 }
-}
-
-function closestPair(mol: Molecule): number {
-  let best = Infinity
-  for (const [index, a] of mol.atoms.entries()) for (const b of mol.atoms.slice(index + 1)) best = Math.min(best, dist(a, b))
-  return best
 }
 
 test("a methyl is swapped for a label, a ring or a recipe, and nothing else moves", () => {

@@ -1,29 +1,19 @@
 import assert from "node:assert/strict"
 import { readdirSync, readFileSync } from "node:fs"
-import { join, relative } from "node:path"
+import { join } from "node:path"
 import test from "node:test"
 import { fileURLToPath } from "node:url"
+import { forbiddenImports } from "@structura/testkit/arch"
 
 const SRC = fileURLToPath(new URL("../../src/", import.meta.url))
 
-function sources(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    return entry.isDirectory() ? sources(path) : /\.tsx?$/.test(entry.name) ? [path] : []
-  })
-}
-
-const importsOf = (file: string) => [...readFileSync(file, "utf8").matchAll(/from\s+"([^"]+)"/g)].map((match) => match[1])
-
 test("the guide uses only core, markush, React and the UI kit: never the editor", () => {
   const allowed = (spec: string) => spec.startsWith(".") || spec === "react" || spec.startsWith("@structura/core") || spec === "@structura/markush" || spec.startsWith("@/components/")
-  const outside = sources(join(SRC, "guide")).flatMap((file) => importsOf(file).filter((spec) => !allowed(spec)).map((spec) => `${relative(SRC, file)} → ${spec}`))
-  assert.deepEqual(outside, [])
+  assert.deepEqual(forbiddenImports(join(SRC, "guide"), allowed), [])
 })
 
 test("the editor reaches the guide only through its entry, @/guide", () => {
-  const deep = sources(join(SRC, "editor")).flatMap((file) => importsOf(file).filter((spec) => spec.startsWith("@/guide/")).map((spec) => `${relative(SRC, file)} → ${spec}`))
-  assert.deepEqual(deep, [])
+  assert.deepEqual(forbiddenImports(join(SRC, "editor"), (spec) => !spec.startsWith("@/guide/")), [])
 })
 
 test("every page file is listed once, with its own id (pages are .tsx, so read as text)", () => {

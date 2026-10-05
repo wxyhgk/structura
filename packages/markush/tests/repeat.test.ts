@@ -4,16 +4,9 @@ import { readDocument, toDocument } from "@structura/core/document"
 import { emptyDrawing } from "@structura/core/drawing"
 import { plainFormula } from "@structura/core/formula"
 import { enumerate, pickFields } from "../src/enumerate.ts"
-import { applyOps, type Op } from "@structura/core/ops"
+import { applyOps } from "@structura/core/ops"
 import type { Drawing, Repeat } from "@structura/core/types"
-
-function run(drawing: Drawing, ops: Op[]): Drawing {
-  const result = applyOps(drawing, ops)
-  assert.ok(result.ok, result.ok ? "" : `op ${result.index}: ${result.error}`)
-  return result.drawing
-}
-
-const label = (text: string) => ({ kind: "label" as const, text })
+import { label, run } from "@structura/testkit"
 
 /** Benzene (atoms 1–6) with (R1)m drawn into it: R1 is atom 7, m from `min` to `max`, R1 = Cl or F. */
 function formula(repeat: Repeat): Drawing {

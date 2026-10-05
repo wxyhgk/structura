@@ -6,14 +6,9 @@ import { plainFormula } from "@structura/core/formula"
 import { enumerate, pickFields } from "../src/enumerate.ts"
 import { fragmentFrom, fragmentProblem, fragmentVariables } from "@structura/core/markush"
 import { applyOps, type Op } from "@structura/core/ops"
-import type { Alternative, Drawing, Molecule } from "@structura/core/types"
+import type { Alternative, Molecule } from "@structura/core/types"
 import { validate } from "@structura/core/validate"
-
-function run(drawing: Drawing, ops: Op[]): Drawing {
-  const result = applyOps(drawing, ops)
-  assert.ok(result.ok, result.ok ? "" : `op ${result.index}: ${result.error}`)
-  return result.drawing
-}
+import { run } from "@structura/testkit"
 
 const label = (text: string): Alternative => ({ kind: "label", text })
 const piece = (ops: Op[]): Alternative => ({ kind: "fragment", molecule: run(emptyDrawing(), ops).molecule })

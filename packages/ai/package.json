@@ -30,5 +30,8 @@
     "@structura/core": "*",
     "@structura/markush": "*",
     "openai": "^7.27.0"
+  },
+  "devDependencies": {
+    "@structura/testkit": "*"
   }
 }

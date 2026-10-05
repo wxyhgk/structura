@@ -8,14 +8,7 @@ import { linkerNames, siteKind } from "../src/sites.ts"
 import { enumerate } from "../src/enumerate.ts"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
-
-function run(drawing: Drawing, ops: Op[]): Drawing {
-  const result = applyOps(drawing, ops)
-  assert.ok(result.ok, result.ok ? "" : `op ${result.index}: ${result.error}`)
-  return result.drawing
-}
-
-const label = (text: string) => ({ kind: "label" as const, text })
+import { closestPair, label, run } from "@structura/testkit"
 
 /** Benzene (atoms 1–6) with R2 on atom 2, and –L–ETU off to the side, attached to any of atoms 1, 2, 3. */
 function formula(): Drawing {
@@ -74,12 +67,6 @@ test("a point inside a ring picks that ring's free positions, not the fusion ato
   assert.equal(positions?.length, 4)
   assert.equal(ringPositionsAt(naphthalene, { x: 900, y: 900 }), null)
 })
-
-function closestPair(mol: Drawing["molecule"]): number {
-  let best = Infinity
-  for (const [index, a] of mol.atoms.entries()) for (const b of mol.atoms.slice(index + 1)) best = Math.min(best, Math.hypot(a.x - b.x, a.y - b.y))
-  return best
-}
 
 test("a linker such as L becomes a single bond or a divalent ring between its two neighbours", () => {
   const drawing = run(formula(), [

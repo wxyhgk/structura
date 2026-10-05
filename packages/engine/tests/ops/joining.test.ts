@@ -1,17 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "@structura/core"
-import { applyOps, type Op } from "@structura/core/ops"
-import type { Drawing } from "@structura/core/types"
 import { snappedMove } from "../../src/pointer/moveSnap.ts"
 import { joinOps, scaffoldOps } from "../../src/ops/builders.ts"
 import { defaultPick } from "../../src/tools/scaffoldPick.ts"
-
-function run(drawing: Drawing, ops: Op[]): Drawing {
-  const result = applyOps(drawing, ops)
-  assert.ok(result.ok, result.ok ? "" : result.error)
-  return result.drawing
-}
+import { run } from "@structura/testkit"
 
 /** Two separate bonds: 1–2 and 3–4. */
 const twoBonds = () =>

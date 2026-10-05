@@ -24,6 +24,7 @@ import {
 import { RECIPES, type RecipeName } from "../src/molecule/recipes.ts"
 import type { BondStyle, Molecule, RingKind } from "../src/types.ts"
 import { errorsOf, validate, validateDrawing, type Problem } from "../src/validate.ts"
+import { seeded } from "@structura/testkit"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 
@@ -92,14 +93,6 @@ test("drawing checks arrows on top of the molecule", () => {
 })
 
 /** Small deterministic generator so a failure always replays the same way. */
-function random(seed: number) {
-  let state = seed >>> 0
-  return () => {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
-    return state / 2 ** 32
-  }
-}
-
 const RECIPE_NAMES = Object.keys(RECIPES) as RecipeName[]
 const LOOKS: BondStyle[] = [
   { order: 2, stereo: "none" },
@@ -115,7 +108,7 @@ const LABELS = ["N", "O", "Cl", "Me", "Ph", "Boc", "D", "Xyz", "", "Ac", "Ts", "
 
 test("random edits never break an invariant", () => {
   for (let seed = 1; seed <= 40; seed++) {
-    const next = random(seed)
+    const next = seeded(seed)
     const pick = <T,>(list: T[]): T => list[Math.floor(next() * list.length)]
     let mol = ethane()
     const log: string[] = []

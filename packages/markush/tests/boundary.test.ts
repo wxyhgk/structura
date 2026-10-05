@@ -1,31 +1,21 @@
 import assert from "node:assert/strict"
-import { readdirSync, readFileSync } from "node:fs"
-import { join, relative } from "node:path"
+import { join } from "node:path"
 import test from "node:test"
 import { fileURLToPath } from "node:url"
+import { forbiddenImports } from "@structura/testkit/arch"
 
-const SRC = fileURLToPath(new URL("../src/", import.meta.url))
-const CORE = fileURLToPath(new URL("../../core/src/", import.meta.url))
-
-function sources(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    return entry.isDirectory() ? sources(path) : entry.name.endsWith(".ts") ? [path] : []
-  })
-}
-
-const importsOf = (file: string) => [...readFileSync(file, "utf8").matchAll(/from\s+"([^"]+)"/g)].map((match) => match[1])
+const ROOT = fileURLToPath(new URL("../../../", import.meta.url))
+const at = (dir: string) => join(ROOT, dir)
 
 test("markush builds on core alone: no engine, editor, React or browser", () => {
-  const problems = sources(SRC).flatMap((file) =>
-    importsOf(file)
-      .filter((spec) => !spec.startsWith(".") && !spec.startsWith("@structura/core"))
-      .map((spec) => `${relative(SRC, file)}: ${spec}`),
-  )
-  assert.deepEqual(problems, [])
+  assert.deepEqual(forbiddenImports(at("packages/markush/src"), (spec) => spec.startsWith(".") || spec.startsWith("@structura/core")), [])
 })
 
 test("core never reaches up into markush: the dependency runs one way", () => {
-  const problems = sources(CORE).flatMap((file) => importsOf(file).filter((spec) => spec.startsWith("@structura/")).map((spec) => `${relative(CORE, file)}: ${spec}`))
-  assert.deepEqual(problems, [])
+  assert.deepEqual(forbiddenImports(at("packages/core/src"), (spec) => !spec.startsWith("@structura/")), [])
+})
+
+test("everything else takes generic-formula code from @structura/markush, never core's model directly", () => {
+  const users = ["src", "packages/engine/src", "packages/ai/src", "packages/rdkit/src"]
+  assert.deepEqual(users.flatMap((dir) => forbiddenImports(at(dir), (spec) => spec !== "@structura/core/markush").map((line) => `${dir}/${line}`)), [])
 })

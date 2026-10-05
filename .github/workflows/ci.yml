@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: ["@structura/core", "@structura/markush", "@structura/engine", "@structura/ai", "@structura/rdkit", "app"]
+        suite: ["@structura/core", "@structura/markush", "@structura/engine", "@structura/ai", "@structura/rdkit", "@structura/testkit", "app"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

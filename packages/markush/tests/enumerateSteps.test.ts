@@ -3,17 +3,9 @@ import test from "node:test"
 import { emptyDrawing } from "@structura/core/drawing"
 import { enumerate, enumerateSteps, pickFields } from "../src/enumerate.ts"
 import { toSdf } from "@structura/core/molfile"
-import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing, Molecule } from "@structura/core/types"
 import { validate } from "@structura/core/validate"
-
-function run(drawing: Drawing, ops: Op[]): Drawing {
-  const result = applyOps(drawing, ops)
-  assert.ok(result.ok, result.ok ? "" : `op ${result.index}: ${result.error}`)
-  return result.drawing
-}
-
-const label = (text: string) => ({ kind: "label" as const, text })
+import { label, run } from "@structura/testkit"
 
 /** Benzene with R2 on atom 2, and –L–ETU attached to any of atoms 1–3; Me cannot be a linker. */
 function formula(): Drawing {

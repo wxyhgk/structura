@@ -1,5 +1,6 @@
 import { emptyDrawing } from "@structura/core"
 import { plainFormula } from "@structura/core/formula"
+import { isVariableName } from "@structura/core/markush"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing, Molecule } from "@structura/core/types"
 import { validate } from "@structura/core/validate"
@@ -8,6 +9,21 @@ import type { Action } from "./types.ts"
 /** Valence problems in the drawing, as text. */
 export function valenceProblems(mol: Molecule): string[] {
   return validate(mol).filter((problem) => problem.code === "valence").map((problem) => problem.message)
+}
+
+/**
+ * R-group variables a build wrote onto atoms inside a ring or chain (two or more bonds): the
+ * ring atom itself became R1, where a substituent R1 was nearly always meant. Other letters
+ * (X, Y, L, A) are often ring or chain members by design and are left alone; even for R this
+ * is a warning, not a refusal.
+ */
+function variablesInside(ops: Op[], mol: Molecule, names: Record<string, number>): string[] {
+  return ops.flatMap((op) => {
+    if (op.op !== "label" || !isVariableName(op.text) || !/^R/.test(op.text)) return []
+    const id = typeof op.atom === "number" ? op.atom : typeof op.atom === "string" ? names[op.atom] : undefined
+    const neighbours = mol.bonds.flatMap((bond) => (bond.a === id ? [bond.b] : bond.b === id ? [bond.a] : []))
+    return id != null && neighbours.length >= 2 ? [`atom ${id} is now ${op.text} itself, bonded to ${neighbours.join(", ")}`] : []
+  })
 }
 
 /** The drawing as the model reads it back: formula, every atom (with the names it has) and what it is bonded to, and problems. */
@@ -74,7 +90,9 @@ export function createSession() {
       drawing = result.drawing
       const present = new Set(drawing.molecule.atoms.map((atom) => atom.id))
       names = new Map([...names, ...Object.entries(result.names)].filter(([, id]) => present.has(id)))
-      return { ok: true, message: [`Applied ${ops.length} ops.`, describe(drawing.molecule, names)].join("\n") }
+      const inside = variablesInside(resolve(ops, names) as Op[], drawing.molecule, result.names)
+      const warning = inside.length > 0 ? [`Warning: ${inside.join("; ")}. Such a variable is part of the ring or chain, not a substituent on it. If the picture shows it as a substituent (a bond from the ring out to the label), undo with set_element back to C and instead add_atom bonded to that ring atom, then label the new atom.`] : []
+      return { ok: true, message: [`Applied ${ops.length} ops.`, ...warning, describe(drawing.molecule, names)].join("\n") }
     },
   }
 }

@@ -22,7 +22,9 @@ Ops (atoms are referred to by their id, or by a name given with "as" in this or 
 - {"op":"add_atom","el":"C","to":5,"order":1,"as":"m"}: a new atom bonded to atom 5 (leave out "to" for a lone atom).
 - {"op":"add_bond","a":5,"b":9,"order":2}
 - {"op":"add_ring","atom":5,"kind":"benzene"} or {"op":"add_ring","bond":{"between":[5,6]},"kind":"cyclohexane"}; kinds: benzene, cyclohexane, cyclopentane, cyclobutane, cyclopropane, cycloheptane, cyclooctane.
-- {"op":"label","atom":7,"text":"OMe"}: an element (N, O, S, Cl…), a common abbreviation (Me, Et, iPr, tBu, Ph, OMe, CF3, CN, NO2, Ac, Boc…), or a variable placeholder of a generic formula (R1, R', X, L, Ar1, n). OH, NH2 are fine too.
+- {"op":"label","atom":7,"text":"OMe"}: turns atom 7 ITSELF into an element (N, O, S, Cl…), a common abbreviation (Me, Et, iPr, tBu, Ph, OMe, CF3, CN, NO2, Ac, Boc…), or a variable placeholder of a generic formula (R1, R', X, L, Ar1, n). OH, NH2 are fine too.
+  A substituent on a ring is a NEW atom: [{"op":"add_atom","el":"C","to":"cz.C3","as":"r1"},{"op":"label","atom":"r1","text":"R1"}]. Never label the ring atom itself as R1, which would put R1 inside the ring. Only a variable that is a ring member in the picture (X in a ring, drawn as a ring corner) is a label on the ring atom: {"op":"label","atom":"dbf.O5","text":"X"}.
+  Variable numbers are not locants: R1 is wherever the picture puts it, not on C1. Place each one by its neighbourhood in the picture: next to the heteroatom side, next to the bond joining two rings, and so on, then find the template locant with that same neighbourhood.
 - {"op":"set_element","atom":7,"el":"N"}, {"op":"set_charge","atom":7,"charge":1}
 - {"op":"set_bond","bond":{"between":[5,6]},"order":2}: bond order 1, 2 or 3; {"op":"set_bond","bond":{"between":[5,6]},"stereo":"up"} for a wedge (or "down" for a hash), starting at the first atom.
 - {"op":"remove","atoms":[7],"bonds":[{"between":[5,6]}]}

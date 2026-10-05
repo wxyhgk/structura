@@ -119,3 +119,13 @@ test("ops sent as an array rather than a string are accepted", () => {
   const answer = session.act({ note: "", action: "build", ops: [{ op: "add_scaffold", name: "benzene" }] as unknown as string })
   assert.ok(answer.ok, answer.message)
 })
+
+test("a variable written onto a ring atom is flagged; one on a new substituent atom is not", () => {
+  const session = createSession()
+  const inside = session.act(build([{ op: "add_scaffold", name: "benzene", as: "b" }, { op: "label", atom: "b.C1", text: "R1" }]))
+  assert.ok(inside.ok)
+  assert.match(inside.message, /Warning: atom \d+ is now R1 itself/)
+  const outside = session.act(build([{ op: "add_atom", el: "C", to: "b.C3", as: "r2" }, { op: "label", atom: "r2", text: "R2" }]))
+  assert.ok(outside.ok)
+  assert.doesNotMatch(outside.message, /Warning/)
+})

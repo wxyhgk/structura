@@ -14,7 +14,11 @@ export const READING: Format = {
     properties: {
       note: { type: "string", description: "What you see, a few words of Chinese" },
       name: { type: "string", description: "A systematic name with locants (e.g. 9-phenyl-3-(dibenzofuran-4-yl)-9H-carbazole); for a generic formula, the core with its variables; empty if it cannot be named" },
-      description: { type: "string", description: "Every ring system; every bond between them and every substituent, each with the IUPAC locant it sits on, worked out from the heteroatoms and fusion atoms in the picture; labels, charges, stereo, variables" },
+      description: {
+        type: "string",
+        description:
+          "Every ring system; then every bond between them and every substituent or variable, each first with what it sits next to in the picture (e.g. 'R1: on the ring carbon beside the one bonded to X'), then the IUPAC locant that follows from that (variable numbers are not locants); labels, charges, stereo",
+      },
     },
   },
 }

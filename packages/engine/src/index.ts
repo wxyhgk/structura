@@ -26,3 +26,7 @@ export { ROTATE_STEP, ZOOM_STEP } from "./view/steps.ts"
 
 export { joinOps, paintOps, scaffoldOps, type Run, type RunOptions } from "./ops/builders.ts"
 export { captureOps } from "./markush/capture.ts"
+
+export { createEditor, type Editor } from "./state/editor.ts"
+export { createEditorStore, type EditorSnapshot, type EditorStore } from "./state/store.ts"
+export { canTransform, statusOf } from "./state/status.ts"

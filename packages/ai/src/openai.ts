@@ -42,9 +42,11 @@ export async function askOpenAI(client: OpenAI, request: FillRequest, model = OP
 export function failure(error: unknown): string {
   if (error instanceof OpenAI.AuthenticationError) return "API key 无效，请检查服务器上的 OPENAI_API_KEY。"
   if (error instanceof OpenAI.PermissionDeniedError) return "这个 API key 没有权限使用该模型。"
-  if (error instanceof OpenAI.NotFoundError) return `找不到模型或接口（${error.message}）。请检查 OPENAI_MODEL，以及 OPENAI_BASE_URL 是否支持 Responses API。`
+  if (error instanceof OpenAI.NotFoundError) return `找不到模型或接口（${error.message}）。请检查 OPENAI_MODEL，以及 OPENAI_BASE_URL 是否支持 Responses API（只支持 Chat Completions 的服务器请设 OPENAI_API=chat）。`
   if (error instanceof OpenAI.RateLimitError) return "请求太频繁或额度不足，请稍后再试。"
   if (error instanceof OpenAI.APIConnectionError) return "连不上 OpenAI 接口，请检查服务器的网络和 OPENAI_BASE_URL。"
   if (error instanceof OpenAI.APIError) return `OpenAI 接口出错（${error.status ?? "无状态码"}）：${error.message}`
-  return `调用失败：${error instanceof Error ? error.message : String(error)}。${KEY_HINT}（OPENAI_API_KEY=…）`
+  const message = error instanceof Error ? error.message : String(error)
+  // Only a missing key earns the hint about setting one; a bad answer is just reported.
+  return /api.?key/i.test(message) ? `调用失败：${message}。${KEY_HINT}（OPENAI_API_KEY=…）` : `调用失败：${message}`
 }

@@ -4,6 +4,7 @@ import { KEY_HINT } from "./check.ts"
 import { askClaude, CLAUDE_MODEL, failure as claudeFailure } from "./claude.ts"
 import { askOpenAI, failure as openaiFailure, OPENAI_MODEL, type Effort } from "./openai.ts"
 import { recognize, type Ask } from "./structure/agent.ts"
+import { chatAsk } from "./structure/chat.ts"
 import { claudeAsk } from "./structure/claude.ts"
 import { openaiAsk } from "./structure/openai.ts"
 import type { StructureRequest, StructureResult, StructureStep } from "./structure/types.ts"
@@ -24,6 +25,8 @@ export type AiEnv = {
   OPENAI_MODEL?: string
   /** low, medium or high: how hard a reasoning model thinks. Left out: high for filling, medium for pictures. */
   OPENAI_REASONING_EFFORT?: string
+  /** "responses" (the default) or "chat", for servers offering only Chat Completions. Picture recognition only, for now. */
+  OPENAI_API?: string
 }
 
 export type Provider = {
@@ -73,7 +76,7 @@ export function providerFrom(env: AiEnv): Provider | { error: string } {
       },
       recognize: async (request, onStep, signal) => {
         const ready = connect()
-        return "error" in ready ? { ok: false, error: ready.error } : recognize(request, explained(openaiAsk(ready, model, effort ?? "medium"), openaiFailure), onStep, signal)
+        return "error" in ready ? { ok: false, error: ready.error } : recognize(request, explained((env.OPENAI_API?.trim().toLowerCase() === "chat" ? chatAsk : openaiAsk)(ready, model, effort ?? "medium"), openaiFailure), onStep, signal)
       },
     }
   }

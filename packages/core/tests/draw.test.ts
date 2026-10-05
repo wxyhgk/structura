@@ -125,3 +125,15 @@ test("a double bond to an end atom is two lines centred on the bond", () => {
   assert.ok(Math.abs(offsets[0] + offsets[1]) < 0.01, "the two lines sit symmetrically")
   assert.ok(offsets[1] > 1)
 })
+
+test("numbers right after a letter or bracket in a label are subscripts; others stay on the line", async () => {
+  const { labelParts } = await import("../src/draw/labels.ts")
+  const shown = (text: string) => labelParts(text).map((part) => (part.sub ? `_${part.text}` : part.text)).join("")
+  assert.equal(shown("R1"), "R_1")
+  assert.equal(shown("R12"), "R_12")
+  assert.equal(shown("Ar'"), "Ar'")
+  assert.equal(shown("Ar2'"), "Ar_2'")
+  assert.equal(shown("CO2Me"), "CO_2Me")
+  assert.equal(shown("(CH2)3"), "(CH_2)_3")
+  assert.equal(shown("2-Py"), "2-Py")
+})

@@ -36,17 +36,48 @@ function symbolParts(atom: Atom): { symbol: string; mass: string } {
   return { symbol: atom.el, mass: atom.isotope == null ? "" : String(atom.isotope) }
 }
 
-export function labelFor(mol: Molecule, atom: Atom, colorHetero: boolean): AtomLabel | null {
-  if (atom.alias) {
-    const width = measureText(atom.alias, LABEL_SIZE)
-    const half = width / 2
-    return {
-      atomId: atom.id,
-      color: elementColor(atom.el, colorHetero),
-      runs: [{ text: atom.alias, x: atom.x, y: atom.y, size: LABEL_SIZE, anchor: "middle", dy: 0 }],
-      box: { left: atom.x - half - 2, right: atom.x + half + 2, top: atom.y - 10, bottom: atom.y + 10 },
-    }
+/** Subscripts sit this much lower than the line and are this size. */
+const SUB_DROP = 4
+const SUB_SIZE = 11
+
+/**
+ * A label typed on an atom, split where it changes between normal text and subscript: a
+ * number right after a letter or a closing bracket is a subscript, as chemists write it
+ * (R₁, Ar₂, NO₂, CF₃, CO₂Me, (CH₂)₂). Numbers elsewhere (2-Py) stay on the line.
+ */
+export function labelParts(text: string): Array<{ text: string; sub: boolean }> {
+  const parts: Array<{ text: string; sub: boolean }> = []
+  for (const piece of text.split(/(?<=[A-Za-z)])(\d+)/)) {
+    if (!piece) continue
+    const sub = /^\d+$/.test(piece) && parts.length > 0
+    const last = parts.at(-1)
+    if (last && last.sub === sub) last.text += piece
+    else parts.push({ text: piece, sub })
   }
+  return parts
+}
+
+/** An alias label (R1, OMe, NO2), centred on its atom, with its numbers as subscripts. */
+function aliasLabel(atom: Atom, colorHetero: boolean): AtomLabel {
+  const parts = labelParts(atom.alias!)
+  const widths = parts.map((part) => measureText(part.text, part.sub ? SUB_SIZE : LABEL_SIZE) + (part.sub ? 0.5 : 0))
+  const width = widths.reduce((sum, item) => sum + item, 0)
+  let x = atom.x - width / 2
+  const runs: LabelRun[] = parts.map((part, index) => {
+    const run: LabelRun = { text: part.text, x, y: atom.y + (part.sub ? SUB_DROP : 0), size: part.sub ? SUB_SIZE : LABEL_SIZE, anchor: "start", dy: 0 }
+    x += widths[index]
+    return run
+  })
+  return {
+    atomId: atom.id,
+    color: elementColor(atom.el, colorHetero),
+    runs,
+    box: { left: atom.x - width / 2 - 2, right: atom.x + width / 2 + 2, top: atom.y - 10, bottom: atom.y + 10 },
+  }
+}
+
+export function labelFor(mol: Molecule, atom: Atom, colorHetero: boolean): AtomLabel | null {
+  if (atom.alias) return aliasLabel(atom, colorHetero)
   const bonded = neighbors(mol, atom.id)
   const { h, error } = atomHydrogens(mol, atom.id)
   const show = atom.el !== "C" || atom.charge !== 0 || atom.isotope != null || error || bonded.length === 0

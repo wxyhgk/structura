@@ -23,6 +23,7 @@ export { snappedMove } from "./pointer/moveSnap.ts"
 
 export { clampZoom, createViewport, drawingPoints, fittedView, zoomedAt, type View, type Viewport } from "./view/viewport.ts"
 export { ROTATE_STEP, ZOOM_STEP } from "./view/steps.ts"
+export { steppedZoom, ZOOM_LEVELS } from "./view/zoomLevels.ts"
 
 export { joinOps, paintOps, scaffoldOps, type Run, type RunOptions } from "./ops/builders.ts"
 export { captureOps } from "./markush/capture.ts"

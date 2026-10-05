@@ -1,4 +1,4 @@
-/** One zoom step, for the keyboard, the menu and the scroll wheel alike. */
+/** One scroll-wheel or pinch step; the buttons and keys step through ZOOM_LEVELS instead. */
 export const ZOOM_STEP = 1.1
 
 /** One rotation step for the keyboard and the menu (15°). */

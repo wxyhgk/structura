@@ -1,4 +1,5 @@
 import type { Arrow, Molecule, Point } from "@structura/core/types"
+import { steppedZoom } from "./zoomLevels.ts"
 
 /** How the drawing sits on screen: screen = pan + world × zoom. */
 export type View = { zoom: number; pan: Point }
@@ -53,6 +54,12 @@ export function createViewport() {
     for (const listener of listeners) listener()
   }
 
+  /** Zooms around the middle of the canvas. */
+  function zoomBy(factor: number) {
+    const rect = element?.getBoundingClientRect()
+    if (rect) set(zoomedAt(view, { x: rect.width / 2, y: rect.height / 2 }, factor))
+  }
+
   return {
     get: (): View => view,
     subscribe(listener: () => void) {
@@ -77,10 +84,10 @@ export function createViewport() {
       const rect = element?.getBoundingClientRect()
       if (rect) set(zoomedAt(view, { x: clientX - rect.left, y: clientY - rect.top }, factor))
     },
-    /** Zooms around the middle of the canvas. */
-    zoomBy(factor: number) {
-      const rect = element?.getBoundingClientRect()
-      if (rect) set(zoomedAt(view, { x: rect.width / 2, y: rect.height / 2 }, factor))
+    zoomBy,
+    /** Zooms around the middle of the canvas to the next preset level up (1) or down (−1). */
+    zoomStep(direction: 1 | -1) {
+      zoomBy(steppedZoom(view.zoom, direction) / view.zoom)
     },
     reset() {
       set(HOME)

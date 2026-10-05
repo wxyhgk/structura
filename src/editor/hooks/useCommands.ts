@@ -6,7 +6,7 @@ import { atomIdsOfSelection, bondsLeaving, emptySelection } from "@structura/cor
 import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
-import { command as engineCommand, type Command, type CommandOptions, joinOps, ROTATE_STEP, type Viewport, ZOOM_STEP } from "@structura/engine"
+import { command as engineCommand, type Command, type CommandOptions, joinOps, ROTATE_STEP, type Viewport } from "@structura/engine"
 import type { EditorState } from "@/editor/useEditor"
 
 /** A command, its shortcut written the way this platform does (⌘ or Ctrl). */
@@ -137,8 +137,8 @@ export function useCommands({
       },
       { keys: [{ key: "Enter" }], when: () => !canvas.current?.hotspot() && editor.selectionHotspot() != null },
     ),
-    zoomIn: command("放大", () => viewport.zoomBy(ZOOM_STEP), { keys: [{ key: "=", meta: true }, { key: "+", meta: true }] }),
-    zoomOut: command("缩小", () => viewport.zoomBy(1 / ZOOM_STEP), { keys: [{ key: "-", meta: true }] }),
+    zoomIn: command("放大", () => viewport.zoomStep(1), { keys: [{ key: "=", meta: true }, { key: "+", meta: true }] }),
+    zoomOut: command("缩小", () => viewport.zoomStep(-1), { keys: [{ key: "-", meta: true }] }),
     actualSize: command("实际大小", () => viewport.reset(), { keys: [{ key: "0", meta: true }] }),
     guide: command("使用说明", openGuide, { keys: [{ key: "F1" }], inFields: true }),
     help: command("快捷键", () => editor.setHelpOpen(true)),

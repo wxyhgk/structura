@@ -4,9 +4,12 @@ import { readDocument, toDocument } from "@structura/core/document"
 import { emptyDrawing } from "@structura/core/drawing"
 import { plainFormula } from "@structura/core/formula"
 import { enumerate, pickFields } from "../src/enumerate.ts"
-import { applyOps } from "@structura/core/ops"
+import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing, Repeat } from "@structura/core/types"
-import { label, run } from "@structura/testkit"
+import { build, label, run } from "@structura/testkit"
+import { chemistry } from "@structura/testkit/chem"
+
+const { canonicalAll } = await chemistry()
 
 /** Benzene (atoms 1–6) with (R1)m drawn into it: R1 is atom 7, m from `min` to `max`, R1 = Cl or F. */
 function formula(repeat: Repeat): Drawing {
@@ -18,6 +21,38 @@ function formula(repeat: Repeat): Drawing {
     { op: "set_variable", name: "R1", alternatives: [label("Cl"), label("F")] },
   ])
 }
+
+/** Every set of `size` items, in order. */
+function subsets<T>(items: T[], size: number): T[][] {
+  if (size === 0) return [[]]
+  return items.flatMap((item, at) => subsets(items.slice(at + 1), size - 1).map((rest) => [item, ...rest]))
+}
+
+/**
+ * What (R1)m on benzene must give, drawn the plain way, without any generic-formula code:
+ * for each count, each set of ring atoms, each Cl/F choice per copy, benzene with those
+ * substituents added by hand. The referee the enumeration is checked against.
+ */
+function byHand(min: number, max: number): Drawing[] {
+  const expected: Drawing[] = []
+  for (let size = min; size <= max; size++)
+    for (const positions of subsets([1, 2, 3, 4, 5, 6], size))
+      for (let pick = 0; pick < 2 ** size; pick++)
+        expected.push(
+          build([
+            { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" },
+            ...positions.flatMap((atom, index): Op[] => [{ op: "add_atom", el: (pick >> index) & 1 ? "F" : "Cl", to: atom }]),
+          ]),
+        )
+  return expected
+}
+
+test("(R1)m gives exactly the molecules drawn by hand, every position set and every choice", () => {
+  const result = enumerate(formula({ min: 0, max: 2, name: "m" }), { limit: 10000 })
+  assert.deepEqual(canonicalAll(result.molecules), canonicalAll(byHand(0, 2)))
+  const all = enumerate(formula({ min: 3, max: 4, name: "n" }), { limit: 10000 })
+  assert.deepEqual(canonicalAll(all.molecules), canonicalAll(byHand(3, 4)))
+})
 
 test("(R1)m expands to every set of m positions, each copy choosing on its own", () => {
   const result = enumerate(formula({ min: 0, max: 2, name: "m" }), { limit: 10000 })

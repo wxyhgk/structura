@@ -9,6 +9,9 @@ import { enumerate } from "../src/enumerate.ts"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
 import { closestPair, label, run } from "@structura/testkit"
+import { chemistry } from "@structura/testkit/chem"
+
+const { canonicalAll } = await chemistry()
 
 /** Benzene (atoms 1–6) with R2 on atom 2, and –L–ETU off to the side, attached to any of atoms 1, 2, 3. */
 function formula(): Drawing {
@@ -32,8 +35,11 @@ test("a variable attachment is placed at each candidate in turn, displacing the 
   // On atom 1 or 3, R2 still chooses H or F; on atom 2, –L–ETU takes R2's place.
   assert.equal(result.total, 5)
   assert.deepEqual([result.molecules.length, result.failed], [5, 0])
-  const formulas = result.molecules.map((mol) => plainFormula(mol)).sort()
-  assert.deepEqual(formulas, ["C12H10O", "C12H10O", "C12H10O", "C12H9FO", "C12H9FO"])
+  // Which molecules, not just which formulas: F sits next to the ether on atoms 1 and 3 (both
+  // ortho to atom 2), so a misplaced attachment (meta or para) would show up here.
+  const diphenylEther = "c1ccc(Oc2ccccc2)cc1"
+  const orthoFluoro = "Fc1ccccc1Oc1ccccc1"
+  assert.deepEqual(canonicalAll(result.molecules), canonicalAll([diphenylEther, diphenylEther, diphenylEther, orthoFluoro, orthoFluoro]))
   for (const mol of result.molecules) assert.ok(mol.atoms.every((atom) => !atom.alias), "no placeholder is left")
 })
 

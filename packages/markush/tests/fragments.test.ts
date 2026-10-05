@@ -9,6 +9,9 @@ import { applyOps, type Op } from "@structura/core/ops"
 import type { Alternative, Molecule } from "@structura/core/types"
 import { validate } from "@structura/core/validate"
 import { run } from "@structura/testkit"
+import { chemistry } from "@structura/testkit/chem"
+
+const { canonical } = await chemistry()
 
 const label = (text: string): Alternative => ({ kind: "label", text })
 const piece = (ops: Op[]): Alternative => ({ kind: "fragment", molecule: run(emptyDrawing(), ops).molecule })
@@ -115,6 +118,8 @@ test("a two-ended piece links two atoms: Ph–L–Ph with L = p-phenylene is ter
   ])
   const result = enumerate(drawing)
   assert.deepEqual(result.molecules.map((mol) => plainFormula(mol)), ["C12H10", "C18H14"])
+  // p-Phenylene makes p-terphenyl: the two outer rings opposite each other, not meta.
+  assert.deepEqual(result.molecules.map(canonical), [canonical("c1ccc(-c2ccccc2)cc1"), canonical("c1ccc(-c2ccc(-c3ccccc3)cc2)cc1")])
   assertTidy(result.molecules[1])
 })
 

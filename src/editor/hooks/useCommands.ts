@@ -34,7 +34,7 @@ export function useCommands({
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
   viewport: Viewport
-  clipboard: { copy: () => void; cut: () => void; paste: () => void }
+  clipboard: { copy: () => void; cut: () => void; paste: () => void; copyImage: () => void }
   openFileDialog: () => void
   openSmilesDialog: () => void
   openEnumerate: () => void
@@ -75,6 +75,11 @@ export function useCommands({
     cut: command("剪切", clipboard.cut, { hint: { key: "x", meta: true }, enabled: selected }),
     // The browser's own ⌘V pastes on the canvas; the menu reads the clipboard itself.
     paste: command("粘贴", clipboard.paste, { hint: { key: "v", meta: true } }),
+    // The selection, or the whole drawing, as a picture for Word and PowerPoint.
+    copyImage: command("复制为图片", clipboard.copyImage, {
+      keys: [{ key: "c", meta: true, shift: true }],
+      enabled: editor.mol.atoms.length > 0,
+    }),
     duplicate: command("重复", editor.duplicateSelection, { keys: [{ key: "d", meta: true }], enabled: selected }),
     remove: command("删除", editor.removeSelection, { keys: [{ key: "Backspace" }, { key: "Delete" }] }),
     selectAll: command("全选", editor.selectEverything, { keys: [{ key: "a", meta: true }] }),

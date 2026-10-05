@@ -7,7 +7,7 @@ export const selectPage = definePage({
   id: "select",
   group: "编辑",
   title: "选择、移动和变换",
-  keywords: "选择 套索 框选 全选 双击 移动 旋转 翻转 复制 粘贴 删除 整理 替换 箭头 连接 合并 吸附 拼接",
+  keywords: "选择 套索 框选 全选 双击 移动 旋转 翻转 复制 粘贴 复制为图片 删除 整理 替换 箭头 连接 合并 吸附 拼接",
   body: (context) => (
     <>
       <Tutorial title="选中、移动、旋转" steps={moveAndTurn(context)} />
@@ -36,6 +36,7 @@ export const selectPage = definePage({
       <Table
         rows={[
           [`[${context.mod}][C] / [${context.mod}][X] / [${context.mod}][V]`, "复制 / 剪切 / 粘贴（剪贴板里是 MOL 文本，也能粘贴 SMILES）；编辑菜单里也有，从菜单粘贴时浏览器会先询问是否允许读取剪贴板"],
+          [`[${context.mod}][⇧][C]`, "复制为图片：选中部分（没有选中时是整张图）以高清 PNG 放进剪贴板，可直接粘贴到 Word、PowerPoint"],
           [`[${context.mod}][D]`, "在旁边复制一份"],
           [`[Delete] / [Backspace]`, "删除"],
           [`[${context.mod}][⇧][K]`, "整理结构（键长、键角、环形状），有选中时只整理选中部分"],

@@ -74,7 +74,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const [guide, setGuide] = useState<GuideTopic | null>(null)
 
   const imports = useImports(editor, viewport)
-  const clipboard = selectionClipboard(editor)
+  const clipboard = selectionClipboard(editor, (line) => imports.showNotes({ opened: false, title: "复制为图片", lines: [line] }))
   const commands = useCommands({
     editor,
     canvas: canvasRef,

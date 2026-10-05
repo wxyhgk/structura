@@ -1,0 +1,55 @@
+# Every push and pull request: types, lint, then each package's tests on their own (so a
+# package that only passes thanks to its neighbours is caught), and the app's tests.
+name: CI
+
+on:
+  push:
+    branches: [master, "phase-*"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+
+  test:
+    needs: check
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ["@structura/core", "@structura/markush", "@structura/engine", "@structura/ai", "@structura/rdkit", "app"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Test ${{ matrix.suite }}
+        run: |
+          if [ "${{ matrix.suite }}" = "app" ]; then npm run test:app; else npm test -w "${{ matrix.suite }}"; fi
+
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build

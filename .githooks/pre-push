@@ -1,0 +1,7 @@
+#!/bin/sh
+# Before anything leaves this machine: types, lint and every test (about 15 s).
+# The browser tests run in CI. Skip once with `git push --no-verify` if you must.
+set -e
+npm run --silent typecheck
+npm run --silent lint
+npm test --silent > /tmp/structura-pre-push.log 2>&1 || { grep -E "^✖|not ok|Error" /tmp/structura-pre-push.log | head -40; echo "测试没通过，推送已取消（完整输出：/tmp/structura-pre-push.log）"; exit 1; }

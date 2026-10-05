@@ -71,7 +71,8 @@ test("the loop reads first, acts step by step, shows the model its drawing on lo
 
 test("a model that never says done stops after the step limit, keeping what it built", async () => {
   const { ask, seen } = scripted((index) => (index === 0 ? build([{ op: "add_scaffold", name: "pyridine" }]) : { note: "", action: "look", ops: "" }))
-  const result = await recognize({ image: PICTURE }, ask, () => {})
+  // Every turn looks; a stand-in renderer keeps this about the loop, not about drawing PNGs.
+  const result = await recognize({ image: PICTURE }, ask, () => {}, undefined, () => PICTURE)
   assert.equal(seen.length, MOST_STEPS)
   assert.ok(result.ok)
 })

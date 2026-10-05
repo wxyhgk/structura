@@ -1,3 +1,4 @@
+import type { Drawing } from "@structura/core/types"
 import { BUILD_TEXT, startText } from "./prompt.ts"
 import { renderForModel } from "./render.ts"
 import { ACTION, READING, type Format } from "./schema.ts"
@@ -10,6 +11,9 @@ export type Ask = (turns: Turn[], format: Format) => Promise<unknown>
 /** The most turns before it stops and hands back what it has (the reading included). */
 export const MOST_STEPS = 16
 
+/** How the loop shows the model its own drawing on look; the real one renders a PNG on the server. */
+export type Render = (drawing: Drawing, names: ReadonlyMap<string, number>) => string | null
+
 /**
  * The agent loop. First the model reads the picture and says what it shows, a name and a
  * description with locants, building nothing: seeing and building are separate jobs, and
@@ -18,7 +22,13 @@ export const MOST_STEPS = 16
  * it says done or runs out of steps. Each step is reported as it happens; the result is the
  * drawing it ended with.
  */
-export async function recognize(request: StructureRequest, askOnce: Ask, onStep: (step: StructureStep) => void, signal?: AbortSignal): Promise<StructureResult> {
+export async function recognize(
+  request: StructureRequest,
+  askOnce: Ask,
+  onStep: (step: StructureStep) => void,
+  signal?: AbortSignal,
+  render: Render = renderForModel,
+): Promise<StructureResult> {
   // A model now and then answers with nothing usable (an empty or cut-off reply); one more try usually does it.
   const ask: Ask = async (turns, format) => {
     try {
@@ -66,7 +76,7 @@ export async function recognize(request: StructureRequest, askOnce: Ask, onStep:
     }
     const outcome = session.act(action)
     onStep({ note: action.note, action: action.action, ok: outcome.ok, message: outcome.message, drawing: session.drawing() })
-    const picture = action.action === "look" ? renderForModel(session.drawing(), session.names()) : null
+    const picture = action.action === "look" ? render(session.drawing(), session.names()) : null
     turns.push({
       role: "user",
       text: `${outcome.message}${action.action === "look" ? (picture ? "\nHere is your drawing, each atom's id and locant name in brown. Compare it with the original picture and with your reading, position by position: for every bond between ring systems and every substituent, check that it sits on the locant you read." : "\nThere is nothing to show yet.") : ""}${step === MOST_STEPS - 1 ? "\nOne turn left: finish with done." : ""}`,

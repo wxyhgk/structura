@@ -193,7 +193,14 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
           />
 
           <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
-          <EnumerateDialog open={enumerateOpen} onOpenChange={setEnumerateOpen} drawing={editor.latest()} colorHetero={editor.colorHetero} />
+          <EnumerateDialog
+            open={enumerateOpen}
+            onOpenChange={setEnumerateOpen}
+            drawing={editor.latest()}
+            colorHetero={editor.colorHetero}
+            base={file.base}
+            onPlace={(mol) => editor.appendMolecules([mol], viewport.centre())}
+          />
           {recognizeStructure && (
             <StructureDialog
               open={recognizeOpen}

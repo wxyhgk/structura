@@ -57,3 +57,11 @@ test("provisos read the way a claim states them", async () => {
   assert.equal(provisoText({ kind: "combination", when: [{ name: "R1", is: [H] }, { name: "R2", is: [H, { kind: "label", text: "D" }] }] }), "排除：R1 = H 且 R2 = H 或 D")
   assert.equal(provisoText({ kind: "compound", smiles: "Clc1ccccc1" }), "排除化合物：Clc1ccccc1")
 })
+
+test("a class carrying named substituents says so", async () => {
+  const { describeAlternative } = await import("../../../src/editor/markush/describe.ts")
+  assert.equal(
+    describeAlternative({ kind: "class", class: "aryl", min: 6, max: 30, substituents: { from: ["F", "Cl"], min: 0, max: 2 } }),
+    "取代或未取代的(C6–C30)芳基（被 0–2 个 F、Cl 取代）",
+  )
+})

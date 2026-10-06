@@ -131,7 +131,7 @@ export type Alternative =
   | { kind: "bond" }
   /** A divalent ring joining the two atoms a placeholder sits between: "L is p-phenylene". */
   | { kind: "bridge"; name: BridgeName }
-  | { kind: "class"; class: GroupClass; min?: number; max?: number; substituted?: boolean; unit?: SizeUnit }
+  | { kind: "class"; class: GroupClass; min?: number; max?: number; substituted?: boolean; unit?: SizeUnit; substituents?: Substituents }
   /**
    * A drawn piece: carbazol-9-yl for Ar, 2,6-naphthylene for L, N–R5 for a ring's X. Atoms
    * labelled "*" mark where it joins the formula, one per bond of the placeholder: the atom
@@ -152,6 +152,12 @@ export type Choice = Exclude<Alternative, { kind: "class" }>
  * usual unit (see GROUP_CLASSES).
  */
 export type SizeUnit = "carbons" | "members"
+
+/**
+ * "Optionally substituted with 1 to 3 groups selected from F, Cl, CN and Me": what a class's
+ * members may carry (labels as typed), and how many of them.
+ */
+export type Substituents = { from: string[]; min: number; max: number }
 
 export type GroupClass =
   | "alkyl"

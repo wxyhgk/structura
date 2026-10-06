@@ -108,6 +108,15 @@ export function alternativeProblem(alternative: Alternative): string | null {
   }
   if (min != null && max != null && min > max) return `size ${min} is above ${max}`
   if (alternative.unit != null && alternative.unit !== "carbons" && alternative.unit !== "members") return `unit "${alternative.unit}" is neither carbons nor members`
+  const carried = alternative.substituents
+  if (carried != null) {
+    if (!Array.isArray(carried.from) || carried.from.length === 0) return "say which groups the class may carry"
+    for (const text of carried.from) if (typeof text !== "string" || !knownLabel(text)) return `"${text}" is not an element or a known abbreviation`
+    if (![carried.min, carried.max].every((count) => Number.isInteger(count) && count >= 0 && count <= 5) || carried.min > carried.max || carried.max < 1) {
+      return "the number of substituents is a range such as 1–3, at most 5"
+    }
+    if (alternative.substituted === false) return "an unsubstituted class carries no substituents"
+  }
   return null
 }
 

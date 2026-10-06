@@ -21,6 +21,11 @@ export function ClassForm({ initial, onSave, onCancel }: { initial?: Alternative
   const [unit, setUnit] = useState<SizeUnit>(start ? sizeUnitOf(start) : GROUP_CLASSES[group].size)
   const ringClass = RING_CLASSES.has(group)
   const shownUnit: SizeUnit = ringClass ? unit : "carbons"
+  /** "Substituted with 1–3 groups selected from …": the groups typed, and how many; empty means not said. */
+  const [groups, setGroups] = useState(start?.substituents?.from.join(", ") ?? "")
+  const [fewest, setFewest] = useState(String(start?.substituents?.min ?? (start?.substituted ? 1 : 0)))
+  const [most, setMost] = useState(String(start?.substituents?.max ?? 3))
+  const named = groups.split(/[,，、\s]+/).filter(Boolean)
   const ranged = min.trim() !== "" || max.trim() !== ""
   const low = Number(min)
   const high = Number(max)
@@ -30,6 +35,7 @@ export function ClassForm({ initial, onSave, onCancel }: { initial?: Alternative
     ...(ranged ? { min: low, max: high } : {}),
     ...(substituted === "either" ? {} : { substituted: substituted === "yes" }),
     ...(ranged && shownUnit !== GROUP_CLASSES[group].size ? { unit: shownUnit } : {}),
+    ...(substituted !== "no" && named.length > 0 ? { substituents: { from: named, min: Number(fewest), max: Number(most) } } : {}),
   }
   const valid = alternativeProblem(candidate) == null
   const field = "h-7 rounded-sm border border-[#d0d0d0] bg-white px-1 outline-none focus:border-[#1a73e8]"
@@ -61,6 +67,20 @@ export function ClassForm({ initial, onSave, onCancel }: { initial?: Alternative
         <option value="no">未取代</option>
         <option value="yes">取代</option>
       </select>
+      {substituted !== "no" && (
+        <>
+          <span>取代基</span>
+          <span className="flex flex-wrap items-center gap-1">
+            <input className={`${field} min-w-0 flex-1`} placeholder="选自（可不填）：F, Cl, CN, Me" value={groups} onChange={(event) => setGroups(event.target.value)} aria-label="取代基选自" />
+            {named.length > 0 && (
+              <>
+                <input className={`${field} w-9`} value={fewest} onChange={(event) => setFewest(event.target.value)} aria-label="取代基最少个数" />–
+                <input className={`${field} w-9`} value={most} onChange={(event) => setMost(event.target.value)} aria-label="取代基最多个数" />个
+              </>
+            )}
+          </span>
+        </>
+      )}
       <span />
       <span className="flex gap-2">
         <Button size="sm" disabled={!valid} onClick={() => onSave(candidate)}>

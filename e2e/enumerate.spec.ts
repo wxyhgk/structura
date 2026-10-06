@@ -99,3 +99,21 @@ test("two variables may close a ring together: the closed rings join the generat
   await expect(dialog).toContainText("得到 5 个不同的化合物")
   await expect(dialog.getByTestId("enumerated-compound").filter({ hasText: "R1+R2 = (CH2)3" })).toHaveCount(1)
 })
+
+test("a class carrying named substituents is added in the form, shown, and counted", async ({ page }) => {
+  await openEditor(page)
+  await openFile(page, fixture("benzene-R1-R2.structura"))
+  await expect(page.getByTestId("library-size")).toContainText("可展开为 4 种组合")
+  const panel = page.getByTestId("variables-panel")
+  await panel.getByRole("button", { name: "更多…" }).first().click()
+  await panel.getByLabel("基团类别").selectOption("aryl")
+  await panel.getByLabel("最小").fill("6")
+  await panel.getByLabel("最大").fill("6")
+  await panel.getByLabel("取代基选自").fill("F")
+  await panel.getByLabel("取代基最少个数").fill("0")
+  await panel.getByLabel("取代基最多个数").fill("1")
+  await panel.getByRole("button", { name: "添加" }).click()
+  await expect(panel).toContainText("芳基（被 0–1 个 F 取代）")
+  // R1: H, Cl, phenyl and 4-fluorophenyl; R2: H, Cl.
+  await expect(page.getByTestId("library-size")).toContainText("可展开为 8 种组合")
+})

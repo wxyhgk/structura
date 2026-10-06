@@ -38,7 +38,9 @@ export function describeAlternative(alternative: Alternative): string {
   const range = min != null || max != null ? `${min ?? 1}–${max ?? "∞"}` : ""
   const size = range ? (sizeUnitOf(alternative) === "members" ? `(${range} 元)` : `(C${range.replace("–", "–C")})`) : ""
   const substituted = alternative.substituted == null ? "取代或未取代的" : alternative.substituted ? "取代的" : "未取代的"
-  return `${substituted}${size}${CLASS_NAMES[alternative.class]}`
+  const carried = alternative.substituents
+  const carrying = carried ? `（被 ${carried.min === carried.max ? carried.min : `${carried.min}–${carried.max}`} 个 ${carried.from.join("、")} 取代）` : ""
+  return `${substituted}${size}${CLASS_NAMES[alternative.class]}${carrying}`
 }
 
 /** Chinese names for the representative labels that stand in for classes when generating. */

@@ -5,6 +5,8 @@
 export * from "@structura/core/markush"
 export { choiceText, enumerate, enumerateSteps, pickFields } from "./enumerate.ts"
 export type { EnumerateOptions, Enumeration, Pick } from "./enumerate.ts"
+export { librarySize } from "./count.ts"
+export type { LibrarySize } from "./count.ts"
 export { alternativesFromText } from "./parse.ts"
 export { placeholders, shareSources, undefinedVariables, variableLabels } from "./queries.ts"
 export { REPRESENTATIVES, representativesOf } from "./representatives.ts"

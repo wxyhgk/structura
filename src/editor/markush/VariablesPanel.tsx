@@ -4,6 +4,7 @@ import type { Attachment, Molecule, Variable } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"
 import { AttachmentRow } from "./AttachmentRow.tsx"
+import { LibrarySizeLine } from "./LibrarySizeLine.tsx"
 import { VariableRow } from "./VariableRow.tsx"
 
 /**
@@ -73,6 +74,7 @@ export function VariablesPanel({
         )}
       </div>
       <footer className="space-y-1.5 border-t border-[#e0e0e0] p-2">
+        <LibrarySizeLine mol={mol} variables={variables} attachments={attachments} />
         {onFill && (
           <Button size="sm" variant="outline" className="w-full" onClick={onFill}>
             从专利文字填写…

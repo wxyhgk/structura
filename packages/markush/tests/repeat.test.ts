@@ -7,7 +7,7 @@ import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing, Repeat } from "@structura/core/types"
 import { build, label, run } from "@structura/testkit"
 import { chemistry } from "@structura/testkit/chem"
-import { enumerate, pickFields } from "@structura/markush"
+import { enumerate, librarySize, pickFields } from "@structura/markush"
 
 const { canonicalAll } = await chemistry()
 
@@ -113,4 +113,20 @@ test("with an identity, repeats are dropped: symmetric positions and H choices g
   assert.deepEqual(canonicalAll(enumerate(withH, { limit: 10000, identity }).molecules), canonicalAll(["c1ccccc1", "Clc1ccccc1", "Clc1ccccc1Cl", "Clc1cccc(Cl)c1", "Clc1ccc(Cl)cc1"]))
   // Without one, every combination is kept as before.
   assert.equal(enumerate(formula({ min: 0, max: 2, name: "m" }), { limit: 10000 }).duplicates, 0)
+})
+
+test("the library size is known without building anything: classes by their representatives, or left out", () => {
+  const withAlkyl = run(formula({ min: 0, max: 2, name: "m" }), [
+    { op: "set_variable", name: "R1", alternatives: [label("Cl"), label("F"), { kind: "class", class: "alkyl", min: 1, max: 6 }] },
+  ])
+  // Cl, F and five alkyls (Me, Et, iPr, tBu, CF3) is seven choices per R1: 1 + 6·7 + 15·7².
+  const counted = librarySize(withAlkyl)
+  assert.equal(counted.combinations, 1 + 6 * 7 + 15 * 49)
+  assert.deepEqual(Object.keys(counted.represented), ["R1"])
+  // Without representatives the class is left out: 1 + 6·2 + 15·2².
+  const plain = librarySize(withAlkyl, { representatives: false })
+  assert.equal(plain.combinations, 73)
+  assert.deepEqual(plain.classesLeftOut, { R1: 1 })
+  // The count is what generating would try.
+  assert.equal(enumerate(withAlkyl, { limit: 100000, representatives: true }).molecules.length, counted.combinations)
 })

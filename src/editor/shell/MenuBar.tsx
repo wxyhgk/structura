@@ -40,6 +40,8 @@ export function MenuBar({
   commands,
   colorHetero,
   onColorHetero,
+  raisedNumbers,
+  onRaisedNumbers,
   hasFill,
   title,
   dirty,
@@ -49,6 +51,9 @@ export function MenuBar({
   hasFill: boolean
   colorHetero: boolean
   onColorHetero: (on: boolean) => void
+  /** Variables' numbers as superscripts (R¹) rather than subscripts (R₁). */
+  raisedNumbers: boolean
+  onRaisedNumbers: (on: boolean) => void
   /** The document's name, and whether it has unsaved changes (shown as a dot). */
   title: string
   dirty: boolean
@@ -114,6 +119,9 @@ export function MenuBar({
         <DropdownMenuSeparator />
         <DropdownMenuCheckboxItem checked={colorHetero} onCheckedChange={(checked) => onColorHetero(checked === true)}>
           杂原子着色
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem checked={raisedNumbers} onCheckedChange={(checked) => onRaisedNumbers(checked === true)}>
+          变量编号写成上标（R¹）
         </DropdownMenuCheckboxItem>
       </MenuButton>
       <MenuButton label="帮助">

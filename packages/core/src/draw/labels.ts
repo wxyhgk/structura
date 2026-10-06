@@ -39,6 +39,18 @@ function symbolParts(atom: Atom): { symbol: string; mass: string } {
 /** Subscripts sit this much lower than the line and are this size. */
 const SUB_DROP = 4
 const SUB_SIZE = 11
+/** How far a variable's number is raised when written as a superscript (R¹). */
+const SUP_RISE = 5
+
+/** How labels are written, beyond colour. */
+export type DrawOptions = {
+  /**
+   * The labels whose numbers are raised (R¹, as many patents print variables) instead of
+   * lowered (R₁, the default). The caller decides which: the renderer does not know what a
+   * variable is. Numbers in formulas (CO₂Me, CF₃) should stay low.
+   */
+  raiseNumbers?: (label: string) => boolean
+}
 
 /**
  * A label typed on an atom, split where it changes between normal text and subscript: a
@@ -57,14 +69,15 @@ export function labelParts(text: string): Array<{ text: string; sub: boolean }> 
   return parts
 }
 
-/** An alias label (R1, OMe, NO2), centred on its atom, with its numbers as subscripts. */
-function aliasLabel(atom: Atom, colorHetero: boolean): AtomLabel {
+/** An alias label (R1, OMe, NO2), centred on its atom, its numbers small: low, or raised for a variable when asked. */
+function aliasLabel(atom: Atom, colorHetero: boolean, options: DrawOptions): AtomLabel {
   const parts = labelParts(atom.alias!)
+  const raised = options.raiseNumbers?.(atom.alias!) ?? false
   const widths = parts.map((part) => measureText(part.text, part.sub ? SUB_SIZE : LABEL_SIZE) + (part.sub ? 0.5 : 0))
   const width = widths.reduce((sum, item) => sum + item, 0)
   let x = atom.x - width / 2
   const runs: LabelRun[] = parts.map((part, index) => {
-    const run: LabelRun = { text: part.text, x, y: atom.y + (part.sub ? SUB_DROP : 0), size: part.sub ? SUB_SIZE : LABEL_SIZE, anchor: "start", dy: 0 }
+    const run: LabelRun = { text: part.text, x, y: atom.y + (part.sub ? (raised ? -SUP_RISE : SUB_DROP) : 0), size: part.sub ? SUB_SIZE : LABEL_SIZE, anchor: "start", dy: 0 }
     x += widths[index]
     return run
   })
@@ -76,8 +89,8 @@ function aliasLabel(atom: Atom, colorHetero: boolean): AtomLabel {
   }
 }
 
-export function labelFor(mol: Molecule, atom: Atom, colorHetero: boolean): AtomLabel | null {
-  if (atom.alias) return aliasLabel(atom, colorHetero)
+export function labelFor(mol: Molecule, atom: Atom, colorHetero: boolean, options: DrawOptions = {}): AtomLabel | null {
+  if (atom.alias) return aliasLabel(atom, colorHetero, options)
   const bonded = neighbors(mol, atom.id)
   const { h, error } = atomHydrogens(mol, atom.id)
   const show = atom.el !== "C" || atom.charge !== 0 || atom.isotope != null || error || bonded.length === 0

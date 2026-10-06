@@ -252,6 +252,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             preview={preview}
             ringHint={ringHint}
             colorHetero={props.colorHetero}
+            drawOptions={props.drawOptions}
             showFrame={!rotating}
             attachments={props.attachments}
           />

@@ -17,6 +17,8 @@ export type EditorSnapshot = {
   atomEl: string
   scaffold: ScaffoldPick
   colorHetero: boolean
+  /** Variables' numbers raised as patents print them (R¹), instead of lowered (R₁). */
+  raisedNumbers: boolean
 }
 
 type Update<T> = T | ((now: T) => T)
@@ -50,6 +52,7 @@ export function createEditorStore(initial: Molecule[] | Drawing = []) {
     atomEl: "N",
     scaffold: defaultPick("benzene"),
     colorHetero: true,
+    raisedNumbers: false,
   }
   const listeners = new Set<() => void>()
 
@@ -104,6 +107,7 @@ export function createEditorStore(initial: Molecule[] | Drawing = []) {
     setRingKind: field("ringKind"),
     setAtomEl: field("atomEl"),
     setColorHetero: field("colorHetero"),
+    setRaisedNumbers: field("raisedNumbers"),
     /** Chooses the scaffold to place, and takes up the template tool. */
     pickScaffold: (pick: ScaffoldPick) => set({ scaffold: pick, tool: "scaffold" }),
     // Opening, importing and starting over replace or extend the document as a whole, so

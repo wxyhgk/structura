@@ -7,6 +7,7 @@ import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { type Command, command as engineCommand, type CommandOptions, drawingPoints, joinOps, ROTATE_STEP, type Viewport } from "@structura/engine"
+import { drawOptions } from "@/editor/drawOptions"
 import type { DocumentFile } from "@/editor/hooks/useDocumentFile"
 import type { EditorState } from "@/editor/useEditor"
 
@@ -86,7 +87,7 @@ export function useCommands({
       inFields: true,
     }),
     exportSvg: command("导出 SVG", () => {
-      const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows, editor.attachments)
+      const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows, editor.attachments, drawOptions(editor.raisedNumbers))
       if (svg) download(`${file.base}.svg`, svg, "image/svg+xml")
     }),
     exportMol: command("导出 MOL", () => download(`${file.base}.mol`, toMolfile(editor.mol), "chemical/x-mdl-molfile")),

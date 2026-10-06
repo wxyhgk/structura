@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react"
-import { bondFigures, buildScene, type AtomLabel, type Figure } from "@structura/core/draw"
+import { bondFigures, buildScene, type AtomLabel, type Figure, type DrawOptions } from "@structura/core/draw"
 import { atomById } from "@structura/core/molecule"
 import type { Arrow, Attachment, Molecule, Selection } from "@structura/core/types"
 import { type RingHintShape, selectionFrame, type ToolId } from "@structura/engine"
@@ -18,6 +18,7 @@ export function SceneView({
   target,
   preview,
   colorHetero,
+  drawOptions,
   showFrame,
   attachments,
   ringHint,
@@ -31,13 +32,15 @@ export function SceneView({
   target: HoverTarget
   preview: Preview
   colorHetero: boolean
+  /** How labels are written (raised variable numbers or not). */
+  drawOptions: DrawOptions
   showFrame: boolean
   attachments?: Attachment[]
   /** While drawing a line into a ring (chain tool, dragging an end): where it will attach. */
   ringHint?: RingHintShape | null
 }) {
   // Hover, previews and panning re-render often; the scene only changes with the molecule.
-  const scene = useMemo(() => buildScene(mol, colorHetero), [mol, colorHetero])
+  const scene = useMemo(() => buildScene(mol, colorHetero, drawOptions), [mol, colorHetero, drawOptions])
   return (
     <>
       <Figures figures={scene.figures} />

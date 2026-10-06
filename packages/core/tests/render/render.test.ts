@@ -1,6 +1,6 @@
 import { dirname, join, basename } from "node:path"
 import test, { snapshot } from "node:test"
-import { sceneToSvg } from "@structura/core/draw"
+import { sceneToSvg, type DrawOptions } from "@structura/core/draw"
 import type { Op } from "@structura/core/ops"
 import { build } from "@structura/testkit"
 
@@ -18,7 +18,7 @@ const normalized = (svg: string) => svg.replace(/-?\d+\.\d+/g, (number) => (Math
 const RING: Op = { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }
 
 /** name → how to draw it (with ops) and whether heteroatoms are coloured. */
-const CASES: Record<string, { ops: Op[]; colour?: boolean; markush?: boolean }> = {
+const CASES: Record<string, { ops: Op[]; colour?: boolean; markush?: boolean; options?: DrawOptions }> = {
   "ethane, one bond": { ops: [{ op: "draw_bond", start: { x: 0, y: 0 } }] },
   "butane, a zigzag chain": { ops: [{ op: "add_atom", el: "C", as: "a" }, { op: "add_atom", el: "C", to: "a", as: "b" }, { op: "add_atom", el: "C", to: "b", as: "c" }, { op: "add_atom", el: "C", to: "c" }] },
   benzene: { ops: [RING] },
@@ -47,6 +47,18 @@ const CASES: Record<string, { ops: Op[]; colour?: boolean; markush?: boolean }> 
   "Ph and Boc shown as labels": { ops: [RING, { op: "add_atom", el: "C", to: 1, as: "p" }, { op: "label", atom: "p", text: "Ph" }, { op: "add_atom", el: "N", to: 4, as: "n" }, { op: "add_atom", el: "C", to: "n", as: "b" }, { op: "label", atom: "b", text: "Boc" }] },
   "tBu shown as a label": { ops: [RING, { op: "add_atom", el: "C", to: 1, as: "t" }, { op: "label", atom: "t", text: "tBu" }] },
   "R1 and R12, numbers as subscripts": { ops: [RING, { op: "add_atom", el: "C", to: 1, as: "a" }, { op: "label", atom: "a", text: "R1" }, { op: "add_atom", el: "C", to: 4, as: "b" }, { op: "label", atom: "b", text: "R12" }] },
+  "R1 and Ar2 with raised numbers, CO2Me still low": {
+    ops: [
+      RING,
+      { op: "add_atom", el: "C", to: 1, as: "a" },
+      { op: "label", atom: "a", text: "R1" },
+      { op: "add_atom", el: "C", to: 3, as: "b" },
+      { op: "label", atom: "b", text: "Ar2" },
+      { op: "add_atom", el: "C", to: 5, as: "c" },
+      { op: "label", atom: "c", text: "CO2Me" },
+    ],
+    options: { raiseNumbers: (label) => /^(R|Ar)\d/.test(label) },
+  },
   "Ar' and X in a ring": { ops: [{ op: "add_scaffold", name: "dibenzofuran", as: "d" }, { op: "label", atom: "d.O5", text: "X" }, { op: "add_atom", el: "C", to: "d.C2", as: "a" }, { op: "label", atom: "a", text: "Ar'" }] },
   "R1 attached anywhere on a ring": {
     ops: [RING, { op: "add_atom", el: "C", as: "r" }, { op: "label", atom: "r", text: "R1" }, { op: "move", atoms: ["r"], dx: 110, dy: -70 }, { op: "set_attachment", atom: "r", to: [1, 2, 3, 4, 5, 6] }],
@@ -66,9 +78,9 @@ const CASES: Record<string, { ops: Op[]; colour?: boolean; markush?: boolean }> 
   "two pieces side by side": { ops: [RING, { op: "add_ring", at: { x: 200, y: 0 }, kind: "cyclopentane" }] },
 }
 
-for (const [name, { ops, colour = false, markush = false }] of Object.entries(CASES)) {
+for (const [name, { ops, colour = false, markush = false, options }] of Object.entries(CASES)) {
   test(`renders ${name}`, (t) => {
     const drawing = build(ops)
-    t.assert.snapshot(normalized(sceneToSvg(drawing.molecule, colour, drawing.arrows, markush ? drawing.attachments : undefined)))
+    t.assert.snapshot(normalized(sceneToSvg(drawing.molecule, colour, drawing.arrows, markush ? drawing.attachments : undefined, options)))
   })
 }

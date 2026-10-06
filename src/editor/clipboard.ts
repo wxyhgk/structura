@@ -1,5 +1,6 @@
 import { failure, writeClipboard } from "@/editor/browser"
 import { downloadImage, writeImage } from "@/editor/clipboardImage"
+import { drawOptions } from "@/editor/drawOptions"
 import { pictureSvg } from "@/editor/pictureSvg"
 import type { EditorState } from "@/editor/useEditor"
 
@@ -10,7 +11,7 @@ import type { EditorState } from "@/editor/useEditor"
  * drawing) there instead, and tells `report` when the browser refuses.
  */
 export function selectionClipboard(
-  editor: Pick<EditorState, "selectionMolfile" | "removeSelection" | "latest" | "selection" | "colorHetero">,
+  editor: Pick<EditorState, "selectionMolfile" | "removeSelection" | "latest" | "selection" | "colorHetero" | "raisedNumbers">,
   report: (line: string) => void,
 ) {
   return {
@@ -32,7 +33,7 @@ export function selectionClipboard(
       editor.removeSelection()
     },
     copyImage() {
-      const svg = pictureSvg(editor.latest(), editor.selection, editor.colorHetero)
+      const svg = pictureSvg(editor.latest(), editor.selection, editor.colorHetero, drawOptions(editor.raisedNumbers))
       // Where the clipboard refuses, the picture is still worth having: it is downloaded instead.
       if (svg)
         writeImage(svg).catch((error) =>

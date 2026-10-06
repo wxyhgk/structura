@@ -4,7 +4,7 @@ import { displayMolecule } from "../molecule/collapse.ts"
 import { atomById, neighbors } from "../molecule/graph.ts"
 import type { Atom, Molecule } from "../types.ts"
 import { bondFigures, chainDoubleFlank, type DoubleFlank } from "./bonds/index.ts"
-import { labelFor, type AtomLabel } from "./labels.ts"
+import { labelFor, type AtomLabel, type DrawOptions } from "./labels.ts"
 import type { Figure } from "./primitives.ts"
 import { inwardPoint } from "./rings.ts"
 
@@ -23,10 +23,10 @@ function doubleFlank(mol: Molecule, a: Atom, b: Atom): DoubleFlank {
 }
 
 /** What is drawn for the molecule: collapsed abbreviations as their labels (see displayMolecule). */
-export function buildScene(molecule: Molecule, colorHetero: boolean): Scene {
+export function buildScene(molecule: Molecule, colorHetero: boolean, options: DrawOptions = {}): Scene {
   const mol = displayMolecule(molecule)
   const labels = mol.atoms
-    .map((atom) => labelFor(mol, atom, colorHetero))
+    .map((atom) => labelFor(mol, atom, colorHetero, options))
     .filter((label): label is AtomLabel => label != null)
   const boxes = new Map(labels.map((label) => [label.atomId, label.box]))
   const figures: Figure[] = []

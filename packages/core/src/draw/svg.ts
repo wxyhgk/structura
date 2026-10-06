@@ -1,7 +1,7 @@
 import type { Arrow, Attachment, Molecule } from "../types.ts"
 import { displayMolecule } from "../molecule/collapse.ts"
 import { attachmentMarks, markTextExtent, type MarkText } from "./attachments.ts"
-import type { AtomLabel } from "./labels.ts"
+import type { AtomLabel, DrawOptions } from "./labels.ts"
 import type { Figure } from "./primitives.ts"
 import { buildScene } from "./scene.ts"
 
@@ -40,11 +40,11 @@ function markTextSvg(text: MarkText): string {
  * The molecule as a standalone SVG, with its arrows and a generic formula's variable points
  * of attachment ("(R1)m" included), fitted with a margin on a white ground.
  */
-export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: Arrow[] = [], attachments?: readonly Attachment[]): string {
+export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: Arrow[] = [], attachments?: readonly Attachment[], options: DrawOptions = {}): string {
   if (molecule.atoms.length === 0) return ""
   // Fitted around what is shown: atoms behind a collapsed label take no room.
   const mol = displayMolecule(molecule)
-  const scene = buildScene(mol, colorHetero)
+  const scene = buildScene(mol, colorHetero, options)
   const marks = attachmentMarks(mol, attachments, scene.labels)
   let minX = Infinity
   let minY = Infinity

@@ -9,7 +9,7 @@ export const labelsPage = definePage({
   id: "labels",
   group: "绘图",
   title: "原子标签和缩写",
-  keywords: "标签 双击 Enter 元素 OH NH2 缩写 Me Ph OMe Boc 同位素 D 13C 展开 收起 位阻",
+  keywords: "标签 双击 Enter 元素 OH NH2 缩写 Me Ph OMe Boc 同位素 D 13C 展开 收起 位阻 上标 下标 R¹",
   body: (context) => (
     <>
       <Tutorial title="输入标签" steps={typingLabels(context)} />
@@ -23,6 +23,7 @@ export const labelsPage = definePage({
           ["缩写", "Me、Et、iPr、tBu、Ph、Bn、Ac、Boc、OMe、CO2Me、CF3、NO2 等，输入后画成真实的原子"],
           ["收起成标签", "Me、Et、iPr、tBu、Ph、Bn、Ac、Bz、Boc、Cbz、Fmoc、Ts、TBS、TMS 默认显示为标签，移动、删除、复制时整组一起；分子式按全部原子算"],
           ["展开 / 收起", "结构菜单的“展开缩写”“收起缩写”：有选中时只作用于选中的，没选中时作用于全部；看位阻时展开"],
+          ["变量编号的写法", "R1、Ar2 默认写成下标 R₁；查看菜单勾选“变量编号写成上标（R¹）”就按专利常见的上标写，画布和导出 SVG、复制为图片都一样，下次打开仍记得。化学式里的数字（CO₂Me）总是下标"],
           ["同位素", "D、T，或在元素前写质量数，如 13C、15N"],
           ["变量（通式）", "R、R1、X、L、Ar、Ar1、ETU 这类名字成为占位符，见“通式：变量和候选项”"],
           ["连接点", "* 表示片段接到通式上的位置，见“通式：画出来的片段”"],

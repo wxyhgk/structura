@@ -31,10 +31,10 @@ export async function drawnText(page: Page): Promise<string> {
   return JSON.stringify(JSON.parse(text, (key, value) => (/^next[A-Z]\w*Id$/.test(key) ? undefined : value)))
 }
 
-/** Picks an item from a top menu. */
+/** Picks an item from a top menu, a plain one or a tick box (杂原子着色…). */
 export async function menu(page: Page, top: string, item: string | RegExp) {
   await page.getByRole("button", { name: top, exact: true }).click()
-  await page.getByRole("menuitem", { name: item }).click()
+  await page.getByRole("menuitem", { name: item }).or(page.getByRole("menuitemcheckbox", { name: item })).first().click()
 }
 
 /** Opens a file through 文件 → 打开…, as a person would. */

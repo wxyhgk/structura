@@ -1,4 +1,4 @@
-import { sceneToSvg } from "@structura/core/draw"
+import { sceneToSvg, type DrawOptions } from "@structura/core/draw"
 import { atomIdsOfSelection, subMolecule } from "@structura/core/molecule"
 import type { Drawing, Selection } from "@structura/core/types"
 
@@ -7,10 +7,10 @@ import type { Drawing, Selection } from "@structura/core/types"
  * else the whole drawing with its arrows. Variable attachments come along when their atom
  * and all its ring positions are in the picture. Empty when there is nothing to draw.
  */
-export function pictureSvg(drawing: Pick<Drawing, "molecule" | "arrows" | "attachments">, selection: Selection, colorHetero: boolean): string {
+export function pictureSvg(drawing: Pick<Drawing, "molecule" | "arrows" | "attachments">, selection: Selection, colorHetero: boolean, options: DrawOptions = {}): string {
   const ids = atomIdsOfSelection(drawing.molecule, selection)
-  if (ids.length === 0) return sceneToSvg(drawing.molecule, colorHetero, drawing.arrows, drawing.attachments)
+  if (ids.length === 0) return sceneToSvg(drawing.molecule, colorHetero, drawing.arrows, drawing.attachments, options)
   const picked = new Set(ids)
   const attachments = drawing.attachments?.filter((attachment) => picked.has(attachment.atom) && attachment.to.every((id) => picked.has(id)))
-  return sceneToSvg(subMolecule(drawing.molecule, ids), colorHetero, [], attachments)
+  return sceneToSvg(subMolecule(drawing.molecule, ids), colorHetero, [], attachments, options)
 }

@@ -1,3 +1,4 @@
+import type { DrawOptions } from "@structura/core/draw"
 import type { Arrow, Attachment, BondStyle, Drawing, Molecule, RingKind, Selection } from "@structura/core/types"
 import type { HoverTarget, Run, ScaffoldPick, ToolId, Viewport } from "@structura/engine"
 
@@ -30,6 +31,8 @@ export type EditorSlice = {
   atomEl: string
   selection: Selection
   colorHetero: boolean
+  /** How labels are written (raised variable numbers or not). */
+  drawOptions: DrawOptions
   /** The generic formula's variable points of attachment, drawn as lines into rings. */
   attachments?: Attachment[]
   /** Applies ops to the latest drawing and commits them; see useEditor. */

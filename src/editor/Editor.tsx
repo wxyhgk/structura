@@ -8,6 +8,8 @@ import { createViewport, toolLabel } from "@structura/engine"
 import { selectionClipboard } from "@/editor/clipboard"
 import { useCommands } from "@/editor/hooks/useCommands"
 import { useDocumentFile } from "@/editor/hooks/useDocumentFile"
+import { RAISED_NUMBERS, useRememberedSetting } from "@/editor/hooks/useRememberedSetting"
+import { drawOptions } from "@/editor/drawOptions"
 import { useEditorHandle, type EditorHandle } from "@/editor/hooks/useEditorHandle"
 import { useImports } from "@/editor/hooks/useImports"
 import { initialContent } from "@/editor/imports/read"
@@ -84,6 +86,9 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
 
   const imports = useImports(editor, viewport)
   const clipboard = selectionClipboard(editor, (line) => imports.showNotes({ opened: false, title: "复制为图片", lines: [line] }))
+  /** How labels are written, the same on the canvas as in what is exported. */
+  const labelStyle = useMemo(() => drawOptions(editor.raisedNumbers), [editor.raisedNumbers])
+  const setRaisedNumbers = useRememberedSetting(RAISED_NUMBERS, editor.raisedNumbers, editor.setRaisedNumbers)
   const file = useDocumentFile(editor.drawing, editor.latest, onDirtyChange)
   /** Opens a file and, if it opened, remembers it as this document's file. */
   const openFile = async (picked: File) => {
@@ -130,7 +135,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               if (picked) void openFile(picked)
             }}
           />
-          <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} />
+          <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} raisedNumbers={editor.raisedNumbers} onRaisedNumbers={setRaisedNumbers} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} />
           <Toolbar commands={commands} zoom={zoom} />
 
           <div className="flex min-h-0 flex-1">
@@ -157,6 +162,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               atomEl={editor.atomEl}
               selection={editor.selection}
               colorHetero={editor.colorHetero}
+              drawOptions={labelStyle}
               attachments={editor.attachments}
               run={editor.run}
               latest={editor.latest}

@@ -32,6 +32,7 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
     scaffold: snapshot.scaffold,
     selection,
     colorHetero: snapshot.colorHetero,
+    raisedNumbers: snapshot.raisedNumbers,
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
     canTransform: canTransform(mol, selection),

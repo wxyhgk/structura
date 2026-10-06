@@ -49,6 +49,7 @@ function Host({ saved }: { saved?: string }) {
 
 - `npm test`：全部单元测试（core、markush、engine、ai、rdkit、testkit 和界面里的纯逻辑），十几秒。每个包也能在自己的目录里 `npm test` 单独跑。
 - `npm run test:e2e`：真浏览器里的关键流程（`e2e/`，Playwright），先打包再用预览服务器打开。第一次运行前 `npx playwright install --only-shell chromium`；本机已有 Chromium 时也可以设 `STRUCTURA_CHROMIUM=浏览器路径`。测试通过 `window.__structura`（只在 `--mode e2e` 的打包里存在）准备数据、读取文档，不靠像素和坐标判断结果。
+- 出图快照：`packages/core/tests/render/` 存了 24 个代表结构的 SVG（数字取一位小数）。渲染有变化时这些测试会失败并给出差异；确认变化是有意的，就运行 `npm test -w @structura/core -- --test-update-snapshots`，把新快照和引起变化的代码一起提交。
 - 测试共用的工具在 `@structura/testkit`（执行操作、按 RDKit 标准 SMILES 比较结构、模拟画布、边界测试的导入解析），只给测试用。
 - 每次推送和 PR 由 GitHub Actions 检查：类型、lint（有警告即失败）、按包的单元测试、打包、端到端测试。本地 `git push` 前会自动跑类型检查、lint 和单元测试（`.githooks/pre-push`，`npm install` 时启用）。
 

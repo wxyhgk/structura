@@ -1,4 +1,4 @@
-import type { Alternative, BondEmphasis, BridgeName, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, Proviso, Repeat, RingKind } from "../types.ts"
+import type { Alternative, BondEmphasis, BridgeName, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, Proviso, Repeat, RingClosure, RingKind } from "../types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
@@ -119,6 +119,9 @@ export type Op =
   | { op: "add_proviso"; proviso: Proviso }
   /** Takes away the proviso at this place in the drawing's list. */
   | { op: "remove_proviso"; index: number }
+  /** "R1 and R2 together form a ring": what they may close into (replaces any closure of the same pair). */
+  | { op: "set_ring_closure"; closure: RingClosure }
+  | { op: "remove_ring_closure"; a: string; b: string }
   /**
    * A variable point of attachment: `atom` is bonded to one of `to`, whichever, as when a
    * line is drawn into a ring's middle. Replaces any earlier one from the same atom.

@@ -1,6 +1,6 @@
 import { displayFormula } from "@structura/core/formula"
 import { fragmentFormula, sizeUnitOf } from "@structura/markush"
-import type { Alternative, BridgeName, Choice, GroupClass, Proviso } from "@structura/core/types"
+import type { Alternative, BridgeName, Choice, GroupClass, Proviso, RingClosure } from "@structura/core/types"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.
 
@@ -87,4 +87,9 @@ export function choiceName(choice: Choice): string {
 export function provisoText(proviso: Proviso): string {
   if (proviso.kind === "compound") return `排除化合物：${proviso.smiles}`
   return `排除：${proviso.when.map((condition) => `${condition.name} = ${condition.is.map(describeAlternative).join(" 或 ")}`).join(" 且 ")}`
+}
+
+/** A ring closure as the claim says it: "R1 与 R2 可一起成环：(CH2)3、(CH2)4". */
+export function closureText(closure: RingClosure): string {
+  return `${closure.a} 与 ${closure.b} 可一起成环：${closure.ring.map(describeAlternative).join("、")}`
 }

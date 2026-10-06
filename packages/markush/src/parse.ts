@@ -62,6 +62,43 @@ function chain(length: number): Alternative {
   return { kind: "fragment", molecule: pieceOf(ops), name: length === 1 ? "CH2" : `(CH2)${length}` }
 }
 
+/** One unit of a written chain: CH2, CH, C, C(=O), O, S, NH, N, N(R5); "=" makes the next bond double. */
+const UNIT = /CH2|CH|C\(=O\)|C|O|S|NH|N\((R\d+[a-z]?'?)\)|N|=/y
+
+/**
+ * A chain written out, linking two atoms: "OCH2O" (methylenedioxy), "CH=CHCH=CH" (a benzo
+ * ring when R1 and R2 close), "C(=O)NH", "CH2N(R5)CH2". Null for anything else. At least two
+ * units, so a single atom stays a label.
+ */
+function writtenChain(word: string): Alternative | null {
+  const units: Array<{ el: string; double: boolean; oxo: boolean; carries?: string }> = []
+  let double = false
+  UNIT.lastIndex = 0
+  while (UNIT.lastIndex < word.length) {
+    const at = UNIT.lastIndex
+    const match = UNIT.exec(word)
+    if (!match || match.index !== at) return null
+    const unit = match[0]
+    if (unit === "=") {
+      if (units.length === 0 || double) return null
+      double = true
+      continue
+    }
+    units.push({ el: unit[0] === "C" ? "C" : unit[0], double, oxo: unit === "C(=O)", carries: match[1] })
+    double = false
+  }
+  if (double || units.length < 2) return null
+  const ops: Op[] = []
+  for (const [index, unit] of units.entries()) {
+    ops.push(index === 0 ? { op: "add_atom", el: unit.el, as: "u0" } : { op: "add_atom", el: unit.el, to: `u${index - 1}`, order: unit.double ? 2 : 1, as: `u${index}` })
+    if (unit.oxo) ops.push({ op: "add_atom", el: "O", to: `u${index}`, order: 2 })
+    if (unit.carries) ops.push({ op: "add_atom", el: "C", to: `u${index}`, as: `v${index}` }, { op: "label", atom: `v${index}`, text: unit.carries })
+  }
+  ops.push({ op: "add_atom", el: "C", to: "u0", as: "a" }, { op: "label", atom: "a", text: "*" })
+  ops.push({ op: "add_atom", el: "C", to: `u${units.length - 1}`, as: "b" }, { op: "label", atom: "b", text: "*" })
+  return { kind: "fragment", molecule: pieceOf(ops), name: word }
+}
+
 /** Ring members written with their hydrogen, which in a ring are just the element. */
 const HYDRIDE_MEMBERS: Record<string, string> = { CH: "C", NH: "N", SiH: "Si" }
 
@@ -119,6 +156,7 @@ export function alternativesFromText(text: string, existing: Alternative[] = [])
     else if (Object.hasOwn(BRIDGE_WORDS, word)) take({ kind: "bridge", name: BRIDGE_WORDS[word] })
     else if (Object.hasOwn(SHORTHANDS, word.toLowerCase())) for (const label of SHORTHANDS[word.toLowerCase()]) take({ kind: "label", text: label })
     else if (knownLabel(word)) take({ kind: "label", text: word })
+    else if (writtenChain(word)) take(writtenChain(word)!)
     else if (!rejected.includes(word)) rejected.push(word)
   }
   return { add, rejected }

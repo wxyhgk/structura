@@ -1,21 +1,31 @@
 import { useMemo } from "react"
 import { librarySize } from "@structura/markush"
-import type { Attachment, Molecule, Variable } from "@structura/core/types"
+import type { Attachment, Molecule, RingClosure, Variable } from "@structura/core/types"
 import { sizeText } from "./sizeText.ts"
 
 /**
  * How many compounds the formula stands for, counted as it is edited, before anything is
  * generated (classes by their typical members, as the generate dialog does by default).
  */
-export function LibrarySizeLine({ mol, variables, attachments }: { mol: Molecule; variables: Record<string, Variable> | undefined; attachments: Attachment[] | undefined }) {
+export function LibrarySizeLine({
+  mol,
+  variables,
+  attachments,
+  ringClosures,
+}: {
+  mol: Molecule
+  variables: Record<string, Variable> | undefined
+  attachments: Attachment[] | undefined
+  ringClosures: RingClosure[] | undefined
+}) {
   const text = useMemo(() => {
     if (!variables || Object.keys(variables).length === 0) return null
     try {
-      return sizeText(librarySize({ molecule: mol, arrows: [], nextArrowId: 1, variables, attachments }))
+      return sizeText(librarySize({ molecule: mol, arrows: [], nextArrowId: 1, variables, attachments, ringClosures }))
     } catch {
       return null
     }
-  }, [mol, variables, attachments])
+  }, [mol, variables, attachments, ringClosures])
   if (!text) return null
   return (
     <div className="px-0.5 text-[11px] leading-snug text-[#555]" data-testid="library-size">

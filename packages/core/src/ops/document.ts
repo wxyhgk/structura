@@ -1,10 +1,11 @@
+import { closureNames, ringClosureProblem } from "../markush/closures.ts"
 import { provisoNames, provisoProblem } from "../markush/provisos.ts"
 import { withGroupMembers } from "../molecule/collapse.ts"
 import { addReactionArrow } from "../drawing.ts"
 import { attachmentProblem } from "../markush/attachments.ts"
 import { sharers, variableProblem } from "../markush/variables.ts"
 import { boundsCenter, tumbleAtoms } from "../molecule.ts"
-import type { Drawing, HotTarget, Variable } from "../types.ts"
+import type { Drawing, HotTarget, RingClosure, Variable } from "../types.ts"
 import { OpError, type Context } from "./context.ts"
 import type { Op } from "./types.ts"
 
@@ -80,11 +81,25 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       const rest = drawing.provisos.filter((_, index) => index !== op.index)
       return { drawing: { ...drawing, provisos: rest.length > 0 ? rest : undefined } }
     }
+    case "set_ring_closure": {
+      const problem = ringClosureProblem(op.closure, drawing.variables)
+      if (problem) throw new OpError(problem)
+      const pair = (closure: RingClosure) => [closure.a, closure.b].sort().join(" ")
+      const others = (drawing.ringClosures ?? []).filter((closure) => pair(closure) !== pair(op.closure))
+      return { drawing: { ...drawing, ringClosures: [...others, op.closure] } }
+    }
+    case "remove_ring_closure": {
+      const pair = [op.a, op.b].sort().join(" ")
+      const rest = (drawing.ringClosures ?? []).filter((closure) => [closure.a, closure.b].sort().join(" ") !== pair)
+      if (rest.length === (drawing.ringClosures ?? []).length) throw new OpError(`${op.a} and ${op.b} have no ring closure`)
+      return { drawing: { ...drawing, ringClosures: rest.length > 0 ? rest : undefined } }
+    }
     case "remove_variable": {
       if (!drawing.variables || !Object.hasOwn(drawing.variables, op.name)) throw new OpError(`there is no variable ${op.name}`)
       const using = sharers(drawing.variables, op.name)
       if (using.length > 0) throw new OpError(`${using.join(", ")} share ${op.name}'s list; change them first`)
       if (provisoNames(drawing.provisos).has(op.name)) throw new OpError(`a proviso speaks of ${op.name}; remove it first`)
+      if (closureNames(drawing.ringClosures).has(op.name)) throw new OpError(`${op.name} may close a ring; remove that first`)
       const { [op.name]: _gone, ...rest } = drawing.variables
       return { drawing: { ...drawing, variables: Object.keys(rest).length > 0 ? rest : undefined } }
     }

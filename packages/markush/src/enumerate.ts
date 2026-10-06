@@ -7,6 +7,7 @@ import { applyOps, type Op } from "@structura/core/ops"
 import type { Alternative, Attachment, Choice, Drawing, Molecule, Proviso } from "@structura/core/types"
 import { validate } from "@structura/core/validate"
 import { fragmentFits, fragmentFormula, fragmentVariables } from "@structura/core/markush"
+import { closeRing } from "./closures.ts"
 import { odometer } from "./odometer.ts"
 import { representativesOf } from "./representatives.ts"
 import { siteKind, type SiteKind } from "./sites.ts"
@@ -438,12 +439,23 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
         yield result
         continue
       }
-      const sites = sitesOf(layout.drawing, [])
-      for (const site of sites) if (site.choices.length === 0) unfilled.add(site.name)
-      const count = sites.reduce((product, site) => product * site.choices.length, 1)
-      result.total += count
-      result.onlyClasses = [...unfilled]
-      plans.push({ formula: index + 1, layout, sites, count })
+      // Each way this layout can be: as drawn, and with each pair that may close a ring closed into each of its rings.
+      const variants: Array<Exclude<Layout, { occupied: true } | { error: string }>> = [layout]
+      for (const closure of drawing.ringClosures ?? []) {
+        for (const ring of closure.ring) {
+          if (ring.kind !== "fragment") continue
+          const closed = closeRing(layout.drawing, closure, ring.molecule)
+          if (closed) variants.push({ drawing: closed, where: [...layout.where, { name: `${closure.a}+${closure.b}`, choice: ring }] })
+        }
+      }
+      for (const variant of variants) {
+        const sites = sitesOf(variant.drawing, [])
+        for (const site of sites) if (site.choices.length === 0) unfilled.add(site.name)
+        const count = sites.reduce((product, site) => product * site.choices.length, 1)
+        result.total += count
+        result.onlyClasses = [...unfilled]
+        plans.push({ formula: index + 1, layout: variant, sites, count })
+      }
       yield result
     }
   }

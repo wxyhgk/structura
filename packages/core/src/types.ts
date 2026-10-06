@@ -79,7 +79,16 @@ export type Drawing = {
   attachments?: Attachment[]
   /** What the claim excludes ("provided that…"): combinations of choices, or particular compounds. */
   provisos?: Proviso[]
+  /** "R1 and R2, together with the atoms they are attached to, form a ring": which pairs may close, and into what. */
+  ringClosures?: RingClosure[]
 }
+
+/**
+ * Two variables that may, instead of each choosing on its own, together become one ring
+ * piece joining the atoms they hang from: `ring` lists the pieces (two "*" each, one for
+ * each atom), such as –(CH2)3– or –OCH2O–.
+ */
+export type RingClosure = { a: string; b: string; ring: Alternative[] }
 
 /**
  * A claim's proviso. `combination`: these choices together are excluded, every condition

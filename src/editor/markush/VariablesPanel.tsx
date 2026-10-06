@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button"
 import { alternativesOf, linkerNames, nestedVariables, variableLabels } from "@structura/markush"
-import type { Attachment, Molecule, Proviso, Variable } from "@structura/core/types"
+import type { Attachment, Molecule, Proviso, RingClosure, Variable } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"
 import { AttachmentRow } from "./AttachmentRow.tsx"
+import { ClosuresSection } from "./ClosuresSection.tsx"
 import { LibrarySizeLine } from "./LibrarySizeLine.tsx"
 import { ProvisosSection } from "./ProvisosSection.tsx"
 import { VariableRow } from "./VariableRow.tsx"
@@ -18,6 +19,7 @@ export function VariablesPanel({
   variables,
   attachments,
   provisos,
+  ringClosures,
   run,
   canEnumerate,
   onEnumerate,
@@ -31,6 +33,8 @@ export function VariablesPanel({
   attachments: Attachment[] | undefined
   /** The claim's provisos: excluded combinations and compounds. */
   provisos: Proviso[] | undefined
+  /** Pairs of variables that may together close a ring. */
+  ringClosures: RingClosure[] | undefined
   run: Run
   canEnumerate: boolean
   onEnumerate: () => void
@@ -68,6 +72,7 @@ export function VariablesPanel({
             onHelp={onHelp}
           />
         ))}
+        <ClosuresSection closures={ringClosures} variables={variables} run={run} />
         <ProvisosSection provisos={provisos} variables={variables} run={run} />
         {attachments && attachments.length > 0 && (
           <>
@@ -79,7 +84,7 @@ export function VariablesPanel({
         )}
       </div>
       <footer className="space-y-1.5 border-t border-[#e0e0e0] p-2">
-        <LibrarySizeLine mol={mol} variables={variables} attachments={attachments} />
+        <LibrarySizeLine mol={mol} variables={variables} attachments={attachments} ringClosures={ringClosures} />
         {onFill && (
           <Button size="sm" variant="outline" className="w-full" onClick={onFill}>
             从专利文字填写…

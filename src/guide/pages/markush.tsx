@@ -9,7 +9,7 @@ export const markushPage = definePage({
   id: "markush",
   group: "通式（Markush）",
   title: "变量和候选项",
-  keywords: "但书 附加条件 排除 provided 通式 markush 变量 R1 X L 候选项 卤素 单键 类别 烷基 芳基 共用 相同",
+  keywords: "成环 一起成环 R1和R2成环 但书 附加条件 排除 provided 通式 markush 变量 R1 X L 候选项 卤素 单键 类别 烷基 芳基 共用 相同",
   body: (context) => (
     <>
       <Tutorial title="定义一个变量并批量生成" steps={firstVariable(context)} />
@@ -24,6 +24,12 @@ export const markushPage = definePage({
       </Steps>
       <H>几个变量用同一组候选项</H>
       <P>“R1 至 R4 各自独立地选自……”：先把 R1 填好，再在 R2–R4 的下拉框里选“与 R1 相同”。以后只改 R1 即可。</P>
+      <H>两个变量一起成环</H>
+      <Steps>
+        <li>“R1 和 R2 与所连原子一起形成 5～6 元环”：在面板“成环”里点“两个变量可以一起成环”，选 R1 与 R2，写能成的环，如 <K>(CH2)3-4</K>、<K>OCH2O</K>（苯并二氧戊环）、<K>CH=CHCH=CH</K>（并苯环）、<K>C(=O)NH</K>。</li>
+        <li>批量生成时，除了 R1、R2 各自取值的组合，还会加上每一种成环的结构，取值写成“R1+R2 = (CH2)3”；库大小也一并计入。</li>
+        <li>R1、R2 要各出现一次、都在链末端，才能一起成环。</li>
+      </Steps>
       <H>附加条件（但书）</H>
       <Steps>
         <li>“当 X 为 O 时，R1 不为 H”“R1 和 R2 不同时为 H”：在面板“附加条件”里点“排除一种组合”，选变量、勾选取值，可以再加一个变量（几个条件同时成立才排除）。条件里可以选基团类别，代表结构都会被排除。</li>

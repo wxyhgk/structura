@@ -80,3 +80,22 @@ test("a proviso written in the panel takes its combination out of what is genera
   // Of four combinations, one is out; the two R1/R2 = H/Cl swaps are the same chlorobenzene.
   await expect(dialog).toContainText("得到 2 个不同的化合物")
 })
+
+test("two variables may close a ring together: the closed rings join the generated compounds", async ({ page }) => {
+  await openEditor(page)
+  await openFile(page, fixture("benzene-R1-R2.structura"))
+  await expect(page.getByTestId("library-size")).toContainText("可展开为 4 种组合")
+  const closures = page.getByTestId("closures")
+  await closures.getByRole("button", { name: "+ 两个变量可以一起成环" }).click()
+  await closures.getByLabel("成环的第一个变量").selectOption("R1")
+  await closures.getByLabel("成环的第二个变量").selectOption("R2")
+  await closures.getByLabel("能成的环").fill("(CH2)3-4")
+  await closures.getByRole("button", { name: "添加" }).click()
+  await expect(closures.getByTestId("closure")).toContainText("R1 与 R2 可一起成环：(CH2)3、(CH2)4")
+  await expect(page.getByTestId("library-size")).toContainText("可展开为 6 种组合")
+  await page.getByRole("button", { name: "批量生成化合物…" }).click()
+  const dialog = page.getByRole("dialog")
+  // Benzene, chlorobenzene (twice), o-dichlorobenzene, indane and tetralin.
+  await expect(dialog).toContainText("得到 5 个不同的化合物")
+  await expect(dialog.getByTestId("enumerated-compound").filter({ hasText: "R1+R2 = (CH2)3" })).toHaveCount(1)
+})

@@ -2,18 +2,18 @@ import { GROUP_CLASSES } from "@structura/markush"
 import type { Alternative } from "@structura/core/types"
 import { CLASS_NAMES, describeAlternative } from "./describe.ts"
 
-/** For a linker such as L: "a single bond, (C6–C30)arylene or (3–30 membered)heteroarylene". */
+/** For a linker such as L: "a single bond, (C6–C30)arylene or (C2–C30)heteroarylene", as OLED patents count them, in carbons. */
 export const LINKER_PRESETS: Alternative[] = [
   { kind: "bond" },
   { kind: "class", class: "arylene", min: 6, max: 30 },
-  { kind: "class", class: "heteroarylene", min: 3, max: 30 },
+  { kind: "class", class: "heteroarylene", min: 2, max: 30, unit: "carbons" },
 ]
 
 /** The classes patent claims name most, one click each; "更多…" opens the full form. */
 export const PRESETS: Alternative[] = [
   { kind: "class", class: "alkyl", min: 1, max: 30 },
   { kind: "class", class: "aryl", min: 6, max: 30 },
-  { kind: "class", class: "heteroaryl", min: 3, max: 30 },
+  { kind: "class", class: "heteroaryl", min: 2, max: 30, unit: "carbons" },
   { kind: "class", class: "silyl" },
   { kind: "class", class: "amino" },
 ]

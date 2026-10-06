@@ -2,7 +2,7 @@ import { knownLabel } from "../label.ts"
 import { BRIDGES } from "./bridges.ts"
 import { fragmentProblem, fragmentVariables } from "./fragments.ts"
 import { isVariableName } from "./names.ts"
-import type { Alternative, GroupClass, Variable } from "../types.ts"
+import type { Alternative, GroupClass, SizeUnit, Variable } from "../types.ts"
 
 export { isVariableName }
 
@@ -107,5 +107,11 @@ export function alternativeProblem(alternative: Alternative): string | null {
     if (bound != null && (!Number.isInteger(bound) || bound < 1 || bound > 100)) return `size ${bound} is not a whole number from 1 to 100`
   }
   if (min != null && max != null && min > max) return `size ${min} is above ${max}`
+  if (alternative.unit != null && alternative.unit !== "carbons" && alternative.unit !== "members") return `unit "${alternative.unit}" is neither carbons nor members`
   return null
+}
+
+/** What a class alternative's size counts: its own unit, else the class's usual one. */
+export function sizeUnitOf(alternative: Extract<Alternative, { kind: "class" }>): SizeUnit {
+  return alternative.unit ?? GROUP_CLASSES[alternative.class].size
 }

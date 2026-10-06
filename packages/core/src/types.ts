@@ -110,7 +110,7 @@ export type Alternative =
   | { kind: "bond" }
   /** A divalent ring joining the two atoms a placeholder sits between: "L is p-phenylene". */
   | { kind: "bridge"; name: BridgeName }
-  | { kind: "class"; class: GroupClass; min?: number; max?: number; substituted?: boolean }
+  | { kind: "class"; class: GroupClass; min?: number; max?: number; substituted?: boolean; unit?: SizeUnit }
   /**
    * A drawn piece: carbazol-9-yl for Ar, 2,6-naphthylene for L, N–R5 for a ring's X. Atoms
    * labelled "*" mark where it joins the formula, one per bond of the placeholder: the atom
@@ -124,6 +124,13 @@ export type BridgeName = "p-phenylene" | "m-phenylene" | "4,4'-biphenylene" | "2
 
 /** One concrete thing a placeholder can become: an alternative that is not a class. */
 export type Choice = Exclude<Alternative, { kind: "class" }>
+
+/**
+ * What a class's size counts: carbon atoms ("C2–C30 heteroaryl", as OLED patents write it)
+ * or ring members ("5–10 membered heteroaryl", as drug patents do). Left out, the class's
+ * usual unit (see GROUP_CLASSES).
+ */
+export type SizeUnit = "carbons" | "members"
 
 export type GroupClass =
   | "alkyl"

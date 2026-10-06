@@ -1,8 +1,11 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { alternativeProblem, GROUP_CLASSES } from "@structura/markush"
-import type { Alternative, GroupClass } from "@structura/core/types"
+import { alternativeProblem, GROUP_CLASSES, sizeUnitOf } from "@structura/markush"
+import type { Alternative, GroupClass, SizeUnit } from "@structura/core/types"
 import { CLASS_NAMES } from "./describe.ts"
+
+/** Classes that are rings, whose size a claim may give in carbons or in ring members. */
+const RING_CLASSES = new Set<GroupClass>(["cycloalkyl", "heterocycloalkyl", "aryl", "heteroaryl", "arylene", "heteroarylene"])
 
 /**
  * A class alternative: which class, its size range (left empty for none, as for silyl),
@@ -14,6 +17,10 @@ export function ClassForm({ initial, onSave, onCancel }: { initial?: Alternative
   const [min, setMin] = useState(start ? String(start.min ?? "") : "1")
   const [max, setMax] = useState(start ? String(start.max ?? "") : "30")
   const [substituted, setSubstituted] = useState<"either" | "yes" | "no">(start?.substituted == null ? "either" : start.substituted ? "yes" : "no")
+  /** What the size counts; only ring classes can be counted in ring members. */
+  const [unit, setUnit] = useState<SizeUnit>(start ? sizeUnitOf(start) : GROUP_CLASSES[group].size)
+  const ringClass = RING_CLASSES.has(group)
+  const shownUnit: SizeUnit = ringClass ? unit : "carbons"
   const ranged = min.trim() !== "" || max.trim() !== ""
   const low = Number(min)
   const high = Number(max)
@@ -22,6 +29,7 @@ export function ClassForm({ initial, onSave, onCancel }: { initial?: Alternative
     class: group,
     ...(ranged ? { min: low, max: high } : {}),
     ...(substituted === "either" ? {} : { substituted: substituted === "yes" }),
+    ...(ranged && shownUnit !== GROUP_CLASSES[group].size ? { unit: shownUnit } : {}),
   }
   const valid = alternativeProblem(candidate) == null
   const field = "h-7 rounded-sm border border-[#d0d0d0] bg-white px-1 outline-none focus:border-[#1a73e8]"
@@ -35,7 +43,14 @@ export function ClassForm({ initial, onSave, onCancel }: { initial?: Alternative
           </option>
         ))}
       </select>
-      <span>{GROUP_CLASSES[group].size === "members" ? "环大小" : "碳数"}</span>
+      {ringClass ? (
+        <select className={`${field} w-fit`} value={unit} onChange={(event) => setUnit(event.target.value as SizeUnit)} aria-label="大小按">
+          <option value="carbons">碳数</option>
+          <option value="members">环原子数</option>
+        </select>
+      ) : (
+        <span>碳数</span>
+      )}
       <span className="flex items-center gap-1">
         <input className={`${field} w-12`} value={min} onChange={(event) => setMin(event.target.value)} aria-label="最小" />–
         <input className={`${field} w-12`} value={max} onChange={(event) => setMax(event.target.value)} aria-label="最大" />

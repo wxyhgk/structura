@@ -8,7 +8,7 @@ import { applyOps, type Op } from "@structura/core/ops"
 import type { Choice, Drawing } from "@structura/core/types"
 import { errorsOf, validate } from "@structura/core/validate"
 import { label, run } from "@structura/testkit"
-import { enumerate, undefinedVariables } from "@structura/markush"
+import { alternativeProblem, enumerate, representativesOf, undefinedVariables } from "@structura/markush"
 
 /** Cyclopentane with X in the ring at atom 1 and placeholders R1, R2 hanging off atoms 3 and 4. */
 function scaffold(): Drawing {
@@ -207,4 +207,18 @@ test("a placeholder between two atoms takes an element in place, and none is lef
   assert.deepEqual([result.molecules.length, result.failed], [8, 0])
   for (const mol of result.molecules) assert.ok(!mol.atoms.some((atom) => atom.alias), "no placeholder is left")
   assert.ok(result.molecules.some((mol) => plainFormula(mol) === "C5H10O2"), "X = O, R1 = O, R2 = H: a methoxy ether")
+})
+
+test("a class's size counts carbons or ring members, as the claim says: C3–C5 heteroaryl takes pyridyl", () => {
+  const names = (alternative: Parameters<typeof representativesOf>[0]) => representativesOf(alternative).map((choice) => (choice.kind === "label" ? choice.text : choice.kind))
+  // OLED patents count carbons: pyridyl has five, so it is a C3–C5 heteroaryl.
+  assert.ok(names({ kind: "class", class: "heteroaryl", min: 3, max: 5, unit: "carbons" }).includes("2-Pyridyl"))
+  // Drug patents count ring members: a 5–6 membered heteroaryl is pyridyl, furyl… but not indolyl.
+  const membered = names({ kind: "class", class: "heteroaryl", min: 5, max: 6, unit: "members" })
+  assert.deepEqual(membered.sort(), ["2-Furyl", "2-Pyridyl", "2-Pyrimidinyl", "2-Thienyl"])
+  // Left out, the unit is the class's usual one (ring members for heteroaryl).
+  assert.deepEqual(names({ kind: "class", class: "heteroaryl", min: 5, max: 6 }).sort(), membered)
+  // A biphenylyl has no single ring size, so a membered aryl range leaves it out.
+  assert.ok(!names({ kind: "class", class: "aryl", min: 6, max: 12, unit: "members" }).includes("4-Biphenylyl"))
+  assert.match(alternativeProblem({ kind: "class", class: "aryl", unit: "atoms" as never }) ?? "", /neither carbons nor members/)
 })

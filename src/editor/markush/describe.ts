@@ -1,5 +1,5 @@
 import { displayFormula } from "@structura/core/formula"
-import { fragmentFormula, GROUP_CLASSES } from "@structura/markush"
+import { fragmentFormula, sizeUnitOf } from "@structura/markush"
 import type { Alternative, BridgeName, Choice, GroupClass } from "@structura/core/types"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.
@@ -36,7 +36,7 @@ export function describeAlternative(alternative: Alternative): string {
   if (alternative.kind === "fragment") return alternative.name ?? `片段 ${displayFormula(fragmentFormula(alternative.molecule))}`
   const { min, max } = alternative
   const range = min != null || max != null ? `${min ?? 1}–${max ?? "∞"}` : ""
-  const size = range ? (GROUP_CLASSES[alternative.class].size === "members" ? `(${range} 元)` : `(C${range.replace("–", "–C")})`) : ""
+  const size = range ? (sizeUnitOf(alternative) === "members" ? `(${range} 元)` : `(C${range.replace("–", "–C")})`) : ""
   const substituted = alternative.substituted == null ? "取代或未取代的" : alternative.substituted ? "取代的" : "未取代的"
   return `${substituted}${size}${CLASS_NAMES[alternative.class]}`
 }

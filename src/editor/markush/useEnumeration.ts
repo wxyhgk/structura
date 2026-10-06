@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { enumerateSteps, type EnumerateOptions, type Enumeration } from "@structura/markush"
-import type { Drawing } from "@structura/core/types"
+import type { Drawing, Molecule } from "@structura/core/types"
+import { loadRDKit } from "@/editor/rdkit"
+import { canonicalIdentity } from "./identity.ts"
 
 /** Work done per slice before the page gets to paint and handle input again. */
 const SLICE_MS = 12
@@ -10,6 +12,8 @@ export type EnumerationRun = {
   result: Enumeration | null
   /** "running" until every combination up to the limit is tried, or the user stops it. */
   status: "running" | "done" | "stopped"
+  /** Whether repeats were dropped: asked and done, not asked, or asked but RDKit would not load. */
+  dedupe: "on" | "off" | "unavailable"
   stop: () => void
 }
 
@@ -32,42 +36,68 @@ function snapshot(result: Enumeration): Enumeration {
  * responsive and shows progress. New inputs start a new run; results of an earlier run are
  * never shown for later inputs, since each run's state is tagged with the inputs it is for.
  */
-export function useEnumeration(drawing: Drawing | null, { limit, representatives }: Required<EnumerateOptions>): EnumerationRun {
-  const inputs = useMemo(() => (drawing ? { drawing, limit, representatives } : null), [drawing, limit, representatives])
-  const [state, setState] = useState<{ inputs: typeof inputs; result: Enumeration | null; status: EnumerationRun["status"] }>({
+export function useEnumeration(
+  drawing: Drawing | null,
+  { limit, representatives, dedupe }: Required<Omit<EnumerateOptions, "identity">> & { dedupe: boolean },
+): EnumerationRun {
+  const inputs = useMemo(() => (drawing ? { drawing, limit, representatives, dedupe } : null), [drawing, limit, representatives, dedupe])
+  const [state, setState] = useState<{ inputs: typeof inputs; result: Enumeration | null; status: EnumerationRun["status"]; dedupe: EnumerationRun["dedupe"] }>({
     inputs: null,
     result: null,
     status: "done",
+    dedupe: "off",
   })
   /** Stops the current run, keeping what it made; a no-op once it is over. */
   const stopRef = useRef<() => void>(() => {})
 
   useEffect(() => {
     if (!inputs) return
-    const steps = enumerateSteps(inputs.drawing, { limit: inputs.limit, representatives: inputs.representatives })
     let timer: ReturnType<typeof setTimeout> | undefined
+    let cancelled = false
+    let steps: ReturnType<typeof enumerateSteps> | null = null
+    let dedupe: EnumerationRun["dedupe"] = "off"
     const slice = () => {
+      if (!steps) return
       const end = performance.now() + SLICE_MS
       let step = steps.next()
       while (!step.done && performance.now() < end) step = steps.next()
-      setState({ inputs, result: snapshot(step.value), status: step.done ? "done" : "running" })
+      setState({ inputs, result: snapshot(step.value), status: step.done ? "done" : "running", dedupe })
       if (!step.done) timer = setTimeout(slice, 0)
     }
+    const start = (identity?: (mol: Molecule) => string | null) => {
+      if (cancelled) return
+      steps = enumerateSteps(inputs.drawing, { limit: inputs.limit, representatives: inputs.representatives, ...(identity ? { identity } : {}) })
+      timer = setTimeout(slice, 0)
+    }
+    // Dropping repeats needs RDKit's canonical SMILES; without RDKit it all goes ahead, repeats kept.
+    if (inputs.dedupe)
+      loadRDKit().then(
+        (rdkit) => {
+          dedupe = "on"
+          start(canonicalIdentity(rdkit))
+        },
+        () => {
+          dedupe = "unavailable"
+          start()
+        },
+      )
+    else start()
     stopRef.current = () => {
+      cancelled = true
       clearTimeout(timer)
       setState((current) => {
-        if (current.inputs !== inputs) return { inputs, result: null, status: "stopped" }
+        if (current.inputs !== inputs) return { inputs, result: null, status: "stopped", dedupe }
         return current.status === "running" ? { ...current, status: "stopped" } : current
       })
     }
-    timer = setTimeout(slice, 0)
     return () => {
+      cancelled = true
       clearTimeout(timer)
       stopRef.current = () => {}
     }
   }, [inputs])
 
   const stop = useCallback(() => stopRef.current(), [])
-  if (!inputs || state.inputs !== inputs) return { result: null, status: inputs ? "running" : "done", stop }
-  return { result: state.result, status: state.status, stop }
+  if (!inputs || state.inputs !== inputs) return { result: null, status: inputs ? "running" : "done", dedupe: "off", stop }
+  return { result: state.result, status: state.status, dedupe: state.dedupe, stop }
 }

@@ -22,6 +22,7 @@ function result(made: number, more: Partial<Enumeration> = {}): Enumeration {
     onlyClasses: [],
     failures: [],
     failed: 0,
+    duplicates: 0,
     ...more,
   }
 }

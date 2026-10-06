@@ -45,6 +45,8 @@ export type Enumeration = {
   failures: Array<{ choice: Pick[]; error: string }>
   /** How many combinations failed in all. */
   failed: number
+  /** Built molecules dropped as repeats of one already made (only with `identity`). */
+  duplicates: number
 }
 
 /** One placeholder atom, how it sits (see siteKind), and what it may become there. */
@@ -127,6 +129,13 @@ export type EnumerateOptions = {
   limit?: number
   /** Let typical members stand in for each class (methyl, ethyl… for alkyl); else classes are left out. */
   representatives?: boolean
+  /**
+   * What makes two molecules the same compound (a canonical SMILES, say), for dropping
+   * repeats: symmetric positions on a ring, or (R1)m where R1 = H gives the bare ring many
+   * ways. Left out, every combination is kept. Kept here as a function so this package needs
+   * no chemistry toolkit; null from it means "cannot tell", and the molecule is kept.
+   */
+  identity?: (mol: Molecule) => string | null
 }
 
 /** A choice in a word: the label, the ring's name, "bond", or a piece's name or formula. */
@@ -261,7 +270,9 @@ export function enumerate(drawing: Drawing, options: EnumerateOptions = {}): Enu
  * builds one combination per step. Every step yields the same result object, growing in
  * place: copy what you keep. The return value is exactly what enumerate() returns.
  */
-export function* enumerateSteps(drawing: Drawing, { limit = 1000, representatives = false }: EnumerateOptions = {}): Generator<Enumeration, Enumeration> {
+export function* enumerateSteps(drawing: Drawing, { limit = 1000, representatives = false, identity }: EnumerateOptions = {}): Generator<Enumeration, Enumeration> {
+  /** The compounds made so far, by identity, when repeats are being dropped. */
+  const seen = new Set<string>()
   const variables = drawing.variables ?? {}
   const defined = new Set(Object.keys(variables))
   const classesLeftOut: Record<string, number> = {}
@@ -333,6 +344,7 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     onlyClasses: [],
     failures: [],
     failed: 0,
+    duplicates: 0,
   }
   const top = new Set(placeholders(drawing).map(({ name }) => name))
   const bare = [...top].filter((name) => choicesOf.get(name)!.length === 0)
@@ -378,8 +390,13 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
       const built = applyOps({ ...laid, variables: undefined }, opsForAll(chosen))
       const wrong = built.ok ? (leftover(built.drawing.molecule, defined) ?? newlyOverValence(built.drawing.molecule, strained)) : built.error
       if (built.ok && !wrong) {
-        result.molecules.push(built.drawing.molecule)
-        result.picks.push(picks)
+        const key = identity?.(built.drawing.molecule) ?? null
+        if (key != null && seen.has(key)) result.duplicates++
+        else {
+          if (key != null) seen.add(key)
+          result.molecules.push(built.drawing.molecule)
+          result.picks.push(picks)
+        }
       } else fail(picks, wrong!)
       yield result
     }

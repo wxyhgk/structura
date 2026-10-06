@@ -31,9 +31,13 @@ export function EnumerateDialog({
   const overlayMark = useOverlayMark()
   const [representatives, setRepresentatives] = useState(true)
   const [limit, setLimit] = useState(500)
-  const run = useEnumeration(open ? drawing : null, { limit, representatives })
+  const [dedupe, setDedupe] = useState(true)
+  const run = useEnumeration(open ? drawing : null, { limit, representatives, dedupe })
   const { result, status } = run
-  const notes = result ? notesOf(result, { limit, status }) : []
+  const notes = [
+    ...(result ? notesOf(result, { limit, status }) : []),
+    ...(run.dedupe === "unavailable" ? ["没能加载 RDKit，这次没有去掉重复的化合物。"] : []),
+  ]
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -45,6 +49,10 @@ export function EnumerateDialog({
         <label className="flex items-center gap-2 text-[13px]">
           <input type="checkbox" checked={representatives} onChange={(event) => setRepresentatives(event.target.checked)} />
           基团类别用代表结构展开（如烷基用甲基、乙基、异丙基、叔丁基）
+        </label>
+        <label className="flex items-center gap-2 text-[13px]">
+          <input type="checkbox" checked={dedupe} onChange={(event) => setDedupe(event.target.checked)} />
+          去掉重复的化合物（对称位置、取 H 后相同的组合等，按 RDKit 标准 SMILES 判断）
         </label>
         <label className="flex items-center gap-2 text-[13px]">
           最多生成
@@ -96,7 +104,8 @@ function progressText({ result, status }: EnumerationRun, limit: number): string
   if (status === "running") return `正在生成：已生成 ${made} / 共 ${Math.min(result.total, limit)}…`
   if (result.total === 0) return "没有可以生成的化合物。"
   const shown = made > SHOWN ? `，下面显示前 ${SHOWN} 个` : ""
-  return `共 ${result.total} 种组合，已生成 ${made} 个${shown}${status === "stopped" ? "（已停止）" : ""}。`
+  const repeats = result.duplicates > 0 ? `（合并了 ${result.duplicates} 个重复的）` : ""
+  return `共 ${result.total} 种组合，得到 ${made} 个${result.duplicates > 0 ? "不同的" : ""}化合物${repeats}${shown}${status === "stopped" ? "（已停止）" : ""}。`
 }
 
 /** One generated compound, numbered, with its formula. */

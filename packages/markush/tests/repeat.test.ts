@@ -98,3 +98,19 @@ test("repeat counts are checked, can be changed or dropped, and are saved", () =
   assert.deepEqual(reread.drawing.attachments?.[0].repeat, { min: 1, max: 3, name: "n" })
 })
 
+
+test("with an identity, repeats are dropped: symmetric positions and H choices give each compound once", () => {
+  const identity = (mol: Parameters<typeof canonicalAll>[0][number]) => canonicalAll([mol])[0]
+  // 73 combinations of (R1)m, m = 0–2, R1 = Cl or F on benzene, are 12 compounds:
+  // benzene; PhCl, PhF; and o/m/p of Cl2, F2 and ClF.
+  const halogens = enumerate(formula({ min: 0, max: 2, name: "m" }), { limit: 10000, identity })
+  assert.equal(halogens.total, 73)
+  assert.equal(halogens.molecules.length, 12)
+  assert.equal(halogens.duplicates, 61)
+  assert.equal(new Set(canonicalAll(halogens.molecules)).size, 12, "what is left has no repeats")
+  // With R1 = H allowed, two H's are no R1 at all: benzene, PhCl, and o/m/p-dichlorobenzene.
+  const withH = run(formula({ min: 0, max: 2, name: "m" }), [{ op: "set_variable", name: "R1", alternatives: [label("H"), label("Cl")] }])
+  assert.deepEqual(canonicalAll(enumerate(withH, { limit: 10000, identity }).molecules), canonicalAll(["c1ccccc1", "Clc1ccccc1", "Clc1ccccc1Cl", "Clc1cccc(Cl)c1", "Clc1ccc(Cl)cc1"]))
+  // Without one, every combination is kept as before.
+  assert.equal(enumerate(formula({ min: 0, max: 2, name: "m" }), { limit: 10000 }).duplicates, 0)
+})

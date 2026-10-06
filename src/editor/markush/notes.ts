@@ -27,7 +27,7 @@ export function notesOf(result: Enumeration, { limit, status = "done" }: { limit
     const picks = first.choice.map((pick) => ("position" in pick ? `${pick.name} 连在 ${pick.position} 位置` : `${pick.name} = ${choiceName(pick.choice)}`))
     notes.push(`${result.failed} 种组合没能生成，例如 ${picks.join("，")}（${first.error}）。`)
   }
-  const tried = result.molecules.length + result.failed
+  const tried = result.molecules.length + result.failed + result.duplicates
   if (status === "running" || result.total <= tried) return notes
   notes.push(status === "stopped" ? `已停止生成，只生成了前 ${tried} 种。` : `组合太多，只生成了前 ${limit} 种。`)
   return notes

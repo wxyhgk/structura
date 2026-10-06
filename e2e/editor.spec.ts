@@ -49,6 +49,8 @@ test("Markush: (R1)m with m = 0–2 enumerates 1 + 12 + 60 = 73 compounds", asyn
   await expect(page.getByTestId("repeat-marks")).toBeVisible()
   await page.getByRole("button", { name: "批量生成化合物…" }).click()
   await expect(page.getByRole("dialog")).toContainText("共 73 种组合")
+  // Repeats are dropped by RDKit's canonical SMILES (loaded in the page): 12 different compounds.
+  await expect(page.getByRole("dialog")).toContainText("得到 12 个不同的化合物（合并了 61 个重复的）")
 })
 
 test("import: a MOL file's R# atom arrives as the variable R1, with no notice", async ({ page }) => {

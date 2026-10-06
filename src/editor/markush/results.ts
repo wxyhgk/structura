@@ -5,8 +5,16 @@ import type { Molecule } from "@structura/core/types"
 // The generated compounds as the dialog lists, filters and exports them. Pure, so tested
 // without a browser; SMILES come from the caller (RDKit lives in the page).
 
-/** One generated compound: its place in the list (1-based), the molecule and what each variable became. */
-export type Row = { number: number; mol: Molecule; picks: readonly Pick[] }
+/**
+ * One generated compound: its place in the list (1-based), the molecule, what each variable
+ * became, and which formula it came from when the drawing holds several (式 1, 式 2…).
+ */
+export type Row = { number: number; mol: Molecule; picks: readonly Pick[]; formula?: number }
+
+/** A row's fields as SD data items and CSV columns: which formula first (when there are several), then each variable. */
+export function rowFields(row: Row): Record<string, string> {
+  return { ...(row.formula != null ? { "Formula No": String(row.formula) } : {}), ...pickFields(row.picks) }
+}
 
 /**
  * What the variables became, briefly, each name once: "R1 在 #1、#3，R1 = Cl、F，X = O";
@@ -31,7 +39,8 @@ export function filterRows(rows: readonly Row[], filter: string): Row[] {
   if (words.length === 0) return rows.slice()
   return rows.filter((row) => {
     const fields = pickFields(row.picks)
-    const haystack = [plainFormula(row.mol), ...Object.entries(fields).flatMap(([name, value]) => [`${name}=${value}`, value])].join(" ").toLowerCase()
+    const which = row.formula != null ? [`式${row.formula}`] : []
+    const haystack = [plainFormula(row.mol), ...which, ...Object.entries(fields).flatMap(([name, value]) => [`${name}=${value}`, value])].join(" ").toLowerCase()
     return words.every((word) => haystack.includes(word))
   })
 }
@@ -45,10 +54,10 @@ const cell = (value: string) => (/[",\n]/.test(value) ? `"${value.replace(/"/g, 
  */
 export function rowsToCsv(rows: readonly Row[], smiles: (mol: Molecule) => string): string {
   const columns: string[] = []
-  for (const row of rows) for (const name of Object.keys(pickFields(row.picks))) if (!columns.includes(name)) columns.push(name)
+  for (const row of rows) for (const name of Object.keys(rowFields(row))) if (!columns.includes(name)) columns.push(name)
   const head = ["No", "SMILES", "Formula", "MW", ...columns]
   const lines = rows.map((row) => {
-    const fields = pickFields(row.picks)
+    const fields = rowFields(row)
     return [String(row.number), smiles(row.mol), displayFormula(plainFormula(row.mol)).normalize("NFKC"), molecularWeight(row.mol).toFixed(2), ...columns.map((name) => fields[name] ?? "")]
       .map(cell)
       .join(",")

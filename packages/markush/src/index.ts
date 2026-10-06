@@ -3,7 +3,7 @@
 // variable, attachment or drawn piece valid) is core's and is re-exported here, so the
 // rest of the app imports generic-formula code from this one place.
 export * from "@structura/core/markush"
-export { choiceText, enumerate, enumerateSteps, pickFields } from "./enumerate.ts"
+export { choiceText, enumerate, enumerateSteps, formulasOf, pickFields } from "./enumerate.ts"
 export type { EnumerateOptions, Enumeration, Pick } from "./enumerate.ts"
 export { librarySize } from "./count.ts"
 export type { LibrarySize } from "./count.ts"

@@ -23,6 +23,8 @@ function result(made: number, more: Partial<Enumeration> = {}): Enumeration {
     failures: [],
     failed: 0,
     duplicates: 0,
+    formulas: 1,
+    formulaOf: Array.from({ length: made }, () => 1),
     ...more,
   }
 }

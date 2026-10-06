@@ -49,3 +49,14 @@ test("an attachment drawn into one ring of carbazole widens to the whole fused s
   // Carbazole is symmetric: 1/8, 2/7, 3/6, 4/5 are the same, so nine positions are five compounds.
   await expect(page.getByRole("dialog")).toContainText("得到 5 个不同的化合物（合并了 4 个重复的）")
 })
+
+test("two formulas on one page are generated each on its own, labelled 式 1 and 式 2", async ({ page }) => {
+  await openEditor(page)
+  await openFile(page, fixture("two-formulas.structura"))
+  await expect(page.getByTestId("library-size")).toContainText("可展开为 4 种组合")
+  await page.getByRole("button", { name: "批量生成化合物…" }).click()
+  const compounds = page.getByRole("dialog").getByTestId("enumerated-compound")
+  await expect(compounds).toHaveCount(4)
+  await expect(compounds.filter({ hasText: "式 1" })).toHaveCount(2)
+  await expect(compounds.filter({ hasText: "式 2" })).toHaveCount(2)
+})

@@ -38,3 +38,15 @@ test("CSV and SMILES exports carry number, structure and every variable's value"
   assert.equal(second, `2,Clc1ccccc1,C6H5Cl,112.56,#2,Cl`)
   assert.equal(rowsToSmiles(rows, smiles), "c1ccccc1\t1\nClc1ccccc1\t2\n")
 })
+
+test("with several formulas, each row says which, in the filter and in the exports", () => {
+  const two: Row[] = [
+    { ...rows[0], formula: 1 },
+    { ...rows[1], formula: 2 },
+  ]
+  assert.deepEqual(filterRows(two, "式2").map((row) => row.number), [2])
+  const [head, , second] = rowsToCsv(two, smiles).replace(/^﻿/, "").trim().split("\n")
+  // The chemical formula and the number of the drawn formula are different columns.
+  assert.equal(head, "No,SMILES,Formula,MW,Formula No,R1 position,R1")
+  assert.ok(second.startsWith("2,Clc1ccccc1,C6H5Cl,112.56,2,"))
+})

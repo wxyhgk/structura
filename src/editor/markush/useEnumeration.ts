@@ -23,6 +23,7 @@ function snapshot(result: Enumeration): Enumeration {
     ...result,
     molecules: result.molecules.slice(),
     picks: result.picks.slice(),
+    formulaOf: result.formulaOf.slice(),
     classesLeftOut: { ...result.classesLeftOut },
     represented: { ...result.represented },
     misfits: { ...result.misfits },

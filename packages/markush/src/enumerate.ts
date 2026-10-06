@@ -47,6 +47,10 @@ export type Enumeration = {
   failed: number
   /** Built molecules dropped as repeats of one already made (only with `identity`). */
   duplicates: number
+  /** How many separate formulas the drawing holds (formula I, formula II…); each is expanded on its own. */
+  formulas: number
+  /** For each molecule, which formula it came from (1, 2…), in drawing order. */
+  formulaOf: number[]
 }
 
 /** One placeholder atom, how it sits (see siteKind), and what it may become there. */
@@ -245,8 +249,41 @@ function attach(drawing: Drawing, hub: number, target: number, displaced: number
   return result.ok ? { drawing: result.drawing } : { error: result.error }
 }
 
-/** A laid-out formula ready to build: its sites with the choices that fit, and how many combinations they make. */
-type Plan = { layout: Exclude<Layout, { occupied: true }>; sites: Site[]; count: number }
+/** A laid-out formula ready to build: which formula, its sites with the choices that fit, and how many combinations they make. */
+type Plan = { formula: number; layout: Exclude<Layout, { occupied: true }>; sites: Site[]; count: number }
+
+/**
+ * The separate generic formulas on a drawing: pieces held together by bonds or by a variable
+ * attachment's line, that carry a variable or an attachment. Plain molecules beside them are
+ * no part of any formula. A drawing with no variables at all is one "formula", itself.
+ */
+export function formulasOf(drawing: Drawing): Drawing[] {
+  const mol = drawing.molecule
+  const parent = new Map(mol.atoms.map((atom) => [atom.id, atom.id]))
+  const root = (id: number): number => {
+    let at = id
+    while (parent.get(at) !== at) at = parent.get(at)!
+    parent.set(id, at)
+    return at
+  }
+  const join = (a: number, b: number) => parent.has(a) && parent.has(b) && parent.set(root(a), root(b))
+  for (const bond of mol.bonds) join(bond.a, bond.b)
+  for (const attachment of drawing.attachments ?? []) for (const id of attachment.to) join(attachment.atom, id)
+  const names = new Set(Object.keys(drawing.variables ?? {}))
+  const marked = new Set([
+    ...mol.atoms.filter((atom) => atom.alias && (names.has(atom.alias) || isVariableName(atom.alias))).map((atom) => root(atom.id)),
+    ...(drawing.attachments ?? []).map((attachment) => root(attachment.atom)),
+  ])
+  if (marked.size === 0) return [drawing]
+  const pieces = new Map<number, number[]>()
+  for (const atom of mol.atoms) if (marked.has(root(atom.id))) pieces.set(root(atom.id), [...(pieces.get(root(atom.id)) ?? []), atom.id])
+  return [...pieces.values()].map((ids) => ({
+    ...drawing,
+    molecule: subMolecule(mol, ids),
+    arrows: [],
+    attachments: drawing.attachments?.filter((attachment) => ids.includes(attachment.atom)),
+  }))
+}
 
 /**
  * Expands a generic formula into concrete molecules: every placement of each variable
@@ -332,6 +369,7 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     return versions
   }
   for (const { name } of placeholders(drawing)) choicesFor(name)
+  const formulas = formulasOf(drawing)
   const result: Enumeration = {
     molecules: [],
     picks: [],
@@ -345,38 +383,48 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     failures: [],
     failed: 0,
     duplicates: 0,
+    formulas: formulas.length,
+    formulaOf: [],
   }
-  const top = new Set(placeholders(drawing).map(({ name }) => name))
-  const bare = [...top].filter((name) => choicesOf.get(name)!.length === 0)
-  if (bare.length > 0) return { ...result, onlyClasses: bare }
-
+  // Variables with nothing concrete: their formula cannot be expanded at all.
   const unfilled = new Set<string>()
   const plans: Plan[] = []
-  for (const layout of layouts(drawing)) {
-    if ("occupied" in layout) {
-      result.occupied++
-      yield result
+  for (const [index, formula] of formulas.entries()) {
+    const top = new Set(placeholders(formula).map(({ name }) => name))
+    const bare = [...top].filter((name) => choicesOf.get(name)!.length === 0)
+    if (bare.length > 0) {
+      for (const name of bare) unfilled.add(name)
+      result.onlyClasses = [...unfilled]
       continue
     }
-    if ("error" in layout) {
-      result.total++
-      plans.push({ layout, sites: [], count: 0 })
+    for (const layout of layouts(formula)) {
+      if ("occupied" in layout) {
+        result.occupied++
+        yield result
+        continue
+      }
+      if ("error" in layout) {
+        result.total++
+        plans.push({ formula: index + 1, layout, sites: [], count: 0 })
+        yield result
+        continue
+      }
+      const sites = sitesOf(layout.drawing, [])
+      for (const site of sites) if (site.choices.length === 0) unfilled.add(site.name)
+      const count = sites.reduce((product, site) => product * site.choices.length, 1)
+      result.total += count
+      result.onlyClasses = [...unfilled]
+      plans.push({ formula: index + 1, layout, sites, count })
       yield result
-      continue
     }
-    const sites = sitesOf(layout.drawing, [])
-    for (const site of sites) if (site.choices.length === 0) unfilled.add(site.name)
-    const count = sites.reduce((product, site) => product * site.choices.length, 1)
-    result.total += count
-    result.onlyClasses = [...unfilled]
-    plans.push({ layout, sites, count })
-    yield result
   }
+  // Nothing at all could be laid out: only classes stand in the way.
+  if (plans.length === 0 && unfilled.size > 0) return result
 
   const fail = (choice: Pick[], error: string) => {
     if (result.failed++ < 5) result.failures.push({ choice, error })
   }
-  for (const { layout, sites } of plans) {
+  for (const { formula, layout, sites } of plans) {
     if ("error" in layout) {
       fail(layout.where, layout.error)
       continue
@@ -396,6 +444,7 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
           if (key != null) seen.add(key)
           result.molecules.push(built.drawing.molecule)
           result.picks.push(picks)
+          result.formulaOf.push(formula)
         }
       } else fail(picks, wrong!)
       yield result

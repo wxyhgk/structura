@@ -2,7 +2,6 @@ import { memo, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { displayFormula, plainFormula } from "@structura/core/formula"
-import { pickFields } from "@structura/markush"
 import { toSdf } from "@structura/core/molfile"
 import type { Drawing, Molecule } from "@structura/core/types"
 import { download } from "@/editor/browser"
@@ -10,7 +9,7 @@ import { useOverlayMark } from "@/editor/input/overlays"
 import { MoleculeThumb } from "@/editor/common/MoleculeThumb"
 import { notesOf } from "./notes.ts"
 import { canonicalIdentity } from "./identity.ts"
-import { filterRows, picksText, rowsToCsv, rowsToSmiles, type Row } from "./results.ts"
+import { filterRows, picksText, rowFields, rowsToCsv, rowsToSmiles, type Row } from "./results.ts"
 import { useEnumeration, type EnumerationRun } from "./useEnumeration.ts"
 import { loadRDKit } from "@/editor/rdkit"
 
@@ -47,7 +46,13 @@ export function EnumerateDialog({
   const run = useEnumeration(open ? drawing : null, { limit, representatives, dedupe })
   const { result, status } = run
   const [filter, setFilter] = useState("")
-  const rows: Row[] = useMemo(() => (result ? result.molecules.map((mol, index) => ({ number: index + 1, mol, picks: result.picks[index] })) : []), [result])
+  const rows: Row[] = useMemo(
+    () =>
+      result
+        ? result.molecules.map((mol, index) => ({ number: index + 1, mol, picks: result.picks[index], ...(result.formulas > 1 ? { formula: result.formulaOf[index] } : {}) }))
+        : [],
+    [result],
+  )
   const kept = useMemo(() => filterRows(rows, filter), [rows, filter])
   /** Writes the kept rows as SMILES-bearing text; RDKit is loaded for it on first use. */
   async function exportWith(write: (rows: Row[], smiles: (mol: Molecule) => string) => string, extension: string, type: string) {
@@ -128,7 +133,7 @@ export function EnumerateDialog({
           <Button
             variant="outline"
             disabled={kept.length === 0}
-            onClick={() => download(`${base} 展开.sdf`, toSdf(kept.map((row) => row.mol), "Structura", kept.map((row) => pickFields(row.picks))), "chemical/x-mdl-sdfile")}
+            onClick={() => download(`${base} 展开.sdf`, toSdf(kept.map((row) => row.mol), "Structura", kept.map(rowFields)), "chemical/x-mdl-sdfile")}
           >
             下载 SDF
           </Button>
@@ -165,7 +170,8 @@ const Thumbnail = memo(function Thumbnail({ row, colorHetero, onPlace }: { row: 
     <figure className="group relative rounded-sm border border-[#e0e0e0] bg-white p-1 text-center" data-testid="enumerated-compound">
       <MoleculeThumb mol={row.mol} colorHetero={colorHetero} className="mx-auto h-24 w-full object-contain" />
       <figcaption className="text-[11px] text-[#666]">
-        {row.number}. {displayFormula(plainFormula(row.mol))}
+        {row.number}. {row.formula != null && <span className="mr-1 rounded-sm bg-[#eef3fd] px-1 text-[#1a73e8]">式 {row.formula}</span>}
+        {displayFormula(plainFormula(row.mol))}
         {picks && (
           <span className="block truncate text-[10px] text-[#888]" title={picks}>
             {picks}

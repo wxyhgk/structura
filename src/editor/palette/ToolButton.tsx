@@ -1,11 +1,11 @@
 import type { ReactElement, ReactNode } from "react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
-export function Hint({ label, children }: { label: string; children: ReactElement }) {
+export function Hint({ label, side = "right", children }: { label: string; side?: "right" | "bottom"; children: ReactElement }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side="right" sideOffset={6}>
+      <TooltipContent side={side} sideOffset={6}>
         {label}
       </TooltipContent>
     </Tooltip>

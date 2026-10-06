@@ -6,7 +6,7 @@ import { atomIdsOfSelection, bondsLeaving, emptySelection, groupsTouching } from
 import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
-import { command as engineCommand, type Command, type CommandOptions, joinOps, ROTATE_STEP, type Viewport } from "@structura/engine"
+import { type Command, command as engineCommand, type CommandOptions, drawingPoints, joinOps, ROTATE_STEP, type Viewport } from "@structura/engine"
 import type { DocumentFile } from "@/editor/hooks/useDocumentFile"
 import type { EditorState } from "@/editor/useEditor"
 
@@ -138,7 +138,7 @@ export function useCommands({
     // A field by the pointer: no single key per template, so none clashes with the hover keys.
     quickScaffold: command("快速放模板…", () => canvas.current?.quickScaffold(), { keys: [{ key: "/" }] }),
     // Two atoms (or two bonds) of two pieces selected: join the pieces there.
-    join: command("连接选中的两个原子 / 两根键", () => editor.run(joinOps(editor.mol, editor.selection) ?? []), {
+    join: command("连接所选", () => editor.run(joinOps(editor.mol, editor.selection) ?? []), {
       keys: [{ key: "j", meta: true }],
       enabled: joinOps(editor.mol, editor.selection) != null,
     }),
@@ -174,6 +174,11 @@ export function useCommands({
     zoomIn: command("放大", () => viewport.zoomStep(1), { keys: [{ key: "=", meta: true }, { key: "+", meta: true }] }),
     zoomOut: command("缩小", () => viewport.zoomStep(-1), { keys: [{ key: "-", meta: true }] }),
     actualSize: command("实际大小", () => viewport.reset(), { keys: [{ key: "0", meta: true }] }),
+    // Asked for, so it may move the view: the way back to a drawing lost on the infinite canvas.
+    fitAll: command("显示全部", () => viewport.fit(drawingPoints(editor.mol, editor.arrows)), {
+      keys: [{ key: "9", meta: true }],
+      enabled: editor.mol.atoms.length > 0 || editor.arrows.length > 0,
+    }),
     guide: command("使用说明", openGuide, { keys: [{ key: "F1" }], inFields: true }),
     help: command("快捷键", () => editor.setHelpOpen(true)),
   }

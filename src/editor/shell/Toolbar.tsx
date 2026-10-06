@@ -17,21 +17,16 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import type { Commands } from "@/editor/hooks/useCommands"
 import type { Command } from "@structura/engine"
+import { Hint } from "@/editor/palette/ToolButton"
 
+/** A toolbar button with the same hint as the tool palette: what it does, and its shortcut. */
 function IconButton({ command, label = command.label, children }: { command: Command; label?: string; children: ReactNode }) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon-sm"
-      aria-label={label}
-      title={label}
-      disabled={!command.enabled}
-      className="size-7 rounded-sm text-[#222]"
-      onClick={command.run}
-    >
-      {children}
-    </Button>
+    <Hint label={command.shortcut ? `${label}  ${command.shortcut}` : label} side="bottom">
+      <Button type="button" variant="ghost" size="icon-sm" aria-label={label} disabled={!command.enabled} className="size-7 rounded-sm text-[#222]" onClick={command.run}>
+        {children}
+      </Button>
+    </Hint>
   )
 }
 

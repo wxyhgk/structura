@@ -1,3 +1,4 @@
+import { MOD } from "@/editor/browser"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -68,7 +69,7 @@ export function SmilesDialog({
         )}
         <div className="flex justify-end">
           <Button size="sm" disabled={busy || text.trim() === ""} onClick={() => void submit()} data-testid="smiles-submit">
-            {busy ? "正在转换…" : "导入"}
+            {busy ? "正在转换…" : `导入 ${MOD}↵`}
           </Button>
         </div>
       </DialogContent>

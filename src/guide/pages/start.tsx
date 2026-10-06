@@ -9,7 +9,7 @@ export const startPage = definePage({
   id: "start",
   group: "入门",
   title: "快速上手",
-  keywords: "开始 入门 画布 平移 缩放 热点 蓝圈 撤销",
+  keywords: "开始 入门 画布 平移 缩放 显示全部 找回 热点 蓝圈 撤销",
   body: (context) => (
     <>
       <Tutorial title="从空白画布到一个分子" steps={firstMolecule(context)} />
@@ -21,6 +21,7 @@ export const startPage = definePage({
           [`按住 [空格] 拖动，或按住中键拖动`, "平移"],
           [`[${context.mod}] + 滚轮，或触控板捏合`, "连续缩放"],
           [`[${context.mod}][=] / [${context.mod}][-] / [${context.mod}][0]`, "放大 / 缩小（按 25%、33%、50%、67%、75%、100%、125%、150%、200%、300%、400% 逐级）/ 实际大小"],
+          [`[${context.mod}][9]`, "显示全部：结构拖丢了、不知道在画布哪里时，用它找回来"],
         ]}
       />
       <H>最快的画法：悬停再按键</H>

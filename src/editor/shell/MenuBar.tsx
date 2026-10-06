@@ -41,12 +41,17 @@ export function MenuBar({
   colorHetero,
   onColorHetero,
   hasFill,
+  title,
+  dirty,
 }: {
   commands: Commands
   /** Whether the host can reach a model for filling (the menu item may still be disabled for want of variables). */
   hasFill: boolean
   colorHetero: boolean
   onColorHetero: (on: boolean) => void
+  /** The document's name, and whether it has unsaved changes (shown as a dot). */
+  title: string
+  dirty: boolean
 }) {
   const c = commands
   return (
@@ -113,7 +118,10 @@ export function MenuBar({
         <Item command={c.guide} />
         <Item command={c.help} />
       </MenuButton>
-      <div className="ml-auto text-[12px] text-[#777]">未命名</div>
+      <div className="ml-auto text-[12px] text-[#777]" data-testid="document-title" title={dirty ? "有未保存的修改" : undefined}>
+        {title}
+        {dirty && <span className="ml-1 text-[#1a73e8]">•</span>}
+      </div>
     </header>
   )
 }

@@ -7,6 +7,7 @@ import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "@/editor/browser"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { command as engineCommand, type Command, type CommandOptions, joinOps, ROTATE_STEP, type Viewport } from "@structura/engine"
+import type { DocumentFile } from "@/editor/hooks/useDocumentFile"
 import type { EditorState } from "@/editor/useEditor"
 
 /** A command, its shortcut written the way this platform does (⌘ or Ctrl). */
@@ -30,6 +31,7 @@ export function useCommands({
   openGuide,
   openRecognize,
   openFill,
+  file,
 }: {
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
@@ -43,6 +45,8 @@ export function useCommands({
   openRecognize?: () => void
   /** 从专利文字填写; absent when the host has no way to reach a model. */
   openFill?: () => void
+  /** Which file this is: the names things are saved under, and what counts as saved. */
+  file: DocumentFile
 }) {
   const selected = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
   /** The abbreviations the expand/collapse commands act on that are now collapsed (or not). */
@@ -56,7 +60,14 @@ export function useCommands({
     Object.fromEntries(arrows.map((name) => [name.toLowerCase(), make(name.toLowerCase() as Arrow, `Arrow${name}`)])) as Record<Arrow, Command>
 
   return {
-    newDocument: command("新建", editor.newDocument, { keys: [{ key: "n", meta: true }], inFields: true }),
+    newDocument: command(
+      "新建",
+      () => {
+        editor.newDocument()
+        file.markSaved(null)
+      },
+      { keys: [{ key: "n", meta: true }], inFields: true },
+    ),
     open: command("打开…", openFileDialog, { keys: [{ key: "o", meta: true }], inFields: true }),
     importSmiles: command("导入 SMILES…", openSmilesDialog),
     recognizeImage: command("从图片识别结构…", () => openRecognize?.(), { enabled: openRecognize != null }),
@@ -64,15 +75,21 @@ export function useCommands({
     fillFromText: command("从专利文字填写变量…", () => openFill?.(), {
       enabled: openFill != null && (variableLabels(editor.mol).length > 0 || Object.keys(editor.variables ?? {}).length > 0),
     }),
-    save: command("保存", () => download("未命名.structura", toDocument(editor.latest()), "application/json"), {
+    save: command(
+      "保存",
+      () => {
+        download(`${file.base}.structura`, toDocument(editor.latest()), "application/json")
+        file.markSaved(`${file.base}.structura`)
+      },
+      {
       keys: [{ key: "s", meta: true }],
       inFields: true,
     }),
     exportSvg: command("导出 SVG", () => {
       const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows, editor.attachments)
-      if (svg) download("未命名.svg", svg, "image/svg+xml")
+      if (svg) download(`${file.base}.svg`, svg, "image/svg+xml")
     }),
-    exportMol: command("导出 MOL", () => download("未命名.mol", toMolfile(editor.mol), "chemical/x-mdl-molfile")),
+    exportMol: command("导出 MOL", () => download(`${file.base}.mol`, toMolfile(editor.mol), "chemical/x-mdl-molfile")),
     undo: command("撤销", editor.undo, { keys: [{ key: "z", meta: true }], enabled: editor.canUndo }),
     redo: command("重做", editor.redo, {
       keys: [{ key: "z", meta: true, shift: true }, { key: "y", meta: true }],

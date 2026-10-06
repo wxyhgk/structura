@@ -7,6 +7,7 @@ import { useZoom } from "@/editor/canvas/useViewport"
 import { createViewport, toolLabel } from "@structura/engine"
 import { selectionClipboard } from "@/editor/clipboard"
 import { useCommands } from "@/editor/hooks/useCommands"
+import { useDocumentFile } from "@/editor/hooks/useDocumentFile"
 import { useEditorHandle, type EditorHandle } from "@/editor/hooks/useEditorHandle"
 import { useImports } from "@/editor/hooks/useImports"
 import { initialContent } from "@/editor/imports/read"
@@ -45,6 +46,11 @@ export type EditorProps = {
   /** The whole drawing as a Structura document, after every edit, including a generic formula's variables. */
   onDocumentChange?: (document: string) => void
   /**
+   * Whether the drawing has changes not yet saved to a file, each time that flips: the host
+   * can warn before the page is closed, or keep a copy (the standalone app does both).
+   */
+  onDirtyChange?: (dirty: boolean) => void
+  /**
    * How to reach the model for "从专利文字填写": the editor builds the request and checks the
    * answer; the host sends it to a server holding the API key (@structura/ai/server).
    * Without it the button is not shown.
@@ -61,7 +67,7 @@ export type EditorProps = {
  * Lays out the editor and wires state, commands and input together. It fills its
  * container, so the host decides its size.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, fillVariables, recognizeStructure }, ref) {
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onDirtyChange, fillVariables, recognizeStructure }, ref) {
   const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
   const editor = useEditor(initial)
   const canvasRef = useRef<CanvasHandle>(null)
@@ -78,7 +84,13 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
 
   const imports = useImports(editor, viewport)
   const clipboard = selectionClipboard(editor, (line) => imports.showNotes({ opened: false, title: "复制为图片", lines: [line] }))
+  const file = useDocumentFile(editor.drawing, editor.latest, onDirtyChange)
+  /** Opens a file and, if it opened, remembers it as this document's file. */
+  const openFile = async (picked: File) => {
+    if (await imports.openFile(picked)) file.markSaved(picked.name)
+  }
   const commands = useCommands({
+    file,
     editor,
     canvas: canvasRef,
     viewport,
@@ -102,8 +114,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
-            const file = event.dataTransfer.files[0]
-            if (file) void imports.openFile(file)
+            const dropped = event.dataTransfer.files[0]
+            if (dropped) void openFile(dropped)
           }}
         >
           <input
@@ -113,12 +125,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             className="hidden"
             data-testid="open-file"
             onChange={(event) => {
-              const file = event.target.files?.[0]
+              const picked = event.target.files?.[0]
               event.target.value = ""
-              if (file) void imports.openFile(file)
+              if (picked) void openFile(picked)
             }}
           />
-          <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} hasFill={fillVariables != null} />
+          <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} />
           <Toolbar commands={commands} zoom={zoom} />
 
           <div className="flex min-h-0 flex-1">

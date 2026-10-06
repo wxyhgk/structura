@@ -60,13 +60,15 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
     return { opened: true, lines }
   }
 
-  /** Replaces the drawing with a file's molecules. */
-  async function openFile(file: File) {
+  /** Replaces the drawing with a file's molecules; says whether it did. */
+  async function openFile(file: File): Promise<boolean> {
     try {
       const result = openText(await file.text())
       if (result.lines.length > 0) setNotes(result)
+      return result.opened
     } catch (error) {
       setNotes({ opened: false, lines: [`读取文件失败：${failure(error)}`] })
+      return false
     }
   }
 

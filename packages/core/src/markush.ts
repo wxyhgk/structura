@@ -5,5 +5,5 @@ export { attachmentProblem, pruneAttachments, repeatProblem } from "./markush/at
 export { BRIDGES } from "./markush/bridges.ts"
 export { fragmentEnds, fragmentFits, fragmentFormula, fragmentFrom, fragmentProblem, fragmentVariables, placeFragment, STAR } from "./markush/fragments.ts"
 export type { Placed } from "./markush/fragments.ts"
-export { absorbRingPointers, ringPointerAt, ringPositionsAt } from "./markush/pointer.ts"
+export { absorbRingPointers, ringPointerAt, ringPositionsAt, ringSystemPositions } from "./markush/pointer.ts"
 export { alternativeProblem, alternativesOf, GROUP_CLASSES, isVariableName, nestedVariables, sharers, sizeUnitOf, variableProblem } from "./markush/variables.ts"

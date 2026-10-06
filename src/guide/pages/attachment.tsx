@@ -9,7 +9,7 @@ export const attachmentPage = definePage({
   id: "attachment",
   group: "通式（Markush）",
   title: "可变连接（接在环的任意位置）",
-  keywords: "可变连接 环中心 任意位置 取代基 虚线 位置 重复 (R)m (R1)n 次数 0-4",
+  keywords: "可变连接 环中心 任意位置 取代基 虚线 位置 重复 (R)m (R1)n 次数 0-4 稠环 咔唑 整个",
   body: (context) => (
     <>
       <Tutorial title="画一个接在环上任意位置的取代基" steps={anywhereOnRing(context)} />
@@ -19,6 +19,7 @@ export const attachmentPage = definePage({
         <li>已经画好的取代基：从它（或它的起点原子）画一根键，终点拖进环的中心，松开。</li>
         <li>拖动时会提示可接的位置；画好后用细线连到这些位置。</li>
         <li>批量生成时会逐个位置展开；已经接了别的基团的位置自动跳过。</li>
+        <li>稠环（咔唑、二苯并呋喃、萘……）上“任意位置”：先拖进其中一个环，再点右侧可变连接下的“扩大到整个稠环体系”，所有能接取代基的位置都算上（稠合处的原子不算）。要改回单个环，撤销或重新画那根线。</li>
       </Steps>
       <Figure
         panels={[

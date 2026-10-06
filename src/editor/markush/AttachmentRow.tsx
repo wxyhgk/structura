@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import { ringSystemPositions } from "@structura/markush"
 import type { Attachment, Molecule, Repeat } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 
@@ -13,6 +14,11 @@ export function AttachmentRow({ attachment, mol, run }: { attachment: Attachment
   const name = hub?.alias ?? `#${attachment.atom}`
   const positions = attachment.to.length
   const repeat = attachment.repeat
+  /** The whole fused system's free positions, when it is wider than the ring drawn into (carbazole from one benzo ring). */
+  const system = useMemo(() => {
+    const all = ringSystemPositions(mol, attachment.to)
+    return all && all.length > positions && attachment.to.every((id) => all.includes(id)) ? all : null
+  }, [mol, attachment.to, positions])
   /** What is being typed, until it makes a valid count. */
   const [draft, setDraft] = useState<{ min: string; max: string; name: string } | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
@@ -44,6 +50,15 @@ export function AttachmentRow({ attachment, mol, run }: { attachment: Attachment
         <span className="font-medium">{repeat ? `(${name})${repeat.name}` : name}</span>
         <span className="text-[#888]">连在环上 {positions} 个位置之一</span>
       </div>
+      {system && (
+        <button
+          type="button"
+          className="mt-1 text-[11px] text-[#1a73e8] hover:underline"
+          onClick={() => run([{ op: "set_attachment", atom: attachment.atom, to: system, ...(repeat ? { repeat } : {}) }], { keepSelection: true })}
+        >
+          扩大到整个稠环体系（{system.length} 个位置）
+        </button>
+      )}
       <label className="mt-1.5 flex items-center gap-1.5 text-[#555]">
         <input
           type="checkbox"

@@ -108,3 +108,20 @@ test("what is meant to be inside a ring stays", () => {
   assert.equal(plain.molecule.atoms.length, start.molecule.atoms.length + 1)
 })
 
+
+test("a ring's fused system: every free position of carbazole, from one of its rings", async () => {
+  const { ringSystemPositions, ringPositionsAt } = await import("@structura/core/markush")
+  const placed = applyOps(emptyDrawing(), [{ op: "add_scaffold", name: "carbazole", as: "cz" }])
+  assert.ok(placed.ok)
+  const mol = placed.drawing.molecule
+  const atom = (name: string) => mol.atoms.find((item) => item.id === placed.names[`cz.${name}`])!
+  // The middle of one benzo ring (C1–C4, C4a, C9a) picks its four CH positions.
+  const benzo = ["C1", "C2", "C3", "C4", "C4a", "C9a"].map(atom)
+  const centre = { x: benzo.reduce((sum, item) => sum + item.x, 0) / 6, y: benzo.reduce((sum, item) => sum + item.y, 0) / 6 }
+  const ring = ringPositionsAt(mol, centre)!
+  assert.deepEqual([...ring].sort(), ["C1", "C2", "C3", "C4"].map((name) => atom(name).id).sort())
+  // The whole system: all eight CH and the NH; the four fusion carbons carry nothing.
+  const all = ringSystemPositions(mol, ring)!
+  assert.deepEqual([...all].sort(), ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "N9"].map((name) => atom(name).id).sort())
+  assert.equal(ringSystemPositions(mol, [9999]), null)
+})

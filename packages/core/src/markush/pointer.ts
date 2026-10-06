@@ -21,6 +21,30 @@ export function ringPositionsAt(mol: Molecule, point: Point, except?: number): n
 }
 
 /**
+ * The free positions of the whole fused ring system the given ring positions belong to:
+ * every ring sharing atoms with theirs, and so on outward (carbazole's three rings from
+ * one of them), taking the atoms that sit in one ring only (the fusion atoms carry no
+ * substituent). Null when the atoms are in no ring.
+ */
+export function ringSystemPositions(mol: Molecule, positions: readonly number[]): number[] | null {
+  const { rings, count } = ringMembership(mol)
+  const inSystem = new Set<number>(positions)
+  const taken = new Set<number>()
+  let grew = true
+  while (grew) {
+    grew = false
+    for (const [index, ring] of rings.entries()) {
+      if (taken.has(index) || !ring.some((id) => inSystem.has(id))) continue
+      taken.add(index)
+      for (const id of ring) inSystem.add(id)
+      grew = true
+    }
+  }
+  if (taken.size === 0) return null
+  return mol.atoms.filter((atom) => inSystem.has(atom.id) && count.get(atom.id) === 1).map((atom) => atom.id)
+}
+
+/**
  * Whether atom `id`, were it at `at`, would be a line drawn into a ring's middle: a bare
  * carbon ending one bond, not in a ring itself, sitting inside a ring its neighbour is not
  * part of. Returns that ring's free positions, or null. A labelled or charged atom there is meant.

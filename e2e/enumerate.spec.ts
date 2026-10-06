@@ -37,3 +37,15 @@ test("generated compounds show what each variable became, filter, export as CSV,
   await expect(dialog).toHaveCount(0)
   await expect.poll(async () => (await doc(page)).molecule.atoms.length).toBeGreaterThan(before)
 })
+
+test("an attachment drawn into one ring of carbazole widens to the whole fused system; symmetric repeats are merged", async ({ page }) => {
+  await openEditor(page)
+  await openFile(page, fixture("carbazole-R1-one-ring.structura"))
+  await expect(page.getByTestId("library-size")).toContainText("可展开为 4 种组合")
+  await page.getByRole("button", { name: /扩大到整个稠环体系（9 个位置）/ }).click()
+  await expect.poll(async () => (await doc(page)).attachments?.[0]?.to.length).toBe(9)
+  await expect(page.getByTestId("library-size")).toContainText("可展开为 9 种组合")
+  await page.getByRole("button", { name: "批量生成化合物…" }).click()
+  // Carbazole is symmetric: 1/8, 2/7, 3/6, 4/5 are the same, so nine positions are five compounds.
+  await expect(page.getByRole("dialog")).toContainText("得到 5 个不同的化合物（合并了 4 个重复的）")
+})

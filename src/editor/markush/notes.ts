@@ -27,7 +27,9 @@ export function notesOf(result: Enumeration, { limit, status = "done" }: { limit
     const picks = first.choice.map((pick) => ("position" in pick ? `${pick.name} 连在 ${pick.position} 位置` : `${pick.name} = ${choiceName(pick.choice)}`))
     notes.push(`${result.failed} 种组合没能生成，例如 ${picks.join("，")}（${first.error}）。`)
   }
-  const tried = result.molecules.length + result.failed + result.duplicates
+  if (result.excluded > 0) notes.push(`按附加条件排除了 ${result.excluded} 个。`)
+  if (result.uncheckedCompounds > 0) notes.push(`有 ${result.uncheckedCompounds} 个排除的化合物没能核对（需要勾选“去掉重复的化合物”，并且 SMILES 能被读懂）。`)
+  const tried = result.molecules.length + result.failed + result.duplicates + result.excluded
   if (status === "running" || result.total <= tried) return notes
   notes.push(status === "stopped" ? `已停止生成，只生成了前 ${tried} 种。` : `组合太多，只生成了前 ${limit} 种。`)
   return notes

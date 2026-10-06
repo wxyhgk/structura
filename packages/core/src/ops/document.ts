@@ -1,3 +1,4 @@
+import { provisoNames, provisoProblem } from "../markush/provisos.ts"
 import { withGroupMembers } from "../molecule/collapse.ts"
 import { addReactionArrow } from "../drawing.ts"
 import { attachmentProblem } from "../markush/attachments.ts"
@@ -69,10 +70,21 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       const others = drawing.attachments.filter((item) => item.atom !== atom)
       return { drawing: { ...drawing, attachments: others.length > 0 ? others : undefined } }
     }
+    case "add_proviso": {
+      const problem = provisoProblem(op.proviso, drawing.variables)
+      if (problem) throw new OpError(problem)
+      return { drawing: { ...drawing, provisos: [...(drawing.provisos ?? []), op.proviso] } }
+    }
+    case "remove_proviso": {
+      if (!drawing.provisos?.[op.index]) throw new OpError(`there is no proviso #${op.index}`)
+      const rest = drawing.provisos.filter((_, index) => index !== op.index)
+      return { drawing: { ...drawing, provisos: rest.length > 0 ? rest : undefined } }
+    }
     case "remove_variable": {
       if (!drawing.variables || !Object.hasOwn(drawing.variables, op.name)) throw new OpError(`there is no variable ${op.name}`)
       const using = sharers(drawing.variables, op.name)
       if (using.length > 0) throw new OpError(`${using.join(", ")} share ${op.name}'s list; change them first`)
+      if (provisoNames(drawing.provisos).has(op.name)) throw new OpError(`a proviso speaks of ${op.name}; remove it first`)
       const { [op.name]: _gone, ...rest } = drawing.variables
       return { drawing: { ...drawing, variables: Object.keys(rest).length > 0 ? rest : undefined } }
     }

@@ -50,3 +50,10 @@ test("with several formulas, each row says which, in the filter and in the expor
   assert.equal(head, "No,SMILES,Formula,MW,Formula No,R1 position,R1")
   assert.ok(second.startsWith("2,Clc1ccccc1,C6H5Cl,112.56,2,"))
 })
+
+test("provisos read the way a claim states them", async () => {
+  const { provisoText } = await import("../../../src/editor/markush/describe.ts")
+  const H = { kind: "label" as const, text: "H" }
+  assert.equal(provisoText({ kind: "combination", when: [{ name: "R1", is: [H] }, { name: "R2", is: [H, { kind: "label", text: "D" }] }] }), "排除：R1 = H 且 R2 = H 或 D")
+  assert.equal(provisoText({ kind: "compound", smiles: "Clc1ccccc1" }), "排除化合物：Clc1ccccc1")
+})

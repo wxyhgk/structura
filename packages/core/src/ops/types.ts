@@ -1,4 +1,4 @@
-import type { Alternative, BondEmphasis, BridgeName, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, Repeat, RingKind } from "../types.ts"
+import type { Alternative, BondEmphasis, BridgeName, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, Proviso, Repeat, RingKind } from "../types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
@@ -115,6 +115,10 @@ export type Op =
   /** Makes a variable share another's list: "R1 to R4 each independently are…". */
   | { op: "set_variable"; name: string; sameAs: string }
   | { op: "remove_variable"; name: string }
+  /** A proviso of the claim: an excluded combination of choices, or an excluded compound. */
+  | { op: "add_proviso"; proviso: Proviso }
+  /** Takes away the proviso at this place in the drawing's list. */
+  | { op: "remove_proviso"; index: number }
   /**
    * A variable point of attachment: `atom` is bonded to one of `to`, whichever, as when a
    * line is drawn into a ring's middle. Replaces any earlier one from the same atom.

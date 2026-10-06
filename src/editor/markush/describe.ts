@@ -1,6 +1,6 @@
 import { displayFormula } from "@structura/core/formula"
 import { fragmentFormula, sizeUnitOf } from "@structura/markush"
-import type { Alternative, BridgeName, Choice, GroupClass } from "@structura/core/types"
+import type { Alternative, BridgeName, Choice, GroupClass, Proviso } from "@structura/core/types"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.
 
@@ -81,4 +81,10 @@ const REPRESENTATIVE_NAMES: Record<string, string> = {
 export function choiceName(choice: Choice): string {
   if (choice.kind === "label") return REPRESENTATIVE_NAMES[choice.text] ?? choice.text
   return describeAlternative(choice)
+}
+
+/** A proviso as the claim would say it: "排除：R1 = H 且 R2 = H", or the excluded compound. */
+export function provisoText(proviso: Proviso): string {
+  if (proviso.kind === "compound") return `排除化合物：${proviso.smiles}`
+  return `排除：${proviso.when.map((condition) => `${condition.name} = ${condition.is.map(describeAlternative).join(" 或 ")}`).join(" 且 ")}`
 }

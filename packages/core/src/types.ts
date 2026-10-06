@@ -77,7 +77,19 @@ export type Drawing = {
   variables?: Record<string, Variable>
   /** A generic formula's variable points of attachment (a line drawn into a ring's middle). */
   attachments?: Attachment[]
+  /** What the claim excludes ("provided that…"): combinations of choices, or particular compounds. */
+  provisos?: Proviso[]
 }
+
+/**
+ * A claim's proviso. `combination`: these choices together are excluded, every condition
+ * holding at once ("when X is O, R1 is not H" excludes X = O with R1 = H); a variable that
+ * appears more than once meets its condition if any of its placeholders does. `compound`:
+ * one compound, given as SMILES, is excluded ("provided the compound is not …").
+ */
+export type Proviso =
+  | { kind: "combination"; when: Array<{ name: string; is: Alternative[] }> }
+  | { kind: "compound"; smiles: string; note?: string }
 
 /**
  * A bond from `atom` to one of the `to` atoms, whichever: "–L–ETU is attached to any free

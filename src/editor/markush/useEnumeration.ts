@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { enumerateSteps, type EnumerateOptions, type Enumeration } from "@structura/markush"
-import type { Drawing, Molecule } from "@structura/core/types"
+import type { Drawing } from "@structura/core/types"
 import { loadRDKit } from "@/editor/rdkit"
-import { canonicalIdentity } from "./identity.ts"
+import { canonicalIdentity, canonicalSmiles } from "./identity.ts"
 
 /** Work done per slice before the page gets to paint and handle input again. */
 const SLICE_MS = 12
@@ -39,7 +39,7 @@ function snapshot(result: Enumeration): Enumeration {
  */
 export function useEnumeration(
   drawing: Drawing | null,
-  { limit, representatives, dedupe }: Required<Omit<EnumerateOptions, "identity">> & { dedupe: boolean },
+  { limit, representatives, dedupe }: Required<Omit<EnumerateOptions, "identity" | "identifySmiles">> & { dedupe: boolean },
 ): EnumerationRun {
   const inputs = useMemo(() => (drawing ? { drawing, limit, representatives, dedupe } : null), [drawing, limit, representatives, dedupe])
   const [state, setState] = useState<{ inputs: typeof inputs; result: Enumeration | null; status: EnumerationRun["status"]; dedupe: EnumerationRun["dedupe"] }>({
@@ -65,9 +65,9 @@ export function useEnumeration(
       setState({ inputs, result: snapshot(step.value), status: step.done ? "done" : "running", dedupe })
       if (!step.done) timer = setTimeout(slice, 0)
     }
-    const start = (identity?: (mol: Molecule) => string | null) => {
+    const start = (identities?: Pick<EnumerateOptions, "identity" | "identifySmiles">) => {
       if (cancelled) return
-      steps = enumerateSteps(inputs.drawing, { limit: inputs.limit, representatives: inputs.representatives, ...(identity ? { identity } : {}) })
+      steps = enumerateSteps(inputs.drawing, { limit: inputs.limit, representatives: inputs.representatives, ...identities })
       timer = setTimeout(slice, 0)
     }
     // Dropping repeats needs RDKit's canonical SMILES; without RDKit it all goes ahead, repeats kept.
@@ -75,7 +75,7 @@ export function useEnumeration(
       loadRDKit().then(
         (rdkit) => {
           dedupe = "on"
-          start(canonicalIdentity(rdkit))
+          start({ identity: canonicalIdentity(rdkit), identifySmiles: canonicalSmiles(rdkit) })
         },
         () => {
           dedupe = "unavailable"

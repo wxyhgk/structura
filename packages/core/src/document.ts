@@ -1,4 +1,5 @@
 import { attachmentProblem } from "./markush/attachments.ts"
+import { provisoProblem } from "./markush/provisos.ts"
 import { variableProblem } from "./markush/variables.ts"
 import type { Drawing } from "./types.ts"
 import { errorsOf, validateDrawing } from "./validate.ts"
@@ -41,6 +42,7 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
     nextArrowId: drawing.nextArrowId ?? 1,
     ...(drawing.variables ? { variables: drawing.variables } : {}),
     ...(drawing.attachments ? { attachments: drawing.attachments } : {}),
+    ...(drawing.provisos ? { provisos: drawing.provisos } : {}),
   }
   const errors = errorsOf(validateDrawing(whole))
   if (errors.length > 0) return { error: errors[0].message }
@@ -50,6 +52,11 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
   }
   for (const [name, variable] of Object.entries(whole.variables ?? {})) {
     const problem = variableProblem(name, variable, whole.variables)
+    if (problem) return { error: problem }
+  }
+  if (whole.provisos != null && !Array.isArray(whole.provisos)) return { error: "the provisos are not a list" }
+  for (const proviso of whole.provisos ?? []) {
+    const problem = provisoProblem(proviso, whole.variables)
     if (problem) return { error: problem }
   }
   return { drawing: whole }

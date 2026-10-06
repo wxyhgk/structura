@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { alternativesOf, linkerNames, nestedVariables, variableLabels } from "@structura/markush"
-import type { Attachment, Molecule, Variable } from "@structura/core/types"
+import type { Attachment, Molecule, Proviso, Variable } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"
 import { AttachmentRow } from "./AttachmentRow.tsx"
 import { LibrarySizeLine } from "./LibrarySizeLine.tsx"
+import { ProvisosSection } from "./ProvisosSection.tsx"
 import { VariableRow } from "./VariableRow.tsx"
 
 /**
@@ -16,6 +17,7 @@ export function VariablesPanel({
   selected,
   variables,
   attachments,
+  provisos,
   run,
   canEnumerate,
   onEnumerate,
@@ -27,6 +29,8 @@ export function VariablesPanel({
   selected: number[]
   variables: Record<string, Variable> | undefined
   attachments: Attachment[] | undefined
+  /** The claim's provisos: excluded combinations and compounds. */
+  provisos: Proviso[] | undefined
   run: Run
   canEnumerate: boolean
   onEnumerate: () => void
@@ -64,6 +68,7 @@ export function VariablesPanel({
             onHelp={onHelp}
           />
         ))}
+        <ProvisosSection provisos={provisos} variables={variables} run={run} />
         {attachments && attachments.length > 0 && (
           <>
             <div className="border-b border-[#e0e0e0] bg-[#f0f0f0] px-3 py-1 text-[11px] text-[#777]">可变连接</div>

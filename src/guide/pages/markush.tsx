@@ -9,7 +9,7 @@ export const markushPage = definePage({
   id: "markush",
   group: "通式（Markush）",
   title: "变量和候选项",
-  keywords: "通式 markush 变量 R1 X L 候选项 卤素 单键 类别 烷基 芳基 共用 相同",
+  keywords: "但书 附加条件 排除 provided 通式 markush 变量 R1 X L 候选项 卤素 单键 类别 烷基 芳基 共用 相同",
   body: (context) => (
     <>
       <Tutorial title="定义一个变量并批量生成" steps={firstVariable(context)} />
@@ -24,6 +24,12 @@ export const markushPage = definePage({
       </Steps>
       <H>几个变量用同一组候选项</H>
       <P>“R1 至 R4 各自独立地选自……”：先把 R1 填好，再在 R2–R4 的下拉框里选“与 R1 相同”。以后只改 R1 即可。</P>
+      <H>附加条件（但书）</H>
+      <Steps>
+        <li>“当 X 为 O 时，R1 不为 H”“R1 和 R2 不同时为 H”：在面板“附加条件”里点“排除一种组合”，选变量、勾选取值，可以再加一个变量（几个条件同时成立才排除）。条件里可以选基团类别，代表结构都会被排除。</li>
+        <li>“条件是该化合物不是……”：点“排除一个化合物”，填它的 SMILES；生成时按标准 SMILES 比对（需要勾选“去掉重复的化合物”）。</li>
+        <li>批量生成时被排除的组合不会出现，上方会写排除了几个。用到某个变量的条件存在时，这个变量不能删。</li>
+      </Steps>
       <H>变量的位置决定能放什么</H>
       <List>
         <li>链的末端（R1）：一价基团或原子，比如 H、Cl、Me、Ph。</li>

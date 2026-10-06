@@ -4,7 +4,7 @@ import { pointFrom } from "@structura/core/geometry"
 import { knownLabel } from "@structura/core"
 import { atomById, bondLengthAt, componentOf, deleteSelection, duplicateAtoms, neighbors, sproutAngle, subMolecule } from "@structura/core/molecule"
 import { applyOps, type Op } from "@structura/core/ops"
-import type { Attachment, Choice, Drawing, Molecule } from "@structura/core/types"
+import type { Alternative, Attachment, Choice, Drawing, Molecule, Proviso } from "@structura/core/types"
 import { validate } from "@structura/core/validate"
 import { fragmentFits, fragmentFormula, fragmentVariables } from "@structura/core/markush"
 import { odometer } from "./odometer.ts"
@@ -51,6 +51,10 @@ export type Enumeration = {
   formulas: number
   /** For each molecule, which formula it came from (1, 2…), in drawing order. */
   formulaOf: number[]
+  /** Combinations or compounds left out because a proviso of the claim excludes them. */
+  excluded: number
+  /** Excluded compounds (by SMILES) that could not be checked, for want of `identifySmiles`. */
+  uncheckedCompounds: number
 }
 
 /** One placeholder atom, how it sits (see siteKind), and what it may become there. */
@@ -140,6 +144,11 @@ export type EnumerateOptions = {
    * no chemistry toolkit; null from it means "cannot tell", and the molecule is kept.
    */
   identity?: (mol: Molecule) => string | null
+  /**
+   * The same identity for a compound given as SMILES (an excluded compound of a proviso),
+   * so it can be matched against what is built. Without it, such provisos cannot be checked.
+   */
+  identifySmiles?: (smiles: string) => string | null
 }
 
 /** A choice in a word: the label, the ring's name, "bond", or a piece's name or formula. */
@@ -249,6 +258,18 @@ function attach(drawing: Drawing, hub: number, target: number, displaced: number
   return result.ok ? { drawing: result.drawing } : { error: result.error }
 }
 
+/** Whether a choice made is one of a condition's values: the same choice, or a member standing in for a class it names. */
+function meets(choice: Choice, value: Alternative): boolean {
+  if (value.kind === "class") return representativesOf(value).some((member) => same(member, choice))
+  if (value.kind === "fragment" && choice.kind === "fragment") return value.name != null ? value.name === choice.name : JSON.stringify(value.molecule) === JSON.stringify(choice.molecule)
+  return same(value, choice)
+}
+
+/** Whether a proviso rules out a combination: every condition is met by some placeholder of its variable. */
+function excludedBy(proviso: Extract<Proviso, { kind: "combination" }>, picks: readonly Pick[]): boolean {
+  return proviso.when.every((condition) => picks.some((pick) => pick.name === condition.name && "choice" in pick && condition.is.some((value) => meets(pick.choice, value))))
+}
+
 /** A laid-out formula ready to build: which formula, its sites with the choices that fit, and how many combinations they make. */
 type Plan = { formula: number; layout: Exclude<Layout, { occupied: true }>; sites: Site[]; count: number }
 
@@ -307,7 +328,7 @@ export function enumerate(drawing: Drawing, options: EnumerateOptions = {}): Enu
  * builds one combination per step. Every step yields the same result object, growing in
  * place: copy what you keep. The return value is exactly what enumerate() returns.
  */
-export function* enumerateSteps(drawing: Drawing, { limit = 1000, representatives = false, identity }: EnumerateOptions = {}): Generator<Enumeration, Enumeration> {
+export function* enumerateSteps(drawing: Drawing, { limit = 1000, representatives = false, identity, identifySmiles }: EnumerateOptions = {}): Generator<Enumeration, Enumeration> {
   /** The compounds made so far, by identity, when repeats are being dropped. */
   const seen = new Set<string>()
   const variables = drawing.variables ?? {}
@@ -385,7 +406,15 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     duplicates: 0,
     formulas: formulas.length,
     formulaOf: [],
+    excluded: 0,
+    uncheckedCompounds: 0,
   }
+  const provisos = drawing.provisos ?? []
+  const combinations = provisos.flatMap((proviso) => (proviso.kind === "combination" ? [proviso] : []))
+  // Excluded compounds, by identity, when both identities are at hand.
+  const compounds = provisos.flatMap((proviso) => (proviso.kind === "compound" ? [proviso.smiles] : []))
+  const excludedKeys = new Set(identity && identifySmiles ? compounds.flatMap((smiles) => identifySmiles(smiles) ?? []) : [])
+  result.uncheckedCompounds = compounds.length - excludedKeys.size
   // Variables with nothing concrete: their formula cannot be expanded at all.
   const unfilled = new Set<string>()
   const plans: Plan[] = []
@@ -435,11 +464,17 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
       if (result.molecules.length + result.failed >= limit) break
       const chosen = sites.map((site, at) => ({ site, choice: site.choices[index[at]] }))
       const picks: Pick[] = [...layout.where, ...chosen.flatMap(({ site, choice }) => [{ name: site.name, choice }, ...(inside.get(choice) ?? [])])]
+      if (combinations.some((proviso) => excludedBy(proviso, picks))) {
+        result.excluded++
+        yield result
+        continue
+      }
       const built = applyOps({ ...laid, variables: undefined }, opsForAll(chosen))
       const wrong = built.ok ? (leftover(built.drawing.molecule, defined) ?? newlyOverValence(built.drawing.molecule, strained)) : built.error
       if (built.ok && !wrong) {
         const key = identity?.(built.drawing.molecule) ?? null
-        if (key != null && seen.has(key)) result.duplicates++
+        if (key != null && excludedKeys.has(key)) result.excluded++
+        else if (key != null && seen.has(key)) result.duplicates++
         else {
           if (key != null) seen.add(key)
           result.molecules.push(built.drawing.molecule)

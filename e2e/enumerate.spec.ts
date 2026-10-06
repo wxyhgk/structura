@@ -60,3 +60,23 @@ test("two formulas on one page are generated each on its own, labelled 式 1 and
   await expect(compounds.filter({ hasText: "式 1" })).toHaveCount(2)
   await expect(compounds.filter({ hasText: "式 2" })).toHaveCount(2)
 })
+
+test("a proviso written in the panel takes its combination out of what is generated", async ({ page }) => {
+  await openEditor(page)
+  await openFile(page, fixture("benzene-R1-R2.structura"))
+  const provisos = page.getByTestId("provisos")
+  await provisos.getByRole("button", { name: "+ 排除一种组合" }).click()
+  await provisos.getByLabel("条件里的变量").first().selectOption("R1")
+  await provisos.getByRole("checkbox", { name: "H" }).first().check()
+  await provisos.getByRole("button", { name: "+ 再加一个变量" }).click()
+  await provisos.getByLabel("条件里的变量").nth(1).selectOption("R2")
+  await provisos.getByRole("checkbox", { name: "H" }).nth(1).check()
+  await provisos.getByRole("button", { name: "添加" }).click()
+  await expect(provisos.getByTestId("proviso")).toHaveText(["排除：R1 = H 且 R2 = H×"])
+  await expect.poll(async () => (await doc(page) as { provisos?: unknown[] }).provisos?.length).toBe(1)
+  await page.getByRole("button", { name: "批量生成化合物…" }).click()
+  const dialog = page.getByRole("dialog")
+  await expect(dialog).toContainText("按附加条件排除了 1 个")
+  // Of four combinations, one is out; the two R1/R2 = H/Cl swaps are the same chlorobenzene.
+  await expect(dialog).toContainText("得到 2 个不同的化合物")
+})

@@ -175,6 +175,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               selected={editor.selection.atoms}
               variables={editor.variables}
               attachments={editor.attachments}
+              provisos={editor.drawing.provisos}
               run={editor.run}
               canEnumerate={commands.enumerate.enabled}
               onEnumerate={commands.enumerate.run}

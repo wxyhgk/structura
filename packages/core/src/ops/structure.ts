@@ -124,7 +124,12 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       }
       const targets = [op.atom, op.bond, op.at].filter((target) => target != null).length
       if (targets !== 1) throw new OpError("give exactly one of atom, bond or at for the ring")
-      if (op.at) return { mol: placeRing(mol, op.at, kind), next: null }
+      if (op.at) {
+        // A ring standing alone: its name (as) is its first atom.
+        const placed = placeRing(mol, op.at, kind)
+        if (op.as != null) ctx.name(op.as, mol.nextAtomId)
+        return { mol: placed, next: null }
+      }
       const ring = op.atom != null ? growRing(mol, ctx.atom(op.atom), kind) : fuseRingAt(mol, ctx.bond(op.bond!), kind, op.side ?? 1)
       if (ring.mol === mol) throw new OpError("the ring could not be placed there")
       ctx.name(op.as, ring.far)

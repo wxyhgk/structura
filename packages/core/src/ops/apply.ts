@@ -51,6 +51,7 @@ function movedAtoms(before: Molecule, after: Molecule): number[] {
  * and the result says which op and why. The whole batch is one step for undo.
  */
 export function applyOps(start: Drawing, ops: Op[]): OpsResult {
+  if (!Array.isArray(ops)) return { ok: false, drawing: start, index: 0, error: "ops must be a list of ops" }
   let drawing = start
   const names: Record<string, number> = {}
   let next: HotTarget | null = null
@@ -58,6 +59,9 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
   const ctx = makeContext(() => drawing.molecule, names)
 
   for (const [index, op] of ops.entries()) {
+    if (typeof op !== "object" || op === null || typeof (op as { op?: unknown }).op !== "string") {
+      return { ok: false, drawing: start, index, error: `op ${index} is not an op: give an object with an "op" name` }
+    }
     try {
       const before = drawing.molecule.nextAtomId
       const done = step(drawing, op, ctx, depth)
@@ -69,8 +73,10 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
       depth = done.depth
       if (done.next !== undefined) next = done.next
     } catch (error) {
-      if (!(error instanceof OpError)) throw error
-      return { ok: false, drawing: start, index, error: error.message }
+      // A malformed op (wrong field types, a missing field) fails like any refused one: the
+      // caller, an agent's loop above all, gets an answer it can act on, never a crash.
+      const message = error instanceof OpError ? error.message : `op is malformed (${error instanceof Error ? error.message : String(error)})`
+      return { ok: false, drawing: start, index, error: message }
     }
   }
 

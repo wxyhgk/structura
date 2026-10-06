@@ -29,6 +29,7 @@ const JOIN_REACH = 0.3
 export function drawingOp(mol: Molecule, op: Op, ctx: Context): Step | null {
   switch (op.op) {
     case "move": {
+      if (!Number.isFinite(op.dx) || !Number.isFinite(op.dy)) throw new OpError("move needs numbers dx and dy")
       const ids = withGroupMembers(mol, op.atoms.map(ctx.atom))
       const moved = moveAtoms(mol, ids, op.dx, op.dy)
       return { mol: op.join ? mergeLandings(moved, landings(moved, ids, bondLengthAt(mol) * JOIN_REACH)) : moved }
@@ -42,6 +43,7 @@ export function drawingOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       return { mol: joined, next: null }
     }
     case "rotate": {
+      if (!Number.isFinite(op.angle)) throw new OpError(`angle ${op.angle} is not a number`)
       const ids = withGroupMembers(mol, op.atoms.map(ctx.atom))
       const center = op.center ?? boundsCenter(mol, ids)
       return { mol: center ? rotateAtoms(mol, ids, center, op.angle) : mol }

@@ -1,3 +1,4 @@
+import { elementOf } from "./elements/index.ts"
 import { atomHydrogens } from "./formula.ts"
 import type { Drawing, Molecule } from "./types.ts"
 
@@ -6,6 +7,8 @@ export type ProblemCode =
   | "id-not-below-counter"
   | "bad-coordinate"
   | "bad-isotope"
+  | "bad-atom"
+  | "bad-bond"
   | "dangling-bond"
   | "self-bond"
   | "duplicate-bond"
@@ -39,6 +42,10 @@ export type Problem = {
 
 const WEDGES = new Set(["up", "down", "either"])
 
+const ORDERS = new Set<unknown>([1, 2, 3])
+const STEREOS = new Set<unknown>(["none", "up", "down", "either"])
+const LOOKS = new Set<unknown>(["bold", "dashed", "shadow"])
+
 export function validate(mol: Molecule): Problem[] {
   const problems: Problem[] = []
   const atomIds = new Set<number>()
@@ -57,6 +64,15 @@ export function validate(mol: Molecule): Problem[] {
     }
     if (atom.isotope != null && !(Number.isInteger(atom.isotope) && atom.isotope >= 1 && atom.isotope <= 999)) {
       problems.push({ code: "bad-isotope", severity: "error", atoms: [atom.id], message: `atom #${atom.id} has mass number ${atom.isotope}` })
+    }
+    if (typeof atom.el !== "string" || !elementOf(atom.el)) {
+      problems.push({ code: "bad-atom", severity: "error", atoms: [atom.id], message: `atom #${atom.id} is "${atom.el}", not an element` })
+    }
+    if (!Number.isInteger(atom.charge) || Math.abs(atom.charge) > 8) {
+      problems.push({ code: "bad-atom", severity: "error", atoms: [atom.id], message: `atom #${atom.id} has charge ${JSON.stringify(atom.charge)}` })
+    }
+    if (atom.alias != null && typeof atom.alias !== "string") {
+      problems.push({ code: "bad-atom", severity: "error", atoms: [atom.id], message: `atom #${atom.id} has a label that is not text` })
     }
     if (!Number.isFinite(atom.x) || !Number.isFinite(atom.y)) {
       problems.push({ code: "bad-coordinate", severity: "error", atoms: [atom.id], message: `atom #${atom.id} has a non-finite coordinate` })
@@ -105,6 +121,14 @@ export function validate(mol: Molecule): Problem[] {
     } else {
       pairs.set(key, bond.id)
     }
+    // Values outside what the types allow (an op or a file can carry anything): never kept.
+    const wrong = [
+      !ORDERS.has(bond.order) && `order ${JSON.stringify(bond.order)}`,
+      !STEREOS.has(bond.stereo) && `stereo ${JSON.stringify(bond.stereo)}`,
+      bond.look != null && !LOOKS.has(bond.look) && `look ${JSON.stringify(bond.look)}`,
+      bond.emphasis != null && !LOOKS.has(bond.emphasis) && `emphasis ${JSON.stringify(bond.emphasis)}`,
+    ].filter(Boolean)
+    if (wrong.length > 0) problems.push({ code: "bad-bond", severity: "error", bonds: [bond.id], message: `bond #${bond.id} has ${wrong.join(", ")}` })
     if (bond.order !== 1 && WEDGES.has(bond.stereo)) {
       problems.push({
         code: "stereo-on-multiple-bond",

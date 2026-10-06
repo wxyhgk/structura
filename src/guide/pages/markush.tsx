@@ -1,7 +1,7 @@
 import { formula } from "../figures/markush.ts"
 import { firstVariable } from "../tutorials/markush.ts"
 import { Figure } from "../ui/Figure.tsx"
-import { H, List, P, Steps, Tip } from "../ui/parts.tsx"
+import { H, K, List, P, Steps, Tip } from "../ui/parts.tsx"
 import { Tutorial } from "../ui/Tutorial.tsx"
 import { definePage } from "../types.ts"
 
@@ -27,8 +27,8 @@ export const markushPage = definePage({
       <H>变量的位置决定能放什么</H>
       <List>
         <li>链的末端（R1）：一价基团或原子，比如 H、Cl、Me、Ph。</li>
-        <li>环里（X）：元素，比如 O、S；带取代基的原子（N–R5、CMe2）用片段。</li>
-        <li>两个原子之间（L）：单键、亚芳基、O、S，或两端都有 * 的片段。</li>
+        <li>环里（X）：元素，比如 O、S；“X 为 N 或 CR3”直接输入 <K>N, CR3</K>（也可以 NR5、CR3R4，CH 就是 C），R3 再单独定义；其他带取代基的原子用片段。</li>
+        <li>两个原子之间（L）：单键、亚芳基、O、S，或两端都有 * 的片段；链长可变的 (CH₂)ₙ 直接输入 <K>(CH2)1-4</K>，每个长度一个候选项，从 0 开始时 0 就是单键。</li>
       </List>
       <Tip>放不下的候选项不会报错，批量生成时会跳过并在提示里说明。</Tip>
     </>

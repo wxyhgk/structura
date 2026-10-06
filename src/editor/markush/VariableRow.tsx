@@ -137,7 +137,7 @@ export function VariableRow({
         <>
           <input
             className="h-7 w-full rounded-sm border border-[#d0d0d0] bg-white px-2 outline-none focus:border-[#1a73e8]"
-            placeholder={linker ? "单键, O, S… 回车添加" : "H, D, 卤素, CN… 回车添加"}
+            placeholder={linker ? "单键, O, (CH2)1-3… 回车添加" : "H, 卤素, CN；环里 N, CR3… 回车添加"}
             value={text}
             onChange={(event) => {
               setText(event.target.value)

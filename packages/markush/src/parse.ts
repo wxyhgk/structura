@@ -1,5 +1,6 @@
-import { knownLabel } from "@structura/core"
-import type { Alternative, BridgeName } from "@structura/core/types"
+import { emptyDrawing, knownLabel } from "@structura/core"
+import { applyOps, type Op } from "@structura/core/ops"
+import type { Alternative, BridgeName, Molecule } from "@structura/core/types"
 
 // What text typed for a variable means, shared by the editor and anything else filling a
 // formula (an agent reading a claim): "H, D, 卤素、CN" → H, D, F, Cl, Br, I, CN.
@@ -26,6 +27,43 @@ const BRIDGE_WORDS: Record<string, BridgeName> = {
 }
 
 const same = (a: Alternative, b: Alternative) => JSON.stringify(a) === JSON.stringify(b)
+
+/** A piece built from ops, which are known good: anything else is a bug here. */
+function pieceOf(ops: Op[]): Molecule {
+  const built = applyOps(emptyDrawing(), ops)
+  if (!built.ok) throw new Error(`could not build a piece: ${built.error}`)
+  return built.drawing.molecule
+}
+
+/** "CR3", "NR5", "CR3R4", "SiR2R3": a ring member carrying variables, as drug patents write "X is N or CR3". */
+const RING_MEMBER = /^(C|N|Si|P|B)((?:R\d+[a-z]?'?)+)$/
+
+/**
+ * A ring member with its variables on it, e.g. CR3: the atom takes both of the ring's bonds
+ * (both "*" on it) and carries R3, so it can stand where X sits in a ring.
+ */
+function ringMember(element: string, variables: string[]): Alternative {
+  const ops: Op[] = [{ op: "place_atom", el: element, at: { x: 0, y: 0 } }]
+  for (const [index, name] of variables.entries()) ops.push({ op: "add_atom", el: "C", to: 1, as: `v${index}` }, { op: "label", atom: `v${index}`, text: name })
+  for (const end of ["a", "b"]) ops.push({ op: "add_atom", el: "C", to: 1, as: end }, { op: "label", atom: end, text: "*" })
+  return { kind: "fragment", molecule: pieceOf(ops), name: `${element}${variables.join("")}` }
+}
+
+/** "(CH2)2-4", "(CH2)1–3", "(CH2)3": a chain of CH2 linking two atoms, one alternative per length. */
+const CHAIN = /^\(CH2\)(\d+)(?:[-–~](\d+))?$/
+
+/** n CH2 between the two atoms a linker joins (0 is a direct bond). */
+function chain(length: number): Alternative {
+  if (length === 0) return { kind: "bond" }
+  const ops: Op[] = [{ op: "add_atom", el: "C", as: "c1" }]
+  for (let at = 2; at <= length; at++) ops.push({ op: "add_atom", el: "C", to: `c${at - 1}`, as: `c${at}` })
+  ops.push({ op: "add_atom", el: "C", to: "c1", as: "a" }, { op: "label", atom: "a", text: "*" })
+  ops.push({ op: "add_atom", el: "C", to: `c${length}`, as: "b" }, { op: "label", atom: "b", text: "*" })
+  return { kind: "fragment", molecule: pieceOf(ops), name: length === 1 ? "CH2" : `(CH2)${length}` }
+}
+
+/** Ring members written with their hydrogen, which in a ring are just the element. */
+const HYDRIDE_MEMBERS: Record<string, string> = { CH: "C", NH: "N", SiH: "Si" }
 
 /** Longest first, so "4,4′-联亚苯基" is taken whole before "联亚苯基". */
 const BRIDGE_ORDER = Object.keys(BRIDGE_WORDS).sort((a, b) => b.length - a.length)
@@ -57,7 +95,8 @@ function wordsOf(text: string): string[] {
 
 /**
  * The alternatives typed text adds to `existing`: labels an atom label understands, "单键",
- * divalent ring names and shorthands, without repeats. Words that mean none of these come
+ * divalent ring names and shorthands, ring members with variables ("N, CR3" for "X is N or
+ * CR3"; CH is C), and chains of CH2 ("(CH2)1-4", one per length, 0 a bond), without repeats. Words that mean none of these come
  * back as `rejected`, for the typist to fix (a range such as C1-C30 is a class, not a label).
  */
 export function alternativesFromText(text: string, existing: Alternative[] = []): { add: Alternative[]; rejected: string[] } {
@@ -68,7 +107,15 @@ export function alternativesFromText(text: string, existing: Alternative[] = [])
     if (![...existing, ...add].some((other) => same(other, alternative))) add.push(alternative)
   }
   for (const word of words) {
-    if (BOND_WORDS.has(word.toLowerCase())) take({ kind: "bond" })
+    const member = RING_MEMBER.exec(word)
+    const lengths = CHAIN.exec(word)
+    if (member) take(ringMember(member[1], member[2].match(/R\d+[a-z]?'?/g)!))
+    else if (lengths) {
+      const [from, to] = [Number(lengths[1]), Number(lengths[2] ?? lengths[1])]
+      if (from > to || to > 12) rejected.push(word)
+      else for (let length = from; length <= to; length++) take(chain(length))
+    } else if (Object.hasOwn(HYDRIDE_MEMBERS, word)) take({ kind: "label", text: HYDRIDE_MEMBERS[word] })
+    else if (BOND_WORDS.has(word.toLowerCase())) take({ kind: "bond" })
     else if (Object.hasOwn(BRIDGE_WORDS, word)) take({ kind: "bridge", name: BRIDGE_WORDS[word] })
     else if (Object.hasOwn(SHORTHANDS, word.toLowerCase())) for (const label of SHORTHANDS[word.toLowerCase()]) take({ kind: "label", text: label })
     else if (knownLabel(word)) take({ kind: "label", text: word })

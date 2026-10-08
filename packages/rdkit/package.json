@@ -2,6 +2,7 @@
   "name": "@structura/rdkit",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Structura 的 RDKit 桥：SMILES 经 RDKit 转成 molfile 和 @structura/core 的分子记录。",
   "type": "module",
   "exports": {

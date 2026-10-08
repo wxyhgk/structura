@@ -2,6 +2,7 @@
   "name": "@structura/core",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Structura 的化学核心：分子模型、操作层（ops）、文件读写、出图，以及通式的数据模型和校验（展开成化合物在 @structura/markush）。不依赖浏览器和 React。",
   "type": "module",
   "exports": {

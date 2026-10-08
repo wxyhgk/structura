@@ -2,6 +2,7 @@
   "name": "@structura/backend",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Structura 的后端：单用户，把用户自己的基团模板存在 SQLite（node:sqlite）里，通过 HTTP 读写、导入和导出。接口见 API.md。",
   "type": "module",
   "scripts": {

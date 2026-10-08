@@ -2,6 +2,7 @@
   "name": "@structura/testkit",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Structura 测试共用的工具：执行操作、构造候选项、带种子的随机数、几何检查、按 RDKit 标准 SMILES 比较结构、模拟画布、边界测试的导入解析。只给测试用，产品代码不得引用。",
   "type": "module",
   "exports": {

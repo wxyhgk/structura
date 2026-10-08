@@ -2,6 +2,7 @@
   "name": "@structura/engine",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Structura 的交互引擎：快捷键、命中检测、吸附、工具、视图换算和每个用户动作对应的操作。不依赖 React 和浏览器。",
   "type": "module",
   "exports": {

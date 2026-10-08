@@ -2,6 +2,7 @@
   "name": "@structura/ai",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Structura 的 AI 助手：用大模型（Claude 或 OpenAI Responses API）从专利文字读出通式变量的定义。服务器端调用模型，浏览器端校验和预览。",
   "type": "module",
   "exports": {

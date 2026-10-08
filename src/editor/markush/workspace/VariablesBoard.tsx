@@ -1,14 +1,13 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { HelpLink } from "@/guide"
-import { AttachmentRow } from "../AttachmentRow.tsx"
 import { variableNames } from "../variableNames.ts"
 import type { WorkspaceProps } from "./types.ts"
 import { VariableCard, type SketchTarget } from "./VariableCard.tsx"
 
 /**
  * The generic-formula workspace's variables: a card for every placeholder (on the drawing,
- * defined, or inside a piece) with what it may stand for, and the variable attachments.
+ * defined, or inside a piece) with what it may stand for (the variable attachments are in the constraints pane, under 位置).
  */
 export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, onFill }: WorkspaceProps) {
   const { molecule: mol, variables, attachments } = drawing
@@ -54,14 +53,6 @@ export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, on
         ))
       )}
 
-      {attachments && attachments.length > 0 && (
-        <section className="overflow-hidden rounded-md border border-[#d0d0d0] bg-white">
-          <h3 className="border-b border-[#e6e6e6] bg-[#fafafa] px-3 py-1.5 text-[12px] font-medium text-[#555]">可变连接</h3>
-          {attachments.map((attachment) => (
-            <AttachmentRow key={attachment.atom} attachment={attachment} mol={mol} run={run} />
-          ))}
-        </section>
-      )}
     </div>
   )
 }

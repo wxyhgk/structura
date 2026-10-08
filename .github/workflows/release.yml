@@ -1,0 +1,55 @@
+# Publishes chem-structura to npm when a tag chem-structura@<version> is pushed. No token is
+# kept anywhere: npm trusts this workflow of this repository (Trusted Publishing, set up once in
+# the package's settings on npmjs.com), and records where each version was built (provenance).
+#
+# To release: set "version" in packages/react/package.json, merge to master, then
+#   git tag chem-structura@<version> && git push origin chem-structura@<version>
+name: Release
+
+on:
+  push:
+    tags: ["chem-structura@*"]
+
+permissions:
+  contents: read
+  # Lets the job prove to npm which repository and workflow it is (OIDC); no npm token needed.
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: The tag names the version in package.json, on a commit that is on master
+        run: |
+          tagged="${GITHUB_REF_NAME#chem-structura@}"
+          declared="$(node -p "require('./packages/react/package.json').version")"
+          if [ "$tagged" != "$declared" ]; then
+            echo "::error::tag says $tagged but packages/react/package.json says $declared"; exit 1
+          fi
+          git fetch origin master
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
+            echo "::error::release only commits that are on master (merged and checked)"; exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build -w chem-structura
+
+      # Provenance comes with trusted publishing; --provenance makes the intent explicit.
+      - run: npm publish -w chem-structura --provenance --access public

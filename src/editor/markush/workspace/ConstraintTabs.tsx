@@ -22,7 +22,7 @@ export function ConstraintTabs({
   folded?: ReactNode
 }) {
   return (
-    <div className="flex h-8 shrink-0 items-stretch gap-0.5 bg-[#f7f7f7] pr-1.5 pl-1 text-[12px]">
+    <div className="flex h-9 shrink-0 items-stretch gap-0.5 border-t border-[#e3e3e3] bg-white pr-1.5 pl-1 text-[12px]">
       <div className="flex items-stretch" role="tablist" aria-label="通式约束">
         {tabs.map((tab) => {
           const selected = open && tab.id === active

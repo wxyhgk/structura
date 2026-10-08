@@ -1,7 +1,11 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { HelpLink } from "@/guide"
+import { alternativesOf } from "@structura/markush"
+import { variableEdits } from "../variableEdits.ts"
 import { variableNames } from "../variableNames.ts"
+import { InlineSketch } from "./InlineSketch.tsx"
+import { PaneHeader } from "./PaneHeader.tsx"
 import type { WorkspaceProps } from "./types.ts"
 import { VariableCard, type SketchTarget } from "./VariableCard.tsx"
 
@@ -15,11 +19,27 @@ export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, on
   /** The one inline sketch pad that is open, if any: which variable, and new or which drawn alternative. */
   const [sketch, setSketch] = useState<SketchTarget | null>(null)
 
+  if (sketch) {
+    const drawn = typeof sketch.index === "number" ? alternativesOf(variables, sketch.name)[sketch.index] : undefined
+    const close = () => setSketch(null)
+    return (
+      <InlineSketch
+        key={`${sketch.name}:${sketch.index}`}
+        name={sketch.name}
+        kind={siteOf(sketch.name)}
+        initial={drawn?.kind === "fragment" ? drawn : undefined}
+        onSave={(piece, alsoAt) => {
+          variableEdits(sketch.name, variables, run).saveSketch(sketch.index, piece, alsoAt)
+          close()
+        }}
+        onCancel={close}
+      />
+    )
+  }
+
   return (
-    <div className="flex flex-col gap-3 p-4 text-[12px] text-[#333]" data-testid="variablesBoard">
-      <header className="flex items-center gap-2">
-        <h2 className="text-[15px] font-semibold">变量</h2>
-        {names.length > 0 && <span className="rounded-full bg-[#e8eaed] px-2 py-px text-[11px] text-[#555]">{names.length}</span>}
+    <div className="flex h-full min-h-0 flex-col text-[12px] text-[#333]" data-testid="variablesBoard">
+      <PaneHeader title="变量" count={names.length}>
         <div className="ml-auto flex items-center gap-2">
           {onFill && (
             <Button size="sm" variant="outline" onClick={onFill}>
@@ -28,8 +48,8 @@ export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, on
           )}
           <HelpLink onClick={() => onHelp("markush")} label="通式变量怎么用" />
         </div>
-      </header>
-
+      </PaneHeader>
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3">
       {names.length === 0 ? (
         <EmptyState />
       ) : (
@@ -47,12 +67,12 @@ export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, on
             colorHetero={colorHetero}
             run={run}
             onHelp={onHelp}
-            sketch={sketch?.name === name ? sketch.index : null}
+            sketch={null}
             onSketch={(index) => setSketch(index == null ? null : { name, index })}
           />
         ))
       )}
-
+      </div>
     </div>
   )
 }

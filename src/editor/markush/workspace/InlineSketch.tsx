@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react"
+import { useCallback, useState, type KeyboardEvent } from "react"
 import type { Molecule } from "@structura/core/types"
 import type { SiteKind } from "@structura/markush"
 import { sketchedPiece } from "@structura/engine"
 import { Button } from "@/components/ui/button"
 import { SketchPad } from "../SketchPad.tsx"
+import { PaneHeader } from "./PaneHeader.tsx"
 
 /**
- * The sketch pad opened inside a variable's card: drawing a new alternative, or changing a
- * drawn one (`initial`). Nothing reaches the drawing until 添加 / 保存 hands the piece back.
+ * The sketch pad taking over the variables pane: drawing a new alternative, or changing a
+ * drawn one (`initial`), with the whole height to draw in. Nothing reaches the drawing until
+ * 添加 / 保存 hands the piece back; 返回 or Escape leaves it.
  */
 export function InlineSketch({
   name,
@@ -23,17 +25,11 @@ export function InlineSketch({
   onSave: (piece: Molecule, alsoAt: number[]) => void
   onCancel: () => void
 }) {
-  const boxRef = useRef<HTMLDivElement>(null)
   const [drawn, setDrawn] = useState<{ mol: Molecule; sites: number[] } | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
   const change = useCallback((mol: Molecule, sites: number[]) => {
     setDrawn({ mol, sites })
     setProblem(null)
-  }, [])
-
-  // Bring the opened pad into view within the board (the canvas view is not touched).
-  useEffect(() => {
-    boxRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
   }, [])
 
   function save() {
@@ -50,18 +46,23 @@ export function InlineSketch({
   }
 
   return (
-    <div ref={boxRef} className="rounded-md border border-[#cfe0f6] bg-[#f8fbff] p-3" onKeyDown={keepKeys} onKeyUp={(event) => event.stopPropagation()} data-testid="inline-sketch">
-      <div className="mb-1 text-[13px] font-medium text-[#333]">{initial ? `修改 ${name} 的候选项` : `给 ${name} 画一个候选项`}</div>
-      <p className="mb-2 text-[#666]">画出结构，再用“◎ 设位点”点原子，标出它接到通式上的位置（蓝圈，可以设多个）。不用画 *。</p>
-      <SketchPad initial={initial} kind={kind} onChange={change} />
-      {problem && <p className="mt-1.5 text-[#b26a00]">{problem}</p>}
-      <div className="mt-2 flex justify-end gap-2">
-        <Button size="sm" variant="ghost" onClick={onCancel}>
-          取消
-        </Button>
-        <Button size="sm" onClick={save} disabled={!drawn || drawn.mol.atoms.length === 0}>
-          {initial ? "保存" : `添加到 ${name}`}
-        </Button>
+    <div className="flex h-full min-h-0 flex-col text-[12px]" onKeyDown={keepKeys} onKeyUp={(event) => event.stopPropagation()} data-testid="inline-sketch">
+      <PaneHeader title={initial ? `修改 ${name} 的候选项` : `给 ${name} 画一个候选项`}>
+        <button className="order-first -ml-1 rounded-sm px-1.5 py-0.5 text-[#1a73e8] hover:bg-[#eef3fb]" onClick={onCancel} title="返回变量（Esc）">
+          ← 返回
+        </button>
+        <span className="ml-auto flex gap-2">
+          <Button size="sm" variant="ghost" onClick={onCancel}>
+            取消
+          </Button>
+          <Button size="sm" onClick={save} disabled={!drawn || drawn.mol.atoms.length === 0}>
+            {initial ? "保存" : `添加到 ${name}`}
+          </Button>
+        </span>
+      </PaneHeader>
+      <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
+        {problem && <p className="rounded-sm bg-[#fff4d6] px-2 py-1 text-[#8a5a00]">{problem}</p>}
+        <SketchPad initial={initial} kind={kind} onChange={change} fill />
       </div>
     </div>
   )

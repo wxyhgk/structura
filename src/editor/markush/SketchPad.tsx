@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent, type ReactNode } from "react"
 import { atomById } from "@structura/core/molecule"
 import type { BondStyle, Molecule, RingKind } from "@structura/core/types"
 import type { SiteKind } from "@structura/markush"
@@ -30,6 +30,20 @@ const SITE_HINT: Record<SiteKind, string> = {
   ring: "位点是占住环里位置的原子（与环成两根键）；可以设多个，每个生成一种",
 }
 const NO_LABELS = drawOptions(false)
+/** Small drawings for the bond, chain and benzene buttons, which text symbols render badly. */
+const ICON = { width: 18, height: 14, viewBox: "0 0 18 14", fill: "none", stroke: "currentColor", strokeWidth: 1.4, "aria-hidden": true } as const
+const BOND_ICONS: Record<number, ReactNode> = {
+  1: <svg {...ICON}><path d="M2 7h14" /></svg>,
+  2: <svg {...ICON}><path d="M2 5h14M2 9h14" /></svg>,
+  3: <svg {...ICON}><path d="M2 3.5h14M2 7h14M2 10.5h14" /></svg>,
+}
+const CHAIN_ICON = <svg {...ICON}><path d="M1.5 10l3.75-6 3.75 6 3.75-6 3.75 6" /></svg>
+const BENZENE_ICON = (
+  <svg {...ICON}>
+    <path d="M9 1.5l5 2.9v5.2l-5 2.9-5-2.9V4.4z" />
+    <circle cx="9" cy="7" r="2.3" />
+  </svg>
+)
 
 /** A site in words: the atom's element and which atom it is. */
 function siteName(mol: Molecule, id: number): string {
@@ -49,11 +63,14 @@ export function SketchPad({
   initial,
   kind,
   onChange,
+  fill = false,
 }: {
   /** A drawn alternative opened for changing: its sites still "*" atoms, and the other atoms it may join by. */
   initial?: { molecule: Molecule; alsoAt?: number[] }
   kind: SiteKind
   onChange: (mol: Molecule, sites: number[]) => void
+  /** Grow to the height it is given (a whole pane) instead of a fixed-size box. */
+  fill?: boolean
 }) {
   const [opened] = useState(() => (initial ? sitesOf(initial.molecule, initial.alsoAt) : null))
   const [sites, setSites] = useState<number[]>(opened?.sites ?? [])
@@ -111,61 +128,69 @@ export function SketchPad({
     event.stopPropagation()
   }
 
-  const on = (active: boolean) =>
-    `rounded-sm border px-1.5 py-0.5 ${active ? "border-[#1a73e8] bg-[#e8f1fb] text-[#1a73e8]" : "border-[#d0d0d0] bg-white hover:bg-[#f2f2f2]"}`
+  /** One button of a segmented group; `name` is what it is called (for the symbols shown). */
+  const segment = (active: boolean) => `inline-flex h-6 min-w-6 items-center justify-center px-1.5 ${active ? "bg-[#e8f1fb] font-semibold text-[#1a73e8]" : "bg-white text-[#333] hover:bg-[#f2f2f2]"}`
+  const group = "inline-flex divide-x divide-[#d6d6d6] overflow-hidden rounded-sm border border-[#d0d0d0]"
   const tool = marking ? null : snapshot.tool
   return (
-    <div className="flex flex-col gap-2 text-xs">
-      <div className="flex flex-wrap items-center gap-1" role="toolbar" aria-label="画板工具">
-        {BONDS.map((bond) => (
-          <button
-            key={bond.label}
-            className={on(tool === "bond" && snapshot.bondStyle.order === bond.style.order && snapshot.bondStyle.stereo === "none")}
-            onClick={() => pick("bond", () => editor.setBondStyle(bond.style))}
-          >
-            {bond.label}
-          </button>
-        ))}
-        <span className="mx-1 h-4 w-px bg-[#ddd]" />
-        <button className={on(tool === "chain")} onClick={() => pick("chain")} title="拖出一条锯齿碳链">
-          碳链
-        </button>
-        <span className="mx-1 h-4 w-px bg-[#ddd]" />
-        {RINGS.map((ring) => (
-          <button
-            key={ring.kind}
-            className={on(tool === "ring" && snapshot.ringKind === ring.kind)}
-            onClick={() => pick("ring", () => editor.setRingKind(ring.kind))}
-            title={ring.kind === "benzene" ? "苯环" : `${ring.label} 元环`}
-          >
-            {ring.kind === "benzene" ? ring.label : `${ring.label}元环`}
-          </button>
-        ))}
-        <span className="mx-1 h-4 w-px bg-[#ddd]" />
-        {ELEMENTS.map((el) => (
-          <button key={el} className={on(tool === "atom" && snapshot.atomEl === el)} onClick={() => pick("atom", () => editor.setAtomEl(el))} title={`点原子改成 ${el}`}>
-            {el}
-          </button>
-        ))}
-        <span className="mx-1 h-4 w-px bg-[#ddd]" />
-        <button className={on(tool === "eraser")} onClick={() => pick("eraser")}>
-          橡皮
-        </button>
+    <div className={`flex flex-col gap-2 text-xs ${fill ? "min-h-0 flex-1" : ""}`}>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5" role="toolbar" aria-label="画板工具">
         <button
-          className={`rounded-sm border px-1.5 py-0.5 font-semibold ${marking ? "border-[#1a73e8] bg-[#1a73e8] text-white" : "border-[#1a73e8] bg-white text-[#1a73e8] hover:bg-[#e8f1fb]"}`}
+          className={`h-6 rounded-sm border px-2 font-semibold ${marking ? "border-[#1a73e8] bg-[#1a73e8] text-white" : "border-[#1a73e8] bg-white text-[#1a73e8] hover:bg-[#e8f1fb]"}`}
           onClick={() => setMarking(!marking)}
           title="点原子设为位点（接到通式上的位置），再点一次去掉"
         >
           ◎ 设位点
         </button>
-        <button className={on(false)} onClick={() => editor.undo()} disabled={snapshot.history.past.length === 0}>
-          撤销
-        </button>
+        <div className={group}>
+          {BONDS.map((bond) => (
+            <button
+              key={bond.label}
+              aria-label={bond.label}
+              title={bond.label}
+              className={segment(tool === "bond" && snapshot.bondStyle.order === bond.style.order && snapshot.bondStyle.stereo === "none")}
+              onClick={() => pick("bond", () => editor.setBondStyle(bond.style))}
+            >
+              {BOND_ICONS[bond.style.order]}
+            </button>
+          ))}
+          <button aria-label="碳链" title="碳链：拖出一条锯齿链" className={segment(tool === "chain")} onClick={() => pick("chain")}>
+            {CHAIN_ICON}
+          </button>
+        </div>
+        <div className={group}>
+          {RINGS.map((ring) => (
+            <button
+              key={ring.kind}
+              aria-label={ring.kind === "benzene" ? "苯环" : `${ring.label}元环`}
+              title={ring.kind === "benzene" ? "苯环" : `${ring.label} 元环`}
+              className={segment(tool === "ring" && snapshot.ringKind === ring.kind)}
+              onClick={() => pick("ring", () => editor.setRingKind(ring.kind))}
+            >
+              {ring.kind === "benzene" ? BENZENE_ICON : ring.label}
+            </button>
+          ))}
+        </div>
+        <div className={group}>
+          {ELEMENTS.map((el) => (
+            <button key={el} className={segment(tool === "atom" && snapshot.atomEl === el)} onClick={() => pick("atom", () => editor.setAtomEl(el))} title={`点原子改成 ${el}`}>
+              {el}
+            </button>
+          ))}
+        </div>
+        <div className={group}>
+          <button className={segment(tool === "eraser")} onClick={() => pick("eraser")}>
+            橡皮
+          </button>
+          <button className={`${segment(false)} disabled:text-[#bbb]`} onClick={() => editor.undo()} disabled={snapshot.history.past.length === 0}>
+            撤销
+          </button>
+        </div>
       </div>
       <div
         ref={boxRef}
         tabIndex={0}
-        className={`relative h-[340px] overflow-hidden rounded-sm border border-[#d0d0d0] bg-white outline-none focus:border-[#9fc3ee] ${marking ? "[&_svg]:cursor-crosshair" : ""}`}
+        className={`relative ${fill ? "min-h-[240px] flex-1" : "h-[340px]"} overflow-hidden rounded-sm border border-[#d0d0d0] bg-white outline-none focus:border-[#9fc3ee] ${marking ? "[&_svg]:cursor-crosshair" : ""}`}
         onPointerDownCapture={markEnd}
         onKeyDown={handleKey}
         data-testid="sketch-pad"

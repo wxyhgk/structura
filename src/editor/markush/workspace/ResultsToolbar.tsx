@@ -49,9 +49,9 @@ export function ResultsToolbar({
   onExport: (kind: "csv" | "sdf" | "smi") => void
 }) {
   return (
-    <div className="border-b border-[#d0d0d0] bg-[#f7f7f7] px-3 py-1.5 text-[12px] text-[#333]">
-      <div className="flex min-h-6 items-center gap-2">
-        <span className="font-medium text-[13px]">生成结果</span>
+    <div className="border-b border-[#e3e3e3] bg-white px-3 pb-1.5 text-[12px] text-[#333]">
+      <div className="flex h-9 items-center gap-2">
+        <span className="text-[13px] font-semibold text-[#222]">生成结果</span>
         <span className="truncate text-[#555]" data-testid="results-summary">
           {summary}
         </span>

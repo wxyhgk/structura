@@ -7,7 +7,6 @@ import { ClassForm } from "../ClassForm.tsx"
 import { variableEdits } from "../variableEdits.ts"
 import { AddBar } from "./AddBar.tsx"
 import { AlternativeChips } from "./AlternativeChips.tsx"
-import { InlineSketch } from "./InlineSketch.tsx"
 
 /** The inline sketch pad's target: a variable, and a new alternative or the drawn one at an index. */
 export type SketchTarget = { name: string; index: number | "new" }
@@ -60,7 +59,6 @@ export function VariableCard({
   const edits = variableEdits(name, variables, run)
   /** The class form: adding a new class, or editing the one at this index. */
   const [classForm, setClassForm] = useState<"new" | number | null>(null)
-  const sketched = typeof sketch === "number" ? alternatives[sketch] : undefined
   const siteLabel = SITE_LABELS[site]
 
   return (
@@ -120,18 +118,6 @@ export function VariableCard({
 
         {shared ? (
           <p className="text-[#888]">要修改，请到 {shared} 里改。</p>
-        ) : sketch != null ? (
-          <InlineSketch
-            key={String(sketch)}
-            name={name}
-            kind={site}
-            initial={sketched?.kind === "fragment" ? sketched : undefined}
-            onSave={(piece, alsoAt) => {
-              edits.saveSketch(sketch, piece, alsoAt)
-              onSketch(null)
-            }}
-            onCancel={() => onSketch(null)}
-          />
         ) : classForm != null ? (
           <ClassForm
             key={String(classForm)}

@@ -16,6 +16,6 @@ test("core never reaches up into markush: the dependency runs one way", () => {
 })
 
 test("everything else takes generic-formula code from @structura/markush, never core's model directly", () => {
-  const users = ["src", "packages/engine/src", "packages/ai/src", "packages/rdkit/src", "backend/src"]
+  const users = ["src", "packages/react/src", "packages/engine/src", "packages/ai/src", "packages/rdkit/src", "backend/src"]
   assert.deepEqual(users.flatMap((dir) => forbiddenImports(at(dir), (spec) => spec !== "@structura/core/markush").map((line) => `${dir}/${line}`)), [])
 })

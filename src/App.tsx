@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react"
 import { forgetUnsaved, keepUnsaved, readUnsaved } from "@/autosave"
-import { Editor, type EditorHandle } from "@/editor/Editor"
+import { Editor, httpTemplateStore, memoryTemplateStore, type EditorHandle } from "chem-structura"
 import { fillOverHttp } from "@/fillOverHttp"
 import { recognizeOverHttp } from "@/recognizeOverHttp"
 import { RestoreBar } from "@/RestoreBar"
-import { httpTemplateStore } from "@/editor/templates/httpStore"
-import { memoryTemplateStore } from "@/editor/templates/memoryStore"
 import { exposeForTests } from "@/testHook"
 
 /** The user's templates: the backend's; in the browser tests' build, kept in memory so they need no backend. */

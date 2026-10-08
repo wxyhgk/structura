@@ -10,7 +10,8 @@
     { "path": "./packages/ai" },
     { "path": "./packages/engine" },
     { "path": "./packages/testkit" },
-    { "path": "./backend" }
+    { "path": "./backend" },
+    { "path": "./packages/react" }
   ],
   "compilerOptions": {
     "paths": {

@@ -18,6 +18,6 @@ test("every form of import is seen", () => {
 
 test("product code never imports the testkit", () => {
   const root = fileURLToPath(new URL("../../../", import.meta.url))
-  const dirs = ["src", "packages/core/src", "packages/markush/src", "packages/engine/src", "packages/ai/src", "packages/rdkit/src"]
+  const dirs = ["src", "packages/react/src", "packages/core/src", "packages/markush/src", "packages/engine/src", "packages/ai/src", "packages/rdkit/src"]
   assert.deepEqual(dirs.flatMap((dir) => forbiddenImports(join(root, dir), (spec) => !spec.startsWith("@structura/testkit")).map((line) => `${dir}/${line}`)), [])
 })

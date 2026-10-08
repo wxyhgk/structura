@@ -1,4 +1,4 @@
-import type { EditorHandle } from "@/editor/Editor"
+import type { EditorHandle } from "chem-structura"
 
 declare global {
   interface Window {

@@ -1,0 +1,39 @@
+{
+  "name": "chem-structura",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Structura：ChemDraw 风格的 2D 化学结构编辑器 React 组件，支持专利通式（Markush）的绘制和批量生成。",
+  "type": "module",
+  "exports": {
+    ".": {
+      "structura-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./style.css": {
+      "structura-source": "./src/style.css",
+      "default": "./dist/style.css"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "node --experimental-strip-types --conditions=structura-source --test \"tests/**/*.test.ts\""
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
+  "dependencies": {
+    "@structura/ai": "*",
+    "@structura/core": "*",
+    "@structura/engine": "*",
+    "@structura/markush": "*",
+    "@structura/rdkit": "*"
+  },
+  "devDependencies": {
+    "@structura/testkit": "*"
+  }
+}

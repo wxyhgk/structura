@@ -10,6 +10,11 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./analysis": {
+      "structura-source": "./src/analysis.ts",
+      "types": "./dist/analysis.d.ts",
+      "default": "./dist/analysis.js"
+    },
     "./constants": {
       "structura-source": "./src/constants.ts",
       "types": "./dist/constants.d.ts",

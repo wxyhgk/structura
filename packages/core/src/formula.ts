@@ -103,6 +103,11 @@ function formulaSymbol(atom: Atom): string {
   return atom.el
 }
 
+/** A drawn isotope's exact mass (13C, D…), or its mass number when it is not in the table. */
+export function isotopeMass(el: string, isotope: number): number {
+  return ISOTOPE_MASS[`${el}${isotope}`] ?? isotope
+}
+
 function atomMass(atom: Atom): number {
   if (atom.isotope == null) return elementMass(atom.el)
   return ISOTOPE_MASS[`${atom.el}${atom.isotope}`] ?? atom.isotope
@@ -127,6 +132,11 @@ function eachPiece(mol: Molecule, atomIds: number[] | undefined, add: (symbol: s
     const { h, error } = atomHydrogens(mol, id)
     if (!error && h > 0) add("H", h, elementMass("H"))
   }
+}
+
+/** How many of each element (D and T apart) the atoms and their hydrogens hold; placeholders count for nothing. */
+export function elementCounts(mol: Molecule, atomIds?: number[]): Map<string, number> {
+  return countsFor(mol, atomIds)
 }
 
 function countsFor(mol: Molecule, atomIds?: number[]): Map<string, number> {

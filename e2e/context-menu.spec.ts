@@ -49,3 +49,19 @@ test("on a selection the menu edits it, and the analysis gives formula, exact ma
   await expect(analysis).toContainText("79.0542")
   await expect(analysis).toContainText("Anal. calcd for C6H6: C, 92.26; H, 7.74.")
 })
+
+test("two quick clicks on a bond with the bond tool step its order twice; only a selection tool's double click selects the molecule", async ({ page }) => {
+  await page.getByRole("button", { name: "键 (B)" }).click()
+  const centre = await canvasCentre(page)
+  await page.mouse.click(centre.x, centre.y)
+  await expect(page.getByTestId("formula")).toHaveText("C₂H₆")
+  const atoms = (await doc(page)).molecule.atoms
+  // The bond's middle on the screen: the first atom sits where the click was.
+  const middle = { x: centre.x + (atoms[1].x - atoms[0].x) / 2, y: centre.y + (atoms[1].y - atoms[0].y) / 2 }
+  await page.mouse.dblclick(middle.x, middle.y)
+  await expect(page.getByTestId("formula")).toHaveText("C₂H₂")
+  await page.getByRole("button", { name: "套索 (V)" }).click()
+  await page.mouse.dblclick(middle.x, middle.y)
+  // The whole molecule is selected, and the triple bond stays a triple bond.
+  await expect(page.locator("footer")).toContainText("C₂H₂")
+})

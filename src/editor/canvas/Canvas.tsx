@@ -39,7 +39,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
    */
   const current = () => displayMolecule(props.latest().molecule)
   /** What the last press hit and the drawing before it, to spot a double click. */
-  const firstClick = useRef<{ hit: HoverTarget; before: Drawing; selection: Selection; time: number; x: number; y: number } | null>(null)
+  const firstClick = useRef<{ hit: HoverTarget; before: Drawing; selection: Selection; tool: string; time: number; x: number; y: number } | null>(null)
 
   function cancelGesture() {
     gesture.current = { kind: "idle" }
@@ -52,7 +52,11 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   }
 
   const host: PointerHost = {
-    props,
+    // The molecule as of the last edit, not as of the last render: a second click or key that
+    // comes before React has drawn the first one's result must act on that result.
+    get props() {
+      return { ...props, mol: current() }
+    },
     gesture,
     space,
     zoom: () => viewport.get().zoom,
@@ -94,10 +98,15 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     firstClick.current = null
     if (event.button !== 0 || !first) return false
     if (event.timeStamp - first.time > DOUBLE_CLICK_MS || Math.hypot(event.clientX - first.x, event.clientY - first.y) > DOUBLE_CLICK_SLOP) return false
+    // Two presses with different tools are two separate clicks, however quick.
+    if (first.tool !== props.tool) return false
     const hit = hitOf(current(), viewport.toWorld(event.clientX, event.clientY), viewport.get().zoom)
     if (!hit || !sameHover(first.hit, hit)) return false
-    if (props.latest() !== first.before) props.undo()
     const action = doubleClickAction(current(), hit)
+    // Selecting the molecule is for the selection tools, as in ChemDraw: with the bond tool,
+    // two quick clicks on a bond are two clicks, stepping its order twice.
+    if (action?.kind === "select" && props.tool !== "lasso" && props.tool !== "marquee") return false
+    if (props.latest() !== first.before) props.undo()
     // The first press may have selected what it hit; a double click leaves the selection as it found it.
     if (action?.kind === "label") {
       props.setSelection(first.selection)
@@ -214,6 +223,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
               hit: hitOf(current(), world, viewport.get().zoom),
               before: props.latest(),
               selection: props.selection,
+              tool: props.tool,
               time: event.timeStamp,
               x: event.clientX,
               y: event.clientY,

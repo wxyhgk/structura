@@ -346,3 +346,11 @@ test("random key presses never break the molecule", () => {
     }
   }
 })
+
+test("1 over a bond makes it a plain single bond again, as 2 and 3 make it double and triple", () => {
+  const ethene = run(emptyMolecule(), [{ op: "draw_bond", start: { x: 0, y: 0 }, order: 2 }]).mol
+  const ops = hotkeyOps(ethene, { type: "bond", id: ethene.bonds[0].id }, "1")
+  assert.ok(ops)
+  const single = run(ethene, ops!).mol
+  assert.equal(single.bonds[0].order, 1)
+})

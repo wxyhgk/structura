@@ -18,6 +18,7 @@ function planFusion(
   bond: Bond,
   kind: RingKind,
   side: 1 | -1,
+  strict = true,
 ): { points: Point[]; reuse: Array<number | null> } | null {
   const a = atomById(mol, bond.a)
   const b = atomById(mol, bond.b)
@@ -49,6 +50,8 @@ function planFusion(
     if (right != null) extra.set(right, (extra.get(right) ?? 0) + 1)
   }
   if (!adds) return null
+  // Not strict: drawn as asked even if it overfills an atom (shown red, as ChemDraw does).
+  if (!strict) return { points, reuse }
   for (const [id, count] of extra) {
     const atom = atomById(mol, id)
     if (!atom) return null
@@ -61,6 +64,11 @@ function planFusion(
 /** Whether a ring of this kind can be fused onto the bond without overfilling an atom. */
 export function canFuse(mol: Molecule, bond: Bond, kind: RingKind): boolean {
   return planFusion(mol, bond, kind, 1) != null
+}
+
+/** Whether a ring of this kind fits onto the bond at all, overfilled atoms allowed: where it can be drawn. */
+export function canPlaceFused(mol: Molecule, bond: Bond, kind: RingKind): boolean {
+  return planFusion(mol, bond, kind, 1, false) != null || planFusion(mol, bond, kind, -1, false) != null
 }
 
 /** Side of a ring bond that does not already contain the ring. A chain bond keeps the requested side. */
@@ -95,7 +103,9 @@ export function fuseRingAt(
   const a = atomById(mol, bond.a)
   const b = atomById(mol, bond.b)
   if (!a || !b) return { mol, far: bond.a }
-  const plan = planFusion(mol, bond, kind, side)
+  // A clean fusion if there is one; else the ring goes where it was asked for anyway, and the
+  // atoms it overfills show red for the chemist to sort out (as ChemDraw does).
+  const plan = planFusion(mol, bond, kind, side) ?? planFusion(mol, bond, kind, side, false)
   if (!plan) return { mol, far: bond.a }
   const built = buildRing(mol, plan.points, kind, plan.reuse)
   const far = built.ids[Math.floor(RING_SIZE[kind] / 2)] ?? a.id

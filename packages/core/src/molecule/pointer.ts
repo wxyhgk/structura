@@ -2,7 +2,7 @@ import { BOND_LENGTH, SINGLE } from "../constants.ts"
 import { distToSegment, pointFrom, sideOfLine } from "../geometry.ts"
 import type { Bond, BondStyle, Molecule, Point, RingKind } from "../types.ts"
 import { sproutAngle } from "./angles.ts"
-import { canFuse, openSide } from "./fusion.ts"
+import { canPlaceFused, openSide } from "./fusion.ts"
 import { addAtom, addBond, atomById, setElement } from "./graph.ts"
 import { bondLengthAt } from "./measure.ts"
 import { sproutAt } from "./place.ts"
@@ -121,8 +121,10 @@ export function fusionTarget(mol: Molecule, point: Point, kind: RingKind, radius
     const b = atomById(mol, bond.b)
     if (!a || !b) continue
     const distance = distToSegment(point, a, b)
-    // Distance is cheap and rules out almost every bond; only then ask whether it can fuse.
-    if (distance <= bestDistance && canFuse(mol, bond, kind)) {
+    // The bond nearest the pointer, never another one that would fit more cleanly: the ring goes
+    // where the chemist points, overfilling an atom if it must (shown red). Distance is cheap
+    // and rules out almost every bond; only then ask whether a ring fits there at all.
+    if (distance <= bestDistance && canPlaceFused(mol, bond, kind)) {
       best = bond
       bestDistance = distance
     }

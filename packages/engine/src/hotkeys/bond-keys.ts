@@ -2,6 +2,7 @@ import type { BondAction } from "./actions.ts"
 
 /** The keys pressed over a bond. Upper case is Shift. */
 export const BOND_KEYS: Record<string, BondAction> = {
+  "1": { do: "style", style: { order: 1, stereo: "none" } },
   "2": { do: "style", style: { order: 2, stereo: "none" } },
   "3": { do: "style", style: { order: 3, stereo: "none" } },
   w: { do: "style", style: { order: 1, stereo: "up" } },

@@ -302,7 +302,9 @@ test("lookups by id and between atoms follow every edit", () => {
   assert.equal(atomById(filling, 99)?.el, "N")
 })
 
-test("a fused ring never overfills a heteroatom at the ring junction", () => {
+test("a fused ring goes where asked; a heteroatom it overfills is flagged, not refused (as ChemDraw does)", async () => {
+  const { canFuse } = await import("../src/molecule/fusion.ts")
+  const { validate } = await import("../src/validate.ts")
   const ring = placeRing(emptyMolecule(), { x: 0, y: 0 }, "cyclohexane")
   const decalin = fuseRingAt(ring, ring.bonds[0].id, "cyclohexane", 1).mol
   const degreeOf = (mol: typeof decalin, id: number) => neighbors(mol, id).length
@@ -313,7 +315,12 @@ test("a fused ring never overfills a heteroatom at the ring junction", () => {
   assert.ok(edge)
   assert.notEqual(fuseRingAt(decalin, edge.id, "cyclopropane", 1).mol, decalin, "a carbon takes a fourth bond")
   const amine = setElement(decalin, [junction.id], "N")
-  assert.equal(fuseRingAt(amine, edge.id, "cyclopropane", 1).mol, amine, "a neutral nitrogen does not")
+  // A neutral nitrogen has no room for a fourth bond: the ring is still drawn, and the
+  // nitrogen shows as a valence problem for the chemist to fix.
+  assert.equal(canFuse(amine, edge, "cyclopropane"), false, "it is not a clean fusion")
+  const overfilled = fuseRingAt(amine, edge.id, "cyclopropane", 1).mol
+  assert.notEqual(overfilled, amine, "the ring is drawn anyway")
+  assert.ok(validate(overfilled).some((problem) => problem.code === "valence" && problem.atoms?.includes(junction.id)), "and the nitrogen is flagged")
   const ammonium = bumpCharge(amine, [junction.id], 1)
   assert.notEqual(fuseRingAt(ammonium, edge.id, "cyclopropane", 1).mol, ammonium, "an ammonium nitrogen does")
 })
@@ -368,4 +375,20 @@ test("a bond laid on another fuses with it, and two pieces join at an atom or a 
   assert.equal(plainFormula(joined.drawing.molecule), "C6H12O")
   const same = applyOps(atoms.drawing, [{ op: "join", atoms: [1, 2] }])
   assert.equal(same.ok, false)
+})
+
+test("the ring tool fuses onto the bond under the pointer, never a cleaner one nearby", async () => {
+  const { fusionTarget, fuseReach } = await import("../src/molecule/pointer.ts")
+  const ring = placeRing(emptyMolecule(), { x: 0, y: 0 }, "cyclohexane")
+  const decalin = fuseRingAt(ring, ring.bonds[0].id, "cyclohexane", 1).mol
+  const degreeOf = (id: number) => neighbors(decalin, id).length
+  const junction = decalin.atoms.find((atom) => degreeOf(atom.id) === 3)!
+  const amine = setElement(decalin, [junction.id], "N")
+  // A bond at the nitrogen junction: a ring there overfills the N, yet it is the one pointed at.
+  const edge = amine.bonds.find((bond) => (bond.a === junction.id || bond.b === junction.id) && degreeOf(bond.a === junction.id ? bond.b : bond.a) === 2)!
+  const a = atomById(amine, edge.a)!
+  const b = atomById(amine, edge.b)!
+  const middle = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+  const picked = fusionTarget(amine, middle, "cyclopropane", fuseReach(3))
+  assert.equal(picked?.id, edge.id)
 })

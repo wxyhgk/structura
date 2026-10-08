@@ -1,3 +1,4 @@
+import { hydrogenCount } from "../formula.ts"
 import type { Bond, Molecule } from "../types.ts"
 import { atomById, bondOrderSum, cloneMolecule } from "./graph.ts"
 
@@ -27,16 +28,35 @@ export function kekulizeAromaticReport(mol: Molecule, near?: Set<number>): { mol
   let unresolved = 0
   for (const bonds of aromaticComponents(next)) {
     if (near && !bonds.some((bond) => near.has(bond.a) || near.has(bond.b))) continue
+    const before = new Map(bonds.map((bond) => [bond.id, { order: bond.order, stereo: bond.stereo, look: bond.look }]))
     for (const bond of bonds) {
       bond.order = 1
       bond.stereo = "none"
       bond.look = undefined
     }
     const { pairs, complete } = matchDoubles(next, bonds)
-    if (!complete) unresolved++
-    const chosen = new Set(pairs.map(([a, b]) => pairKey(a, b)))
+    if (complete) {
+      const chosen = new Set(pairs.map(([a, b]) => pairKey(a, b)))
+      for (const bond of bonds) bond.order = chosen.has(pairKey(bond.a, bond.b)) ? 2 : 1
+      continue
+    }
+    // No clean alternation (a ring fused where an atom has no room, say): what was there
+    // stays as it was, and only the new ring's bonds get what doubles still fit, so a
+    // drawing is never left all single bonds.
+    unresolved++
+    const fresh = (bond: Bond) => near != null && near.has(bond.a) && near.has(bond.b)
     for (const bond of bonds) {
-      bond.order = chosen.has(pairKey(bond.a, bond.b)) ? 2 : 1
+      const old = before.get(bond.id)!
+      if (fresh(bond)) bond.order = 1
+      else Object.assign(bond, old)
+    }
+    const hasDouble = (id: number) => next.bonds.some((bond) => bond.order === 2 && (bond.a === id || bond.b === id))
+    const roomFor = (id: number) => {
+      const atom = atomById(next, id)
+      return atom != null && !hydrogenCount(atom.el, atom.charge, bondOrderSum(next, id) + 1).error
+    }
+    for (const bond of bonds) {
+      if (fresh(bond) && !hasDouble(bond.a) && !hasDouble(bond.b) && roomFor(bond.a) && roomFor(bond.b)) bond.order = 2
     }
   }
   return { mol: next, unresolved }

@@ -392,3 +392,23 @@ test("the ring tool fuses onto the bond under the pointer, never a cleaner one n
   const picked = fusionTarget(amine, middle, "cyclopropane", fuseReach(3))
   assert.equal(picked?.id, edge.id)
 })
+
+test("a ring fused where an atom has no room leaves the aromatic rings around it as they were, not all single", async () => {
+  const { applyOps } = await import("../src/ops.ts")
+  const { emptyDrawing } = await import("../src/drawing.ts")
+  // Indane: benzene with a five-membered ring on bond 1–2, so atoms 1 and 2 each have three bonds.
+  const indane = applyOps(emptyDrawing(), [
+    { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" },
+    { op: "add_ring", bond: { between: [1, 2] }, kind: "cyclopentane" },
+  ])
+  assert.ok(indane.ok)
+  const doublesIn = (mol: typeof indane.drawing.molecule, ids: number[]) => mol.bonds.filter((bond) => bond.order === 2 && ids.includes(bond.a) && ids.includes(bond.b)).length
+  assert.equal(doublesIn(indane.drawing.molecule, [1, 2, 3, 4, 5, 6]), 3)
+  // A benzene on bond 2–3: atom 2 has no room for it, so no clean alternation exists.
+  const fused = applyOps(indane.drawing, [{ op: "add_ring", bond: { between: [2, 3] }, kind: "benzene" }])
+  assert.ok(fused.ok, fused.ok ? "" : fused.error)
+  const mol = fused.drawing.molecule
+  // The first benzene keeps its three double bonds; the new ring gets what still fits.
+  assert.equal(doublesIn(mol, [1, 2, 3, 4, 5, 6]), 3, "the old ring is not left all single")
+  assert.ok(mol.bonds.filter((bond) => bond.order === 2).length > 3, "the new ring has double bonds too")
+})

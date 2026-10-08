@@ -7,6 +7,7 @@ import { ClassForm } from "./ClassForm.tsx"
 import { describeAlternative } from "./describe.ts"
 import { MoleculeThumb } from "@/editor/common/MoleculeThumb"
 import { LINKER_PRESETS, PRESETS, shortName } from "./presets.ts"
+import { SketchDialog } from "./SketchDialog.tsx"
 
 /** One variable in the panel: its alternatives, and the ways to add, share or remove them. */
 export function VariableRow({
@@ -46,6 +47,9 @@ export function VariableRow({
   /** Why the selection could not be taken in as a piece, until the next try. */
   const [captureProblem, setCaptureProblem] = useState<string | null>(null)
   const alternatives = alternativesOf(variables, name)
+  /** The sketch pad: drawing a new alternative, or changing the drawn one at this index. */
+  const [sketch, setSketch] = useState<"new" | number | null>(null)
+  const sketched = typeof sketch === "number" ? alternatives[sketch] : undefined
 
   /** Shares another variable's list, or (with "") takes a copy of the shared list as its own. */
   function share(source: string) {
@@ -115,7 +119,14 @@ export function VariableRow({
       <div className="mb-1.5 flex flex-wrap gap-1">
         {alternatives.map((item, index) => (
           <span key={index} className="inline-flex items-center gap-1 rounded-sm border border-[#d0d0d0] bg-white px-1.5 py-0.5" data-testid="alternative">
-            {item.kind === "fragment" && <MoleculeThumb mol={item.molecule} className="h-12 w-16 object-contain" />}
+            {item.kind === "fragment" &&
+              (shared ? (
+                <MoleculeThumb mol={item.molecule} className="h-12 w-16 object-contain" />
+              ) : (
+                <button onClick={() => setSketch(index)} title="点击在画板里修改" aria-label="修改画的结构">
+                  <MoleculeThumb mol={item.molecule} className="h-12 w-16 object-contain" />
+                </button>
+              ))}
             {item.kind === "class" && !shared ? (
               <button className="hover:text-[#1a73e8]" onClick={() => setClassForm(index)} title="点击修改范围">
                 {describeAlternative(item)}
@@ -177,6 +188,13 @@ export function VariableRow({
                 </button>
               ))}
               <button
+                className="rounded-sm border border-dashed border-[#9fc3ee] px-1.5 py-0.5 text-[#1a73e8] hover:bg-[#e8f1fb]"
+                onClick={() => setSketch("new")}
+                title="在小画板里画出这个基团，画完加进候选项"
+              >
+                ✎ 画一个
+              </button>
+              <button
                 className="rounded-sm border border-dashed border-[#9fc3ee] px-1.5 py-0.5 text-[#1a73e8] hover:bg-[#e8f1fb] disabled:border-[#ddd] disabled:text-[#aaa] disabled:hover:bg-transparent"
                 disabled={selected.length === 0}
                 onClick={capture}
@@ -193,6 +211,19 @@ export function VariableRow({
             </div>
           )}
         </>
+      )}
+      {sketch != null && (
+        <SketchDialog
+          name={name}
+          linker={linker}
+          initial={sketched?.kind === "fragment" ? sketched.molecule : undefined}
+          onSave={(piece) => {
+            const item: Alternative = { kind: "fragment", molecule: piece }
+            save(typeof sketch === "number" ? alternatives.map((other, index) => (index === sketch ? item : other)) : [...alternatives, item])
+            setSketch(null)
+          }}
+          onClose={() => setSketch(null)}
+        />
       )}
     </section>
   )

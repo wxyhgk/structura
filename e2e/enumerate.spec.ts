@@ -117,3 +117,69 @@ test("a class carrying named substituents is added in the form, shown, and count
   // R1: H, Cl, phenyl and 4-fluorophenyl; R2: H, Cl.
   await expect(page.getByTestId("library-size")).toContainText("可展开为 8 种组合")
 })
+
+test("a candidate drawn in the sketch pad joins the variable's list, and the compounds made from it", async ({ page }) => {
+  await openEditor(page)
+  await openFile(page, fixture("benzene-R1-anywhere.structura"))
+  const row = page.getByTestId("variable-R1")
+  const count = async () => {
+    await page.getByRole("button", { name: "批量生成化合物…" }).click()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toContainText("得到")
+    const made = await dialog.getByTestId("enumerated-compound").count()
+    await page.keyboard.press("Escape")
+    await expect(dialog).toHaveCount(0)
+    return made
+  }
+  const compoundsBefore = await count()
+  const alternativesBefore = await row.getByTestId("alternative").count()
+
+  await row.getByRole("button", { name: "✎ 画一个" }).click()
+  const sketch = page.getByTestId("sketch-dialog")
+  await expect(sketch).toContainText("给 R1 画一个候选项")
+  await expect(sketch).toHaveAttribute("data-state", "open")
+  await page.waitForFunction(() => document.getAnimations().length === 0)
+  const pad = await sketch.getByTestId("sketch-pad").boundingBox()
+  const centre = { x: pad!.x + pad!.width / 2, y: pad!.y + pad!.height / 2 }
+  // A bond, then its first atom made O: methoxy, joined by the O (the first atom drawn).
+  await page.mouse.click(centre.x, centre.y)
+  await sketch.getByRole("button", { name: "O", exact: true }).click()
+  await page.mouse.click(centre.x, centre.y)
+  // The main drawing is untouched while drawing in the pad.
+  expect((await doc(page)).molecule.atoms.length).toBe(7)
+  await sketch.getByRole("button", { name: "添加到 R1" }).click()
+  await expect(sketch).toHaveCount(0)
+  await expect(row.getByTestId("alternative")).toHaveCount(alternativesBefore + 1)
+  // Anisole: one more compound.
+  expect(await count()).toBe(compoundsBefore + 1)
+
+  // The drawn candidate opens again for changing.
+  await row.getByRole("button", { name: "修改画的结构" }).click()
+  await expect(page.getByTestId("sketch-dialog")).toContainText("修改 R1 的候选项")
+  await page.getByTestId("sketch-dialog").getByRole("button", { name: "保存" }).click()
+  await expect(row.getByTestId("alternative")).toHaveCount(alternativesBefore + 1)
+})
+
+test("in the sketch pad's marking mode a click on an atom marks where the piece joins, instead of drawing", async ({ page }) => {
+  await openEditor(page)
+  await openFile(page, fixture("benzene-R1-anywhere.structura"))
+  await page.getByTestId("variable-R1").getByRole("button", { name: "✎ 画一个" }).click()
+  const sketch = page.getByTestId("sketch-dialog")
+  await expect(sketch).toContainText("给 R1 画一个候选项")
+  await expect(sketch).toHaveAttribute("data-state", "open")
+  await page.waitForFunction(() => document.getAnimations().length === 0)
+  const pad = await sketch.getByTestId("sketch-pad").boundingBox()
+  const centre = { x: pad!.x + pad!.width / 2, y: pad!.y + pad!.height / 2 }
+  await page.mouse.click(centre.x, centre.y)
+  // Marking mode: a click on the atom marks it instead of drawing a bond from it.
+  await sketch.getByRole("button", { name: "连接点 *" }).click()
+  await page.mouse.click(centre.x, centre.y)
+  await sketch.getByRole("button", { name: "添加到 R1" }).click()
+  await expect(sketch).toHaveCount(0)
+  // Ethyl with its one mark: two carbons and a "*", not a third carbon drawn by the click.
+  type Piece = { kind: string; molecule?: { atoms: Array<{ el: string; alias?: string }> } }
+  const list = (await doc(page)).variables?.R1 as { alternatives: Piece[] }
+  const piece = list.alternatives.at(-1)
+  expect(piece?.kind).toBe("fragment")
+  expect(piece?.molecule?.atoms.map((atom) => atom.alias ?? atom.el).sort()).toEqual(["*", "C", "C"])
+})

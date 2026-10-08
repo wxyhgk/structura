@@ -1,4 +1,4 @@
-import type { ImportReport, Template, TemplateInput, TemplateLibrary } from "@structura/core/markush"
+import type { ImportReport, Template, TemplateInput, TemplateLibrary } from "@structura/markush"
 
 /**
  * Where the user's own templates are kept. The standalone app talks to the Structura backend

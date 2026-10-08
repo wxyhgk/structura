@@ -33,7 +33,10 @@ export function describeAlternative(alternative: Alternative): string {
   if (alternative.kind === "label") return alternative.text
   if (alternative.kind === "bond") return "单键"
   if (alternative.kind === "bridge") return BRIDGE_NAMES[alternative.name]
-  if (alternative.kind === "fragment") return alternative.name ?? `片段 ${displayFormula(fragmentFormula(alternative.molecule))}`
+  if (alternative.kind === "fragment") {
+    const named = alternative.name ?? `片段 ${displayFormula(fragmentFormula(alternative.molecule))}`
+    return alternative.alsoAt?.length ? `${named}（${alternative.alsoAt.length + 1} 个位点）` : named
+  }
   const { min, max } = alternative
   const range = min != null || max != null ? `${min ?? 1}–${max ?? "∞"}` : ""
   const size = range ? (sizeUnitOf(alternative) === "members" ? `(${range} 元)` : `(C${range.replace("–", "–C")})`) : ""

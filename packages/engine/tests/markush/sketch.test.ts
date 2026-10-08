@@ -24,13 +24,34 @@ test("a group with no site set joins by its first atom drawn, shown as the defau
   assert.deepEqual(heads(result.piece), ["O"])
 })
 
-test("a group's site moves with one click, and a click on it takes it back to the default", () => {
+test("a group's site is set with a click, and a click on it takes it back to the default", () => {
   const sites = pickSite([], 2, "end")
   assert.deepEqual(sites, [2])
   const result = sketchedPiece(methoxy(), sites, "end")
   assert.ok("piece" in result)
   assert.deepEqual(heads(result.piece), ["C"])
+  assert.deepEqual(result.alsoAt, [])
   assert.deepEqual(pickSite(sites, 2, "end"), [])
+})
+
+test("a group may take several sites: the first carries the *, the others are where it may also join", () => {
+  // Pyridine: N at atom 1; sites on C2, C3, C4.
+  const pyridine = run(emptyDrawing(), [
+    { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" },
+    { op: "label", atom: 1, text: "N" },
+  ]).molecule
+  let sites: number[] = []
+  for (const atom of [2, 3, 4]) sites = pickSite(sites, atom, "end")
+  assert.deepEqual(sites, [2, 3, 4])
+  const result = sketchedPiece(pyridine, sites, "end")
+  assert.ok("piece" in result)
+  assert.equal(fragmentEnds(result.piece).length, 1)
+  const at = (id: number) => result.piece.atoms.find((atom) => atom.id === id)
+  assert.deepEqual(result.alsoAt.map((id) => at(id)?.el), ["C", "C"])
+  assert.equal(new Set([fragmentEnds(result.piece)[0].head, ...result.alsoAt]).size, 3, "three different atoms")
+  // Saved and opened again, all three sites come back, in order.
+  const opened = sitesOf(result.piece, result.alsoAt)
+  assert.equal(opened.sites.length, 3)
 })
 
 test("a linker takes two sites on different atoms, the third click replacing the oldest", () => {
@@ -50,7 +71,7 @@ test("a ring atom's site is one atom bonded twice", () => {
   const mol = run(emptyDrawing(), [{ op: "place_atom", el: "N", at: { x: 0, y: 0 } }]).molecule
   assert.ok(sitesProblem(mol, [], "ring"))
   const sites = pickSite([], 1, "ring")
-  assert.deepEqual(sites, [1, 1])
+  assert.deepEqual(sites, [1])
   const result = sketchedPiece(mol, sites, "ring")
   assert.ok("piece" in result, "problem" in result ? result.problem : "")
   assert.deepEqual(heads(result.piece), ["N", "N"])

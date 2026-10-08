@@ -25,9 +25,9 @@ const RINGS: Array<{ label: string; kind: RingKind }> = [
 const ELEMENTS = ["C", "N", "O", "S", "P", "F", "Cl", "Br", "I"]
 /** What the sites are for, by where the variable sits. */
 const SITE_HINT: Record<SiteKind, string> = {
-  end: "1 个位点：从这个原子接到通式上",
-  link: "2 个位点：连接基的两端",
-  ring: "1 个原子：它占住环里的位置（与环成两根键）",
+  end: "位点是接到通式上的原子；可以设多个，每个位点生成一种（如吡啶基接在 2、3、4 位）",
+  link: "连接基要 2 个位点：两端各一个",
+  ring: "位点是占住环里位置的原子（与环成两根键）；可以设多个，每个生成一种",
 }
 const NO_LABELS = drawOptions(false)
 
@@ -50,12 +50,12 @@ export function SketchPad({
   kind,
   onChange,
 }: {
-  /** A drawn alternative opened for changing, its sites still "*" atoms. */
-  initial?: Molecule
+  /** A drawn alternative opened for changing: its sites still "*" atoms, and the other atoms it may join by. */
+  initial?: { molecule: Molecule; alsoAt?: number[] }
   kind: SiteKind
   onChange: (mol: Molecule, sites: number[]) => void
 }) {
-  const [opened] = useState(() => (initial ? sitesOf(initial) : null))
+  const [opened] = useState(() => (initial ? sitesOf(initial.molecule, initial.alsoAt) : null))
   const [sites, setSites] = useState<number[]>(opened?.sites ?? [])
   const [editor] = useState(() => {
     const made = createEditor(opened ? [opened.mol] : [])
@@ -195,8 +195,9 @@ export function SketchPad({
         <span className="text-[#888]">{SITE_HINT[kind]}。</span>
         {shown.sites.length > 0 && (
           <span>
-            位点：{[...new Set(shown.sites)].map((id) => siteName(mol, id)).join("、")}
+            位点：{shown.sites.map((id, index) => `${index + 1}. ${siteName(mol, id)}`).join("、")}
             {shown.assumed && "（默认用第一个画的原子，点“设位点”可以换）"}
+            {kind !== "link" && shown.sites.length > 1 && `，生成时每个位点一种，共 ${shown.sites.length} 种`}
           </span>
         )}
         {problem && mol.atoms.length > 0 && <span className="text-[#b26a00]"> {problem}</span>}

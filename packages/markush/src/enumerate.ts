@@ -6,7 +6,7 @@ import { atomById, bondLengthAt, componentOf, deleteSelection, duplicateAtoms, n
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Alternative, Attachment, Choice, Drawing, Molecule, Proviso } from "@structura/core/types"
 import { validate } from "@structura/core/validate"
-import { fragmentFits, fragmentFormula, fragmentVariables } from "@structura/core/markush"
+import { fragmentFits, fragmentFormula, fragmentVariables, fragmentVersions } from "@structura/core/markush"
 import { closeRing } from "./closures.ts"
 import { odometer } from "./odometer.ts"
 import { representativesOf } from "./representatives.ts"
@@ -360,7 +360,7 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     const known = choicesOf.get(name)
     if (known) return known
     const alternatives = alternativesOf(variables, name)
-    const choices: Choice[] = alternatives.flatMap((item) => (item.kind === "class" ? [] : [item]))
+    const choices: Choice[] = alternatives.flatMap((item) => (item.kind === "class" ? [] : item.kind === "fragment" ? joinings(item) : [item]))
     for (const item of alternatives) {
       if (item.kind !== "class") continue
       const standIns = representatives ? representativesOf(item).filter((choice) => !choices.some((other) => same(other, choice))) : []
@@ -373,6 +373,16 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     )
     choicesOf.set(name, concrete)
     return concrete
+  }
+  /**
+   * A piece that may join by several of its atoms, as one choice per joining atom, each named
+   * by its site ("C₅H₄N（位点 2）") so the compounds made from them can be told apart.
+   */
+  function joinings(piece: Extract<Choice, { kind: "fragment" }>): Choice[] {
+    const { alsoAt, ...plain } = piece
+    if (!alsoAt?.length) return [plain]
+    const base = piece.name ?? fragmentFormula(piece.molecule)
+    return fragmentVersions(piece.molecule, alsoAt).map((molecule, index) => ({ kind: "fragment", molecule, name: `${base}（位点 ${index + 1}）` }))
   }
   /** Every concrete version of a piece, its inner placeholders filled with the choices that fit them. */
   function filled(piece: Extract<Choice, { kind: "fragment" }>, stack: string[]): Choice[] {

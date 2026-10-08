@@ -1,6 +1,6 @@
 import { knownLabel } from "../label.ts"
 import { BRIDGES } from "./bridges.ts"
-import { fragmentProblem, fragmentVariables } from "./fragments.ts"
+import { alsoAtProblem, fragmentProblem, fragmentVariables } from "./fragments.ts"
 import { isVariableName } from "./names.ts"
 import type { Alternative, GroupClass, SizeUnit, Variable } from "../types.ts"
 
@@ -93,7 +93,10 @@ export function alternativeProblem(alternative: Alternative): string | null {
   if (alternative.kind === "bridge") return Object.hasOwn(BRIDGES, alternative.name) ? null : `unknown bridge "${alternative.name}" (${Object.keys(BRIDGES).join(", ")})`
   if (alternative.kind === "fragment") {
     if (alternative.name != null && (typeof alternative.name !== "string" || alternative.name.length > 60)) return "a piece's name is text of at most 60 characters"
-    return fragmentProblem(alternative.molecule)
+    const problem = fragmentProblem(alternative.molecule)
+    if (problem || alternative.alsoAt == null) return problem
+    if (!Array.isArray(alternative.alsoAt)) return "a piece's other joining atoms are a list of its atom ids"
+    return alsoAtProblem(alternative.molecule, alternative.alsoAt)
   }
   if (alternative.kind === "label") {
     const text = alternative.text.trim()

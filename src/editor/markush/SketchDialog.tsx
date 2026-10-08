@@ -22,8 +22,8 @@ export function SketchDialog({
   name: string
   /** Where the variable sits, which says how many sites the piece takes. */
   kind: SiteKind
-  initial?: Molecule
-  onSave: (piece: Molecule) => void
+  initial?: { molecule: Molecule; alsoAt?: number[] }
+  onSave: (piece: Molecule, alsoAt: number[]) => void
   onClose: () => void
 }) {
   const overlayMark = useOverlayMark()
@@ -38,7 +38,7 @@ export function SketchDialog({
     if (!drawn) return
     const result = sketchedPiece(drawn.mol, drawn.sites, kind)
     if ("problem" in result) setProblem(result.problem)
-    else onSave(result.piece)
+    else onSave(result.piece, result.alsoAt)
   }
 
   return (
@@ -46,7 +46,7 @@ export function SketchDialog({
       <DialogContent {...overlayMark} className="sm:max-w-3xl" data-testid="sketch-dialog">
         <DialogHeader>
           <DialogTitle>{initial ? `修改 ${name} 的候选项` : `给 ${name} 画一个候选项`}</DialogTitle>
-          <DialogDescription>画出结构，再用“◎ 设位点”点原子，标出它接到通式上的位置（蓝圈）。不用画 *。</DialogDescription>
+          <DialogDescription>画出结构，再用“◎ 设位点”点原子，标出它接到通式上的位置（蓝圈，可以设多个）。不用画 *。</DialogDescription>
         </DialogHeader>
         <SketchPad initial={initial} kind={kind} onChange={change} />
         {problem && <p className="text-xs text-[#b26a00]">{problem}</p>}

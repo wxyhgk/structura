@@ -220,9 +220,10 @@ export function VariableRow({
         <SketchDialog
           name={name}
           kind={site}
-          initial={sketched?.kind === "fragment" ? sketched.molecule : undefined}
-          onSave={(piece) => {
-            const item: Alternative = { kind: "fragment", molecule: piece }
+          initial={sketched?.kind === "fragment" ? sketched : undefined}
+          onSave={(piece, alsoAt) => {
+            const kept = sketched?.kind === "fragment" && sketched.name != null ? { name: sketched.name } : {}
+            const item: Alternative = { kind: "fragment", molecule: piece, ...kept, ...(alsoAt.length > 0 ? { alsoAt } : {}) }
             save(typeof sketch === "number" ? alternatives.map((other, index) => (index === sketch ? item : other)) : [...alternatives, item])
             setSketch(null)
           }}

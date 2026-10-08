@@ -222,3 +222,46 @@ export function fragmentFrom(mol: Molecule, atoms: number[]): Molecule {
 export function fragmentVariables(piece: Molecule): string[] {
   return [...new Set(piece.atoms.flatMap((atom) => (atom.alias && atom.alias !== STAR && isVariableName(atom.alias) ? [atom.alias] : [])))]
 }
+
+/**
+ * The piece joined by another of its atoms: its "*" marks moved onto `head`, pointing away
+ * from that atom's bonds (two marks, for a ring atom, splayed either side).
+ */
+export function fragmentAt(piece: Molecule, head: number): Molecule {
+  const ends = fragmentEnds(piece)
+  const stars = new Set(ends.map((end) => end.star))
+  const centre = atomById(piece, head)
+  if (!centre || stars.has(head) || ends.length === 0) return piece
+  const length = ends[0].head > 0 ? dist(at(piece, ends[0].head), at(piece, ends[0].star)) : bondLengthAt(piece)
+  const others = neighbors(piece, head).filter((atom) => !stars.has(atom.id))
+  const pull = others.reduce((sum, atom) => ({ x: sum.x + atom.x - centre.x, y: sum.y + atom.y - centre.y }), { x: 0, y: 0 })
+  const away = pull.x === 0 && pull.y === 0 ? 0 : Math.atan2(-pull.y, -pull.x)
+  const spread = ends.length > 1 ? [-0.6, 0.6] : [0]
+  const kept = piece.bonds.filter((bond) => !stars.has(bond.a) && !stars.has(bond.b))
+  const atoms = piece.atoms.map((atom) => {
+    const index = ends.findIndex((end) => end.star === atom.id)
+    if (index < 0) return atom
+    const angle = away + (spread[index] ?? 0)
+    return { ...atom, x: centre.x + Math.cos(angle) * length, y: centre.y + Math.sin(angle) * length }
+  })
+  const joins = ends.map((end, index) => ({ id: piece.nextBondId + index, a: head, b: end.star, order: 1 as const, stereo: "none" as const }))
+  return { ...piece, atoms, bonds: [...kept, ...joins], nextBondId: piece.nextBondId + ends.length }
+}
+
+/** Why a piece's other joining atoms (`alsoAt`) will not do, or null. */
+export function alsoAtProblem(piece: Molecule, alsoAt: number[]): string | null {
+  const ends = fragmentEnds(piece)
+  if (new Set(ends.map((end) => end.head)).size > 1) return "a linker piece joins by two atoms; it cannot take other joining atoms"
+  const stars = new Set(ends.map((end) => end.star))
+  for (const id of alsoAt) {
+    if (!Number.isInteger(id) || !atomById(piece, id) || stars.has(id)) return `the piece has no atom #${id} to join by`
+    if (ends.some((end) => end.head === id)) return `atom #${id} is already where the piece joins`
+  }
+  return new Set(alsoAt).size === alsoAt.length ? null : "an atom to join by is listed twice"
+}
+
+/** Every way a piece alternative joins: as drawn, then by each of its other joining atoms. */
+export function fragmentVersions(piece: Molecule, alsoAt: number[] = []): Molecule[] {
+  return [piece, ...alsoAt.map((head) => fragmentAt(piece, head))]
+}
+

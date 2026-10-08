@@ -138,7 +138,17 @@ export type Alternative =
    * bonded to a "*" takes that bond (both "*" on one atom: it takes both, as X in a ring).
    * Placeholders inside it (R5) are variables too. `name` is how it is shown, if given.
    */
-  | { kind: "fragment"; molecule: Molecule; name?: string }
+  | {
+      kind: "fragment"
+      molecule: Molecule
+      name?: string
+      /**
+       * Other atoms of the piece it may join by instead of the one its "*" marks are on, each
+       * one more choice ("pyridyl, joined at C2, C3 or C4"). Not for a linker, whose two
+       * marks sit on two atoms.
+       */
+      alsoAt?: number[]
+    }
 
 /** The divalent rings a linker can be (see markush/bridges.ts for how each is built). */
 export type BridgeName = "p-phenylene" | "m-phenylene" | "4,4'-biphenylene" | "2,5-pyridinediyl"

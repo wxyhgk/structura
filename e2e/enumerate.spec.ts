@@ -191,3 +191,42 @@ test("in the sketch pad's site mode a click on an atom sets the site, shown on t
   await expect(page.getByTestId("sketch-dialog").getByTestId("site-badge")).toHaveText("1")
   await expect(page.getByTestId("sketch-dialog").getByTestId("sites-line")).toContainText("第 1 个原子")
 })
+
+test("a candidate drawn with two sites makes one compound for each: methoxy joined by O, and by C", async ({ page }) => {
+  await openEditor(page)
+  await openFile(page, fixture("benzene-R1-anywhere.structura"))
+  const row = page.getByTestId("variable-R1")
+  const compounds = async () => {
+    await page.getByRole("button", { name: "批量生成化合物…" }).click()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toContainText("得到")
+    const made = await dialog.getByTestId("enumerated-compound").count()
+    await page.keyboard.press("Escape")
+    await expect(dialog).toHaveCount(0)
+    return made
+  }
+  const before = await compounds()
+  await row.getByRole("button", { name: "✎ 画一个" }).click()
+  const sketch = page.getByTestId("sketch-dialog")
+  await expect(sketch).toHaveAttribute("data-state", "open")
+  await page.waitForFunction(() => document.getAnimations().length === 0)
+  const pad = await sketch.getByTestId("sketch-pad").boundingBox()
+  const first = { x: pad!.x + pad!.width / 2, y: pad!.y + pad!.height / 2 }
+  // A click on empty canvas draws a bond to the right, one bond length (40 at 100%) long.
+  const second = { x: first.x + 40, y: first.y }
+  await page.mouse.click(first.x, first.y)
+  await sketch.getByRole("button", { name: "O", exact: true }).click()
+  await page.mouse.click(first.x, first.y)
+  await sketch.getByRole("button", { name: "◎ 设位点" }).click()
+  await page.mouse.click(first.x, first.y)
+  await page.mouse.click(second.x, second.y)
+  await expect(sketch.getByTestId("site-badge")).toHaveText(["1", "2"])
+  await expect(sketch.getByTestId("sites-line")).toContainText("共 2 种")
+  await sketch.getByRole("button", { name: "添加到 R1" }).click()
+  await expect(row.getByTestId("alternative").last()).toContainText("2 个位点")
+  // Anisole and benzyl alcohol.
+  expect(await compounds()).toBe(before + 2)
+  // Opened again, both sites are back on their atoms.
+  await row.getByRole("button", { name: "修改画的结构" }).click()
+  await expect(page.getByTestId("sketch-dialog").getByTestId("site-badge")).toHaveText(["1", "2"])
+})

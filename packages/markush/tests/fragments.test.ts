@@ -135,3 +135,41 @@ test("a formula with drawn pieces survives a save and an open", async () => {
   assert.deepEqual(read.drawing.variables, JSON.parse(JSON.stringify(drawing.variables)))
   assert.deepEqual(enumerate(read.drawing).molecules.length, 2)
 })
+
+/** Pyridyl drawn joined at C2 (atom 2 next to N1), and allowed at C3 and C4 too. */
+const pyridylAnywhere = (): Alternative => {
+  const drawn = piece([
+    { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" },
+    { op: "label", atom: 1, text: "N" },
+    { op: "add_atom", el: "C", to: 2, as: "star" },
+    { op: "label", atom: "star", text: "*" },
+  ])
+  return { ...drawn, alsoAt: [3, 4] } as Alternative
+}
+
+test("a piece that may join by several of its atoms is one compound per joining atom: 2-, 3- and 4-pyridyl", () => {
+  const drawing = run(emptyDrawing(), [
+    { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" },
+    { op: "add_atom", el: "C", to: 1, as: "r" },
+    { op: "label", atom: "r", text: "R1" },
+    { op: "set_variable", name: "R1", alternatives: [pyridylAnywhere()] },
+  ])
+  const result = enumerate(drawing)
+  assert.equal(result.failed, 0)
+  assert.deepEqual(result.molecules.map(canonical).sort(), [canonical("c1ccc(-c2ccccn2)cc1"), canonical("c1ccc(-c2cccnc2)cc1"), canonical("c1ccc(-c2ccncc2)cc1")].sort())
+  for (const mol of result.molecules) assertTidy(mol)
+  assert.deepEqual(
+    result.picks.map((pick) => pickFields(pick).R1),
+    ["C5H4N（位点 1）", "C5H4N（位点 2）", "C5H4N（位点 3）"],
+  )
+})
+
+test("other joining atoms must be atoms of the piece, and not on a linker", async () => {
+  const { alternativeProblem } = await import("@structura/markush")
+  const pyridyl = pyridylAnywhere() as Extract<Alternative, { kind: "fragment" }>
+  assert.equal(alternativeProblem(pyridyl), null)
+  assert.ok(alternativeProblem({ ...pyridyl, alsoAt: [99] }))
+  assert.ok(alternativeProblem({ ...pyridyl, alsoAt: [2] }), "the atom it already joins by")
+  assert.ok(alternativeProblem({ ...pyridyl, alsoAt: [3, 3] }))
+  assert.ok(alternativeProblem({ ...(phenylene() as Extract<Alternative, { kind: "fragment" }>), alsoAt: [2] }))
+})

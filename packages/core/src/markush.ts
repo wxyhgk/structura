@@ -3,7 +3,19 @@
 // into compounds, and the questions the editor asks about it, are @structura/markush.
 export { attachmentProblem, pruneAttachments, repeatProblem } from "./markush/attachments.ts"
 export { BRIDGES } from "./markush/bridges.ts"
-export { fragmentEnds, fragmentFits, fragmentFormula, fragmentFrom, fragmentProblem, fragmentVariables, placeFragment, STAR } from "./markush/fragments.ts"
+export {
+  alsoAtProblem,
+  fragmentAt,
+  fragmentEnds,
+  fragmentFits,
+  fragmentFormula,
+  fragmentFrom,
+  fragmentProblem,
+  fragmentVariables,
+  fragmentVersions,
+  placeFragment,
+  STAR,
+} from "./markush/fragments.ts"
 export type { Placed } from "./markush/fragments.ts"
 export { closureNames, ringClosureProblem } from "./markush/closures.ts"
 export { provisoNames, provisoProblem } from "./markush/provisos.ts"

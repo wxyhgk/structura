@@ -5,8 +5,7 @@ import type { Viewport } from "@structura/engine"
 
 /**
  * The sketch pad's sites drawn over its canvas: a ring round each site atom with its number
- * (1, 2; ×2 for a ring atom that takes both bonds). The default site, used while none is
- * set, is dashed and says so.
+ * (1, 2, 3…). The default site, used while none is set, is dashed and says so.
  */
 export function SiteBadges({ mol, sites, assumed, viewport }: { mol: Molecule; sites: number[]; assumed: boolean; viewport: Viewport }) {
   const view = useSyncExternalStore(viewport.subscribe, viewport.get)
@@ -18,8 +17,7 @@ export function SiteBadges({ mol, sites, assumed, viewport }: { mol: Molecule; s
         if (!atom) return null
         const x = view.pan.x + atom.x * view.zoom
         const y = view.pan.y + atom.y * view.zoom
-        const count = sites.filter((site) => site === id).length
-        const label = assumed ? "默认" : count > 1 ? "×2" : String(sites.indexOf(id) + 1)
+        const label = assumed ? "默认" : String(sites.indexOf(id) + 1)
         return (
           <g key={id} data-testid="site-badge">
             <circle cx={x} cy={y} r={13} fill="rgba(26,115,232,0.12)" stroke="#1a73e8" strokeWidth={1.5} strokeDasharray={assumed ? "3 3" : undefined} />

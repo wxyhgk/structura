@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/tsconfig.react-build.tsbuildinfo",
+    "types": ["vite/client"],
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    // The workspace packages are compiled from their sources too, so the root spans the repo.
+    "rootDir": "../..",
+    // Through node_modules the workspace packages count as external libraries, whose
+    // declarations tsc does not emit; mapped to their sources, they are emitted with ours.
+    "paths": {
+      "@structura/*": ["../*/src/index.ts"],
+      "@structura/core/*": ["../core/src/*.ts"],
+      "@structura/engine/*": ["../engine/src/*.ts"],
+      "@structura/markush/*": ["../markush/src/*.ts"],
+      "@structura/ai/*": ["../ai/src/*.ts"],
+      "@structura/rdkit/*": ["../rdkit/src/*.ts"]
+    }
+  },
+  "include": ["src"]
+}

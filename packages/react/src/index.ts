@@ -6,3 +6,4 @@ export type { EditorHandle, EditorProps, EnumerateOptions, Enumeration, FillVari
 export type { TemplateStore } from "./editor/templates/store.ts"
 export { httpTemplateStore } from "./editor/templates/httpStore.ts"
 export { memoryTemplateStore } from "./editor/templates/memoryStore.ts"
+export { configureRDKit } from "./editor/rdkit.ts"

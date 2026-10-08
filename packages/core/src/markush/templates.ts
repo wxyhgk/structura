@@ -66,7 +66,8 @@ function siteMismatch(site: TemplateSite, alternative: Alternative): string | nu
   const ends = fragmentEnds(alternative.molecule)
   const heads = new Set(ends.map((end) => end.head))
   if (site === "end" && ends.length !== 1) return "a group (site end) is a piece with one *"
-  if (site === "link" && (ends.length !== 2 || heads.size !== 2)) return "a linker (site link) is a piece with a * on each of two atoms"
+  // A linker joins by two atoms (p-phenylene), or by one atom bonded twice (–C(=O)–).
+  if (site === "link" && ends.length !== 2) return "a linker (site link) is a piece with two *: one on each of two atoms, or both on one atom"
   if (site === "ring" && (ends.length !== 2 || heads.size !== 1)) return "a ring atom (site ring) is a piece with both * on one atom"
   return null
 }

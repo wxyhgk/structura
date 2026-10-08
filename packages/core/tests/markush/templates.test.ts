@@ -33,6 +33,17 @@ test("a template is a named alternative that suits its site", () => {
   assert.equal(templateProblem(template()), null)
   assert.equal(templateProblem(template({ name: "对亚苯基", site: "link", alternative: phenylene() })), null)
   assert.equal(templateProblem(template({ name: "C1–C6 烷基", alternative: { kind: "class", class: "alkyl", min: 1, max: 6 } })), null)
+  // –C(=O)– joins two atoms by one atom bonded twice: a linker as well as a ring atom.
+  const carbonyl = piece([
+    { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
+    { op: "add_atom", el: "O", to: 1, order: 2 },
+    { op: "add_atom", el: "C", to: 1, as: "a" },
+    { op: "label", atom: "a", text: "*" },
+    { op: "add_atom", el: "C", to: 1, as: "b" },
+    { op: "label", atom: "b", text: "*" },
+  ])
+  assert.equal(templateProblem(template({ name: "羰基", site: "link", alternative: carbonyl })), null)
+  assert.equal(templateProblem(template({ name: "羰基", site: "ring", alternative: carbonyl })), null)
 })
 
 test("a template's piece must match where it stands", () => {

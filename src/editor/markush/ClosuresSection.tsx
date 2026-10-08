@@ -11,7 +11,7 @@ const FIELD = "h-6 rounded-sm border border-[#d0d0d0] bg-white px-1 text-[12px] 
  * "R1 and R2, together with the atoms they are attached to, form a ring": which pairs may
  * close, and into what rings, written the way a claim writes them ((CH2)3-4, OCH2O, CH=CHCH=CH).
  */
-export function ClosuresSection({ closures, variables, run }: { closures: RingClosure[] | undefined; variables: Record<string, Variable> | undefined; run: Run }) {
+export function ClosuresSection({ closures, variables, run, heading = true }: { closures: RingClosure[] | undefined; variables: Record<string, Variable> | undefined; run: Run; /** Whether to show its own grey heading (off where a tab already names it). */ heading?: boolean }) {
   const names = Object.keys(variables ?? {})
   const [open, setOpen] = useState(false)
   const [a, setA] = useState(names[0] ?? "")
@@ -32,7 +32,7 @@ export function ClosuresSection({ closures, variables, run }: { closures: RingCl
 
   return (
     <div data-testid="closures">
-      <div className="border-b border-[#e0e0e0] bg-[#f0f0f0] px-3 py-1 text-[11px] text-[#777]">成环</div>
+      {heading && <div className="border-b border-[#e0e0e0] bg-[#f0f0f0] px-3 py-1 text-[11px] text-[#777]">成环</div>}
       <div className="space-y-1 px-3 py-2">
         {(closures ?? []).map((closure) => (
           <div key={`${closure.a}+${closure.b}`} className="flex items-start gap-1 text-[12px] text-[#333]" data-testid="closure">

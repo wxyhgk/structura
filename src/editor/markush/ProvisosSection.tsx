@@ -11,7 +11,7 @@ const FIELD = "h-6 rounded-sm border border-[#d0d0d0] bg-white px-1 text-[12px] 
  * The claim's provisos under the variables: what is listed, removing one, and adding an
  * excluded combination ("when R1 is H, R2 is not H") or an excluded compound (SMILES).
  */
-export function ProvisosSection({ provisos, variables, run }: { provisos: Proviso[] | undefined; variables: Record<string, Variable> | undefined; run: Run }) {
+export function ProvisosSection({ provisos, variables, run, heading = true }: { provisos: Proviso[] | undefined; variables: Record<string, Variable> | undefined; run: Run; /** Whether to show its own grey heading (off where a tab already names it). */ heading?: boolean }) {
   const names = Object.keys(variables ?? {})
   const [adding, setAdding] = useState<"combination" | "compound" | null>(null)
   /** The combination being written: each condition a variable and the values it excludes (by index in its list). */
@@ -32,7 +32,7 @@ export function ProvisosSection({ provisos, variables, run }: { provisos: Provis
 
   return (
     <div data-testid="provisos">
-      <div className="border-b border-[#e0e0e0] bg-[#f0f0f0] px-3 py-1 text-[11px] text-[#777]">附加条件</div>
+      {heading && <div className="border-b border-[#e0e0e0] bg-[#f0f0f0] px-3 py-1 text-[11px] text-[#777]">附加条件</div>}
       <div className="space-y-1 px-3 py-2">
         {(provisos ?? []).map((proviso, index) => (
           <div key={index} className="flex items-start gap-1 text-[12px] text-[#333]" data-testid="proviso">

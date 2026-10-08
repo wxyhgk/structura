@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { alternativesOf, linkerNames, nestedVariables, variableLabels } from "@structura/markush"
+import { alternativesOf, linkerNames, nestedVariables, ringNames, variableLabels, type SiteKind } from "@structura/markush"
 import type { Attachment, Molecule, Proviso, RingClosure, Variable } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"
@@ -48,7 +48,10 @@ export function VariablesPanel({
   /** Placeholders inside the variables' pieces (R5 in Ar = N–R5), which need defining too. */
   const nested = new Set(defined.flatMap((name) => nestedVariables(variables, name)))
   const pieces = defined.flatMap((name) => alternativesOf(variables, name).flatMap((item) => (item.kind === "fragment" ? [item.molecule] : [])))
-  const linkers = new Set([mol, ...pieces].flatMap((molecule) => [...linkerNames({ molecule, arrows: [], nextArrowId: 0, attachments: molecule === mol ? attachments : undefined })]))
+  const drawings = [mol, ...pieces].map((molecule) => ({ molecule, arrows: [], nextArrowId: 0, attachments: molecule === mol ? attachments : undefined }))
+  const linkers = new Set(drawings.flatMap((drawing) => [...linkerNames(drawing)]))
+  const rings = new Set(drawings.flatMap((drawing) => [...ringNames(drawing)]))
+  const siteOf = (name: string): SiteKind => (rings.has(name) ? "ring" : linkers.has(name) ? "link" : "end")
   const names = [...new Set([...onDrawing, ...defined, ...nested])]
   if (names.length === 0) return null
   return (
@@ -66,6 +69,7 @@ export function VariablesPanel({
             onDrawing={onDrawing.includes(name)}
             nested={nested.has(name)}
             linker={linkers.has(name)}
+            site={siteOf(name)}
             mol={mol}
             selected={selected}
             run={run}

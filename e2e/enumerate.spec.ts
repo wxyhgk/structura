@@ -160,7 +160,7 @@ test("a candidate drawn in the sketch pad joins the variable's list, and the com
   await expect(row.getByTestId("alternative")).toHaveCount(alternativesBefore + 1)
 })
 
-test("in the sketch pad's marking mode a click on an atom marks where the piece joins, instead of drawing", async ({ page }) => {
+test("in the sketch pad's site mode a click on an atom sets the site, shown on the atom, instead of drawing", async ({ page }) => {
   await openEditor(page)
   await openFile(page, fixture("benzene-R1-anywhere.structura"))
   await page.getByTestId("variable-R1").getByRole("button", { name: "✎ 画一个" }).click()
@@ -171,15 +171,23 @@ test("in the sketch pad's marking mode a click on an atom marks where the piece 
   const pad = await sketch.getByTestId("sketch-pad").boundingBox()
   const centre = { x: pad!.x + pad!.width / 2, y: pad!.y + pad!.height / 2 }
   await page.mouse.click(centre.x, centre.y)
-  // Marking mode: a click on the atom marks it instead of drawing a bond from it.
-  await sketch.getByRole("button", { name: "连接点 *" }).click()
+  // Before any site is set, the first atom drawn is the default, and says so.
+  await expect(sketch.getByTestId("site-badge")).toHaveText("默认")
+  await expect(sketch.getByTestId("sites-line")).toContainText("默认用第一个画的原子")
+  await sketch.getByRole("button", { name: "◎ 设位点" }).click()
   await page.mouse.click(centre.x, centre.y)
+  await expect(sketch.getByTestId("site-badge")).toHaveText("1")
   await sketch.getByRole("button", { name: "添加到 R1" }).click()
   await expect(sketch).toHaveCount(0)
-  // Ethyl with its one mark: two carbons and a "*", not a third carbon drawn by the click.
+  // Ethyl with one "*": two carbons, not a third drawn by the click.
   type Piece = { kind: string; molecule?: { atoms: Array<{ el: string; alias?: string }> } }
   const list = (await doc(page)).variables?.R1 as { alternatives: Piece[] }
   const piece = list.alternatives.at(-1)
   expect(piece?.kind).toBe("fragment")
   expect(piece?.molecule?.atoms.map((atom) => atom.alias ?? atom.el).sort()).toEqual(["*", "C", "C"])
+
+  // Opened again, the piece shows its site on the atom, with no "*" drawn.
+  await page.getByTestId("variable-R1").getByRole("button", { name: "修改画的结构" }).click()
+  await expect(page.getByTestId("sketch-dialog").getByTestId("site-badge")).toHaveText("1")
+  await expect(page.getByTestId("sketch-dialog").getByTestId("sites-line")).toContainText("第 1 个原子")
 })

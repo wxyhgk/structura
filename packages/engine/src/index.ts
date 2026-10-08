@@ -27,7 +27,8 @@ export { ROTATE_STEP, ZOOM_STEP } from "./view/steps.ts"
 export { steppedZoom, ZOOM_LEVELS } from "./view/zoomLevels.ts"
 
 export { joinOps, paintOps, scaffoldOps, type Run, type RunOptions } from "./ops/builders.ts"
-export { captureOps, sketchedPiece, toggleEndOps } from "./markush/capture.ts"
+export { captureOps } from "./markush/capture.ts"
+export { pickSite, sitesOf, sitesProblem, sitesShown, sketchedPiece } from "./markush/sketch.ts"
 
 export { createEditor, type Editor } from "./state/editor.ts"
 export { createEditorStore, type EditorSnapshot, type EditorStore } from "./state/store.ts"

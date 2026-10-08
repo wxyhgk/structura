@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { alternativesFromText, alternativesOf, shareSources, sharers } from "@structura/markush"
 import type { Alternative, Molecule, Variable } from "@structura/core/types"
+import type { SiteKind } from "@structura/markush"
 import { captureOps, type Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"
 import { ClassForm } from "./ClassForm.tsx"
@@ -16,6 +17,7 @@ export function VariableRow({
   onDrawing,
   nested,
   linker,
+  site,
   mol,
   selected,
   run,
@@ -28,6 +30,8 @@ export function VariableRow({
   nested: boolean
   /** It sits between two atoms (like L), so it offers a bond and divalent rings. */
   linker: boolean
+  /** Where it sits (end of a branch, linker, ring atom): how many sites a piece drawn for it takes. */
+  site: SiteKind
   /** The drawing and the atoms selected on it, for taking a drawn piece into the list. */
   mol: Molecule
   selected: number[]
@@ -215,7 +219,7 @@ export function VariableRow({
       {sketch != null && (
         <SketchDialog
           name={name}
-          linker={linker}
+          kind={site}
           initial={sketched?.kind === "fragment" ? sketched.molecule : undefined}
           onSave={(piece) => {
             const item: Alternative = { kind: "fragment", molecule: piece }

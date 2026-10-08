@@ -18,11 +18,19 @@ export function siteKind(drawing: Drawing, atom: number): SiteKind {
   return neighbors(mol, atom).length + pending >= 2 ? "link" : "end"
 }
 
+/** Variables with a placeholder of this kind (see siteKind). */
+function namesSitting(drawing: Drawing, kind: SiteKind): Set<string> {
+  return new Set(
+    drawing.molecule.atoms.flatMap((atom) => (atom.alias && isVariableName(atom.alias) && siteKind(drawing, atom.id) === kind ? [atom.alias] : [])),
+  )
+}
+
 /** Variables with a placeholder that links two atoms (see siteKind). */
 export function linkerNames(drawing: Drawing): Set<string> {
-  return new Set(
-    drawing.molecule.atoms.flatMap((atom) =>
-      atom.alias && isVariableName(atom.alias) && siteKind(drawing, atom.id) === "link" ? [atom.alias] : [],
-    ),
-  )
+  return namesSitting(drawing, "link")
+}
+
+/** Variables with a placeholder inside a ring (X = O, N–R5): a piece takes its place by one atom bonded twice. */
+export function ringNames(drawing: Drawing): Set<string> {
+  return namesSitting(drawing, "ring")
 }

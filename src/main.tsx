@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import './app.css'
 import 'chem-structura/style.css'
 import './page.css'
 import App from './App.tsx'

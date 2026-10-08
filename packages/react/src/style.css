@@ -1,4 +1,11 @@
-@import "tailwindcss";
+/* The editor's styles, confined to it: nothing here styles the page around it. Tailwind's theme
+   and utilities without its global reset; the reset, the colour variables and the base rules
+   apply inside the editor's root (.chem-app) and its overlays (.chem-overlay: dialogs, menus and
+   tooltips, which portal out to <body>). */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "./styles/preflight.css";
+@import "tailwindcss/utilities.css" layer(utilities);
 @import "tw-animate-css";
 @import "./styles/shadcn.css";
 
@@ -57,7 +64,7 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
+:where(.chem-app, .chem-overlay) {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -92,7 +99,8 @@
     --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
+:where(.dark) :where(.chem-app, .chem-overlay),
+:where(.chem-app, .chem-overlay):where(.dark) {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);
@@ -127,14 +135,12 @@
 }
 
 @layer base {
-  * {
+  :where(.chem-app, .chem-overlay),
+  :where(.chem-app, .chem-overlay) * {
     @apply border-border outline-ring/50;
     }
-  body {
-    @apply bg-background text-foreground;
-    }
-  html {
-    @apply font-sans;
+  :where(.chem-app, .chem-overlay) {
+    @apply text-foreground font-sans;
     }
 }
 
@@ -153,7 +159,7 @@
   user-select: text;
 }
 
-.tool-button {
+:where(.chem-app, .chem-overlay) .tool-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,16 +172,16 @@
   padding: 0;
 }
 
-.tool-button:hover {
+:where(.chem-app, .chem-overlay) .tool-button:hover {
   background: #e4e4e4;
 }
 
-.tool-button[data-active="true"] {
+:where(.chem-app, .chem-overlay) .tool-button[data-active="true"] {
   background: #d6e8f8;
   box-shadow: inset 0 0 0 1px #7eadd4;
 }
 
-.flyout-caret {
+:where(.chem-app, .chem-overlay) .flyout-caret {
   position: absolute;
   right: 0;
   bottom: 0;
@@ -190,6 +196,6 @@
   padding: 0;
 }
 
-.flyout-caret:hover {
+:where(.chem-app, .chem-overlay) .flyout-caret:hover {
   color: #111;
 }

@@ -45,6 +45,7 @@ export function MenuBar({
   hasFill,
   title,
   dirty,
+  tabs,
 }: {
   commands: Commands
   /** Whether the host can reach a model for filling (the menu item may still be disabled for want of variables). */
@@ -57,6 +58,8 @@ export function MenuBar({
   /** The document's name, and whether it has unsaved changes (shown as a dot). */
   title: string
   dirty: boolean
+  /** The workspace switch (绘图 / 通式), shown in the middle of the bar. */
+  tabs?: ReactNode
 }) {
   const c = commands
   return (
@@ -128,7 +131,8 @@ export function MenuBar({
         <Item command={c.guide} />
         <Item command={c.help} />
       </MenuButton>
-      <div className="ml-auto text-[12px] text-[#777]" data-testid="document-title" title={dirty ? "有未保存的修改" : undefined}>
+      {tabs && <div className="mx-auto">{tabs}</div>}
+      <div className={`${tabs ? "" : "ml-auto "}text-[12px] text-[#777]`} data-testid="document-title" title={dirty ? "有未保存的修改" : undefined}>
         {title}
         {dirty && <span className="ml-1 text-[#1a73e8]">•</span>}
       </div>

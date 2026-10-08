@@ -34,6 +34,9 @@ import type { FillVariables } from "@/editor/markush/useFill"
 import { StructureDialog } from "@/editor/vision/StructureDialog"
 import type { RecognizeStructure } from "@/editor/vision/useRecognition"
 import { VariablesPanel } from "@/editor/markush/VariablesPanel"
+import { MarkushWorkspace } from "@/editor/markush/workspace/MarkushWorkspace"
+import type { Workspace } from "@/editor/markush/workspace/types"
+import { WorkspaceTabs } from "@/editor/markush/workspace/WorkspaceTabs"
 import { SmilesDialog } from "@/editor/shell/dialogs/SmilesDialog"
 import { MenuBar } from "@/editor/shell/MenuBar"
 import { StatusBar } from "@/editor/shell/StatusBar"
@@ -91,6 +94,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const shownMol = useMemo(() => displayMolecule(editor.mol), [editor.mol])
   const [recognizeOpen, setRecognizeOpen] = useState(false)
   const [guide, setGuide] = useState<GuideTopic | null>(null)
+  /** Drawing, or the generic formula's workspace; both show the same document. */
+  const [workspace, setWorkspace] = useState<Workspace>("draw")
 
   const imports = useImports(editor, viewport)
   const clipboard = selectionClipboard(editor, (line) => imports.showNotes({ opened: false, title: "复制为图片", lines: [line] }))
@@ -142,47 +147,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
   useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange })
 
-  return (
-    <TooltipProvider delayDuration={350}>
-      <OverlayScope value={input.overlayScope}>
-        <div
-          className="chem-app relative flex h-full w-full min-h-0 flex-col overflow-hidden"
-          {...input.rootProps}
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault()
-            const dropped = event.dataTransfer.files[0]
-            if (dropped) void openFile(dropped)
-          }}
-        >
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".structura,.mol,.sdf,.sd,.mdl"
-            className="hidden"
-            data-testid="open-file"
-            onChange={(event) => {
-              const picked = event.target.files?.[0]
-              event.target.value = ""
-              if (picked) void openFile(picked)
-            }}
-          />
-          <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} raisedNumbers={editor.raisedNumbers} onRaisedNumbers={setRaisedNumbers} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} />
-          <Toolbar commands={commands} zoom={zoom} />
-
-          <div className="flex min-h-0 flex-1">
-            <ToolPalette
-              tool={editor.tool}
-              bondStyle={editor.bondStyle}
-              ringKind={editor.ringKind}
-              atomEl={editor.atomEl}
-              scaffold={editor.scaffold}
-              onScaffold={editor.pickScaffold}
-              onTool={editor.setTool}
-              onBondStyle={editor.setBondStyle}
-              onRingKind={editor.setRingKind}
-              onElement={editor.applyElement}
-            />
+  /** The canvas with its right-click menu: the drawing workspace's centre, and the formula's canvas in the other. */
+  const canvasArea = (
             <ContextMenu>
               <ContextMenuTrigger asChild>
                 <div className="flex min-h-0 min-w-0 flex-1" onContextMenu={(event) => setMenuTarget(contextTarget(shownMol, editor.selection, canvasRef.current?.targetAt(event.clientX, event.clientY) ?? null))}>
@@ -217,7 +183,67 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
                 onAnalyze={() => setReport(reportFor(editor.mol, menuAtoms()))}
               />
             </ContextMenu>
-            <VariablesPanel
+  )
+
+  return (
+    <TooltipProvider delayDuration={350}>
+      <OverlayScope value={input.overlayScope}>
+        <div
+          className="chem-app relative flex h-full w-full min-h-0 flex-col overflow-hidden"
+          {...input.rootProps}
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault()
+            const dropped = event.dataTransfer.files[0]
+            if (dropped) void openFile(dropped)
+          }}
+        >
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".structura,.mol,.sdf,.sd,.mdl"
+            className="hidden"
+            data-testid="open-file"
+            onChange={(event) => {
+              const picked = event.target.files?.[0]
+              event.target.value = ""
+              if (picked) void openFile(picked)
+            }}
+          />
+          <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} raisedNumbers={editor.raisedNumbers} onRaisedNumbers={setRaisedNumbers} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} tabs={<WorkspaceTabs value={workspace} onChange={setWorkspace} />} />
+          <Toolbar commands={commands} zoom={zoom} />
+
+          <div className="flex min-h-0 flex-1">
+            <ToolPalette
+              tool={editor.tool}
+              bondStyle={editor.bondStyle}
+              ringKind={editor.ringKind}
+              atomEl={editor.atomEl}
+              scaffold={editor.scaffold}
+              onScaffold={editor.pickScaffold}
+              onTool={editor.setTool}
+              onBondStyle={editor.setBondStyle}
+              onRingKind={editor.setRingKind}
+              onElement={editor.applyElement}
+            />
+            {workspace === "draw" && canvasArea}
+            {workspace === "markush" && (
+              <MarkushWorkspace
+                canvas={canvasArea}
+                drawing={editor.drawing}
+                run={editor.run}
+                selected={editor.selection.atoms}
+                colorHetero={editor.colorHetero}
+                base={file.base}
+                onPlace={(mol) => {
+                  editor.appendMolecules([mol], viewport.centre())
+                  setWorkspace("draw")
+                }}
+                onHelp={setGuide}
+                onFill={fillVariables ? () => setFillOpen(true) : undefined}
+              />
+            )}
+            {workspace === "draw" && <VariablesPanel
               mol={editor.mol}
               selected={editor.selection.atoms}
               variables={editor.variables}
@@ -229,7 +255,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               onEnumerate={commands.enumerate.run}
               onFill={fillVariables ? () => setFillOpen(true) : undefined}
               onHelp={setGuide}
-            />
+            />}
           </div>
 
           <StatusBar

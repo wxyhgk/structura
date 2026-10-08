@@ -46,10 +46,15 @@ test("filtering keeps the variable's site unless every site is asked for", () =>
   assert.deepEqual(filterTemplates(all, { site: "end", query: "亚乙", allSites: true }), [ethylene])
 })
 
-test("the card's quick picks are the site's first few", () => {
+test("a card's quick picks are the user's own newest first, then the favourite built-ins for that site", () => {
   assert.ok(quickPicks(all, "end", 3).length <= 3)
-  assert.ok(quickPicks(all, "link").every((template) => template.site === "link"))
-  assert.ok(quickPicks(all, "link").includes(ethylene))
+  const link = quickPicks(all, "link")
+  assert.ok(link.every((template) => template.site === "link"))
+  assert.equal(link[0], ethylene, "the user's own comes first")
+  assert.ok(link.some((template) => template.id === "builtin:bond"), "then the single bond")
+  const end = quickPicks(builtinTemplates(), "end").map((template) => template.id)
+  assert.equal(end[0], "builtin:alkyl-c1-c30", "the classes claims name most lead")
+  for (const site of ["end", "link", "ring"] as const) assert.ok(quickPicks(builtinTemplates(), site).length >= 5, `every favourite for ${site} exists`)
 })
 
 test("templates sit on their shelves, in the order the shelves first appear", () => {

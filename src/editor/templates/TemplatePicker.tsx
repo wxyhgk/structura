@@ -7,8 +7,8 @@ import type { Templates } from "./useTemplates.ts"
 const CHIP = "inline-flex h-7 items-center gap-1 rounded-full border border-dashed px-2.5"
 
 /**
- * The templates offered on a variable's card: the first few for its site, built-ins first,
- * one click each, a drawn one with its picture; and the way into the whole library.
+ * The templates offered on a variable's card: the user's own newest, then favourite
+ * built-ins for its site (see quickPicks), one click each, a drawn one with its picture; and the way into the whole library.
  */
 export function TemplatePicker({
   templates,

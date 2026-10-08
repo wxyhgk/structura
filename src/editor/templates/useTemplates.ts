@@ -96,6 +96,7 @@ export function useTemplates(store?: TemplateStore): Templates {
     [ready],
   )
 
-  const templates = useMemo(() => [...builtins, ...mine], [builtins, mine])
+  // The user's own first: the library shows shelves in the order they first appear, and theirs are the likeliest wanted.
+  const templates = useMemo(() => [...mine, ...builtins], [builtins, mine])
   return { templates, status, error, save, remove, exportFile, importFile }
 }

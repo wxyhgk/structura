@@ -84,18 +84,22 @@ test("a piece drawn in the sketch pad is saved as a template, with its site, and
   await r2.getByRole("button", { name: "模板库…" }).click()
   const library = page.getByTestId("template-library")
   await library.getByLabel("搜索模板").fill("ome")
-  const row = library.getByTestId("template-row").filter({ hasText: "甲氧基" })
+  // The built-ins hold a 甲氧基 (and 三氟甲氧基) too: the user's own is the one tagged 我的.
+  const row = library
+    .getByTestId("template-row")
+    .filter({ has: page.getByTestId("template-name").getByText("甲氧基", { exact: true }) })
+    .filter({ has: page.getByTestId("template-source").getByText("我的", { exact: true }) })
   await expect(row.getByTestId("template-source")).toHaveText("我的")
   await expect(row.getByRole("button", { name: "已添加" })).toBeDisabled()
   await row.getByRole("button", { name: "改名/分组" }).click()
   const edit = library.getByTestId("save-template-form")
   await edit.getByLabel("模板分组").fill("烷氧基")
   await edit.getByRole("button", { name: "保存修改" }).click()
-  await expect(library.getByTestId("template-group")).toContainText("烷氧基")
+  await expect(library.getByTestId("template-group").filter({ hasText: "烷氧基" })).toHaveCount(1)
   await row.getByRole("button", { name: "删除" }).click()
   await expect(row).toContainText("不能撤销")
   await row.getByRole("button", { name: "删除" }).click()
-  await expect(library.getByTestId("template-row")).toHaveCount(0)
+  await expect(row).toHaveCount(0)
 })
 
 test("a class on a card is saved as a template; the user's templates go out to a file and come back", async ({ page }) => {

@@ -11,9 +11,10 @@
     "build": "tsc -b && NODE_OPTIONS=--conditions=structura-source vite --configLoader native build",
     "lint": "oxlint --deny-warnings",
     "typecheck": "tsc -b",
-    "test": "node --experimental-strip-types --conditions=structura-source --import ./tests/support/alias.ts --test \"tests/**/*.test.ts\" \"packages/*/tests/**/*.test.ts\"",
+    "test": "node --experimental-strip-types --conditions=structura-source --import ./tests/support/alias.ts --test \"tests/**/*.test.ts\" \"packages/*/tests/**/*.test.ts\" \"backend/tests/**/*.test.ts\"",
     "test:app": "node --experimental-strip-types --conditions=structura-source --import ./tests/support/alias.ts --test \"tests/**/*.test.ts\"",
     "test:e2e": "playwright test -c e2e",
+    "backend": "node --experimental-strip-types --conditions=structura-source backend/src/main.ts",
     "preview": "NODE_OPTIONS=--conditions=structura-source vite --configLoader native preview",
     "prepare": "git config core.hooksPath .githooks || true"
   },
@@ -47,6 +48,7 @@
     "vite": "^8.3.0"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "backend"
   ]
 }

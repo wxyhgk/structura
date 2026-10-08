@@ -9,7 +9,8 @@
     { "path": "./packages/rdkit" },
     { "path": "./packages/ai" },
     { "path": "./packages/engine" },
-    { "path": "./packages/testkit" }
+    { "path": "./packages/testkit" },
+    { "path": "./backend" }
   ],
   "compilerOptions": {
     "paths": {

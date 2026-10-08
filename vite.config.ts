@@ -16,5 +16,9 @@ export default defineConfig(({ mode }) => ({
     conditions: ['structura-source', ...defaultClientConditions],
   },
   // Agent worktrees live under .claude/; their edits must not reload this app's pages.
-  server: { watch: { ignored: ['**/.claude/**'] } },
+  server: {
+    watch: { ignored: ['**/.claude/**'] },
+    // The user's templates are kept by the backend (npm run backend); the app calls same-origin paths.
+    proxy: Object.fromEntries(['/api/templates', '/api/health'].map((route) => [route, `http://127.0.0.1:${process.env.STRUCTURA_BACKEND_PORT ?? 25174}`])),
+  },
 }))

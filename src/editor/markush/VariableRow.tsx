@@ -1,14 +1,15 @@
 import { useState } from "react"
-import { alternativesFromText, alternativesOf, shareSources, sharers } from "@structura/markush"
-import type { Alternative, Molecule, Variable } from "@structura/core/types"
+import { alternativesOf, shareSources, sharers } from "@structura/markush"
+import type { Molecule, Variable } from "@structura/core/types"
 import type { SiteKind } from "@structura/markush"
-import { captureOps, type Run } from "@structura/engine"
+import type { Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"
 import { ClassForm } from "./ClassForm.tsx"
 import { describeAlternative } from "./describe.ts"
 import { MoleculeThumb } from "@/editor/common/MoleculeThumb"
 import { LINKER_PRESETS, PRESETS, shortName } from "./presets.ts"
 import { SketchDialog } from "./SketchDialog.tsx"
+import { variableEdits } from "./variableEdits.ts"
 
 /** One variable in the panel: its alternatives, and the ways to add, share or remove them. */
 export function VariableRow({
@@ -55,38 +56,18 @@ export function VariableRow({
   const [sketch, setSketch] = useState<"new" | number | null>(null)
   const sketched = typeof sketch === "number" ? alternatives[sketch] : undefined
 
-  /** Shares another variable's list, or (with "") takes a copy of the shared list as its own. */
-  function share(source: string) {
-    if (source) run([{ op: "set_variable", name, sameAs: source }], { keepSelection: true })
-    else if (alternatives.length > 0) run([{ op: "set_variable", name, alternatives }], { keepSelection: true })
-    else run([{ op: "remove_variable", name }], { keepSelection: true })
-  }
-
-  /** Saves the new list; an empty list takes the definition away. */
-  function save(next: Alternative[]) {
-    if (next.length > 0) run([{ op: "set_variable", name, alternatives: next }], { keepSelection: true })
-    else if (variable) run([{ op: "remove_variable", name }], { keepSelection: true })
-  }
+  const { save, share, add: addClass, replace, remove, addText, capture: captureFrom, saveSketch } = variableEdits(name, variables, run)
 
   /** Adds what was typed; words that are no element or abbreviation stay in the field, flagged. */
   function addLabels() {
-    const { add, rejected } = alternativesFromText(text, alternatives)
-    if (add.length > 0) save([...alternatives, ...add])
+    const rejected = addText(text)
     setUnknown(rejected)
     setText(rejected.join(", "))
   }
 
   /** Moves the selected piece off the canvas into this variable's list, as one step. */
   function capture() {
-    const result = captureOps(name, alternatives, mol, selected)
-    if ("problem" in result) return setCaptureProblem(result.problem)
-    setCaptureProblem(null)
-    run(result.ops)
-  }
-
-  function addClass(item: Alternative) {
-    const same = alternatives.some((other) => JSON.stringify(other) === JSON.stringify(item))
-    if (!same) save([...alternatives, item])
+    setCaptureProblem(captureFrom(mol, selected))
   }
 
   return (
@@ -139,7 +120,7 @@ export function VariableRow({
               describeAlternative(item)
             )}
             {!shared && (
-              <button className="text-[#999] hover:text-[#d1242f]" onClick={() => save(alternatives.filter((_, other) => other !== index))} aria-label="去掉">
+              <button className="text-[#999] hover:text-[#d1242f]" onClick={() => remove(index)} aria-label="去掉">
                 ×
               </button>
             )}
@@ -173,7 +154,7 @@ export function VariableRow({
             <ClassForm
               initial={typeof classForm === "number" ? alternatives[classForm] : undefined}
               onSave={(item) => {
-                if (typeof classForm === "number") save(alternatives.map((other, index) => (index === classForm ? item : other)))
+                if (typeof classForm === "number") replace(classForm, item)
                 else addClass(item)
                 setClassForm(null)
               }}
@@ -222,9 +203,7 @@ export function VariableRow({
           kind={site}
           initial={sketched?.kind === "fragment" ? sketched : undefined}
           onSave={(piece, alsoAt) => {
-            const kept = sketched?.kind === "fragment" && sketched.name != null ? { name: sketched.name } : {}
-            const item: Alternative = { kind: "fragment", molecule: piece, ...kept, ...(alsoAt.length > 0 ? { alsoAt } : {}) }
-            save(typeof sketch === "number" ? alternatives.map((other, index) => (index === sketch ? item : other)) : [...alternatives, item])
+            saveSketch(sketch, piece, alsoAt)
             setSketch(null)
           }}
           onClose={() => setSketch(null)}

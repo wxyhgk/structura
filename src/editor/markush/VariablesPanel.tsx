@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button"
-import { alternativesOf, linkerNames, nestedVariables, ringNames, variableLabels, type SiteKind } from "@structura/markush"
 import type { Attachment, Molecule, Proviso, RingClosure, Variable } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "@/guide"
@@ -7,6 +6,7 @@ import { AttachmentRow } from "./AttachmentRow.tsx"
 import { ClosuresSection } from "./ClosuresSection.tsx"
 import { LibrarySizeLine } from "./LibrarySizeLine.tsx"
 import { ProvisosSection } from "./ProvisosSection.tsx"
+import { variableNames } from "./variableNames.ts"
 import { VariableRow } from "./VariableRow.tsx"
 
 /**
@@ -43,16 +43,7 @@ export function VariablesPanel({
   /** Opens the user guide on a page. */
   onHelp: (topic: GuideTopic) => void
 }) {
-  const onDrawing = variableLabels(mol)
-  const defined = Object.keys(variables ?? {})
-  /** Placeholders inside the variables' pieces (R5 in Ar = N–R5), which need defining too. */
-  const nested = new Set(defined.flatMap((name) => nestedVariables(variables, name)))
-  const pieces = defined.flatMap((name) => alternativesOf(variables, name).flatMap((item) => (item.kind === "fragment" ? [item.molecule] : [])))
-  const drawings = [mol, ...pieces].map((molecule) => ({ molecule, arrows: [], nextArrowId: 0, attachments: molecule === mol ? attachments : undefined }))
-  const linkers = new Set(drawings.flatMap((drawing) => [...linkerNames(drawing)]))
-  const rings = new Set(drawings.flatMap((drawing) => [...ringNames(drawing)]))
-  const siteOf = (name: string): SiteKind => (rings.has(name) ? "ring" : linkers.has(name) ? "link" : "end")
-  const names = [...new Set([...onDrawing, ...defined, ...nested])]
+  const { names, onDrawing, nested, linkers, siteOf } = variableNames(mol, variables, attachments)
   if (names.length === 0) return null
   return (
     <aside className="flex w-64 shrink-0 flex-col border-l border-[#d0d0d0] bg-[#f7f7f7] text-[12px]" data-testid="variables-panel">

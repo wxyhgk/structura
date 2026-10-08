@@ -1,10 +1,18 @@
 import { forwardRef, useMemo, useRef, useState } from "react"
-import { displayMolecule } from "@structura/core/molecule"
+import { atomIdsOfSelection, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { AnalysisDialog } from "@/editor/analysis/AnalysisDialog"
+import { reportFor, type Report } from "@/editor/analysis/report"
+import { writeClipboard } from "@/editor/browser"
+import { CanvasMenu } from "@/editor/canvas/CanvasMenu"
+import { identifierOf, IDENTIFIER_NAMES, type IdentifierKind } from "@/editor/identifiers"
+import { Flash } from "@/editor/shell/Flash"
+import { useFlash } from "@/editor/shell/useFlash"
 import { Canvas } from "@/editor/canvas/Canvas"
 import type { CanvasHandle } from "@/editor/canvas/types"
 import { useZoom } from "@/editor/canvas/useViewport"
-import { createViewport, toolLabel } from "@structura/engine"
+import { contextTarget, type ContextTarget, createViewport, toolLabel } from "@structura/engine"
 import { selectionClipboard } from "@/editor/clipboard"
 import { useCommands } from "@/editor/hooks/useCommands"
 import { useDocumentFile } from "@/editor/hooks/useDocumentFile"
@@ -89,6 +97,30 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   /** How labels are written, the same on the canvas as in what is exported. */
   const labelStyle = useMemo(() => drawOptions(editor.raisedNumbers), [editor.raisedNumbers])
   const setRaisedNumbers = useRememberedSetting(RAISED_NUMBERS, editor.raisedNumbers, editor.setRaisedNumbers)
+  /** What the last right-click was about, for the menu it opens. */
+  const [menuTarget, setMenuTarget] = useState<ContextTarget | null>(null)
+  const [report, setReport] = useState<Report | null>(null)
+  const { message, flash } = useFlash()
+  /** The atoms the menu's copying and analysis act on: the selection, the molecule of the atom or bond clicked, or everything. */
+  const menuAtoms = (): number[] => {
+    const mol = editor.mol
+    if (menuTarget?.kind === "selection") return atomIdsOfSelection(mol, editor.selection)
+    if (menuTarget?.kind === "atom") return componentOf(mol, menuTarget.id)
+    if (menuTarget?.kind === "bond") {
+      const bond = mol.bonds.find((item) => item.id === menuTarget.id)
+      return bond ? componentOf(mol, bond.a) : []
+    }
+    return []
+  }
+  async function copyAs(kind: IdentifierKind) {
+    try {
+      const text = await identifierOf(editor.mol, menuAtoms(), kind)
+      writeClipboard(text)
+      flash(`已复制 ${IDENTIFIER_NAMES[kind]}：${text.length > 48 ? `${text.slice(0, 48)}…` : text}`)
+    } catch (error) {
+      flash(`没能生成 ${IDENTIFIER_NAMES[kind]}：${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
   const file = useDocumentFile(editor.drawing, editor.latest, onDirtyChange)
   /** Opens a file and, if it opened, remembers it as this document's file. */
   const openFile = async (picked: File) => {
@@ -114,7 +146,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     <TooltipProvider delayDuration={350}>
       <OverlayScope value={input.overlayScope}>
         <div
-          className="chem-app flex h-full w-full min-h-0 flex-col overflow-hidden"
+          className="chem-app relative flex h-full w-full min-h-0 flex-col overflow-hidden"
           {...input.rootProps}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
@@ -151,25 +183,40 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               onRingKind={editor.setRingKind}
               onElement={editor.applyElement}
             />
-            <Canvas
-              ref={canvasRef}
-              mol={shownMol}
-              arrows={editor.arrows}
-              tool={editor.tool}
-              bondStyle={editor.bondStyle}
-              ringKind={editor.ringKind}
-              scaffold={editor.scaffold}
-              atomEl={editor.atomEl}
-              selection={editor.selection}
-              colorHetero={editor.colorHetero}
-              drawOptions={labelStyle}
-              attachments={editor.attachments}
-              run={editor.run}
-              latest={editor.latest}
-              setSelection={editor.setSelection}
-              undo={editor.undo}
-              viewport={viewport}
-            />
+            <ContextMenu>
+              <ContextMenuTrigger asChild>
+                <div className="flex min-h-0 min-w-0 flex-1" onContextMenu={(event) => setMenuTarget(contextTarget(shownMol, editor.selection, canvasRef.current?.targetAt(event.clientX, event.clientY) ?? null))}>
+                <Canvas
+                  ref={canvasRef}
+                  mol={shownMol}
+                  arrows={editor.arrows}
+                  tool={editor.tool}
+                  bondStyle={editor.bondStyle}
+                  ringKind={editor.ringKind}
+                  scaffold={editor.scaffold}
+                  atomEl={editor.atomEl}
+                  selection={editor.selection}
+                  colorHetero={editor.colorHetero}
+                  drawOptions={labelStyle}
+                  attachments={editor.attachments}
+                  run={editor.run}
+                  latest={editor.latest}
+                  setSelection={editor.setSelection}
+                  undo={editor.undo}
+                  viewport={viewport}
+                />
+                </div>
+              </ContextMenuTrigger>
+              <CanvasMenu
+                target={menuTarget}
+                commands={commands}
+                run={(ops) => void editor.run(ops)}
+                onEditLabel={(atom) => canvasRef.current?.editLabel(atom)}
+                onSelectMolecule={(atom) => editor.setSelection(selectionFromAtoms(editor.mol, componentOf(editor.mol, atom)))}
+                onCopyAs={(kind) => void copyAs(kind)}
+                onAnalyze={() => setReport(reportFor(editor.mol, menuAtoms()))}
+              />
+            </ContextMenu>
             <VariablesPanel
               mol={editor.mol}
               selected={editor.selection.atoms}
@@ -195,6 +242,11 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
           />
 
           <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
+          <AnalysisDialog report={report} onOpenChange={(open) => !open && setReport(null)} onCopy={(text, what) => {
+            writeClipboard(text)
+            flash(`已复制${what}`)
+          }} />
+          <Flash message={message} />
           <EnumerateDialog
             open={enumerateOpen}
             onOpenChange={setEnumerateOpen}

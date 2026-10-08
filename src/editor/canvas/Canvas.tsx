@@ -157,6 +157,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     hotspot: () => hotspot.active(current()),
     pointed: () => hotspot.under(),
     focusAtom: hotspot.pin,
+    editLabel: (id) => void openLabel(id),
+    targetAt: (clientX, clientY) => hitOf(current(), viewport.toWorld(clientX, clientY), viewport.get().zoom),
     quickScaffold() {
       // What it will act on is fixed now: the pointer's atom or bond, else the hotspot, else
       // the spot under the pointer, so moving the pointer while typing changes nothing.

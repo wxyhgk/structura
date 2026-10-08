@@ -15,6 +15,10 @@ export type CanvasHandle = {
   /** The atom or bond under the pointer right now (not a pinned hotspot), if any. */
   pointed: () => HoverTarget
   focusAtom: (id: number) => void
+  /** Opens the label field on an atom, as a double click does. */
+  editLabel: (id: number) => void
+  /** The atom or bond at a point on the screen (client coordinates), as shown; null for empty canvas. */
+  targetAt: (clientX: number, clientY: number) => HoverTarget
   /** Opens the quick template field by the pointer, acting on what the pointer (or hotspot) is on now. */
   quickScaffold: () => void
   /** Opens a field on the fragment made of these atoms; what is typed replaces it. */

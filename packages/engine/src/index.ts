@@ -17,6 +17,7 @@ export { describeAtomAction, describeBondAction, hotkeyLabel } from "./tools/des
 export { defaultPick } from "./tools/scaffoldPick.ts"
 
 export type { HoverTarget } from "./pointer/types.ts"
+export { contextTarget, type ContextTarget } from "./pointer/context.ts"
 export { bondEnd, clampScale, dragIds, frameAt, handleCursor, hitOf, hoverOf, sameHover, selectionFrame, type FrameHandle, type SelectionFrame } from "./pointer/targeting.ts"
 export { doubleClickAction, type DoubleClick } from "./pointer/doubleClick.ts"
 export { snappedMove } from "./pointer/moveSnap.ts"

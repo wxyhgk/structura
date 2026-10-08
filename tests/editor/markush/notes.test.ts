@@ -3,7 +3,7 @@ import test from "node:test"
 import type { Enumeration } from "@structura/markush"
 import { emptyMolecule } from "@structura/core/molecule"
 import { choiceName } from "../../../src/editor/markush/describe.ts"
-import { notesOf } from "../../../src/editor/markush/notes.ts"
+import { notesOf, runNotes } from "../../../src/editor/markush/notes.ts"
 
 const label = (text: string) => ({ kind: "label" as const, text })
 /** How the panel names a label, so these notes follow its wording. */
@@ -62,4 +62,10 @@ test("a run cut short says whether the limit or the user stopped it", () => {
   assert.deepEqual(notesOf(result(40, { total: 3000 }), { limit: 100, status: "running" }), [], "still going: nothing is cut short yet")
   assert.deepEqual(notesOf(result(42, { total: 3000 }), { limit: 500, status: "stopped" }), ["已停止生成，只生成了前 42 种。"])
   assert.deepEqual(notesOf(result(500, { total: 500 }), { limit: 500, status: "stopped" }), [], "stopped after the last one: nothing is missing")
+})
+
+test("a run's notes add that repeats were kept when RDKit would not load", () => {
+  assert.deepEqual(runNotes(null, { limit: 500, status: "running", dedupe: "on" }), [])
+  assert.deepEqual(runNotes(result(2), { limit: 500, status: "done", dedupe: "unavailable" }), ["没能加载 RDKit，这次没有去掉重复的化合物。"])
+  assert.deepEqual(runNotes(result(2, { excluded: 1 }), { limit: 500, status: "done", dedupe: "off" }), ["按附加条件排除了 1 个。"])
 })

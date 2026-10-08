@@ -1,20 +1,15 @@
-import { memo, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { displayFormula, plainFormula } from "@structura/core/formula"
-import { toSdf } from "@structura/core/molfile"
 import type { Drawing, Molecule } from "@structura/core/types"
-import { download } from "@/editor/browser"
 import { useOverlayMark } from "@/editor/input/overlays"
-import { MoleculeThumb } from "@/editor/common/MoleculeThumb"
-import { notesOf } from "./notes.ts"
-import { canonicalIdentity } from "./identity.ts"
-import { filterRows, picksText, rowFields, rowsToCsv, rowsToSmiles, type Row } from "./results.ts"
-import { useEnumeration, type EnumerationRun } from "./useEnumeration.ts"
-import { loadRDKit } from "@/editor/rdkit"
+import { CompoundThumbnail } from "./CompoundThumbnail.tsx"
+import { downloadCsv, downloadSdf, downloadSmiles } from "./exportRows.ts"
+import { runNotes } from "./notes.ts"
+import { DEFAULT_LIMIT, LIMITS, progressText } from "./progressText.ts"
+import { filterRows, rowsOf, type Row } from "./results.ts"
+import { useEnumeration } from "./useEnumeration.ts"
 
-/** How many to generate at most, for the user to pick; the SD file holds them all. */
-const LIMITS = [100, 500, 2000]
 /** Drawn in the grid; more only slows the dialog down. */
 const SHOWN = 120
 
@@ -41,36 +36,21 @@ export function EnumerateDialog({
 }) {
   const overlayMark = useOverlayMark()
   const [representatives, setRepresentatives] = useState(true)
-  const [limit, setLimit] = useState(500)
+  const [limit, setLimit] = useState(DEFAULT_LIMIT)
   const [dedupe, setDedupe] = useState(true)
   const run = useEnumeration(open ? drawing : null, { limit, representatives, dedupe })
   const { result, status } = run
   const [filter, setFilter] = useState("")
-  const rows: Row[] = useMemo(
-    () =>
-      result
-        ? result.molecules.map((mol, index) => ({ number: index + 1, mol, picks: result.picks[index], ...(result.formulas > 1 ? { formula: result.formulaOf[index] } : {}) }))
-        : [],
-    [result],
-  )
+  const rows: Row[] = useMemo(() => (result ? rowsOf(result) : []), [result])
   const kept = useMemo(() => filterRows(rows, filter), [rows, filter])
-  /** Writes the kept rows as SMILES-bearing text; RDKit is loaded for it on first use. */
-  async function exportWith(write: (rows: Row[], smiles: (mol: Molecule) => string) => string, extension: string, type: string) {
-    const rdkit = await loadRDKit()
-    const identity = canonicalIdentity(rdkit)
-    download(`${base} 展开.${extension}`, write(kept, (mol) => identity(mol) ?? ""), type)
-  }
-  const notes = [
-    ...(result ? notesOf(result, { limit, status }) : []),
-    ...(run.dedupe === "unavailable" ? ["没能加载 RDKit，这次没有去掉重复的化合物。"] : []),
-  ]
+  const notes = runNotes(result, { limit, status, dedupe: run.dedupe })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent {...overlayMark} className="max-h-[85vh] overflow-hidden sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>批量生成化合物</DialogTitle>
-          <DialogDescription data-testid="enumeration-progress">{progressText(run, limit)}</DialogDescription>
+          <DialogDescription data-testid="enumeration-progress">{progressText(run, limit, SHOWN)}</DialogDescription>
         </DialogHeader>
         <label className="flex items-center gap-2 text-[13px]">
           <input type="checkbox" checked={representatives} onChange={(event) => setRepresentatives(event.target.checked)} />
@@ -112,7 +92,7 @@ export function EnumerateDialog({
         )}
         <div className="grid max-h-[50vh] grid-cols-4 gap-2 overflow-y-auto" data-testid="enumerated">
           {kept.slice(0, SHOWN).map((row) => (
-            <Thumbnail
+            <CompoundThumbnail
               key={row.number}
               row={row}
               colorHetero={colorHetero}
@@ -133,14 +113,14 @@ export function EnumerateDialog({
           <Button
             variant="outline"
             disabled={kept.length === 0}
-            onClick={() => download(`${base} 展开.sdf`, toSdf(kept.map((row) => row.mol), "Structura", kept.map(rowFields)), "chemical/x-mdl-sdfile")}
+            onClick={() => downloadSdf(base, kept)}
           >
             下载 SDF
           </Button>
-          <Button variant="outline" disabled={kept.length === 0} onClick={() => void exportWith(rowsToSmiles, "smi", "chemical/x-daylight-smiles")}>
+          <Button variant="outline" disabled={kept.length === 0} onClick={() => void downloadSmiles(base, kept)}>
             SMILES
           </Button>
-          <Button variant="outline" disabled={kept.length === 0} onClick={() => void exportWith(rowsToCsv, "csv", "text/csv")}>
+          <Button variant="outline" disabled={kept.length === 0} onClick={() => void downloadCsv(base, kept)}>
             CSV
           </Button>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
@@ -151,40 +131,3 @@ export function EnumerateDialog({
     </Dialog>
   )
 }
-
-/** The line under the title: progress while generating, then what was made. */
-function progressText({ result, status }: EnumerationRun, limit: number): string {
-  if (!result) return status === "running" ? "正在生成…" : "没有可以生成的化合物。"
-  const made = result.molecules.length
-  if (status === "running") return `正在生成：已生成 ${made} / 共 ${Math.min(result.total, limit)}…`
-  if (result.total === 0) return "没有可以生成的化合物。"
-  const shown = made > SHOWN ? `，下面显示前 ${SHOWN} 个` : ""
-  const repeats = result.duplicates > 0 ? `（合并了 ${result.duplicates} 个重复的）` : ""
-  return `共 ${result.total} 种组合，得到 ${made} 个${result.duplicates > 0 ? "不同的" : ""}化合物${repeats}${shown}${status === "stopped" ? "（已停止）" : ""}。`
-}
-
-/** One generated compound: numbered, its formula, what its variables became, and a way onto the canvas. */
-const Thumbnail = memo(function Thumbnail({ row, colorHetero, onPlace }: { row: Row; colorHetero: boolean; onPlace: () => void }) {
-  const picks = picksText(row.picks)
-  return (
-    <figure className="group relative rounded-sm border border-[#e0e0e0] bg-white p-1 text-center" data-testid="enumerated-compound">
-      <MoleculeThumb mol={row.mol} colorHetero={colorHetero} className="mx-auto h-24 w-full object-contain" />
-      <figcaption className="text-[11px] text-[#666]">
-        {row.number}. {row.formula != null && <span className="mr-1 rounded-sm bg-[#eef3fd] px-1 text-[#1a73e8]">式 {row.formula}</span>}
-        {displayFormula(plainFormula(row.mol))}
-        {picks && (
-          <span className="block truncate text-[10px] text-[#888]" title={picks}>
-            {picks}
-          </span>
-        )}
-      </figcaption>
-      <button
-        type="button"
-        className="absolute top-1 right-1 rounded-sm bg-[#1a73e8] px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100 focus:opacity-100"
-        onClick={onPlace}
-      >
-        放到画布
-      </button>
-    </figure>
-  )
-})

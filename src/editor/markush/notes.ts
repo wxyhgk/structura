@@ -34,3 +34,8 @@ export function notesOf(result: Enumeration, { limit, status = "done" }: { limit
   notes.push(status === "stopped" ? `已停止生成，只生成了前 ${tried} 种。` : `组合太多，只生成了前 ${limit} 种。`)
   return notes
 }
+
+/** The notes for a run as shown: what was and was not generated, and whether repeats could be dropped. */
+export function runNotes(result: Enumeration | null, { limit, status, dedupe }: { limit: number; status: "running" | "done" | "stopped"; dedupe: "on" | "off" | "unavailable" }): string[] {
+  return [...(result ? notesOf(result, { limit, status }) : []), ...(dedupe === "unavailable" ? ["没能加载 RDKit，这次没有去掉重复的化合物。"] : [])]
+}

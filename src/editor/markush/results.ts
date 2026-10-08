@@ -1,5 +1,5 @@
 import { displayFormula, molecularWeight, plainFormula } from "@structura/core/formula"
-import { pickFields, type Pick } from "@structura/markush"
+import { pickFields, type Enumeration, type Pick } from "@structura/markush"
 import type { Molecule } from "@structura/core/types"
 
 // The generated compounds as the dialog lists, filters and exports them. Pure, so tested
@@ -10,6 +10,11 @@ import type { Molecule } from "@structura/core/types"
  * became, and which formula it came from when the drawing holds several (式 1, 式 2…).
  */
 export type Row = { number: number; mol: Molecule; picks: readonly Pick[]; formula?: number }
+
+/** An enumeration's compounds as rows, numbered from 1, tagged with their formula when there are several. */
+export function rowsOf(result: Enumeration): Row[] {
+  return result.molecules.map((mol, index) => ({ number: index + 1, mol, picks: result.picks[index], ...(result.formulas > 1 ? { formula: result.formulaOf[index] } : {}) }))
+}
 
 /** A row's fields as SD data items and CSV columns: which formula first (when there are several), then each variable. */
 export function rowFields(row: Row): Record<string, string> {

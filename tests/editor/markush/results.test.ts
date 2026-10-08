@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import type { Pick } from "@structura/markush"
 import { build } from "@structura/testkit"
-import { filterRows, picksText, rowsToCsv, rowsToSmiles, type Row } from "../../../src/editor/markush/results.ts"
+import { filterRows, picksText, rowsOf, rowsToCsv, rowsToSmiles, type Row } from "../../../src/editor/markush/results.ts"
 
 const benzene = build([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).molecule
 const chloro = build([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }, { op: "add_atom", el: "Cl", to: 1 }]).molecule
@@ -64,4 +64,13 @@ test("a class carrying named substituents says so", async () => {
     describeAlternative({ kind: "class", class: "aryl", min: 6, max: 30, substituents: { from: ["F", "Cl"], min: 0, max: 2 } }),
     "取代或未取代的(C6–C30)芳基（被 0–2 个 F、Cl 取代）",
   )
+})
+
+test("an enumeration's compounds become rows numbered from 1, tagged by formula only when there are several", () => {
+  const made = { molecules: [benzene, chloro], picks: [rows[0].picks, rows[1].picks], formulaOf: [1, 2] }
+  const one = rowsOf({ ...made, formulas: 1 } as unknown as Parameters<typeof rowsOf>[0])
+  assert.deepEqual(one.map((row) => [row.number, row.mol, row.formula]), [[1, benzene, undefined], [2, chloro, undefined]])
+  assert.equal(one[1].picks, rows[1].picks)
+  const two = rowsOf({ ...made, formulas: 2 } as unknown as Parameters<typeof rowsOf>[0])
+  assert.deepEqual(two.map((row) => row.formula), [1, 2])
 })

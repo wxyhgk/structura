@@ -1,6 +1,7 @@
 import type { Drawing, Molecule } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import type { GuideTopic } from "@/guide"
+import type { Templates } from "@/editor/templates/useTemplates"
 
 /** Which of the editor's two workspaces is showing: drawing, or the generic formula and what it generates. */
 export type Workspace = "draw" | "markush"
@@ -20,6 +21,8 @@ export type WorkspaceProps = {
   onPlace: (mol: Molecule) => void
   /** Opens the user guide on a page. */
   onHelp: (topic: GuideTopic) => void
+  /** The template library: built-ins and the user's own, offered on every variable. */
+  templates: Templates
   /** Opens 从专利文字填写; absent when the host has no way to reach a model. */
   onFill?: () => void
 }

@@ -4,7 +4,12 @@ import { Editor, type EditorHandle } from "@/editor/Editor"
 import { fillOverHttp } from "@/fillOverHttp"
 import { recognizeOverHttp } from "@/recognizeOverHttp"
 import { RestoreBar } from "@/RestoreBar"
+import { httpTemplateStore } from "@/editor/templates/httpStore"
+import { memoryTemplateStore } from "@/editor/templates/memoryStore"
 import { exposeForTests } from "@/testHook"
+
+/** The user's templates: the backend's; in the browser tests' build, kept in memory so they need no backend. */
+const templateStore = import.meta.env.MODE === "e2e" ? memoryTemplateStore() : httpTemplateStore()
 
 /**
  * The standalone app: the editor filling the whole page, reaching the model through its own
@@ -48,6 +53,7 @@ export default function App() {
           ref={editor}
           fillVariables={fillOverHttp}
           recognizeStructure={recognizeOverHttp}
+          templateStore={templateStore}
           onDirtyChange={(now) => {
             const was = dirty.current
             dirty.current = now

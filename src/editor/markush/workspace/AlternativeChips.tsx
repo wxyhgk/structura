@@ -1,10 +1,12 @@
+import { BookmarkPlus } from "lucide-react"
 import type { Alternative } from "@structura/core/types"
 import { MoleculeThumb } from "@/editor/common/MoleculeThumb"
 import { describeAlternative } from "../describe.ts"
 
 /**
  * A variable's alternatives: drawn pieces as picture tiles, everything else as chips. A click
- * opens a class or a drawn piece for changing; × takes one away. Read-only for a shared list.
+ * opens a class or a drawn piece for changing; × takes one away; the bookmark saves a class
+ * or a drawn piece as a template. Read-only for a shared list.
  */
 export function AlternativeChips({
   alternatives,
@@ -14,6 +16,7 @@ export function AlternativeChips({
   onEditClass,
   onEditFragment,
   onRemove,
+  onSaveTemplate,
 }: {
   alternatives: Alternative[]
   readOnly: boolean
@@ -23,6 +26,8 @@ export function AlternativeChips({
   onEditClass: (index: number) => void
   onEditFragment: (index: number) => void
   onRemove: (index: number) => void
+  /** Opens 存为模板 for the class or drawn piece at this index. */
+  onSaveTemplate: (index: number) => void
 }) {
   if (alternatives.length === 0) return <p className="text-[#999]">还没有候选项。</p>
   const remove = (index: number) =>
@@ -31,6 +36,11 @@ export function AlternativeChips({
         ×
       </button>
     )
+  const keep = (index: number) => (
+    <button className="px-0.5 text-[#999] hover:text-[#1a73e8]" onClick={() => onSaveTemplate(index)} aria-label="存为模板" title="存为模板：以后在模板库里一键添加">
+      <BookmarkPlus size={13} />
+    </button>
+  )
   const frame = (index: number) => (editing === index ? "border-[#1a73e8] bg-[#f1f6fd]" : "border-[#d0d0d0] bg-white")
 
   return (
@@ -51,6 +61,7 @@ export function AlternativeChips({
               <span className="min-w-0 flex-1 truncate text-[11px] text-[#555]" title={describeAlternative(item)}>
                 {describeAlternative(item)}
               </span>
+              {keep(index)}
               {remove(index)}
             </div>
           </div>
@@ -63,6 +74,7 @@ export function AlternativeChips({
             ) : (
               <span className="font-[Arial,Helvetica,sans-serif]">{describeAlternative(item)}</span>
             )}
+            {item.kind === "class" && keep(index)}
             {remove(index)}
           </span>
         ),

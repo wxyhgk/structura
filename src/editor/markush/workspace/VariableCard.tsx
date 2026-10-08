@@ -3,7 +3,11 @@ import { alternativesOf, shareSources, sharers, type SiteKind } from "@structura
 import type { Molecule, Variable } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import type { GuideTopic } from "@/guide"
+import { SaveTemplateForm } from "@/editor/templates/SaveTemplateForm"
+import { TemplatePicker } from "@/editor/templates/TemplatePicker"
+import type { Templates } from "@/editor/templates/useTemplates"
 import { ClassForm } from "../ClassForm.tsx"
+import { describeAlternative } from "../describe.ts"
 import { variableEdits } from "../variableEdits.ts"
 import { AddBar } from "./AddBar.tsx"
 import { AlternativeChips } from "./AlternativeChips.tsx"
@@ -32,6 +36,8 @@ export function VariableCard({
   onHelp,
   sketch,
   onSketch,
+  templates,
+  onLibrary,
 }: {
   name: string
   variables: Record<string, Variable> | undefined
@@ -49,6 +55,9 @@ export function VariableCard({
   /** The alternative open in the inline sketch pad, if this card has it. */
   sketch: number | "new" | null
   onSketch: (index: number | "new" | null) => void
+  templates: Templates
+  /** Opens the template library for this variable. */
+  onLibrary: () => void
 }) {
   const variable = variables?.[name]
   /** The variable whose list this one shares, if it shares one; its own list is then read-only. */
@@ -59,6 +68,9 @@ export function VariableCard({
   const edits = variableEdits(name, variables, run)
   /** The class form: adding a new class, or editing the one at this index. */
   const [classForm, setClassForm] = useState<"new" | number | null>(null)
+  /** The alternative being saved as a template, by index. */
+  const [templateForm, setTemplateForm] = useState<number | null>(null)
+  const keeping = templateForm != null ? alternatives[templateForm] : undefined
   const siteLabel = SITE_LABELS[site]
 
   return (
@@ -107,16 +119,34 @@ export function VariableCard({
           editing={classForm ?? sketch}
           onEditClass={(index) => {
             onSketch(null)
+            setTemplateForm(null)
             setClassForm(index)
           }}
           onEditFragment={(index) => {
             setClassForm(null)
             onSketch(index)
           }}
-          onRemove={(index) => edits.remove(index)}
+          onRemove={(index) => {
+            setTemplateForm(null)
+            edits.remove(index)
+          }}
+          onSaveTemplate={(index) => {
+            setClassForm(null)
+            setTemplateForm(index)
+          }}
         />
 
-        {shared ? (
+        {keeping ? (
+          <SaveTemplateForm
+            key={templateForm}
+            templates={templates}
+            site={site}
+            alternative={keeping}
+            initial={{ name: keeping.kind === "fragment" ? keeping.name : describeAlternative(keeping) }}
+            onDone={() => setTemplateForm(null)}
+            onCancel={() => setTemplateForm(null)}
+          />
+        ) : shared ? (
           <p className="text-[#888]">要修改，请到 {shared} 里改。</p>
         ) : classForm != null ? (
           <ClassForm
@@ -136,6 +166,7 @@ export function VariableCard({
             empty={alternatives.length === 0}
             canCapture={selected.length > 0}
             edits={edits}
+            picker={<TemplatePicker templates={templates} site={site} alternatives={alternatives} colorHetero={colorHetero} onAdd={(item) => edits.add(item)} onLibrary={onLibrary} />}
             onCapture={() => edits.capture(mol, selected)}
             onClass={() => setClassForm("new")}
             onSketch={() => onSketch("new")}

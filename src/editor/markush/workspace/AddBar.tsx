@@ -1,15 +1,12 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { HelpLink, type GuideTopic } from "@/guide"
-import { describeAlternative } from "../describe.ts"
-import { LINKER_PRESETS, PRESETS, shortName } from "../presets.ts"
 import type { variableEdits } from "../variableEdits.ts"
 
-const CHIP = "rounded-full border border-dashed border-[#9fc3ee] px-2.5 py-0.5 text-[#1a73e8] hover:bg-[#e8f1fb]"
 const ACTION =
   "rounded-sm border border-[#9fc3ee] bg-white px-2.5 py-1 text-[#1a73e8] hover:bg-[#e8f1fb] disabled:border-[#ddd] disabled:text-[#aaa] disabled:hover:bg-transparent"
 
 /**
- * The ways to add to a variable's list: typing elements and abbreviations, one-click classes,
+ * The ways to add to a variable's list: typing elements and abbreviations, one-click templates,
  * the full class form, drawing a piece, or taking the piece selected on the canvas.
  */
 export function AddBar({
@@ -18,6 +15,7 @@ export function AddBar({
   empty,
   canCapture,
   edits,
+  picker,
   onCapture,
   onClass,
   onSketch,
@@ -30,6 +28,8 @@ export function AddBar({
   /** Atoms are selected on the canvas. */
   canCapture: boolean
   edits: ReturnType<typeof variableEdits>
+  /** The templates offered for this variable. */
+  picker: ReactNode
   /** Takes the selection in; returns why it could not, if it could not. */
   onCapture: () => string | null
   onClass: () => void
@@ -66,14 +66,7 @@ export function AddBar({
       {unknown.length > 0 && (
         <p className="text-[#b26a00]">看不懂：{unknown.join("、")}。只能填元素或缩写（如 H、Cl、CN、Me、Ph）；烷基、芳基这类范围请用类别。</p>
       )}
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-[#888]">常用：</span>
-        {(linker ? LINKER_PRESETS : PRESETS).map((preset) => (
-          <button key={preset.kind === "class" ? preset.class : preset.kind} className={CHIP} onClick={() => edits.add(preset)} title={`添加：${describeAlternative(preset)}`}>
-            + {shortName(preset)}
-          </button>
-        ))}
-      </div>
+      {picker}
       <div className="flex flex-wrap items-center gap-1.5">
         <button className={ACTION} onClick={onClass} title="选类别，填碳数范围和取代情况">
           + 类别…

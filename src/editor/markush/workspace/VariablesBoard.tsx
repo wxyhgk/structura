@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { HelpLink } from "@/guide"
-import { alternativesOf } from "@structura/markush"
+import { alternativesOf, type Template } from "@structura/markush"
+import { TemplateLibraryPanel } from "@/editor/templates/TemplateLibraryPanel"
 import { variableEdits } from "../variableEdits.ts"
 import { variableNames } from "../variableNames.ts"
 import { InlineSketch } from "./InlineSketch.tsx"
@@ -12,12 +13,39 @@ import { VariableCard, type SketchTarget } from "./VariableCard.tsx"
 /**
  * The generic-formula workspace's variables: a card for every placeholder (on the drawing,
  * defined, or inside a piece) with what it may stand for (the variable attachments are in the constraints pane, under 位置).
+ * The sketch pad and the template library each take the pane over while open.
  */
-export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, onFill }: WorkspaceProps) {
+export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, onFill, templates }: WorkspaceProps) {
   const { molecule: mol, variables, attachments } = drawing
   const { names, onDrawing, nested, linkers, siteOf } = variableNames(mol, variables, attachments)
   /** The one inline sketch pad that is open, if any: which variable, and new or which drawn alternative. */
   const [sketch, setSketch] = useState<SketchTarget | null>(null)
+  /** The variable the template library is open for, if it is open. */
+  const [library, setLibrary] = useState<string | null>(null)
+  /** One of the user's drawn templates open in the sketch pad, from the library. */
+  const [redraw, setRedraw] = useState<Template | null>(null)
+
+  if (redraw?.alternative.kind === "fragment") {
+    const { id, alternative, ...input } = redraw
+    const close = () => setRedraw(null)
+    return (
+      <InlineSketch
+        key={`template:${id}`}
+        name={redraw.name}
+        kind={redraw.site}
+        initial={alternative}
+        title={`修改模板“${redraw.name}”的结构和位点`}
+        saveLabel="保存到模板"
+        onSave={async (piece, alsoAt) => {
+          const named = alternative.name != null ? { name: alternative.name } : {}
+          const sites = alsoAt.length > 0 ? { alsoAt } : {}
+          await templates.save({ name: input.name, group: input.group, aliases: input.aliases, site: input.site, alternative: { kind: "fragment", molecule: piece, ...named, ...sites } }, id)
+          close()
+        }}
+        onCancel={close}
+      />
+    )
+  }
 
   if (sketch) {
     const drawn = typeof sketch.index === "number" ? alternativesOf(variables, sketch.name)[sketch.index] : undefined
@@ -28,11 +56,27 @@ export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, on
         name={sketch.name}
         kind={siteOf(sketch.name)}
         initial={drawn?.kind === "fragment" ? drawn : undefined}
+        templates={templates}
         onSave={(piece, alsoAt) => {
           variableEdits(sketch.name, variables, run).saveSketch(sketch.index, piece, alsoAt)
           close()
         }}
         onCancel={close}
+      />
+    )
+  }
+
+  if (library) {
+    return (
+      <TemplateLibraryPanel
+        templates={templates}
+        name={library}
+        site={siteOf(library)}
+        alternatives={alternativesOf(variables, library)}
+        colorHetero={colorHetero}
+        onAdd={(item) => variableEdits(library, variables, run).add(item)}
+        onEditStructure={setRedraw}
+        onClose={() => setLibrary(null)}
       />
     )
   }
@@ -69,6 +113,8 @@ export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, on
             onHelp={onHelp}
             sketch={null}
             onSketch={(index) => setSketch(index == null ? null : { name, index })}
+            templates={templates}
+            onLibrary={() => setLibrary(name)}
           />
         ))
       )}

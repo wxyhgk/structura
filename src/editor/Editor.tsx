@@ -42,12 +42,15 @@ import { MenuBar } from "@/editor/shell/MenuBar"
 import { StatusBar } from "@/editor/shell/StatusBar"
 import { Toolbar } from "@/editor/shell/Toolbar"
 import { useEditor } from "@/editor/useEditor"
+import type { TemplateStore } from "@/editor/templates/store"
+import { useTemplates } from "@/editor/templates/useTemplates"
 
 export type { EditorHandle, RunResult } from "@/editor/hooks/useEditorHandle"
 export type { EnumerateOptions, Enumeration } from "@structura/markush"
 export type { Op } from "@structura/core/ops"
 export type { FillVariables } from "@/editor/markush/useFill"
 export type { RecognizeStructure } from "@/editor/vision/useRecognition"
+export type { TemplateStore } from "@/editor/templates/store"
 
 export type EditorProps = {
   /** Molfile or SD text to start with; read once, when the editor mounts. */
@@ -74,15 +77,21 @@ export type EditorProps = {
    * (see @structura/ai/server's structureHandler). Without it the menu item is not shown.
    */
   recognizeStructure?: RecognizeStructure
+  /**
+   * Where the user's own group templates are kept (the standalone app: the Structura backend).
+   * Without it only the built-in templates are offered, and saving one says why it cannot.
+   */
+  templateStore?: TemplateStore
 }
 
 /**
  * Lays out the editor and wires state, commands and input together. It fills its
  * container, so the host decides its size.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onDirtyChange, fillVariables, recognizeStructure }, ref) {
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onDirtyChange, fillVariables, recognizeStructure, templateStore }, ref) {
   const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
   const editor = useEditor(initial)
+  const templates = useTemplates(templateStore)
   const canvasRef = useRef<CanvasHandle>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [viewport] = useState(createViewport)
@@ -241,6 +250,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
                 }}
                 onHelp={setGuide}
                 onFill={fillVariables ? () => setFillOpen(true) : undefined}
+                templates={templates}
               />
             )}
             {workspace === "draw" && <VariablesPanel

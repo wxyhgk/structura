@@ -81,3 +81,13 @@ export const SITE_PROBLEMS = {
   linkNeedsTwo: (none: boolean) => `连接基要两个位点（两端各一个），${none ? "还没有设" : "还差一个"}：点“设位点”，再点原子。`,
   ringNeedsOne: "环里的原子要指定由哪个原子占住环里的位置：点“设位点”，再点那个原子。",
 }
+
+/** Why a drawn piece, or a selection taken into a variable, will not do as an alternative. */
+export const PIECE_PROBLEMS = {
+  noStar: "片段里要有标成 * 的原子，表示从哪里接到通式上（双击原子输入 *）。",
+  tooManyStars: (count: number) => `片段里有 ${count} 个 *，最多两个：接一端用一个，连接基用两个。`,
+  disconnected: "画的是几块互不相连的结构，片段要连成一整块。",
+  other: (message: string) => `这个片段用不了：${message}`,
+  nothingSelected: "先在画布上选中画好的片段。",
+  stillConnected: "选中的原子还连着别的结构。片段要单独画，并整个选中。",
+}

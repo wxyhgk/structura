@@ -22,8 +22,7 @@ test("no CSS cursors: which cursor a handle shows is the screen's choice", () =>
 })
 
 test("Chinese words live in i18n/zh.ts only", () => {
-  // markush/capture.ts keeps its messages until they move into zh.ts too.
-  const allowed = new Set(["i18n/zh.ts", "markush/capture.ts"])
+  const allowed = new Set(["i18n/zh.ts"])
   const worded = sources(SRC)
     .filter((file) => !allowed.has(relative(SRC, file).split("\\").join("/")))
     .filter((file) => /[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]/.test(readFileSync(file, "utf8")))

@@ -1,4 +1,4 @@
-import { type Alternative, alternativesFromText, alternativesOf, type Variable } from "@structura/markush"
+import { type Alternative, alternativesFromText, alternativesOf, sameAlternative, type Variable } from "@structura/markush"
 import type { Molecule } from "@structura/core/types"
 import { captureOps, type Run } from "@structura/engine"
 
@@ -28,8 +28,7 @@ export function variableEdits(name: string, variables: Record<string, Variable> 
     },
     /** Adds one alternative, unless the list has it already. */
     add(item: Alternative) {
-      const same = alternatives.some((other) => JSON.stringify(other) === JSON.stringify(item))
-      if (!same) save([...alternatives, item])
+      if (!alternatives.some((other) => sameAlternative(other, item))) save([...alternatives, item])
     },
     replace(index: number, item: Alternative) {
       save(alternatives.map((other, at) => (at === index ? item : other)))

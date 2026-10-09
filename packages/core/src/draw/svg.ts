@@ -1,4 +1,5 @@
-import type { Arrow, Attachment, Molecule } from "../types.ts"
+import type { Arrow, Molecule } from "../types.ts"
+import type { Attachment } from "../markush/types.ts"
 import { displayMolecule } from "../molecule/collapse.ts"
 import { attachmentMarks, markTextExtent, type MarkText } from "./attachments.ts"
 import type { AtomLabel, DrawOptions } from "./labels.ts"

@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { alternativeProblem, enumerate, representativesOf } from "@structura/markush"
-import type { Alternative } from "@structura/core/types"
+import { type Alternative, alternativeProblem, enumerate, representativesOf } from "@structura/markush"
 import { build, run } from "@structura/testkit"
 import { chemistry } from "@structura/testkit/chem"
 

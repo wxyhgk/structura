@@ -1,4 +1,4 @@
-import type { RingClosure, Variable } from "../types.ts"
+import type { RingClosure, Variable } from "./types.ts"
 import { fragmentEnds, fragmentProblemText } from "./fragments.ts"
 
 /** Why a ring closure cannot be kept with these variables, or null when it can. */

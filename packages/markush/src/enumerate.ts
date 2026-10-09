@@ -1,6 +1,7 @@
 import { knownLabel } from "@structura/core"
 import { applyOps } from "@structura/core/ops"
-import type { Choice, Drawing, Molecule } from "@structura/core/types"
+import type { Drawing, Molecule } from "@structura/core/types"
+import type { Choice } from "@structura/core/markush"
 import { validate } from "@structura/core/validate"
 import { isVariableName } from "@structura/core/markush"
 import { choiceResolver } from "./choices.ts"

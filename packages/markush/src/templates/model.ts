@@ -1,5 +1,4 @@
-import { alternativeProblem, fragmentEnds } from "@structura/core/markush"
-import type { Alternative } from "@structura/core/types"
+import { type Alternative, alternativeProblem, fragmentEnds } from "@structura/core/markush"
 
 // The group library: named alternatives kept to be reused, built in or the user's own. A
 // template is an alternative as a variable holds it (a drawn piece with its sites, a class,

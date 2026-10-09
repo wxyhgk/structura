@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
-import { ringSystemPositions } from "@structura/markush"
-import type { Attachment, Molecule, Repeat } from "@structura/core/types"
+import { type Attachment, type Repeat, ringSystemPositions } from "@structura/markush"
+import type { Molecule } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 
 const FIELD = "h-6 rounded border border-[#d0d0d0] bg-white px-1 text-center text-[12px] outline-none focus:border-[#1a73e8]"

@@ -1,5 +1,6 @@
 import { Button } from "../../components/ui/button.tsx"
-import type { Attachment, Molecule, Proviso, RingClosure, Variable } from "@structura/core/types"
+import type { Molecule } from "@structura/core/types"
+import type { Attachment, Proviso, RingClosure, Variable } from "@structura/markush"
 import type { Run } from "@structura/engine"
 import { HelpLink, type GuideTopic } from "../../guide/index.ts"
 import { AttachmentRow } from "./AttachmentRow.tsx"

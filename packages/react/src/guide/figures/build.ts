@@ -1,7 +1,8 @@
 import { emptyDrawing } from "@structura/core"
 import { sceneToSvg } from "@structura/core/draw"
 import { applyOps, type Op } from "@structura/core/ops"
-import type { Alternative, Drawing } from "@structura/core/types"
+import type { Drawing } from "@structura/core/types"
+import type { Alternative } from "@structura/markush"
 
 // Making the guide's pictures: drawn by the same ops and renderer as the editor, so a
 // picture always shows what the editor really does.

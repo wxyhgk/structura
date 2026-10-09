@@ -5,7 +5,8 @@ import { bondLengthAt } from "../molecule/measure.ts"
 import { relax } from "../molecule/relax.ts"
 import { attachRingAt } from "../molecule/rings.ts"
 import { moveAtoms } from "../molecule/transform.ts"
-import type { BridgeName, Molecule } from "../types.ts"
+import type { Molecule } from "../types.ts"
+import type { BridgeName } from "./types.ts"
 import { BRIDGES, type Bridge } from "./bridges.ts"
 
 /**

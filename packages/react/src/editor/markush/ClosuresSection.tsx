@@ -1,6 +1,5 @@
 import { useState } from "react"
-import { alternativesFromText } from "@structura/markush"
-import type { RingClosure, Variable } from "@structura/core/types"
+import { alternativesFromText, type RingClosure, type Variable } from "@structura/markush"
 import type { Run } from "@structura/engine"
 import { Button } from "../../components/ui/button.tsx"
 import { closureText } from "./describe.ts"

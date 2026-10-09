@@ -1,6 +1,7 @@
 import { elementOf } from "@structura/core/elements"
 import { applyOps } from "@structura/core/ops"
-import type { Choice, Drawing, Variable } from "@structura/core/types"
+import type { Drawing } from "@structura/core/types"
+import type { Choice, Variable } from "@structura/core/markush"
 import { alternativesOf, fragmentFits, fragmentFormula, fragmentVariables } from "@structura/core/markush"
 import { fragmentVersions } from "./fragments.ts"
 import { odometer } from "./odometer.ts"

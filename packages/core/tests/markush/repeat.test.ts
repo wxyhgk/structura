@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { emptyDrawing } from "@structura/core/drawing"
-import type { Drawing, Repeat } from "@structura/core/types"
+import type { Drawing } from "@structura/core/types"
+import type { Repeat } from "@structura/core/markush"
 import { label, run } from "@structura/testkit"
 
 /** Benzene (atoms 1–6) with (R1)m drawn into it: R1 is atom 7, m from `min` to `max`, R1 = Cl or F. */

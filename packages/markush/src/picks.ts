@@ -1,4 +1,4 @@
-import type { Choice } from "@structura/core/types"
+import type { Choice } from "@structura/core/markush"
 import { fragmentFormula } from "@structura/core/markush"
 
 /** One thing in a combination: a placeholder's choice, or where an attachment was made. */

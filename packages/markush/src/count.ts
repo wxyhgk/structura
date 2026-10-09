@@ -1,4 +1,5 @@
-import type { Choice, Drawing } from "@structura/core/types"
+import type { Drawing } from "@structura/core/types"
+import type { Choice } from "@structura/core/markush"
 import { choiceResolver } from "./choices.ts"
 import { formulasOf } from "./formulas.ts"
 import { planFormulas, type Tally } from "./plans.ts"

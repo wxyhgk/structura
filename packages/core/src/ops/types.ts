@@ -1,4 +1,5 @@
-import type { Alternative, BondEmphasis, BridgeName, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, Proviso, Repeat, RingClosure, RingKind } from "../types.ts"
+import type { BondEmphasis, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, RingKind } from "../types.ts"
+import type { Alternative, BridgeName, Proviso, Repeat, RingClosure } from "../markush/types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 

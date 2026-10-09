@@ -1,5 +1,5 @@
-import { enumerate } from "@structura/markush"
-import type { Alternative, Drawing } from "@structura/core/types"
+import { type Alternative, enumerate } from "@structura/markush"
+import type { Drawing } from "@structura/core/types"
 import { build, label, once, star } from "./build.ts"
 
 // Pictures for the generic-formula pages.

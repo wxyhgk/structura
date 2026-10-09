@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { ringSystemPositions } from "@structura/markush"
-import type { Attachment, Drawing, Molecule } from "@structura/core/types"
+import { type Attachment, ringSystemPositions } from "@structura/markush"
+import type { Drawing, Molecule } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import { LibrarySizeLine } from "../LibrarySizeLine.tsx"
 import type { FormulaFacts } from "./formulaFacts.ts"

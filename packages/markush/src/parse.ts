@@ -1,6 +1,7 @@
 import { emptyDrawing, knownLabel } from "@structura/core"
 import { applyOps, type Op } from "@structura/core/ops"
-import type { Alternative, BridgeName, Molecule } from "@structura/core/types"
+import type { Molecule } from "@structura/core/types"
+import type { Alternative, BridgeName } from "@structura/core/markush"
 import { sameAlternative } from "./same.ts"
 
 // What text typed for a variable means, shared by the editor and anything else filling a

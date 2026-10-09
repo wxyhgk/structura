@@ -1,4 +1,5 @@
-import type { Attachment, Molecule, Point } from "../types.ts"
+import type { Molecule, Point } from "../types.ts"
+import type { Attachment } from "../markush/types.ts"
 import type { AtomLabel } from "./labels.ts"
 
 /** Text drawn beside a label: the brackets and count of "(R1)m". */

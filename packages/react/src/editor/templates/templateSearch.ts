@@ -1,5 +1,4 @@
-import type { Alternative } from "@structura/core/types"
-import type { Template, TemplateSite } from "@structura/markush"
+import type { Alternative, Template, TemplateSite } from "@structura/markush"
 import { describeAlternative } from "../markush/describe.ts"
 
 // Finding templates in the library: by what they are called, by where they can stand, and

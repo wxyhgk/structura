@@ -2,9 +2,9 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { BOND_LENGTH } from "@structura/core/constants"
 import { emptyDrawing } from "@structura/core/drawing"
-import { fragmentFrom, fragmentProblem, fragmentProblemText, fragmentVariables } from "@structura/core/markush"
+import { type Alternative, fragmentFrom, fragmentProblem, fragmentProblemText, fragmentVariables } from "@structura/core/markush"
 import { applyOps, type Op } from "@structura/core/ops"
-import type { Alternative, Molecule } from "@structura/core/types"
+import type { Molecule } from "@structura/core/types"
 import { run } from "@structura/testkit"
 
 const label = (text: string): Alternative => ({ kind: "label", text })

@@ -1,5 +1,6 @@
 import type { DrawOptions } from "@structura/core/draw"
-import type { Arrow, Attachment, BondStyle, Drawing, Molecule, RingKind, Selection } from "@structura/core/types"
+import type { Arrow, BondStyle, Drawing, Molecule, RingKind, Selection } from "@structura/core/types"
+import type { Attachment } from "@structura/markush"
 import type { HoverTarget, Run, ScaffoldPick, ToolId, Viewport } from "@structura/engine"
 
 export type CanvasHandle = {

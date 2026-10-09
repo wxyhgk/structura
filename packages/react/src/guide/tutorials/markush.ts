@@ -1,5 +1,4 @@
-import { enumerate, fragmentFrom } from "@structura/markush"
-import type { Alternative } from "@structura/core/types"
+import { type Alternative, enumerate, fragmentFrom } from "@structura/markush"
 import { perHost, press, Walk } from "./walk.ts"
 
 // Walk-throughs for the generic-formula pages.

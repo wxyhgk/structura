@@ -1,6 +1,5 @@
-import { alternativeProblem, alternativesFromText, GROUP_CLASSES, isVariableName, sameAlternative, variableProblem } from "@structura/markush"
+import { type Alternative, alternativeProblem, alternativesFromText, GROUP_CLASSES, isVariableName, sameAlternative, type Variable, variableProblem } from "@structura/markush"
 import type { Op } from "@structura/core/ops"
-import type { Alternative, Variable } from "@structura/core/types"
 import type { AnswerAlternative, FillAnswer, FillRequest } from "./types.ts"
 
 // The model's answer checked against what the editor can store, before anything is applied:

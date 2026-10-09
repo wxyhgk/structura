@@ -1,5 +1,5 @@
 import type { Op } from "@structura/core/ops"
-import type { Choice } from "@structura/core/types"
+import type { Choice } from "@structura/core/markush"
 import type { SiteKind } from "./sites.ts"
 
 /** One placeholder atom, how it sits (see siteKind), and what it may become there. */

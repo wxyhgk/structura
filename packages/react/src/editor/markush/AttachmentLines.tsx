@@ -1,6 +1,7 @@
 import { memo } from "react"
 import { attachmentMarks, type AtomLabel } from "@structura/core/draw"
-import type { Attachment, Molecule } from "@structura/core/types"
+import type { Molecule } from "@structura/core/types"
+import type { Attachment } from "@structura/markush"
 
 /**
  * Variable points of attachment: one line from the atom into the middle of its candidate

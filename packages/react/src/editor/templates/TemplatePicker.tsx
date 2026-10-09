@@ -1,5 +1,4 @@
-import type { Alternative } from "@structura/core/types"
-import type { TemplateSite } from "@structura/markush"
+import type { Alternative, TemplateSite } from "@structura/markush"
 import { MoleculeThumb } from "../common/MoleculeThumb.tsx"
 import { inList, quickPicks, templateTitle } from "./templateSearch.ts"
 import type { Templates } from "./useTemplates.ts"

@@ -2,7 +2,7 @@ import { knownLabel } from "../label/known.ts"
 import { BRIDGES } from "./bridges.ts"
 import { alsoAtProblem, fragmentProblemText, fragmentVariables } from "./fragments.ts"
 import { isVariableName } from "./names.ts"
-import type { Alternative, GroupClass, SizeUnit, Variable } from "../types.ts"
+import type { Alternative, GroupClass, SizeUnit, Variable } from "./types.ts"
 
 export { isVariableName }
 

@@ -1,5 +1,6 @@
 import { atomById } from "../molecule/graph.ts"
-import type { Attachment, Drawing, Molecule, Repeat } from "../types.ts"
+import type { Drawing, Molecule } from "../types.ts"
+import type { Attachment, Repeat } from "./types.ts"
 
 /** How a repeat count may be written: a lower-case letter, optionally numbered (m, n, p1, n'). */
 const COUNT_NAME = /^[a-z]\d{0,2}'?$/

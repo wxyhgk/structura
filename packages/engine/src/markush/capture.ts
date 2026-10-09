@@ -1,6 +1,6 @@
-import { fragmentFrom, fragmentMessage, fragmentProblem } from "@structura/markush"
+import { type Alternative, fragmentFrom, fragmentMessage, fragmentProblem } from "@structura/markush"
 import type { Op } from "@structura/core/ops"
-import type { Alternative, Molecule } from "@structura/core/types"
+import type { Molecule } from "@structura/core/types"
 
 /** Why a drawn piece will not do as an alternative, in words the chemist can act on; null when it will. */
 export function pieceProblem(piece: Molecule): string | null {

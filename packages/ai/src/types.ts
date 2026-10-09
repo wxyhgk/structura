@@ -1,4 +1,4 @@
-import type { Alternative, GroupClass, Variable } from "@structura/core/types"
+import type { Alternative, GroupClass, Variable } from "@structura/markush"
 
 /** What the editor sends: the claim text and the formula's variables as they stand. */
 export type FillRequest = {

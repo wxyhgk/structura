@@ -1,9 +1,8 @@
 import { emptyDrawing } from "@structura/core"
 import { atomHydrogens } from "@structura/core/formula"
-import { sizeUnitOf } from "@structura/core/markush"
+import { type Alternative, type BridgeName, type Choice, type GroupClass, sizeUnitOf } from "@structura/core/markush"
 import { neighbors } from "@structura/core/molecule"
 import { applyOps, type Op } from "@structura/core/ops"
-import type { Alternative, BridgeName, Choice, GroupClass } from "@structura/core/types"
 
 /**
  * A typical member of a class, for generating example compounds from a claim that names

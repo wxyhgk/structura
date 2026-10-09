@@ -1,5 +1,5 @@
-import { alternativesFromText, alternativesOf } from "@structura/markush"
-import type { Alternative, Molecule, Variable } from "@structura/core/types"
+import { type Alternative, alternativesFromText, alternativesOf, type Variable } from "@structura/markush"
+import type { Molecule } from "@structura/core/types"
 import { captureOps, type Run } from "@structura/engine"
 
 const KEEP = { keepSelection: true }

@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { alternativesOf, shareSources, sharers, type SiteKind } from "@structura/markush"
-import type { Molecule, Variable } from "@structura/core/types"
+import { alternativesOf, sharers, shareSources, type SiteKind, type Variable } from "@structura/markush"
+import type { Molecule } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import type { GuideTopic } from "../../../guide/index.ts"
 import { SaveTemplateForm } from "../../templates/SaveTemplateForm.tsx"

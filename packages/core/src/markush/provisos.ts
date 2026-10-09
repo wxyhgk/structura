@@ -1,4 +1,4 @@
-import type { Proviso, Variable } from "../types.ts"
+import type { Proviso, Variable } from "./types.ts"
 import { alternativeProblem } from "./variables.ts"
 
 /** Why a proviso cannot be kept with these variables, or null when it can. */

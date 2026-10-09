@@ -1,5 +1,5 @@
-import { alternativesOf, linkerNames, nestedVariables, ringNames, variableLabels, type SiteKind } from "@structura/markush"
-import type { Attachment, Molecule, Variable } from "@structura/core/types"
+import { alternativesOf, type Attachment, linkerNames, nestedVariables, ringNames, type SiteKind, type Variable, variableLabels } from "@structura/markush"
+import type { Molecule } from "@structura/core/types"
 
 /** The variables a formula has to show, and where each one stands. */
 export type VariableNames = {

@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { Button } from "../../components/ui/button.tsx"
-import { alternativeProblem, GROUP_CLASSES, sizeUnitOf } from "@structura/markush"
-import type { Alternative, GroupClass, SizeUnit } from "@structura/core/types"
+import { type Alternative, alternativeProblem, GROUP_CLASSES, type GroupClass, type SizeUnit, sizeUnitOf } from "@structura/markush"
 import { CLASS_NAMES } from "./describe.ts"
 
 /** Classes that are rings, whose size a claim may give in carbons or in ring members. */

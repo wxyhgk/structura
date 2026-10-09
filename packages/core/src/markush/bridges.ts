@@ -1,4 +1,4 @@
-import type { BridgeName } from "../types.ts"
+import type { BridgeName } from "./types.ts"
 
 /**
  * Divalent pieces that join two atoms: "L is a single bond or a substituted or unsubstituted

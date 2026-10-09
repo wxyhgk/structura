@@ -1,4 +1,4 @@
-import type { Alternative, Choice, Proviso } from "@structura/core/types"
+import type { Alternative, Choice, Proviso } from "@structura/core/markush"
 import type { Pick } from "./picks.ts"
 import { representativesOf } from "./representatives.ts"
 import { sameAlternative } from "./same.ts"

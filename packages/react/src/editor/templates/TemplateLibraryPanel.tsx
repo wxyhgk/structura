@@ -1,6 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from "react"
-import type { Alternative } from "@structura/core/types"
-import type { ImportReport, Template, TemplateSite } from "@structura/markush"
+import type { Alternative, ImportReport, Template, TemplateSite } from "@structura/markush"
 import { PaneHeader } from "../markush/workspace/PaneHeader.tsx"
 import { SaveTemplateForm } from "./SaveTemplateForm.tsx"
 import { filterTemplates, groupTemplates, inList, SITE_NAMES } from "./templateSearch.ts"

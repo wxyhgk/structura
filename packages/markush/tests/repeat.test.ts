@@ -4,10 +4,10 @@ import { readDocument, toDocument } from "@structura/core/document"
 import { emptyDrawing } from "@structura/core/drawing"
 import { plainFormula } from "@structura/core/formula"
 import { applyOps, type Op } from "@structura/core/ops"
-import type { Drawing, Repeat } from "@structura/core/types"
+import type { Drawing } from "@structura/core/types"
+import { enumerate, librarySize, pickFields, type Repeat } from "@structura/markush"
 import { build, label, run } from "@structura/testkit"
 import { chemistry } from "@structura/testkit/chem"
-import { enumerate, librarySize, pickFields } from "@structura/markush"
 
 const { canonicalAll } = await chemistry()
 

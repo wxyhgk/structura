@@ -1,6 +1,5 @@
 import { useState } from "react"
-import type { Alternative } from "@structura/core/types"
-import type { Template, TemplateSite } from "@structura/markush"
+import type { Alternative, Template, TemplateSite } from "@structura/markush"
 import { Button } from "../../components/ui/button.tsx"
 import { aliasesFromText, groupNames, SITE_NAMES } from "./templateSearch.ts"
 import { OFFLINE_NOTE, type Templates } from "./useTemplates.ts"

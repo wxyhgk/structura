@@ -4,11 +4,11 @@ import { BOND_LENGTH } from "@structura/core/constants"
 import { emptyDrawing } from "@structura/core/drawing"
 import { plainFormula } from "@structura/core/formula"
 import { type Op } from "@structura/core/ops"
-import type { Alternative, Molecule } from "@structura/core/types"
+import type { Molecule } from "@structura/core/types"
+import { type Alternative, enumerate, pickFields } from "@structura/markush"
 import { validate } from "@structura/core/validate"
 import { run } from "@structura/testkit"
 import { chemistry } from "@structura/testkit/chem"
-import { enumerate, pickFields } from "@structura/markush"
 
 const { canonical } = await chemistry()
 

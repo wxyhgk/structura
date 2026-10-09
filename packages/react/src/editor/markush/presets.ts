@@ -1,5 +1,4 @@
-import { GROUP_CLASSES } from "@structura/markush"
-import type { Alternative } from "@structura/core/types"
+import { type Alternative, GROUP_CLASSES } from "@structura/markush"
 import { CLASS_NAMES, describeAlternative } from "./describe.ts"
 
 /** For a linker such as L: "a single bond, (C6–C30)arylene or (C2–C30)heteroarylene", as OLED patents count them, in carbons. */

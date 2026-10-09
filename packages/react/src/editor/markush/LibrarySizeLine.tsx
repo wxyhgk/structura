@@ -1,6 +1,6 @@
 import { useMemo } from "react"
-import { librarySize } from "@structura/markush"
-import type { Attachment, Molecule, RingClosure, Variable } from "@structura/core/types"
+import { type Attachment, librarySize, type RingClosure, type Variable } from "@structura/markush"
+import type { Molecule } from "@structura/core/types"
 import { sizeText } from "./sizeText.ts"
 
 /**

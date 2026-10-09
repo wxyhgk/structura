@@ -5,10 +5,10 @@ import { plainFormula } from "@structura/core/formula"
 import { toMolfile } from "@structura/core/molfile"
 import { alternativesOf, isVariableName } from "@structura/core/markush"
 import { applyOps, type Op } from "@structura/core/ops"
-import type { Choice, Drawing } from "@structura/core/types"
+import type { Drawing } from "@structura/core/types"
+import { alternativeProblem, type Choice, enumerate, representativesOf, undefinedVariables } from "@structura/markush"
 import { errorsOf, validate } from "@structura/core/validate"
 import { label, run } from "@structura/testkit"
-import { alternativeProblem, enumerate, representativesOf, undefinedVariables } from "@structura/markush"
 
 /** Cyclopentane with X in the ring at atom 1 and placeholders R1, R2 hanging off atoms 3 and 4. */
 function scaffold(): Drawing {

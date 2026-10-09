@@ -1,5 +1,5 @@
 import { BookmarkPlus } from "lucide-react"
-import type { Alternative } from "@structura/core/types"
+import type { Alternative } from "@structura/markush"
 import { MoleculeThumb } from "../../common/MoleculeThumb.tsx"
 import { describeAlternative } from "../describe.ts"
 

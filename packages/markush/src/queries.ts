@@ -1,5 +1,5 @@
-import { isVariableName, nestedVariables, sharers } from "@structura/core/markush"
-import type { Drawing, Molecule, Variable } from "@structura/core/types"
+import { isVariableName, nestedVariables, sharers, type Variable } from "@structura/core/markush"
+import type { Drawing, Molecule } from "@structura/core/types"
 
 // Questions about a generic formula's variables, for the panel and for expanding it.
 

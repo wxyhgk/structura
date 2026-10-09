@@ -1,7 +1,7 @@
-import { fragmentEnds } from "@structura/core/markush"
+import { fragmentEnds, type RingClosure } from "@structura/core/markush"
 import { addBond, bondLengthAt, componentOf, deleteSelection, neighbors, spliceIn, subMolecule } from "@structura/core/molecule"
 import { applyOps } from "@structura/core/ops"
-import type { Drawing, Molecule, RingClosure } from "@structura/core/types"
+import type { Drawing, Molecule } from "@structura/core/types"
 
 /**
  * "R1 and R2 together form a ring": the two placeholders go, and the ring piece joins the

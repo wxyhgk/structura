@@ -1,6 +1,5 @@
 import { displayFormula } from "@structura/core/formula"
-import { fragmentFormula, REPRESENTATIVES, sizeUnitOf } from "@structura/markush"
-import type { Alternative, BridgeName, Choice, GroupClass, Proviso, RingClosure } from "@structura/core/types"
+import { type Alternative, type BridgeName, type Choice, fragmentFormula, type GroupClass, type Proviso, REPRESENTATIVES, type RingClosure, sizeUnitOf } from "@structura/markush"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.
 

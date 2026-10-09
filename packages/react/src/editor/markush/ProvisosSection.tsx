@@ -1,6 +1,5 @@
 import { useState } from "react"
-import { alternativesOf } from "@structura/markush"
-import type { Alternative, Proviso, Variable } from "@structura/core/types"
+import { type Alternative, alternativesOf, type Proviso, type Variable } from "@structura/markush"
 import type { Run } from "@structura/engine"
 import { Button } from "../../components/ui/button.tsx"
 import { describeAlternative, provisoText } from "./describe.ts"

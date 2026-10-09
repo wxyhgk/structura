@@ -1,6 +1,7 @@
 import { emptyDrawing, knownLabel } from "@structura/core"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Alternative, BridgeName, Molecule } from "@structura/core/types"
+import { sameAlternative } from "./same.ts"
 
 // What text typed for a variable means, shared by the editor and anything else filling a
 // formula (an agent reading a claim): "H, D, 卤素、CN" → H, D, F, Cl, Br, I, CN.
@@ -25,8 +26,6 @@ const BRIDGE_WORDS: Record<string, BridgeName> = {
   "2,5-pyridinediyl": "2,5-pyridinediyl",
   "2,5-亚吡啶基": "2,5-pyridinediyl",
 }
-
-const same = (a: Alternative, b: Alternative) => JSON.stringify(a) === JSON.stringify(b)
 
 /** A piece built from ops, which are known good: anything else is a bug here. */
 function pieceOf(ops: Op[]): Molecule {
@@ -141,7 +140,7 @@ export function alternativesFromText(text: string, existing: Alternative[] = [])
   const add: Alternative[] = []
   const rejected: string[] = []
   const take = (alternative: Alternative) => {
-    if (![...existing, ...add].some((other) => same(other, alternative))) add.push(alternative)
+    if (![...existing, ...add].some((other) => sameAlternative(other, alternative))) add.push(alternative)
   }
   for (const word of words) {
     const member = RING_MEMBER.exec(word)

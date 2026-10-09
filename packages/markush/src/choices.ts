@@ -7,9 +7,8 @@ import type { Pick } from "./picks.ts"
 import { opsForAll, type Site } from "./place.ts"
 import { placeholders } from "./queries.ts"
 import { representativesOf } from "./representatives.ts"
+import { sameAlternative } from "./same.ts"
 import { siteKind, type SiteKind } from "./sites.ts"
-
-const same = (a: Choice, b: Choice) => JSON.stringify(a) === JSON.stringify(b)
 
 /** How deep pieces may sit inside pieces (Ar = N–R5, R5 = …) before the rest is left out. */
 const NESTING = 4
@@ -56,7 +55,7 @@ export function choiceResolver(variables: Record<string, Variable>, representati
   const choicesOf = new Map<string, Choice[]>()
   const inside = new WeakMap<Choice, Pick[]>()
   const misfit = (name: string, choice: Choice) => {
-    if (!(misfits[name] ?? []).some((other) => same(other, choice))) misfits[name] = [...(misfits[name] ?? []), choice]
+    if (!(misfits[name] ?? []).some((other) => sameAlternative(other, choice))) misfits[name] = [...(misfits[name] ?? []), choice]
   }
   const sitesOf = (drawing: Drawing, stack: string[]): Site[] =>
     placeholders(drawing).map(({ atom, name }) => {
@@ -76,7 +75,7 @@ export function choiceResolver(variables: Record<string, Variable>, representati
     const choices: Choice[] = alternatives.flatMap((item) => (item.kind === "class" ? [] : item.kind === "fragment" ? joinings(item) : [item]))
     for (const item of alternatives) {
       if (item.kind !== "class") continue
-      const standIns = representatives ? representativesOf(item).filter((choice) => !choices.some((other) => same(other, choice))) : []
+      const standIns = representatives ? representativesOf(item).filter((choice) => !choices.some((other) => sameAlternative(other, choice))) : []
       if (standIns.length === 0) classesLeftOut[name] = (classesLeftOut[name] ?? 0) + 1
       choices.push(...standIns)
       if (standIns.length > 0) represented[name] = [...(represented[name] ?? []), ...standIns]

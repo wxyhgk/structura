@@ -1,4 +1,4 @@
-import { alternativeProblem, alternativesFromText, GROUP_CLASSES, isVariableName, variableProblem } from "@structura/markush"
+import { alternativeProblem, alternativesFromText, GROUP_CLASSES, isVariableName, sameAlternative, variableProblem } from "@structura/markush"
 import type { Op } from "@structura/core/ops"
 import type { Alternative, Variable } from "@structura/core/types"
 import type { AnswerAlternative, FillAnswer, FillRequest } from "./types.ts"
@@ -24,8 +24,6 @@ export type ReviewedVariable = {
 }
 
 export type Review = { variables: ReviewedVariable[]; notes: string[] }
-
-const same = (a: Alternative, b: Alternative) => JSON.stringify(a) === JSON.stringify(b)
 
 /** "C1–C30 alkyl", "label Foo": how a dropped alternative is shown. */
 function shown(item: AnswerAlternative): string {
@@ -86,7 +84,7 @@ export function reviewAnswer(answer: FillAnswer, request: FillRequest): Review {
       for (const alternative of item.alternatives) {
         const result = converted(alternative)
         if ("why" in result) rejected.push({ text: shown(alternative), why: result.why })
-        else for (const add of result.add) if (!alternatives.some((other) => same(other, add))) alternatives.push(add)
+        else for (const add of result.add) if (!alternatives.some((other) => sameAlternative(other, add))) alternatives.push(add)
       }
       if (alternatives.length > 0) variable = { alternatives }
       const misfits = alternatives.filter((alternative) => asked && divalent(alternative) !== asked.linker)

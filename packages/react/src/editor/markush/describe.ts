@@ -1,5 +1,5 @@
 import { displayFormula } from "@structura/core/formula"
-import { fragmentFormula, sizeUnitOf } from "@structura/markush"
+import { fragmentFormula, REPRESENTATIVES, sizeUnitOf } from "@structura/markush"
 import type { Alternative, BridgeName, Choice, GroupClass, Proviso, RingClosure } from "@structura/core/types"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.
@@ -46,45 +46,16 @@ export function describeAlternative(alternative: Alternative): string {
   return `${substituted}${size}${CLASS_NAMES[alternative.class]}${carrying}`
 }
 
-/** Chinese names for the representative labels that stand in for classes when generating. */
-const REPRESENTATIVE_NAMES: Record<string, string> = {
-  Me: "甲基",
-  Et: "乙基",
-  iPr: "异丙基",
-  tBu: "叔丁基",
-  CF3: "三氟甲基",
-  Vinyl: "乙烯基",
-  Allyl: "烯丙基",
-  Ethynyl: "乙炔基",
-  Propargyl: "炔丙基",
-  cPr: "环丙基",
-  Cy: "环己基",
-  THP: "四氢吡喃基",
-  Ph: "苯基",
-  "1-Naphthyl": "1-萘基",
-  "2-Naphthyl": "2-萘基",
-  "4-Biphenylyl": "4-联苯基",
-  Tol: "甲苯基",
-  Mes: "均三甲苯基",
-  "2-Pyridyl": "2-吡啶基",
-  "2-Furyl": "2-呋喃基",
-  "2-Thienyl": "2-噻吩基",
-  "2-Pyrimidinyl": "2-嘧啶基",
-  "3-Indolyl": "3-吲哚基",
-  OMe: "甲氧基",
-  OEt: "乙氧基",
-  OPh: "苯氧基",
-  Si: "甲硅烷基（SiH₃）",
-  TMS: "三甲基硅基",
-  SiPh3: "三苯基硅基",
-  N: "氨基（NH₂）",
-  NMe2: "二甲氨基",
-  NHPh: "苯氨基",
-}
+/** Chinese names for the representative labels that stand in for classes when generating (see REPRESENTATIVES). */
+const REPRESENTATIVE_NAMES = new Map(
+  Object.values(REPRESENTATIVES)
+    .flat()
+    .flatMap((item) => (item.choice.kind === "label" ? [[item.choice.text, item.zh] as const] : [])),
+)
 
 /** "2-吡啶基" for a representative label, the bridge's name, or 单键. */
 export function choiceName(choice: Choice): string {
-  if (choice.kind === "label") return REPRESENTATIVE_NAMES[choice.text] ?? choice.text
+  if (choice.kind === "label") return REPRESENTATIVE_NAMES.get(choice.text) ?? choice.text
   return describeAlternative(choice)
 }
 

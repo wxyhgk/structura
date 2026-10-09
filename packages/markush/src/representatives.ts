@@ -10,29 +10,43 @@ import type { Alternative, BridgeName, Choice, GroupClass } from "@structura/cor
  * only classes. Its size both ways: `carbons`, and `members` (ring atoms of its ring system,
  * left out where "membered" means nothing, as for an alkyl or a biphenylyl); `substituted`
  * says whether it is the plain group (SiH3, NH2) or one carrying substituents (SiMe3, CF3).
+ * `zh` is its name in Chinese, as the editor shows it.
  */
-type Representative = { choice: Choice; carbons: number; members?: number; substituted: boolean }
+type Representative = { choice: Choice; zh: string; carbons: number; members?: number; substituted: boolean }
 
-const plain = (text: string, carbons: number, members?: number): Representative => ({ choice: { kind: "label", text }, carbons, members, substituted: false })
-const carrying = (text: string, carbons: number, members?: number): Representative => ({ choice: { kind: "label", text }, carbons, members, substituted: true })
-const bridge = (name: BridgeName, carbons: number, members?: number): Representative => ({ choice: { kind: "bridge", name }, carbons, members, substituted: false })
+const plain = (text: string, zh: string, carbons: number, members?: number): Representative => ({ choice: { kind: "label", text }, zh, carbons, members, substituted: false })
+const carrying = (text: string, zh: string, carbons: number, members?: number): Representative => ({ choice: { kind: "label", text }, zh, carbons, members, substituted: true })
+const bridge = (name: BridgeName, zh: string, carbons: number, members?: number): Representative => ({ choice: { kind: "bridge", name }, zh, carbons, members, substituted: false })
 
 export const REPRESENTATIVES: Record<GroupClass, Representative[]> = {
-  alkyl: [plain("Me", 1), plain("Et", 2), plain("iPr", 3), plain("tBu", 4), carrying("CF3", 1)],
-  alkenyl: [plain("Vinyl", 2), plain("Allyl", 3)],
-  alkynyl: [plain("Ethynyl", 2), plain("Propargyl", 3)],
-  cycloalkyl: [plain("cPr", 3, 3), plain("Cy", 6, 6)],
-  heterocycloalkyl: [plain("THP", 5, 6)],
-  aryl: [plain("Ph", 6, 6), plain("1-Naphthyl", 10, 10), plain("2-Naphthyl", 10, 10), plain("4-Biphenylyl", 12), carrying("Tol", 7, 6), carrying("Mes", 9, 6)],
-  heteroaryl: [plain("2-Pyridyl", 5, 6), plain("2-Furyl", 4, 5), plain("2-Thienyl", 4, 5), plain("2-Pyrimidinyl", 4, 6), plain("3-Indolyl", 8, 9)],
-  alkoxy: [plain("OMe", 1), plain("OEt", 2)],
-  aryloxy: [plain("OPh", 6, 6)],
+  alkyl: [plain("Me", "甲基", 1), plain("Et", "乙基", 2), plain("iPr", "异丙基", 3), plain("tBu", "叔丁基", 4), carrying("CF3", "三氟甲基", 1)],
+  alkenyl: [plain("Vinyl", "乙烯基", 2), plain("Allyl", "烯丙基", 3)],
+  alkynyl: [plain("Ethynyl", "乙炔基", 2), plain("Propargyl", "炔丙基", 3)],
+  cycloalkyl: [plain("cPr", "环丙基", 3, 3), plain("Cy", "环己基", 6, 6)],
+  heterocycloalkyl: [plain("THP", "四氢吡喃基", 5, 6)],
+  aryl: [
+    plain("Ph", "苯基", 6, 6),
+    plain("1-Naphthyl", "1-萘基", 10, 10),
+    plain("2-Naphthyl", "2-萘基", 10, 10),
+    plain("4-Biphenylyl", "4-联苯基", 12),
+    carrying("Tol", "甲苯基", 7, 6),
+    carrying("Mes", "均三甲苯基", 9, 6),
+  ],
+  heteroaryl: [
+    plain("2-Pyridyl", "2-吡啶基", 5, 6),
+    plain("2-Furyl", "2-呋喃基", 4, 5),
+    plain("2-Thienyl", "2-噻吩基", 4, 5),
+    plain("2-Pyrimidinyl", "2-嘧啶基", 4, 6),
+    plain("3-Indolyl", "3-吲哚基", 8, 9),
+  ],
+  alkoxy: [plain("OMe", "甲氧基", 1), plain("OEt", "乙氧基", 2)],
+  aryloxy: [plain("OPh", "苯氧基", 6, 6)],
   // An element label is the bare group with its hydrogens: Si is SiH3, N is NH2.
-  silyl: [plain("Si", 0), carrying("TMS", 3), carrying("SiPh3", 18)],
-  amino: [plain("N", 0), carrying("NMe2", 2), carrying("NHPh", 6)],
+  silyl: [plain("Si", "甲硅烷基（SiH₃）", 0), carrying("TMS", "三甲基硅基", 3), carrying("SiPh3", "三苯基硅基", 18)],
+  amino: [plain("N", "氨基（NH₂）", 0), carrying("NMe2", "二甲氨基", 2), carrying("NHPh", "苯氨基", 6)],
   // Divalent: joining the two atoms a linker sits between.
-  arylene: [bridge("p-phenylene", 6, 6), bridge("m-phenylene", 6, 6), bridge("4,4'-biphenylene", 12)],
-  heteroarylene: [bridge("2,5-pyridinediyl", 5, 6)],
+  arylene: [bridge("p-phenylene", "对亚苯基", 6, 6), bridge("m-phenylene", "间亚苯基", 6, 6), bridge("4,4'-biphenylene", "4,4′-联亚苯基", 12)],
+  heteroarylene: [bridge("2,5-pyridinediyl", "2,5-亚吡啶基", 5, 6)],
 }
 
 /** Most substituents put on one representative: enough to show the idea, without the count running away. */

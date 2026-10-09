@@ -1,5 +1,5 @@
 import type { BondEmphasis, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, RingKind } from "../types.ts"
-import type { Alternative, BridgeName, Proviso, Repeat, RingClosure } from "../markush/types.ts"
+import type { Alternative, AttachmentShape, BridgeName, Proviso, Repeat, RingClosure } from "../markush/types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
@@ -127,7 +127,12 @@ export type Op =
    * A variable point of attachment: `atom` is bonded to one of `to`, whichever, as when a
    * line is drawn into a ring's middle. Replaces any earlier one from the same atom.
    */
-  | { op: "set_attachment"; atom: Ref; to: Ref[]; repeat?: Repeat }
+  | { op: "set_attachment"; atom: Ref; to: Ref[]; repeat?: Repeat; shape?: AttachmentShape }
+  /**
+   * How `atom`'s attachment is drawn: "line" into one ring, "loop" (an ellipse round the
+   * rings and a line to it) or "arc" (the bond sweeping round them); null chooses by itself.
+   */
+  | { op: "set_attachment_shape"; atom: Ref; shape: AttachmentShape | null }
   /** "(R1)m": how many times the piece on `atom`'s attachment appears; null makes it once again. */
   | { op: "set_repeat"; atom: Ref; repeat: Repeat | null }
   | { op: "remove_attachment"; atom: Ref }

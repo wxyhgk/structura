@@ -50,7 +50,7 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       return { drawing: { ...drawing, variables: { ...drawing.variables, [op.name]: variable } } }
     }
     case "set_attachment": {
-      const attachment = { atom: ctx.atom(op.atom), to: [...new Set(op.to.map(ctx.atom))], ...(op.repeat ? { repeat: op.repeat } : {}) }
+      const attachment = { atom: ctx.atom(op.atom), to: [...new Set(op.to.map(ctx.atom))], ...(op.repeat ? { repeat: op.repeat } : {}), ...(op.shape ? { shape: op.shape } : {}) }
       const problem = attachmentProblem(drawing.molecule, attachment)
       if (problem) throw new OpError(problem)
       const others = (drawing.attachments ?? []).filter((item) => item.atom !== attachment.atom)
@@ -62,6 +62,16 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       if (!attachment) throw new OpError(`atom #${atom} has no variable attachment`)
       const { repeat: _old, ...plain } = attachment
       const next = op.repeat ? { ...plain, repeat: { ...op.repeat, name: op.repeat.name.trim() } } : plain
+      const problem = attachmentProblem(drawing.molecule, next)
+      if (problem) throw new OpError(problem)
+      return { drawing: { ...drawing, attachments: drawing.attachments!.map((item) => (item === attachment ? next : item)) } }
+    }
+    case "set_attachment_shape": {
+      const atom = ctx.atom(op.atom)
+      const attachment = drawing.attachments?.find((item) => item.atom === atom)
+      if (!attachment) throw new OpError(`atom #${atom} has no variable attachment`)
+      const { shape: _old, ...plain } = attachment
+      const next = op.shape ? { ...plain, shape: op.shape } : plain
       const problem = attachmentProblem(drawing.molecule, next)
       if (problem) throw new OpError(problem)
       return { drawing: { ...drawing, attachments: drawing.attachments!.map((item) => (item === attachment ? next : item)) } }

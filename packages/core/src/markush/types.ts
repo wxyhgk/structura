@@ -22,10 +22,18 @@ export type Proviso =
 
 /**
  * A bond from `atom` to one of the `to` atoms, whichever: "–L–ETU is attached to any free
- * position of this ring". Drawn as one line into the middle of the candidates; the bond
- * is only made when the formula is expanded into concrete compounds.
+ * position of this ring". Drawn as patents draw it (see `shape`); the bond is only made
+ * when the formula is expanded into concrete compounds.
  */
-export type Attachment = { atom: number; to: number[]; repeat?: Repeat }
+export type Attachment = { atom: number; to: number[]; repeat?: Repeat; shape?: AttachmentShape }
+
+/**
+ * How a variable attachment is drawn: a straight line into the middle of one ring, a closed
+ * ellipse round a whole fused system with a line to it ("n Rx anywhere on these rings"),
+ * or the bond itself sweeping round the system as an open curve ("L joined at any position
+ * of these rings"). Left out, it is chosen from the attachment (draw/attachmentShape.ts).
+ */
+export type AttachmentShape = "line" | "loop" | "arc"
 
 /**
  * "(R1)m, m = 0–4": the attached piece appears `min` to `max` times, each copy on a

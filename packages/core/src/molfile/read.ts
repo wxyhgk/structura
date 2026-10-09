@@ -5,7 +5,7 @@ import { emptyMolecule } from "../molecule/graph.ts"
 import type { Atom, Bond, Bracket, Molecule } from "../types.ts"
 import { validate, type Problem, type ProblemCode } from "../validate.ts"
 import { CHARGE_CODES, PX_PER_ANGSTROM, R_GROUP_SYMBOLS, rGroupLabel, stereoFor } from "./codes.ts"
-import { readSgroupLine, repeatFromLabel, type SgroupRead } from "./sgroups.ts"
+import { readSgroupLine, REPEAT_FIELD, repeatFrom, type SgroupRead } from "./sgroups.ts"
 
 function int(text: string | undefined): number {
   const value = Number.parseInt((text ?? "").trim(), 10)
@@ -50,20 +50,33 @@ function propertyPairs(line: string): Array<[number, number]> {
   return pairs
 }
 
+/** A key for a set of atom numbers, whatever their order. */
+function atomsKey(atoms: readonly number[]): string {
+  return [...atoms].sort((a, b) => a - b).join(",")
+}
+
 /**
  * Brackets from the Sgroups read: a repeat unit (SRU) or a generic group (GEN), on atoms
- * numbered as in the file (which are their ids). The types of any other Sgroups go in `others`.
+ * numbered as in the file (which are their ids). A repeat unit's range comes from the data
+ * Sgroup written with it on the same atoms, else from its label. The types of any other
+ * Sgroups go in `others`.
  */
 function bracketsOf(sgroups: Map<number, SgroupRead>, atomCount: number, others: Set<string>): Bracket[] {
+  const atomsOf = (sgroup: SgroupRead) => [...new Set(sgroup.atoms.filter((number) => number >= 1 && number <= atomCount))]
+  const ranges = new Map<string, string>()
+  for (const sgroup of sgroups.values()) {
+    if (sgroup.type === "DAT" && sgroup.field === REPEAT_FIELD && sgroup.data != null) ranges.set(atomsKey(atomsOf(sgroup)), sgroup.data)
+  }
   const brackets: Bracket[] = []
   for (const sgroup of sgroups.values()) {
-    const atoms = [...new Set(sgroup.atoms.filter((number) => number >= 1 && number <= atomCount))]
+    if (sgroup.type === "DAT" && sgroup.field === REPEAT_FIELD) continue
+    const atoms = atomsOf(sgroup)
     if ((sgroup.type !== "SRU" && sgroup.type !== "GEN") || atoms.length === 0) {
       others.add(sgroup.type ?? "?")
       continue
     }
     const id = brackets.length + 1
-    brackets.push(sgroup.type === "SRU" ? { id, atoms, kind: "repeat", repeat: repeatFromLabel(sgroup.label) } : { id, atoms, kind: "group" })
+    brackets.push(sgroup.type === "SRU" ? { id, atoms, kind: "repeat", repeat: repeatFrom(sgroup.label, ranges.get(atomsKey(atoms))) } : { id, atoms, kind: "group" })
   }
   return brackets
 }
@@ -202,7 +215,7 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
         unnumbered.delete(int(line.slice(3, 6)))
       }
       index++
-    } else if (/^M {2}S(TY|LB|ST|AL|BL|SL|MT|DI|AP|CN|BV|DS|PA|NN)/.test(line)) {
+    } else if (/^M {2}S(TY|LB|ST|AL|BL|SL|MT|DI|AP|CN|BV|DS|PA|NN|DT|DD|CD|ED|PL)/.test(line)) {
       // The rest (labels, bonds, bracket corners…) are worked out again from the atoms.
       readSgroupLine(line, sgroups)
     } else if (line.startsWith("S  SKP")) {

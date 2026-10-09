@@ -6,7 +6,13 @@ import { ANGSTROM_PER_PX } from "./codes.ts"
 
 // Brackets as V2000 Sgroups: a repeat unit is an SRU (its count's name as the label, the
 // bonds that cross it, head-to-tail), a group a GEN. Each gets its two brackets' corners
-// (M  SDI) for programs that draw them as given.
+// (M  SDI) for programs that draw them as given. The SRU label is only the name (n, as
+// other programs show it), so its range goes alongside as a data Sgroup on the same atoms:
+// field STRUCTURA_REPEAT, value such as 1-4. Programs that do not know the field keep it as
+// data and still open the file.
+
+/** The data field that carries a repeat unit's range. */
+export const REPEAT_FIELD = "STRUCTURA_REPEAT"
 
 /** How far the written brackets stand off the atoms, in bond lengths. */
 const PAD = 0.35
@@ -47,12 +53,15 @@ function pairLines(tag: string, pairs: Array<[number, string]>): string[] {
 export function sgroupLines(mol: Molecule, brackets: readonly Bracket[], atomIndex: ReadonlyMap<number, number>, bondIndex: ReadonlyMap<number, number>): string[] {
   const written = brackets.filter((bracket) => bracket.atoms.length > 0 && bracket.atoms.every((id) => atomIndex.has(id)))
   if (written.length === 0) return []
-  const lines = pairLines(
-    "STY",
-    written.map((bracket, index) => [index + 1, bracket.kind === "repeat" ? "SRU" : "GEN"]),
-  )
+  // Each repeat unit's range is one more Sgroup, numbered after the brackets.
+  const ranged = written.filter((bracket) => bracket.kind === "repeat")
+  const lines = pairLines("STY", [
+    ...written.map((bracket, index): [number, string] => [index + 1, bracket.kind === "repeat" ? "SRU" : "GEN"]),
+    ...ranged.map((_bracket, index): [number, string] => [written.length + index + 1, "DAT"]),
+  ])
   const atoms = new Map(mol.atoms.map((atom) => [atom.id, atom]))
   const heads: Array<[number, string]> = []
+  const data: string[] = []
   written.forEach((bracket, index) => {
     const sgroup = index + 1
     const inside = new Set(bracket.atoms)
@@ -71,17 +80,30 @@ export function sgroupLines(mol: Molecule, brackets: readonly Bracket[], atomInd
     const top = -(Math.min(...points.map((atom) => atom.y)) - pad) * ANGSTROM_PER_PX
     const bottom = -(Math.max(...points.map((atom) => atom.y)) + pad) * ANGSTROM_PER_PX
     for (const x of [left, right]) lines.push(`M  SDI ${pad3(sgroup)}  4${fixed10(x)}${fixed10(bottom)}${fixed10(x)}${fixed10(top)}`)
+    if (bracket.kind === "repeat") {
+      // The range, as text, shown (by programs that show data) just past the count's name.
+      const repeat = bracket.repeat ?? DEFAULT_REPEAT
+      const number = written.length + ranged.indexOf(bracket) + 1
+      data.push(...listLines("SAL", number, bracket.atoms.map((id) => atomIndex.get(id)!)))
+      data.push(`M  SDT ${pad3(number)} ${REPEAT_FIELD.padEnd(30, " ")}T`)
+      data.push(`M  SDD ${pad3(number)} ${fixed10(right + 0.3)}${fixed10(bottom - 0.3)}    DA    ALL  1       5`)
+      data.push(`M  SED ${pad3(number)} ${repeat.min}-${repeat.max}`)
+    }
   })
-  lines.push(...pairLines("SCN", heads))
+  lines.push(...pairLines("SCN", heads), ...data)
   return lines
 }
 
-/** One Sgroup as read so far: its type and atoms (file numbers), and its label. */
-export type SgroupRead = { type?: string; atoms: number[]; label?: string }
+/**
+ * One Sgroup as read so far: its type and atoms (file numbers), its label, and for a data
+ * Sgroup its field's name and value.
+ */
+export type SgroupRead = { type?: string; atoms: number[]; label?: string; field?: string; data?: string }
 
 /**
- * Takes in an Sgroup property line (STY, SAL, SMT; the others are worked out again from the
- * atoms) into `sgroups`, by Sgroup number. Returns false for a line it does not read.
+ * Takes in an Sgroup property line (STY, SAL, SMT, and SDT, SCD, SED for data; the others
+ * are worked out again from the atoms) into `sgroups`, by Sgroup number. Returns false for
+ * a line it does not read.
  */
 export function readSgroupLine(line: string, sgroups: Map<number, SgroupRead>): boolean {
   const int = (text: string) => Number.parseInt(text.trim(), 10) || 0
@@ -108,7 +130,28 @@ export function readSgroupLine(line: string, sgroups: Map<number, SgroupRead>): 
     sgroup(int(line.slice(6, 10))).label = line.slice(11).trim()
     return true
   }
+  if (tag === "SDT") {
+    sgroup(int(line.slice(6, 10))).field = line.slice(11, 41).trim()
+    return true
+  }
+  // SCD lines carry a long value in pieces of 69, SED the last piece.
+  if (tag === "SCD" || tag === "SED") {
+    const read = sgroup(int(line.slice(6, 10)))
+    read.data = (read.data ?? "") + (tag === "SCD" ? line.slice(11, 80) : line.slice(11).trimEnd())
+    return true
+  }
   return false
+}
+
+/**
+ * A repeat unit's count from its label and, when the file has one, the range written with
+ * it (REPEAT_FIELD): the range from there, the name from the label.
+ */
+export function repeatFrom(label: string | undefined, range: string | undefined): Repeat {
+  const named = repeatFromLabel(label)
+  const ranged = range == null ? null : /^\s*(\d+)\s*-\s*(\d+)\s*$/.exec(range)
+  if (!ranged || Number(ranged[1]) > Number(ranged[2])) return named
+  return { ...named, min: Number(ranged[1]), max: Number(ranged[2]) }
 }
 
 /**

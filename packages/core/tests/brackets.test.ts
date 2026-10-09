@@ -194,19 +194,23 @@ test("the exported SVG draws the brackets and the count, and its bounds take the
 
 test("brackets round-trip through molfile Sgroups: SRU with its label and crossing bonds, GEN", () => {
   const drawing = run(chain(), [
-    { op: "add_bracket", atoms: [3], kind: "repeat", repeat: { min: 1, max: 4, name: "m" } },
+    { op: "add_bracket", atoms: [3], kind: "repeat", repeat: { min: 2, max: 6, name: "m" } },
     { op: "add_bracket", atoms: [1, 2], kind: "group" },
   ])
   const text = toMolfile(drawing.molecule, "Structura", drawing.brackets)
-  assert.match(text, /^M {2}STY {2}2 {3}1 SRU {3}2 GEN$/m)
+  assert.match(text, /^M {2}STY {2}3 {3}1 SRU {3}2 GEN {3}3 DAT$/m)
   assert.match(text, /^M {2}SAL {3}1 {2}1 {3}3$/m)
   assert.match(text, /^M {2}SBL {3}1 {2}2 {3}2 {3}3$/m)
   assert.match(text, /^M {2}SMT {3}1 m$/m)
   assert.match(text, /^M {2}SCN {2}1 {3}1 HT $/m)
   assert.equal(text.match(/^M {2}SDI/gm)?.length, 4, "two bracket lines per Sgroup")
+  // The label is the name alone; the range goes alongside as data on the same atoms.
+  assert.match(text, /^M {2}SAL {3}3 {2}1 {3}3$/m)
+  assert.match(text, /^M {2}SDT {3}3 STRUCTURA_REPEAT {14}T$/m)
+  assert.match(text, /^M {2}SED {3}3 2-6$/m)
   const read = readMolfile(text)
   assert.deepEqual(read.brackets, [
-    { id: 1, atoms: [3], kind: "repeat", repeat: { min: 1, max: 4, name: "m" } },
+    { id: 1, atoms: [3], kind: "repeat", repeat: { min: 2, max: 6, name: "m" } },
     { id: 2, atoms: [1, 2], kind: "group" },
   ])
   assert.ok(!read.problems.some((problem) => /Sgroup/.test(problem.message)))
@@ -220,6 +224,27 @@ test("other Sgroups are still noted as ignored; an SRU labelled with a range rea
   const read = readMolfile(text)
   assert.deepEqual(read.brackets, [{ id: 1, atoms: [2, 3], kind: "repeat", repeat: { min: 2, max: 5, name: "n" } }])
   assert.ok(read.problems.some((problem) => /SUP/.test(problem.message)))
+})
+
+test("a repeat unit's range reads from its data Sgroup first, whatever the order and even split over lines", () => {
+  const sgroups = [
+    "M  STY  3   1 DAT   2 SRU   3 DAT",
+    "M  SAL   1  2   3   2",
+    "M  SDT   1 STRUCTURA_REPEAT              T",
+    "M  SCD   1 1-",
+    "M  SED   1 12",
+    "M  SAL   2  2   2   3",
+    "M  SMT   2 k",
+    "M  SAL   3  1   4",
+    "M  SDT   3 COMMENT                       T",
+    "M  SED   3 hello",
+  ]
+  const read = readMolfile(toMolfile(chain().molecule).replace("M  END", [...sgroups, "M  END"].join("\n")))
+  assert.deepEqual(read.brackets, [{ id: 1, atoms: [2, 3], kind: "repeat", repeat: { min: 1, max: 12, name: "k" } }])
+  // Another data field is still noted as ignored; the repeat range is not.
+  assert.equal(read.problems.filter((problem) => /Sgroups other/.test(problem.message)).length, 1)
+  assert.match(read.problems.find((problem) => /Sgroups other/.test(problem.message))!.message, /\(DAT:/)
+  assert.ok(!read.problems.some((problem) => /ignored "M  S/.test(problem.message)))
 })
 
 test("opening or pasting molecules with brackets puts the brackets on the atoms' new ids", () => {

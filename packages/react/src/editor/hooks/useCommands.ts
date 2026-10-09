@@ -1,7 +1,7 @@
 import { useMemo, type RefObject } from "react"
 import { toDocument } from "@structura/core/document"
 import { sceneToSvg } from "@structura/core/draw"
-import { placeholders, variableLabels } from "@structura/markush"
+import { variableLabels } from "@structura/markush"
 import { atomIdsOfSelection, bondsLeaving, emptySelection, groupsTouching } from "@structura/core/molecule"
 import { toMolfile } from "@structura/core/molfile"
 import { download, MOD } from "../browser.ts"
@@ -29,6 +29,7 @@ export function useCommands({
   clipboard,
   openFileDialog,
   dialogs,
+  openMarkush,
   models,
   file,
 }: {
@@ -39,6 +40,8 @@ export function useCommands({
   openFileDialog: () => void
   /** The dialogs the commands open. */
   dialogs: Pick<EditorDialogs, "open" | "showGuide">
+  /** Switches to the 通式 workspace. */
+  openMarkush: () => void
   /** Which model-backed dialogs the host can serve: 从图片识别结构 and 从专利文字填写. */
   models: { recognize: boolean; fill: boolean }
   /** Which file this is: the names things are saved under, and what counts as saved. */
@@ -72,7 +75,7 @@ export function useCommands({
     recognizeImage: command("从图片识别结构…", () => {
       if (models.recognize) dialogs.open("recognize")
     }, { enabled: models.recognize }),
-    // Filling needs variables to fill: labels such as R1, X on the formula, or ones already defined (as the variables panel shows them).
+    // Filling needs variables to fill: labels such as R1, X on the formula, or ones already defined (as the 通式 workspace shows them).
     fillFromText: command("从专利文字填写变量…", () => {
       if (models.fill) dialogs.open("fill")
     }, {
@@ -144,9 +147,8 @@ export function useCommands({
       keys: [{ key: "j", meta: true }],
       enabled: join != null,
     }),
-    enumerate: command("批量生成化合物…", () => dialogs.open("enumerate"), {
-      enabled: placeholders({ molecule: editor.mol, arrows: editor.arrows, nextArrowId: 0, variables: editor.variables }).length > 0,
-    }),
+    // The 通式 workspace: the formula's variables, its constraints and the compounds it makes.
+    enumerate: command("通式与批量生成…", openMarkush),
     nudge: perArrow((direction, key) =>
       command("移动 10 像素", () => editor.nudgeSelection(direction), { keys: [{ key, shift: true }], enabled: selected }),
     ),

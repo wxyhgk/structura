@@ -28,12 +28,10 @@ import { ToolPalette } from "./palette/ToolPalette.tsx"
 import { HelpDialog } from "./shell/dialogs/HelpDialog.tsx"
 import { EditorGuide } from "./shell/EditorGuide.tsx"
 import { ImportNotesDialog } from "./shell/dialogs/ImportNotesDialog.tsx"
-import { EnumerateDialog } from "./markush/EnumerateDialog.tsx"
 import { FillDialog } from "./markush/FillDialog.tsx"
 import type { FillVariables } from "./markush/useFill.ts"
 import { StructureDialog } from "./vision/StructureDialog.tsx"
 import type { RecognizeStructure } from "./vision/useRecognition.ts"
-import { VariablesPanel } from "./markush/VariablesPanel.tsx"
 import { MarkushWorkspace } from "./markush/workspace/MarkushWorkspace.tsx"
 import type { Workspace } from "./markush/workspace/types.ts"
 import { WorkspaceTabs } from "./markush/workspace/WorkspaceTabs.tsx"
@@ -122,6 +120,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     clipboard: { ...clipboard, paste: () => void imports.pasteClipboard() },
     openFileDialog: () => fileRef.current?.click(),
     dialogs,
+    openMarkush: () => setWorkspace("markush"),
     models: { recognize: recognizeStructure != null, fill: fillVariables != null },
   })
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
@@ -206,19 +205,6 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
                 templates={templates}
               />
             )}
-            {workspace === "draw" && <VariablesPanel
-              mol={editor.mol}
-              selected={editor.selection.atoms}
-              variables={editor.variables}
-              attachments={editor.attachments}
-              provisos={editor.drawing.provisos}
-              ringClosures={editor.drawing.ringClosures}
-              run={editor.run}
-              canEnumerate={commands.enumerate.enabled}
-              onEnumerate={commands.enumerate.run}
-              onFill={fillVariables ? () => dialogs.open("fill") : undefined}
-              onHelp={dialogs.showGuide}
-            />}
           </div>
 
           <StatusBar
@@ -236,14 +222,6 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             flash(`已复制${what}`)
           }} />
           <Flash message={message} />
-          <EnumerateDialog
-            open={dialogs.enumerate}
-            onOpenChange={dialogs.setOpen("enumerate")}
-            drawing={editor.latest()}
-            colorHetero={editor.colorHetero}
-            base={file.base}
-            onPlace={(mol) => editor.appendMolecules([mol], viewport.centre())}
-          />
           {recognizeStructure && (
             <StructureDialog
               open={dialogs.recognize}

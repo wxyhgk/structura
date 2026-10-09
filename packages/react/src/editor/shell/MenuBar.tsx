@@ -105,7 +105,6 @@ export function MenuBar({
         <Item command={c.quickScaffold} />
         <DropdownMenuSeparator />
         <Item command={c.enumerate} />
-        {!c.enumerate.enabled && <div className="max-w-56 px-2 pb-1.5 text-[11px] leading-snug text-[#888]">先在右侧“通式变量”面板给 R1、X 等变量定义候选项</div>}
       </MenuButton>
       {(c.recognizeImage.enabled || hasFill) && (
         <MenuButton label="AI">

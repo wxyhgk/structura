@@ -1,5 +1,8 @@
 import type { Choice, Drawing } from "@structura/core/types"
-import { enumerate } from "./enumerate.ts"
+import { choiceResolver } from "./choices.ts"
+import { formulasOf } from "./formulas.ts"
+import { planFormulas, type Tally } from "./plans.ts"
+import { placeholders } from "./queries.ts"
 
 /** How big a generic formula's library is, known before any compound is built. */
 export type LibrarySize = {
@@ -18,6 +21,10 @@ export type LibrarySize = {
  * every placeholder's fitting choices are counted, and no molecule is built.
  */
 export function librarySize(drawing: Drawing, { representatives = true }: { representatives?: boolean } = {}): LibrarySize {
-  const result = enumerate(drawing, { limit: 0, representatives })
-  return { combinations: result.total, represented: result.represented, classesLeftOut: result.classesLeftOut, onlyClasses: result.onlyClasses }
+  const resolver = choiceResolver(drawing.variables ?? {}, representatives)
+  for (const { name } of placeholders(drawing)) resolver.choicesFor(name)
+  const tally: Tally = { total: 0, occupied: 0, onlyClasses: [] }
+  const planning = planFormulas(drawing, formulasOf(drawing), resolver, tally)
+  while (!planning.next().done);
+  return { combinations: tally.total, represented: resolver.represented, classesLeftOut: resolver.classesLeftOut, onlyClasses: tally.onlyClasses }
 }

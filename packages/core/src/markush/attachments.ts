@@ -3,7 +3,7 @@ import type { Drawing, Molecule } from "../types.ts"
 import type { Attachment, AttachmentShape, Repeat } from "./types.ts"
 
 /** Every way an attachment can be drawn, for checking what a file or an op asks for. */
-export const ATTACHMENT_SHAPES: readonly AttachmentShape[] = ["line", "loop", "arc"]
+export const ATTACHMENT_SHAPES: readonly AttachmentShape[] = ["line", "loop", "arc", "bracket"]
 
 /** How a repeat count may be written: a lower-case letter, optionally numbered (m, n, p1, n'). */
 const COUNT_NAME = /^[a-z]\d{0,2}'?$/
@@ -23,7 +23,7 @@ export function attachmentProblem(mol: Molecule, attachment: Attachment): string
   if (to.size < 2) return "a variable attachment needs at least two atoms to choose from"
   if (to.has(attachment.atom)) return `atom #${attachment.atom} cannot be one of its own candidates`
   for (const id of [attachment.atom, ...to]) if (!atomById(mol, id)) return `there is no atom #${id}`
-  if (attachment.shape !== undefined && !ATTACHMENT_SHAPES.includes(attachment.shape)) return `"${String(attachment.shape)}" is not a way to draw an attachment: use line, loop or arc`
+  if (attachment.shape !== undefined && !ATTACHMENT_SHAPES.includes(attachment.shape)) return `"${String(attachment.shape)}" is not a way to draw an attachment: use line, loop, arc or bracket`
   return attachment.repeat ? repeatProblem(attachment.repeat, to.size) : null
 }
 

@@ -1,5 +1,5 @@
 import type { Drawing, HotTarget, Molecule } from "../types.ts"
-import { pruneBrackets } from "../drawing/brackets.ts"
+import { followBrackets, pruneBrackets } from "../drawing/brackets.ts"
 import { pruneAttachments } from "../markush/attachments.ts"
 import { absorbRingPointers } from "../markush/pointer.ts"
 import { validateDrawing } from "../validate.ts"
@@ -67,8 +67,9 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
     try {
       const before = drawing.molecule.nextAtomId
       const done = step(drawing, op, ctx, depth)
-      // Deleting atoms takes their variable attachments with them, and takes them out of brackets.
-      drawing = pruneBrackets(pruneAttachments(done.drawing))
+      // Deleting atoms takes their variable attachments with them, and takes them out of
+      // brackets; an attachment drawn into a bracket keeps the bracket's atoms as candidates.
+      drawing = followBrackets(drawing, pruneBrackets(pruneAttachments(done.drawing)))
       // Drawn with the pointer tools, a line into a ring's middle is a variable attachment.
       const ends = pointerEnds(op, drawing, before, ctx)
       if (ends.length > 0) drawing = absorbRingPointers(drawing, ends)

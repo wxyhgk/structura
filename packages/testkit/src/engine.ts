@@ -15,7 +15,7 @@ export function fakeCanvas(editor: Editor) {
   const host: PointerHost = {
     get props() {
       const state = editor.get()
-      return { ...state, mol: editor.latest().molecule, brackets: editor.latest().brackets, run: editor.run, setSelection: editor.setSelection }
+      return { ...state, mol: editor.latest().molecule, brackets: editor.latest().brackets, attachments: editor.latest().attachments, run: editor.run, setSelection: editor.setSelection }
     },
     gesture: { current: { kind: "idle" } as Gesture },
     space: { current: false },

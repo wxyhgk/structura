@@ -130,7 +130,8 @@ export type Op =
   | { op: "set_attachment"; atom: Ref; to: Ref[]; repeat?: Repeat; shape?: AttachmentShape }
   /**
    * How `atom`'s attachment is drawn: "line" into one ring, "loop" (an ellipse round the
-   * rings and a line to it) or "arc" (the bond sweeping round them); null chooses by itself.
+   * rings and a line to it), "arc" (the bond sweeping round them) or "bracket" (a bond into
+   * the group bracket whose atoms are the candidates); null chooses by itself.
    */
   | { op: "set_attachment_shape"; atom: Ref; shape: AttachmentShape | null }
   /** "(R1)m": how many times the piece on `atom`'s attachment appears; null makes it once again. */

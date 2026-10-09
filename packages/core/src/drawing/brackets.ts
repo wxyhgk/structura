@@ -1,5 +1,5 @@
 import { repeatProblem } from "../markush/attachments.ts"
-import type { Repeat } from "../markush/types.ts"
+import type { Attachment, Repeat } from "../markush/types.ts"
 import { atomById } from "../molecule/graph.ts"
 import type { Bracket, Drawing, Molecule } from "../types.ts"
 
@@ -89,6 +89,44 @@ export function carryBrackets(drawing: Drawing, brackets: readonly Bracket[], ma
     ids.push(added.id)
   }
   return { drawing: next, ids, skipped }
+}
+
+/** Whether two lists hold the same atoms, whatever their order. */
+function sameAtoms(a: readonly number[], b: readonly number[]): boolean {
+  const set = new Set(a)
+  return set.size === new Set(b).size && b.every((id) => set.has(id))
+}
+
+/**
+ * The group bracket an attachment goes into, "L joined at any position of the bracketed
+ * group": one whose atoms are exactly the attachment's candidates, its atom outside. Null
+ * when there is none. This equality is the whole link (no id is stored on the attachment),
+ * so a drawing, a file or an op that makes it has it, and followBrackets keeps it true.
+ */
+export function bracketInto(brackets: readonly Bracket[] | undefined, attachment: Attachment): Bracket | null {
+  return (brackets ?? []).find((bracket) => bracket.kind === "group" && !bracket.atoms.includes(attachment.atom) && sameAtoms(bracket.atoms, attachment.to)) ?? null
+}
+
+/**
+ * The drawing with each attachment that went into a group bracket before (see bracketInto)
+ * still going into it after the bracket's atoms changed: its candidates follow the
+ * bracket's atoms. Applied after every op, so whatever changes a bracket's atoms, the
+ * attachments drawn into it go along.
+ */
+export function followBrackets(before: Drawing, after: Drawing): Drawing {
+  if (!after.attachments || !before.brackets || before.brackets === after.brackets) return after
+  const now = new Map((after.brackets ?? []).map((bracket) => [bracket.id, bracket]))
+  let changed = false
+  const attachments = after.attachments.map((attachment) => {
+    const was = before.attachments?.find((item) => item.atom === attachment.atom)
+    const old = was && bracketInto(before.brackets, was)
+    const bracket = old && now.get(old.id)
+    if (!bracket || bracket.kind !== "group" || bracket.atoms.length < 2 || bracket.atoms.includes(attachment.atom) || sameAtoms(bracket.atoms, attachment.to)) return attachment
+    changed = true
+    const repeat = attachment.repeat && { ...attachment.repeat, max: Math.min(attachment.repeat.max, bracket.atoms.length), min: Math.min(attachment.repeat.min, bracket.atoms.length) }
+    return { ...attachment, to: [...bracket.atoms], ...(repeat ? { repeat } : {}) }
+  })
+  return changed ? { ...after, attachments } : after
 }
 
 /** The bonds with exactly one end among `atoms`: the ones that cross a bracket around them. */

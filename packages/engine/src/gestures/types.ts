@@ -26,8 +26,11 @@ export type Preview =
   | { kind: "ring"; points: Point[]; doubles: boolean; anchor?: Point }
   | { kind: "marquee"; a: Point; b: Point }
   | { kind: "lasso"; points: Point[] }
-  /** A bond dragged into a ring: it will attach at any of `positions`, meeting the ring at `centre`. */
-  | { kind: "attachment"; a: Point; centre: Point; positions: Point[] }
+  /**
+   * A bond dragged into a ring: it will attach at any of `positions`, meeting the ring at
+   * `centre`. Into a bracket, the line stops at `end`, just past the bracket's upright.
+   */
+  | { kind: "attachment"; a: Point; centre: Point; positions: Point[]; end?: Point }
 
 /** The editor as gestures see it: what is drawn, the tool settings, the selection, and the write path. */
 export type GestureContext = {

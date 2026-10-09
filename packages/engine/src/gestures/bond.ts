@@ -2,27 +2,36 @@ import { ringPositionsAt } from "@structura/markush"
 import { SNAP_ATOM, atomById, nearestAtom } from "@structura/core/molecule"
 import type { Op } from "@structura/core/ops"
 import type { Molecule, Point } from "@structura/core/types"
+import { bracketDropAt } from "../pointer/brackets.ts"
 import { bondEnd, hitOf } from "../pointer/targeting.ts"
-import type { Gesture, GestureKind, PointerHost } from "./types.ts"
+import type { Gesture, GestureContext, GestureKind, PointerHost } from "./types.ts"
 
 type BondGesture = Extract<Gesture, { kind: "bond" }>
 
-/** Where a variable attachment would go: from an existing atom, or (atom null) from a new one made at `end`. */
-type AttachmentTarget = { atom: number; positions: number[] } | { atom: null; end: Point; positions: number[] }
+/**
+ * Where a variable attachment would go: from an existing atom (into a group bracket, `into`
+ * says where the bond will end), or (atom null) from a new one made at `end`.
+ */
+type AttachmentTarget = { atom: number; positions: number[]; into?: Point } | { atom: null; end: Point; positions: number[] }
 
 /**
  * A bond dragged between an atom and the inside of a ring, either way round, makes a
  * variable point of attachment rather than a bond: –L– hangs off any of that ring's free
- * positions. Dragged from a ring's inside out into empty space, the substituent's atom is
- * made where it ends, in one go. Returns the atom and those positions, or null for an
- * ordinary bond.
+ * positions. Dragged from an atom into a group bracket it is outside of (on no atom and in
+ * no ring's middle there), it hangs off any of the bracket's atoms. Dragged from a ring's
+ * inside out into empty space, the substituent's atom is made where it ends, in one go.
+ * Returns the atom and those positions, or null for an ordinary bond.
  */
-function attachmentTarget(gesture: BondGesture, world: Point, zoom: number): AttachmentTarget | null {
+function attachmentTarget(gesture: BondGesture, world: Point, zoom: number, context: GestureContext): AttachmentTarget | null {
   const mol = gesture.mol
   if (gesture.fromId != null) {
-    if (hitOf(mol, world, zoom)) return null
-    const positions = ringPositionsAt(mol, world, gesture.fromId)
-    return positions ? { atom: gesture.fromId, positions } : null
+    const hit = hitOf(mol, world, zoom)
+    if (hit?.type === "atom") return null
+    const positions = hit ? null : ringPositionsAt(mol, world, gesture.fromId)
+    if (positions) return { atom: gesture.fromId, positions }
+    // On a bond in a bracket counts as in the bracket: what else could ending there mean.
+    const drop = bracketDropAt(mol, context.brackets, context.attachments, world, gesture.fromId)
+    return drop ? { atom: gesture.fromId, positions: drop.bracket.atoms, into: drop.end } : null
   }
   const landed = nearestAtom(mol, world, SNAP_ATOM / zoom)
   if (landed) {
@@ -53,13 +62,14 @@ export const bond: GestureKind<BondGesture> = {
     const zoom = host.zoom()
     const snapped = nearestAtom(gesture.mol, world, SNAP_ATOM / zoom, gesture.fromId ?? undefined)
     host.assignHover(snapped ? { type: "atom", id: snapped.id } : null)
-    // Between a ring's inside and an atom, letting go makes a variable attachment; show where it could land.
-    const attachment = attachmentTarget(gesture, world, zoom)
+    // Between a ring's inside (or a bracket's) and an atom, letting go makes a variable attachment; show where it could land.
+    const attachment = attachmentTarget(gesture, world, zoom, host.props)
     if (attachment) {
       const atoms = attachment.positions.map((id) => atomById(gesture.mol, id)!)
       const centre = { x: atoms.reduce((sum, atom) => sum + atom.x, 0) / atoms.length, y: atoms.reduce((sum, atom) => sum + atom.y, 0) / atoms.length }
       const from = attachment.atom == null ? attachment.end : atomById(gesture.mol, attachment.atom)!
-      host.setPreview({ kind: "attachment", a: from, centre, positions: atoms })
+      const end = attachment.atom != null ? attachment.into : undefined
+      host.setPreview({ kind: "attachment", a: from, centre, positions: atoms, ...(end ? { end } : {}) })
       return
     }
     const origin = originOf(gesture)
@@ -73,7 +83,7 @@ export const bond: GestureKind<BondGesture> = {
       host.props.run([{ op: "draw_bond", from, start: gesture.origin, ...style, ringPointer: true }])
       return
     }
-    const attachment = attachmentTarget(gesture, world, host.zoom())
+    const attachment = attachmentTarget(gesture, world, host.zoom(), host.props)
     if (attachment) {
       // A new atom takes the next id, so the attachment can name it in the same step.
       const ops: Op[] =

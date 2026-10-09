@@ -146,7 +146,7 @@ export function CanvasMenu({
             编辑标签…<ContextMenuShortcut>Enter</ContextMenuShortcut>
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => onSelectMolecule(target.id)}>选中整个分子</ContextMenuItem>
-          {attachment && <AttachmentShapeMenu attachment={attachment} run={run} />}
+          {attachment && <AttachmentShapeMenu attachment={attachment} brackets={brackets} run={run} />}
           <ContextMenuSeparator />
           <Identify onCopyAs={onCopyAs} onAnalyze={onAnalyze} />
           <ContextMenuSeparator />

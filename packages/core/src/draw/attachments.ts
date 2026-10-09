@@ -1,7 +1,10 @@
-import type { Molecule, Point } from "../types.ts"
+import { bracketInto } from "../drawing/brackets.ts"
+import { bondLengthAt } from "../molecule/measure.ts"
+import type { Bracket, Molecule, Point } from "../types.ts"
 import type { Attachment, AttachmentShape } from "../markush/types.ts"
 import { arcJoin, arcPath, ellipseBounds, ellipsePoint, fitEllipse, loopPath, nearestOnEllipse } from "./attachmentCurve.ts"
 import { attachmentShape } from "./attachmentShape.ts"
+import { intoBracketEnd, type Uprights } from "./intoBracket.ts"
 import type { AtomLabel } from "./labels.ts"
 
 /** Text drawn beside a label: the brackets and count of "(R1)m". */
@@ -82,13 +85,21 @@ function heading(mol: Molecule, atom: Point & { id: number }): Point | undefined
 }
 
 /**
+ * What drawing attachments needs to know of the brackets: the drawing's `brackets`, for
+ * telling which attachments go into one, and where each bracket's uprights stand, by id,
+ * once the brackets are drawn. An attachment into a bracket not yet drawn is left out.
+ */
+export type BracketContext = { brackets?: readonly Bracket[]; uprights?: ReadonlyMap<number, Uprights> }
+
+/**
  * Variable points of attachment as patents draw them, by their shape: a line from the atom
  * (leaving its label) into the middle of one ring; an ellipse round a fused system with a
- * line to it; or the bond sweeping round the system as an open curve. "(R1)m" when it
- * repeats. Shared by the canvas and every export, so they look the same, and recomputed from
- * the atoms, so a curve follows them as they move.
+ * line to it; the bond sweeping round the system as an open curve; or a bond crossing a
+ * group bracket's upright into it. "(R1)m" when it repeats. Shared by the canvas and every
+ * export (through structureMarks), so they look the same, and recomputed from the atoms, so
+ * a curve follows them as they move.
  */
-export function attachmentMarks(mol: Molecule, attachments: readonly Attachment[] | undefined, labels: readonly AtomLabel[]): AttachmentMark[] {
+export function attachmentMarks(mol: Molecule, attachments: readonly Attachment[] | undefined, labels: readonly AtomLabel[], context: BracketContext = {}): AttachmentMark[] {
   if (!attachments) return []
   const atoms = new Map(mol.atoms.map((atom) => [atom.id, atom]))
   return attachments.flatMap((attachment): AttachmentMark[] => {
@@ -97,11 +108,18 @@ export function attachmentMarks(mol: Molecule, attachments: readonly Attachment[
     if (!from || targets.length === 0) return []
     const label = labels.find((item) => item.atomId === from.id)
     const texts = attachment.repeat && label ? repeatTexts(label, attachment.repeat.name) : []
-    const shape = attachmentShape(mol, attachment)
+    const shape = attachmentShape(mol, attachment, context.brackets)
     const base = { atom: attachment.atom, targets: targets.map((atom) => atom.id), texts }
     const leaving = (toward: Point) => {
       const t = leaveBox(from, toward, label)
       return { x: from.x + (toward.x - from.x) * t, y: from.y + (toward.y - from.y) * t }
+    }
+    if (shape === "bracket") {
+      const frame = context.uprights?.get(bracketInto(context.brackets, attachment)!.id)
+      if (!frame) return []
+      const to = intoBracketEnd(from, frame, bondLengthAt(mol, from.id))
+      const start = leaving(to)
+      return [{ ...base, shape, from: start, to, path: `M ${fixed(start)} L ${fixed(to)}`, bounds: extentOf([start, to]), curve: null }]
     }
     if (shape === "line") {
       const to = { x: targets.reduce((sum, atom) => sum + atom.x, 0) / targets.length, y: targets.reduce((sum, atom) => sum + atom.y, 0) / targets.length }

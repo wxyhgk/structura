@@ -118,7 +118,7 @@ export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: 
   const attached = marks
     .map(
       (mark) =>
-        (mark.shape === "line"
+        (mark.shape === "line" || mark.shape === "bracket"
           ? `<line x1="${mark.from.x.toFixed(2)}" y1="${mark.from.y.toFixed(2)}" x2="${mark.to.x.toFixed(2)}" y2="${mark.to.y.toFixed(2)}" stroke="#222" stroke-width="1.55" stroke-linecap="round"/>`
           : `<path d="${mark.path}" fill="none" stroke="#222" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>`) +
         mark.texts.map(markTextSvg).join(""),

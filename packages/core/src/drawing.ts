@@ -3,12 +3,14 @@ import type { Drawing } from "./types.ts"
 
 export {
   addBracket,
+  bracketInto,
   bracketProblem,
   bracketRepeatProblem,
   bracketsWithin,
   carryBrackets,
   crossingBonds,
   DEFAULT_REPEAT,
+  followBrackets,
   nextBracketId,
   pruneBrackets,
   withBrackets,

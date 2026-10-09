@@ -2,6 +2,7 @@ import { bondLengthAt } from "../molecule/measure.ts"
 import type { Atom, Bracket, Molecule, Point } from "../types.ts"
 import { markTextExtent, type AttachmentMark, type MarkText } from "./attachments.ts"
 import { labelFor, type AtomLabel } from "./labels.ts"
+import type { Uprights } from "./intoBracket.ts"
 import type { DrawPolyline } from "./primitives.ts"
 
 /** Room between the bracketed atoms (their labels included) and the brackets, in bond lengths. */
@@ -24,10 +25,11 @@ const WIDTH = 1.55
 type Box = { left: number; right: number; top: number; bottom: number }
 
 /**
- * One bracket as drawn: "[" and "]" as two polylines (a upright with a serif at each end),
- * the count of a repeat unit at the lower right, and how far it all reaches.
+ * One bracket as drawn: "[" and "]" as two polylines (an upright with a serif at each end)
+ * and where those stand, the count of a repeat unit at the lower right, and how far it all
+ * reaches.
  */
-export type BracketMark = { id: number; kind: Bracket["kind"]; figures: DrawPolyline[]; text: MarkText | null; box: Box }
+export type BracketMark = { id: number; kind: Bracket["kind"]; figures: DrawPolyline[]; uprights: Uprights; text: MarkText | null; box: Box }
 
 /** Where an atom's drawing reaches: its label's box, or the point itself when it has none. */
 function extent(atom: Atom, label: AtomLabel | null | undefined): Box {
@@ -138,7 +140,7 @@ function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLa
     ? { text: name, x: right + COUNT_GAP * length, y: bottom - COUNT_SIZE * 0.15, size: COUNT_SIZE, anchor: "start", italic: true, color: STROKE }
     : null
   const textRight = text ? text.x + text.text.length * COUNT_SIZE * 0.6 : right
-  return { id: bracket.id, kind: bracket.kind, figures, text, box: { left, right: textRight, top, bottom: Math.max(bottom, text ? text.y + COUNT_SIZE * 0.6 : bottom) } }
+  return { id: bracket.id, kind: bracket.kind, figures, uprights: { left, right, top, bottom }, text, box: { left, right: textRight, top, bottom: Math.max(bottom, text ? text.y + COUNT_SIZE * 0.6 : bottom) } }
 }
 
 /**

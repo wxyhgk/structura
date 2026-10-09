@@ -30,10 +30,13 @@ export type Attachment = { atom: number; to: number[]; repeat?: Repeat; shape?: 
 /**
  * How a variable attachment is drawn: a straight line into the middle of one ring, a closed
  * ellipse round a whole fused system with a line to it ("n Rx anywhere on these rings"),
- * or the bond itself sweeping round the system as an open curve ("L joined at any position
- * of these rings"). Left out, it is chosen from the attachment (draw/attachmentShape.ts).
+ * the bond itself sweeping round the system as an open curve ("L joined at any position
+ * of these rings"), or a bond crossing a group bracket's upright and ending inside it ("L
+ * joined at any position of the bracketed group"), which only applies when the candidates
+ * are exactly that bracket's atoms and the attached atom is outside it. Left out, it is
+ * chosen from the attachment (draw/attachmentShape.ts).
  */
-export type AttachmentShape = "line" | "loop" | "arc"
+export type AttachmentShape = "line" | "loop" | "arc" | "bracket"
 
 /**
  * "(R1)m, m = 0–4": the attached piece appears `min` to `max` times, each copy on a

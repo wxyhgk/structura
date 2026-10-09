@@ -1,17 +1,18 @@
 import type { Attachment, AttachmentShape } from "@structura/markush"
-import type { Molecule } from "@structura/core/types"
+import type { Bracket, Molecule } from "@structura/core/types"
 import { attachmentShape } from "@structura/core/draw"
 import type { Run } from "@structura/engine"
-import { SHAPE_CHOICES, SHAPE_NAMES } from "./attachmentShapes.ts"
+import { SHAPE_NAMES, shapeChoices } from "./attachmentShapes.ts"
 
 /**
- * "画法：自动 / 直线 / 椭圆 / 弧线": how one variable attachment is drawn. 自动 says what it
- * picked; each choice is one undoable step.
+ * "画法：自动 / 直线 / 椭圆 / 弧线 (/ 括号)": how one variable attachment is drawn. 自动 says
+ * what it picked; 括号 is there when the attachment goes into a group bracket; each choice
+ * is one undoable step.
  */
-export function AttachmentShapePicker({ attachment, mol, run }: { attachment: Attachment; mol: Molecule; run: Run }) {
+export function AttachmentShapePicker({ attachment, mol, brackets, run }: { attachment: Attachment; mol: Molecule; brackets?: readonly Bracket[]; run: Run }) {
   const { shape: given, ...plain } = attachment
   const chosen = given ?? null
-  const auto = attachmentShape(mol, plain)
+  const auto = attachmentShape(mol, plain, brackets)
   const pick = (shape: AttachmentShape | null) => {
     if (shape !== chosen) run([{ op: "set_attachment_shape", atom: attachment.atom, shape }], { keepSelection: true })
   }
@@ -19,7 +20,7 @@ export function AttachmentShapePicker({ attachment, mol, run }: { attachment: At
     <div className="mt-1.5 flex items-center gap-1.5 text-[#555]">
       <span>画法</span>
       <div role="radiogroup" aria-label="画法" className="flex overflow-hidden rounded border border-[#d0d0d0]">
-        {SHAPE_CHOICES.map((shape) => (
+        {shapeChoices(attachment, brackets).map((shape) => (
           <button
             key={shape ?? "auto"}
             type="button"

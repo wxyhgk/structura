@@ -15,7 +15,7 @@ export function StatusBar({
 }) {
   return (
     <footer className="flex h-7 shrink-0 items-center gap-4 border-t border-[#d0d0d0] bg-[#f2f2f2] px-3 text-[12px] text-[#333]">
-      <span className="w-16 text-[#555]" data-testid="tool-label">
+      <span className="min-w-16 whitespace-nowrap text-[#555]" data-testid="tool-label">
         {toolLabel}
       </span>
       <span className="min-w-16 font-[Arial,Helvetica,sans-serif] text-[13px] tracking-wide" data-testid="formula">

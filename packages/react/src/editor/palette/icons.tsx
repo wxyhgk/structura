@@ -146,14 +146,14 @@ export function ChargeMinusIcon() {
   )
 }
 
-/** Square brackets round a bit of chain; a repeat unit's with its n at the lower right. */
+/** Square brackets round a ring; a repeat unit's round a stretch of chain, its n at the lower right. */
 export function BracketIcon({ kind }: { kind: Bracket["kind"] }) {
   if (kind === "repeat") {
     return (
       <Frame>
-        <path d="M6 4.5H3.5v15H6M14.5 4.5H17v15h-2.5" />
-        <path d="M6.8 14.2 10.2 9.6l3.4 4.6" strokeWidth="1.4" />
-        <text x="20.6" y="20.4" fontSize="8" fontStyle="italic" fontFamily="Arial, Helvetica, sans-serif" textAnchor="middle" fill="currentColor" stroke="none">
+        <path d="M7.2 4.5H5v15h2.2M13.8 4.5H16v15h-2.2" />
+        <path d="M2 13.6 5.8 10.4l3.8 3.2 3.8-3.2 3.8 3.2" strokeWidth="1.4" />
+        <text x="20.6" y="20.6" fontSize="8" fontStyle="italic" fontFamily="Arial, Helvetica, sans-serif" textAnchor="middle" fill="currentColor" stroke="none">
           n
         </text>
       </Frame>
@@ -161,8 +161,8 @@ export function BracketIcon({ kind }: { kind: Bracket["kind"] }) {
   }
   return (
     <Frame>
-      <path d="M7.5 4.5H5v15h2.5M16.5 4.5H19v15h-2.5" />
-      <path d="M8.6 14.2 12 9.6l3.4 4.6" strokeWidth="1.4" />
+      <path d="M7 4H4.5v16H7M17 4h2.5v16H17" />
+      <polygon points={hexagonAt(12, 12, 4.4)} strokeWidth="1.3" />
     </Frame>
   )
 }
@@ -184,25 +184,26 @@ export function AttachIcon({ shape }: { shape: AttachmentShape | "auto" }) {
   if (shape === "line") {
     return (
       <Frame>
-        <polygon points={hexagonAt(14.5, 12, 6.6)} strokeWidth="1.3" />
-        <path d="M2.5 12h12" />
+        <polygon points={hexagonAt(14, 11, 6.4)} strokeWidth="1.3" />
+        <path d="M2 11h12" />
       </Frame>
     )
   }
-  const ring = <polygon points={hexagonAt(15, 12, 4.2)} strokeWidth="1.2" />
+  // Kept up and to the left, clear of the flyout's caret in the button's corner.
+  const ring = <polygon points={hexagonAt(14, 11, 4)} strokeWidth="1.2" />
   if (shape === "arc" || shape === "bracket") {
     return (
       <Frame>
         {ring}
-        <path d="M2 12h6a7 7 0 1 1 5.78 6.89" />
+        <path d="M2 11h5.4a6.6 6.6 0 1 1 5.45 6.5" />
       </Frame>
     )
   }
   return (
     <Frame>
       {ring}
-      <path d="M2 12h6" />
-      <circle cx="15" cy="12" r="7" strokeDasharray={shape === "auto" ? "2.2 1.8" : undefined} />
+      <path d="M2 11h5.4" />
+      <circle cx="14" cy="11" r="6.6" strokeDasharray={shape === "auto" ? "2.2 1.8" : undefined} />
     </Frame>
   )
 }

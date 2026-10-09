@@ -16,7 +16,8 @@ export function renderForModel(drawing: Drawing, names: ReadonlyMap<string, numb
   const ids = mol.atoms
     .map((atom) => `<text x="${atom.x + 6}" y="${atom.y - 6}" font-family="Arial, Helvetica, sans-serif" font-size="8" fill="#9a6a00">${atom.id}${label.has(atom.id) ? ` ${label.get(atom.id)}` : ""}</text>`)
     .join("")
-  const svg = sceneToSvg(mol, true).replace(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/, (_, x, y, w, h) => `viewBox="${+x - 16} ${+y - 16} ${+w + 70} ${+h + 32}"`).replace("</svg>", `${ids}</svg>`)
+  // The ids sit up and to the right of their atoms, the locant names trailing further right.
+  const svg = sceneToSvg(mol, true, [], undefined, {}, { extraMargin: { left: 16, top: 16, right: 54, bottom: 16 }, overlay: ids })
   const png = new Resvg(svg, { fitTo: { mode: "width", value: width }, background: "#ffffff" }).render().asPng()
   return `data:image/png;base64,${Buffer.from(png).toString("base64")}`
 }

@@ -36,11 +36,19 @@ function markTextSvg(text: MarkText): string {
   return `<text x="${text.x.toFixed(2)}" y="${text.y.toFixed(2)}" fill="${text.color}" font-family="Arial, Helvetica, sans-serif" font-size="${text.size.toFixed(2)}"${italic} text-anchor="${text.anchor}" dominant-baseline="central">${escapeXml(text.text)}</text>`
 }
 
+/** Extras for a standalone SVG, beyond what is drawn on the canvas. */
+export type SvgOptions = {
+  /** Room added to the usual margin on each side, for whatever `overlay` draws there. */
+  extraMargin?: { left?: number; top?: number; right?: number; bottom?: number }
+  /** Markup drawn over the molecule, in its coordinates (atom ids for a model to read, say). */
+  overlay?: string
+}
+
 /**
  * The molecule as a standalone SVG, with its arrows and a generic formula's variable points
  * of attachment ("(R1)m" included), fitted with a margin on a white ground.
  */
-export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: Arrow[] = [], attachments?: readonly Attachment[], options: DrawOptions = {}): string {
+export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: Arrow[] = [], attachments?: readonly Attachment[], options: DrawOptions = {}, svg: SvgOptions = {}): string {
   if (molecule.atoms.length === 0) return ""
   // Fitted around what is shown: atoms behind a collapsed label take no room.
   const mol = displayMolecule(molecule)
@@ -77,10 +85,13 @@ export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: 
     maxY = Math.max(maxY, arrow.y1, arrow.y2)
   }
   const pad = 18
-  const x = minX - pad
-  const y = minY - pad
-  const width = Math.max(1, maxX - minX + pad * 2)
-  const height = Math.max(1, maxY - minY + pad * 2)
+  const extra = svg.extraMargin ?? {}
+  const left = pad + (extra.left ?? 0)
+  const top = pad + (extra.top ?? 0)
+  const x = minX - left
+  const y = minY - top
+  const width = Math.max(1, maxX - minX + left + pad + (extra.right ?? 0))
+  const height = Math.max(1, maxY - minY + top + pad + (extra.bottom ?? 0))
   const arrows = arrowList
     .map((arrow) => {
       const dx = arrow.x2 - arrow.x1
@@ -101,6 +112,6 @@ export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: 
         mark.texts.map(markTextSvg).join(""),
     )
     .join("")
-  const body = scene.figures.map(figureSvg).join("") + scene.labels.map(labelSvg).join("") + attached + arrows
+  const body = scene.figures.map(figureSvg).join("") + scene.labels.map(labelSvg).join("") + attached + arrows + (svg.overlay ?? "")
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width.toFixed(1)}" height="${height.toFixed(1)}" viewBox="${x.toFixed(1)} ${y.toFixed(1)} ${width.toFixed(1)} ${height.toFixed(1)}">\n<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${width.toFixed(1)}" height="${height.toFixed(1)}" fill="#ffffff"/>\n${body}\n</svg>\n`
 }

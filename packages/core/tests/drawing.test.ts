@@ -31,3 +31,14 @@ test("svg export keeps arrows inside the view box", () => {
   const arrow = drawing.arrows[0]
   assert.ok(x + width >= Math.max(arrow.x1, arrow.x2))
 })
+
+test("svg export can widen its margin and draw an overlay on top", () => {
+  const molecule = createBondAt(emptyDrawing().molecule, { x: 0, y: 0 }, { order: 1, stereo: "none" })
+  const plain = sceneToSvg(molecule, false)
+  const box = (svg: string) => svg.match(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/)!.slice(1).map(Number)
+  const wide = sceneToSvg(molecule, false, [], undefined, {}, { extraMargin: { left: 16, top: 16, right: 54, bottom: 16 }, overlay: "<g id=\"ids\"/>" })
+  const [x, y, width, height] = box(plain)
+  assert.deepEqual(box(wide), [x - 16, y - 16, width + 70, height + 32])
+  assert.ok(wide.endsWith("<g id=\"ids\"/>\n</svg>\n"))
+  assert.equal(sceneToSvg(molecule, false, [], undefined, {}, {}), plain)
+})

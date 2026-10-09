@@ -48,8 +48,8 @@ colour variables do not override your own theme.
 
 ### Handle (`ref`)
 
-`getMolfile()`, `setMolfile(text)`, `getDocument()`, `setDocument(text)`, `run(ops)`,
-`enumerate(options)`, `fit()`.
+`getMolfile()`, `setMolfile(text)`, `getDocument()`, `setDocument(text)`, `getCdxml()` (ChemDraw
+CDXML, generic-formula marks and definitions included), `run(ops)`, `enumerate(options)`, `fit()`.
 
 ### RDKit
 

@@ -4,6 +4,7 @@ import { enumerate, enumerationSdf, type EnumerateOptions, type Enumeration } fr
 import { toMolfile } from "@structura/core/molfile"
 import type { Op, OpsResult } from "@structura/core/ops"
 import { failure } from "../browser.ts"
+import { drawingCdxml } from "../cdxml.ts"
 import { drawingPoints, type Viewport } from "@structura/engine"
 import type { Imports } from "./useImports.ts"
 import type { EditorState } from "../useEditor.ts"
@@ -28,6 +29,11 @@ export type EditorHandle = {
    * Returns why it could not be read, or nothing. Not echoed to onChange / onDocumentChange.
    */
   setDocument(text: string): string[]
+  /**
+   * The drawing as a ChemDraw file (CDXML), as 导出 CDXML saves it: variables, variable
+   * attachments and brackets as ChemDraw's own objects, the definitions as text under it.
+   */
+  getCdxml(): string
   /**
    * Applies edits through the same op layer agents use (add_atom, replace, set_variable…),
    * all or nothing, as one undoable step. Reported to onChange / onDocumentChange like any edit.
@@ -54,7 +60,7 @@ export function useEditorHandle(
     onChange,
     onDocumentChange,
   }: {
-    editor: Pick<EditorState, "mol" | "arrows" | "drawing" | "latest" | "run" | "loadDrawing" | "newDocument">
+    editor: Pick<EditorState, "mol" | "arrows" | "drawing" | "latest" | "run" | "loadDrawing" | "newDocument" | "raisedNumbers">
     viewport: Viewport
     openText: Imports["openText"]
     onChange?: (molfile: string) => void
@@ -112,6 +118,7 @@ export function useEditorHandle(
       editor.loadDrawing(read.drawing)
       return []
     },
+    getCdxml: () => drawingCdxml(editor.latest(), editor.raisedNumbers),
     run(ops: Op[]) {
       let rejected: { index: number; error: string } | null = null
       const result = editor.run(ops, { keepSelection: true, onReject: (why) => (rejected = why) })

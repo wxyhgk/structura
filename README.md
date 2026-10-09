@@ -41,6 +41,7 @@ function Host({ saved }: { saved?: string }) {
 |---|---|
 | `getMolfile()` / `setMolfile(text)` | 读写 MOL / SDF；写入是一步可撤销的操作，不触发回调 |
 | `getDocument()` / `setDocument(text)` | 读写完整文档（`.structura`）；写入不触发回调，返回读不了的原因 |
+| `getCdxml()` | ChemDraw 文件（CDXML），与“导出 CDXML”相同：变量、可变连接、方括号写成 ChemDraw 自己的对象，定义写成结构下面的文字 |
 | `run(ops)` | 用操作层修改（与 agent 相同的 JSON 操作，见 `packages/core/src/ops/types.ts`），一步可撤销，触发回调；失败时返回哪一步、为什么 |
 | `enumerate({ limit, representatives })` | 把通式展开成具体化合物，结果附带 SDF 文本 |
 | `fit()` | 缩放平移到整张图可见 |

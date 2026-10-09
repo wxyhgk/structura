@@ -1,6 +1,19 @@
 import { atomById, emptyMolecule } from "./molecule/graph.ts"
 import type { Drawing } from "./types.ts"
 
+export {
+  addBracket,
+  bracketProblem,
+  bracketRepeatProblem,
+  bracketsWithin,
+  carryBrackets,
+  crossingBonds,
+  DEFAULT_REPEAT,
+  nextBracketId,
+  pruneBrackets,
+  withBrackets,
+} from "./drawing/brackets.ts"
+
 export function emptyDrawing(): Drawing {
   return { molecule: emptyMolecule(), arrows: [], nextArrowId: 1 }
 }

@@ -49,6 +49,16 @@ export function placeBeside(existing: Molecule, molecules: Molecule[], at?: Poin
   return merged
 }
 
+/**
+ * The ids sideBySide and placeBeside give each molecule's atoms (old id → new id, one map
+ * per molecule): handed out in order, molecule after molecule, from `start`, the counter
+ * of the molecule they join.
+ */
+export function placedIds(molecules: Molecule[], start: number): Array<Map<number, number>> {
+  let next = start
+  return molecules.map((mol) => new Map(mol.atoms.map((atom) => [atom.id, next++])))
+}
+
 /** Where something new goes: two bond lengths right of the drawing, level with its middle; the origin on an empty page. */
 export function spotBeside(existing: Molecule): Point {
   if (existing.atoms.length === 0) return { x: 0, y: 0 }

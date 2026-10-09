@@ -2,9 +2,10 @@ import { BOND_LENGTH } from "../constants.ts"
 import { elementMass, elementOf } from "../elements/index.ts"
 import { kekulizeAromaticReport } from "../molecule/kekule.ts"
 import { emptyMolecule } from "../molecule/graph.ts"
-import type { Atom, Bond, Molecule } from "../types.ts"
+import type { Atom, Bond, Bracket, Molecule } from "../types.ts"
 import { validate, type Problem, type ProblemCode } from "../validate.ts"
 import { CHARGE_CODES, PX_PER_ANGSTROM, R_GROUP_SYMBOLS, rGroupLabel, stereoFor } from "./codes.ts"
+import { readSgroupLine, repeatFromLabel, type SgroupRead } from "./sgroups.ts"
 
 function int(text: string | undefined): number {
   const value = Number.parseInt((text ?? "").trim(), 10)
@@ -50,10 +51,29 @@ function propertyPairs(line: string): Array<[number, number]> {
 }
 
 /**
- * Reads one V2000 molfile (the part up to `M  END`). Atoms are numbered 1…n in file order.
- * Anything the editor cannot hold is dropped and reported rather than guessed at.
+ * Brackets from the Sgroups read: a repeat unit (SRU) or a generic group (GEN), on atoms
+ * numbered as in the file (which are their ids). The types of any other Sgroups go in `others`.
  */
-export function readMolfile(text: string): { mol: Molecule; title: string; problems: Problem[] } {
+function bracketsOf(sgroups: Map<number, SgroupRead>, atomCount: number, others: Set<string>): Bracket[] {
+  const brackets: Bracket[] = []
+  for (const sgroup of sgroups.values()) {
+    const atoms = [...new Set(sgroup.atoms.filter((number) => number >= 1 && number <= atomCount))]
+    if ((sgroup.type !== "SRU" && sgroup.type !== "GEN") || atoms.length === 0) {
+      others.add(sgroup.type ?? "?")
+      continue
+    }
+    const id = brackets.length + 1
+    brackets.push(sgroup.type === "SRU" ? { id, atoms, kind: "repeat", repeat: repeatFromLabel(sgroup.label) } : { id, atoms, kind: "group" })
+  }
+  return brackets
+}
+
+/**
+ * Reads one V2000 molfile (the part up to `M  END`). Atoms are numbered 1…n in file order.
+ * Repeat units (SRU) and generic groups (GEN) become brackets, on those numbers. Anything
+ * the editor cannot hold is dropped and reported rather than guessed at.
+ */
+export function readMolfile(text: string): { mol: Molecule; title: string; problems: Problem[]; brackets?: Bracket[] } {
   const lines = text.replace(/\r\n?/g, "\n").split("\n")
   const problems: Problem[] = []
   const note = (code: ProblemCode, message: string, severity: Problem["severity"] = "warning") =>
@@ -147,7 +167,7 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
 
   // Property lines. CHG, RAD and ISO lines override the atom block, as the format says.
   let charges: Array<[number, number]> | null = null
-  const sgroups = new Set<string>()
+  const sgroups = new Map<number, SgroupRead>()
   for (let index = 4 + atomCount + bondCount; index < lines.length; index++) {
     const line = lines[index] ?? ""
     if (line.startsWith("M  END")) break
@@ -183,7 +203,8 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
       }
       index++
     } else if (/^M {2}S(TY|LB|ST|AL|BL|SL|MT|DI|AP|CN|BV|DS|PA|NN)/.test(line)) {
-      sgroups.add(line.slice(3, 6))
+      // The rest (labels, bonds, bracket corners…) are worked out again from the atoms.
+      readSgroupLine(line, sgroups)
     } else if (line.startsWith("S  SKP")) {
       index += int(line.slice(6, 9))
     } else if (line.trim() !== "") {
@@ -197,8 +218,10 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
       if (atom) atom.charge = charge
     }
   }
-  if (sgroups.size > 0) {
-    note("unsupported-mol-feature", "Sgroups (abbreviations, brackets) were ignored; their atoms are drawn out")
+  const others = new Set<string>()
+  const brackets = bracketsOf(sgroups, atomCount, others)
+  if (others.size > 0) {
+    note("unsupported-mol-feature", `Sgroups other than repeat units and groups (${[...others].join(", ")}: abbreviations and the like) were ignored; their atoms are drawn out`)
   }
   if (depth || (lines[1] ?? "").slice(20, 22) === "3D") {
     note("flattened-3d", "the file has 3D coordinates; they were projected onto the page")
@@ -220,6 +243,6 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
     }
   }
   problems.push(...validate(mol))
-  return { mol, title, problems }
+  return { mol, title, problems, ...(brackets.length > 0 ? { brackets } : {}) }
 }
 

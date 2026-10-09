@@ -1,7 +1,8 @@
-import type { Arrow, Molecule } from "../types.ts"
+import type { Arrow, Bracket, Molecule } from "../types.ts"
 import type { Attachment } from "../markush/types.ts"
 import { displayMolecule } from "../molecule/collapse.ts"
 import { attachmentMarks, markTextExtent, type MarkText } from "./attachments.ts"
+import { bracketMarks } from "./brackets.ts"
 import type { AtomLabel, DrawOptions } from "./labels.ts"
 import type { Figure } from "./primitives.ts"
 import { buildScene } from "./scene.ts"
@@ -37,8 +38,10 @@ function markTextSvg(text: MarkText): string {
   return `<text x="${text.x.toFixed(2)}" y="${text.y.toFixed(2)}" fill="${text.color}" font-family="Arial, Helvetica, sans-serif" font-size="${text.size.toFixed(2)}"${italic} text-anchor="${text.anchor}" dominant-baseline="central">${escapeXml(text.text)}</text>`
 }
 
-/** Extras for a standalone SVG, beyond what is drawn on the canvas. */
+/** Extras for a standalone SVG: the drawing's brackets, and room and markup beyond what is drawn on the canvas. */
 export type SvgOptions = {
+  /** Square brackets around parts of the molecule, drawn as on the canvas. */
+  brackets?: readonly Bracket[]
   /** Room added to the usual margin on each side, for whatever `overlay` draws there. */
   extraMargin?: { left?: number; top?: number; right?: number; bottom?: number }
   /** Markup drawn over the molecule, in its coordinates (atom ids for a model to read, say). */
@@ -55,6 +58,7 @@ export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: 
   const mol = displayMolecule(molecule)
   const scene = buildScene(mol, colorHetero, options)
   const marks = attachmentMarks(mol, attachments, scene.labels)
+  const brackets = bracketMarks(mol, svg.brackets, scene.labels)
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity
@@ -78,6 +82,12 @@ export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: 
       maxX = Math.max(maxX, extent.right)
       maxY = Math.max(maxY, extent.bottom)
     }
+  }
+  for (const { box } of brackets) {
+    minX = Math.min(minX, box.left)
+    minY = Math.min(minY, box.top)
+    maxX = Math.max(maxX, box.right)
+    maxY = Math.max(maxY, box.bottom)
   }
   for (const arrow of arrowList) {
     minX = Math.min(minX, arrow.x1, arrow.x2)
@@ -115,6 +125,7 @@ export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: 
         mark.texts.map(markTextSvg).join(""),
     )
     .join("")
-  const body = scene.figures.map(figureSvg).join("") + scene.labels.map(labelSvg).join("") + attached + arrows + (svg.overlay ?? "")
+  const bracketed = brackets.map((mark) => mark.figures.map(figureSvg).join("") + (mark.text ? markTextSvg(mark.text) : "")).join("")
+  const body = scene.figures.map(figureSvg).join("") + scene.labels.map(labelSvg).join("") + attached + bracketed + arrows + (svg.overlay ?? "")
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width.toFixed(1)}" height="${height.toFixed(1)}" viewBox="${x.toFixed(1)} ${y.toFixed(1)} ${width.toFixed(1)} ${height.toFixed(1)}">\n<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${width.toFixed(1)}" height="${height.toFixed(1)}" fill="#ffffff"/>\n${body}\n</svg>\n`
 }

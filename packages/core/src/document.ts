@@ -20,6 +20,13 @@ export function isDocument(text: string): boolean {
   return /^\s*\{[\s\S]*"format"\s*:\s*"structura"/.test(text.slice(0, 200))
 }
 
+/** The bracket counter as saved, or one past the highest id when a file left it out. */
+function bracketCounter(drawing: Partial<Drawing>): Pick<Drawing, "nextBracketId"> {
+  if (drawing.nextBracketId != null) return { nextBracketId: drawing.nextBracketId }
+  if (!Array.isArray(drawing.brackets) || drawing.brackets.length === 0) return {}
+  return { nextBracketId: Math.max(0, ...drawing.brackets.map((bracket) => (Number.isInteger(bracket?.id) ? bracket.id : 0))) + 1 }
+}
+
 /** Reads a Structura file; the error says why when it cannot be used as it is. */
 export function readDocument(text: string): { drawing: Drawing } | { error: string } {
   let parsed: unknown
@@ -45,6 +52,8 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
     ...(drawing.attachments ? { attachments: drawing.attachments } : {}),
     ...(drawing.provisos ? { provisos: drawing.provisos } : {}),
     ...(drawing.ringClosures ? { ringClosures: drawing.ringClosures } : {}),
+    ...(drawing.brackets ? { brackets: drawing.brackets } : {}),
+    ...bracketCounter(drawing),
   }
   const errors = errorsOf(validateDrawing(whole))
   if (errors.length > 0) return { error: errors[0].message }

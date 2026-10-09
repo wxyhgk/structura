@@ -1,7 +1,8 @@
 import { elementOf } from "./elements/index.ts"
 import { bondOrderSum } from "./molecule/graph.ts"
 import { ANGSTROM_PER_PX, rGroupNumber, stereoCode } from "./molfile/codes.ts"
-import type { Molecule } from "./types.ts"
+import { sgroupLines } from "./molfile/sgroups.ts"
+import type { Bracket, Molecule } from "./types.ts"
 
 function pad3(value: number): string {
   return String(value).padStart(3, " ")
@@ -41,7 +42,8 @@ function valenceField(mol: Molecule, atom: Molecule["atoms"][number]): number {
   return bonds === 0 ? 15 : Math.min(bonds, 14)
 }
 
-export function toMolfile(mol: Molecule, title = "Structura"): string {
+/** The molecule as a V2000 molfile; `brackets` (those wholly in it) go in as Sgroups. */
+export function toMolfile(mol: Molecule, title = "Structura", brackets: readonly Bracket[] = []): string {
   const index = new Map(mol.atoms.map((atom, position) => [atom.id, position + 1]))
   const atomLines = mol.atoms.map((atom) => {
     const x = atom.x * ANGSTROM_PER_PX
@@ -49,10 +51,12 @@ export function toMolfile(mol: Molecule, title = "Structura"): string {
     // dd ccc sss hhh bbb vvv, then six unused fields.
     return `${fixed10(x)}${fixed10(y)}${fixed10(0)} ${symbolOf(atom).padEnd(3, " ")} 0${"  0".repeat(4)}${pad3(valenceField(mol, atom))}${"  0".repeat(6)}`
   })
+  const bondIndex = new Map<number, number>()
   const bondLines = mol.bonds.flatMap((bond) => {
     const a = index.get(bond.a)
     const b = index.get(bond.b)
     if (a == null || b == null) return []
+    bondIndex.set(bond.id, bondIndex.size + 1)
     const stereo = bond.order === 1 ? stereoCode(bond.stereo) : 0
     return [`${pad3(a)}${pad3(b)}${pad3(bond.order)}${pad3(stereo)}  0  0  0`]
   })
@@ -77,7 +81,7 @@ export function toMolfile(mol: Molecule, title = "Structura"): string {
     ...atomLines,
     ...bondLines,
   ]
-  lines.push(...aliases, ...propertyLines("CHG", charged), ...propertyLines("ISO", isotopes), ...propertyLines("RGP", rGroups), "M  END", "")
+  lines.push(...aliases, ...propertyLines("CHG", charged), ...propertyLines("ISO", isotopes), ...propertyLines("RGP", rGroups), ...sgroupLines(mol, brackets, index, bondIndex), "M  END", "")
   return lines.join("\n")
 }
 

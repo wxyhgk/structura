@@ -1,3 +1,4 @@
+import { bracketProblem } from "./drawing/brackets.ts"
 import { elementOf } from "./elements/index.ts"
 import { atomHydrogens } from "./formula.ts"
 import type { Drawing, Molecule } from "./types.ts"
@@ -23,6 +24,7 @@ export type ProblemCode =
   | "missing-coordinates"
   | "flattened-3d"
   | "aromatic-unresolved"
+  | "bad-bracket"
 
 /**
  * Errors break an invariant the rest of the code relies on.
@@ -35,6 +37,7 @@ export type Problem = {
   bonds?: number[]
   arrows?: number[]
   groups?: number[]
+  brackets?: number[]
   /** Which SDF record, counting from 1, when the problem comes from a file. */
   record?: number
   message: string
@@ -216,6 +219,30 @@ export function validateDrawing(drawing: Drawing): Problem[] {
     if (![arrow.x1, arrow.y1, arrow.x2, arrow.y2].every(Number.isFinite)) {
       problems.push({ code: "bad-coordinate", severity: "error", arrows: [arrow.id], message: `arrow #${arrow.id} has a non-finite coordinate` })
     }
+  }
+  problems.push(...bracketProblems(drawing))
+  return problems
+}
+
+/** Brackets that list missing atoms, repeat an id, or carry a count they cannot have. */
+function bracketProblems(drawing: Drawing): Problem[] {
+  if (drawing.brackets == null) return []
+  if (!Array.isArray(drawing.brackets)) return [{ code: "bad-bracket", severity: "error", message: "the brackets are not a list" }]
+  const problems: Problem[] = []
+  const ids = new Set<number>()
+  const counter = drawing.nextBracketId ?? 1
+  for (const bracket of drawing.brackets) {
+    if (!Number.isInteger(bracket?.id)) {
+      problems.push({ code: "bad-bracket", severity: "error", message: "a bracket has no id" })
+      continue
+    }
+    if (ids.has(bracket.id)) problems.push({ code: "duplicate-id", severity: "error", brackets: [bracket.id], message: `bracket #${bracket.id} appears twice` })
+    ids.add(bracket.id)
+    if (bracket.id >= counter) {
+      problems.push({ code: "id-not-below-counter", severity: "error", brackets: [bracket.id], message: `bracket #${bracket.id} is not below nextBracketId ${counter}` })
+    }
+    const problem = bracketProblem(drawing.molecule, bracket)
+    if (problem) problems.push({ code: "bad-bracket", severity: "error", brackets: [bracket.id], message: problem })
   }
   return problems
 }

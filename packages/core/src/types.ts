@@ -1,4 +1,4 @@
-import type { Attachment, Proviso, RingClosure, Variable } from "./markush/types.ts"
+import type { Attachment, Proviso, Repeat, RingClosure, Variable } from "./markush/types.ts"
 import type { BondEmphasis, BondLook, BondOrder, BondStereo, Molecule } from "./types/molecule.ts"
 
 export type { Atom, Bond, BondEmphasis, BondLook, BondOrder, BondStereo, Group, Molecule } from "./types/molecule.ts"
@@ -9,6 +9,20 @@ export type Arrow = {
   y1: number
   x2: number
   y2: number
+}
+
+/**
+ * Square brackets around a set of atoms, as part of the structure: drawn from where its atoms
+ * are (so it follows them), crossed by the bonds with one end inside. "group": the fragment
+ * is one unit (a ring system in brackets, an outside bond ending anywhere in it); "repeat":
+ * a repeat unit [ … ]n, `repeat.name` written at the lower right of "]".
+ */
+export type Bracket = {
+  id: number
+  atoms: number[]
+  kind: "group" | "repeat"
+  /** Only on a repeat bracket: n, from `min` to `max` times. */
+  repeat?: Repeat
 }
 
 /** The whole canvas: the molecule plus the non-chemical marks drawn around it. */
@@ -27,6 +41,10 @@ export type Drawing = {
   provisos?: Proviso[]
   /** "R1 and R2, together with the atoms they are attached to, form a ring": which pairs may close, and into what. */
   ringClosures?: RingClosure[]
+  /** Square brackets around parts of the structure. Absent: none. */
+  brackets?: Bracket[]
+  /** The next bracket's id; absent counts as 1. Ids are never handed out twice. */
+  nextBracketId?: number
 }
 
 export type Point = { x: number; y: number }

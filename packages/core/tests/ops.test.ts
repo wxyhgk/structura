@@ -194,10 +194,10 @@ test("the result lists exactly the atoms and bonds a batch created", () => {
   assert.ok(ring.added.atoms.every((id) => id >= start.nextAtomId))
 
   const removed = ok(ring.mol, [{ op: "remove", atoms: [ring.added.atoms[0]] }])
-  assert.deepEqual(removed.added, { atoms: [], bonds: [], arrows: [] })
+  assert.deepEqual(removed.added, { atoms: [], bonds: [], arrows: [], brackets: [] })
 
   const relabelled = ok(start, [{ op: "set_element", atom: 2, el: "N" }])
-  assert.deepEqual(relabelled.added, { atoms: [], bonds: [], arrows: [] })
+  assert.deepEqual(relabelled.added, { atoms: [], bonds: [], arrows: [], brackets: [] })
 })
 
 test("drawing ops do what the mouse tools do", () => {
@@ -309,7 +309,7 @@ test("an arrow is drawn beside the atoms and reported as added", () => {
   const result = applyOps(start, [{ op: "add_arrow", atoms: [1, 2], direction: "right" }])
   assert.ok(result.ok)
   assert.deepEqual(result.drawing, addReactionArrow(start, [1, 2], "right"))
-  assert.deepEqual(result.added, { atoms: [], bonds: [], arrows: [1] })
+  assert.deepEqual(result.added, { atoms: [], bonds: [], arrows: [1], brackets: [] })
   assert.equal(result.drawing.molecule, molecule, "the molecule is untouched")
   assert.equal(applyOps(start, [{ op: "add_arrow", atoms: [], direction: "up" }]).ok, false)
   assert.equal(applyOps(start, [{ op: "add_arrow", atoms: [7], direction: "up" }]).ok, false)

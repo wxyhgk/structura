@@ -1,4 +1,4 @@
-import type { BondEmphasis, BondLook, BondOrder, BondStereo, Drawing, HotTarget, Molecule, Point, RingKind } from "../types.ts"
+import type { BondEmphasis, BondLook, BondOrder, BondStereo, Bracket, Drawing, HotTarget, Molecule, Point, RingKind } from "../types.ts"
 import type { Alternative, AttachmentShape, BridgeName, Proviso, Repeat, RingClosure } from "../markush/types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
@@ -136,6 +136,17 @@ export type Op =
   /** "(R1)m": how many times the piece on `atom`'s attachment appears; null makes it once again. */
   | { op: "set_repeat"; atom: Ref; repeat: Repeat | null }
   | { op: "remove_attachment"; atom: Ref }
+  /**
+   * Square brackets around these atoms (an abbreviation's hidden atoms come along), drawn
+   * from where they are and crossed by the bonds leaving them. "group" (the default): the
+   * piece is one unit, such as a ring system an outside bond joins anywhere; "repeat": a
+   * repeat unit [ … ]n, `repeat` defaulting to n = 1–4. The new bracket's id is in the
+   * result's `added.brackets`.
+   */
+  | { op: "add_bracket"; atoms: Ref[]; kind?: Bracket["kind"]; repeat?: Repeat }
+  /** Makes a bracket a group or a repeat unit, or changes its count (a repeat bracket only). */
+  | { op: "set_bracket"; id: number; kind?: Bracket["kind"]; repeat?: Repeat }
+  | { op: "remove_bracket"; id: number }
   /** A reaction arrow beside these atoms, pointing away from them. */
   | { op: "add_arrow"; atoms: Ref[]; direction: "left" | "right" | "up" | "down" }
   /**
@@ -166,8 +177,8 @@ export type OpsResult =
        * presses: the new tip, or the atom or bond it changed.
        */
       next: HotTarget | null
-      /** Atoms, bonds and arrows this batch created (ids are never reused, so this is exact). */
-      added: { atoms: number[]; bonds: number[]; arrows: number[] }
+      /** Atoms, bonds, arrows and brackets this batch created (ids are never reused, so this is exact). */
+      added: { atoms: number[]; bonds: number[]; arrows: number[]; brackets: number[] }
       /** Atoms that were there before and now sit somewhere else. */
       moved: number[]
       /** Set when the batch ends with a tumble: pass it to the next tumble's `depth`. */

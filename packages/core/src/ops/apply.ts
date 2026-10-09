@@ -1,7 +1,9 @@
 import type { Drawing, HotTarget, Molecule } from "../types.ts"
+import { pruneBrackets } from "../drawing/brackets.ts"
 import { pruneAttachments } from "../markush/attachments.ts"
 import { absorbRingPointers } from "../markush/pointer.ts"
 import { validateDrawing } from "../validate.ts"
+import { bracketOp } from "./brackets.ts"
 import { makeContext, OpError, type Context } from "./context.ts"
 import { documentOp, type DocumentStep } from "./document.ts"
 import { drawingOp } from "./drawing.ts"
@@ -10,7 +12,7 @@ import type { Op, OpsResult } from "./types.ts"
 
 /** Runs one op: the whole-drawing ops first, else the molecule's. */
 function step(drawing: Drawing, op: Op, ctx: Context, depth: Map<number, number> | undefined): DocumentStep {
-  const whole = documentOp(drawing, op, ctx, depth)
+  const whole = documentOp(drawing, op, ctx, depth) ?? bracketOp(drawing, op, ctx)
   if (whole) return whole
   const mol = drawing.molecule
   const part = structureOp(mol, op, ctx) ?? drawingOp(mol, op, ctx)
@@ -65,8 +67,8 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
     try {
       const before = drawing.molecule.nextAtomId
       const done = step(drawing, op, ctx, depth)
-      // Deleting atoms takes their variable attachments with them.
-      drawing = pruneAttachments(done.drawing)
+      // Deleting atoms takes their variable attachments with them, and takes them out of brackets.
+      drawing = pruneBrackets(pruneAttachments(done.drawing))
       // Drawn with the pointer tools, a line into a ring's middle is a variable attachment.
       const ends = pointerEnds(op, drawing, before, ctx)
       if (ends.length > 0) drawing = absorbRingPointers(drawing, ends)
@@ -88,6 +90,7 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
     atoms: mol.atoms.filter((item) => item.id >= start.molecule.nextAtomId).map((item) => item.id),
     bonds: mol.bonds.filter((item) => item.id >= start.molecule.nextBondId).map((item) => item.id),
     arrows: drawing.arrows.filter((item) => item.id >= start.nextArrowId).map((item) => item.id),
+    brackets: (drawing.brackets ?? []).filter((item) => item.id >= (start.nextBracketId ?? 1)).map((item) => item.id),
   }
   const moved = movedAtoms(start.molecule, mol)
   return { ok: true, drawing, names, problems, next, added, moved, ...(depth ? { depth: Object.fromEntries(depth) } : {}) }

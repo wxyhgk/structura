@@ -9,7 +9,6 @@ import {
   bondById,
   bumpCharge,
   deleteSelection,
-  duplicateAtoms,
   fuseChairAt,
   fuseRingAt,
   growRing,
@@ -165,10 +164,6 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
     case "set_collapsed": {
       const ids = op.atoms ? op.atoms.map(ctx.atom) : null
       return { mol: setCollapsed(mol, groupsTouching(mol, ids), op.collapsed), next: null }
-    }
-    case "duplicate": {
-      const copy = duplicateAtoms(mol, withGroupMembers(mol, op.atoms.map(ctx.atom)))
-      return { mol: copy.mol, next: null }
     }
     default:
       return null

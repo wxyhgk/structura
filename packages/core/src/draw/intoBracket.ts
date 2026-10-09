@@ -6,7 +6,7 @@ import type { Point } from "../types.ts"
 /** How far past the upright the bond ends, in bond lengths. */
 const PAST = 0.4
 /** How near the ends of an upright (its serifs) the bond may cross it, in bond lengths. */
-const CLEAR = 0.3
+const CLEAR = 0.45
 
 /** Where a bracket's uprights stand: their x (left, right) and how far they reach (top, bottom). */
 export type Uprights = { left: number; right: number; top: number; bottom: number }

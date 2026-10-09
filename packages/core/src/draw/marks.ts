@@ -1,5 +1,8 @@
-import type { Bracket, Molecule } from "../types.ts"
+import { bracketInto } from "../drawing/brackets.ts"
+import { atomById } from "../molecule/graph.ts"
+import type { Bracket, Molecule, Point } from "../types.ts"
 import type { Attachment } from "../markush/types.ts"
+import { attachmentShape } from "./attachmentShape.ts"
 import { attachmentMarks, type AttachmentMark } from "./attachments.ts"
 import { bracketMarks, type BracketMark } from "./brackets.ts"
 import { labelFor, type AtomLabel } from "./labels.ts"
@@ -18,7 +21,14 @@ export type StructureMarks = { attachments: AttachmentMark[]; brackets: BracketM
 export function structureMarks(mol: Molecule, attachments: readonly Attachment[] | undefined, brackets: readonly Bracket[] | undefined, labels?: readonly AtomLabel[]): StructureMarks {
   const shown = labels ?? mol.atoms.flatMap((atom) => labelFor(mol, atom, false) ?? [])
   const first = attachmentMarks(mol, attachments, shown, { brackets })
-  const drawn = bracketMarks(mol, brackets, shown, first)
+  // Where the bonds into brackets come from, by bracket.
+  const entries = new Map<number, Point[]>()
+  for (const attachment of attachments ?? []) {
+    const into = bracketInto(brackets, attachment)
+    const from = into && atomById(mol, attachment.atom)
+    if (from && attachmentShape(mol, attachment, brackets) === "bracket") entries.set(into.id, [...(entries.get(into.id) ?? []), from])
+  }
+  const drawn = bracketMarks(mol, brackets, shown, { attachments: first, entries })
   const done = new Set(first.map((mark) => mark.atom))
   const rest = (attachments ?? []).filter((attachment) => !done.has(attachment.atom))
   if (rest.length === 0) return { attachments: first, brackets: drawn }

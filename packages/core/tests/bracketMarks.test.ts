@@ -99,6 +99,9 @@ test("an attachment whose candidates are a group bracket's atoms, from outside, 
   assert.ok(Math.abs(mark.to.x - (bracket.uprights.right - 0.4 * length)) < 1e-6, "it ends 0.4 bond length past \"]\"")
   assert.ok(Math.abs(mark.to.y - L1.y) < 1e-6, "level, as L1 is level with the bracket")
   assert.equal(mark.curve, null)
+  // "]", where the bond comes in, stands further off than "[", so the bond ends in the clear.
+  const xs = mol.atoms.filter((atom) => atom.id <= 10).map((atom) => atom.x)
+  assert.ok(bracket.uprights.right - Math.max(...xs) > Math.min(...xs) - bracket.uprights.left + 0.2 * length)
   assert.ok(
     mol.atoms.every((atom) => Math.hypot(atom.x - mark.to.x, atom.y - mark.to.y) > 0.3 * length),
     "and on no atom",

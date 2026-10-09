@@ -7,6 +7,8 @@ import type { DrawPolyline } from "./primitives.ts"
 
 /** Room between the bracketed atoms (their labels included) and the brackets, in bond lengths. */
 const PAD = 0.35
+/** The room on a side a bond comes in through (it ends 0.4 bond length past the upright), in bond lengths. */
+const ENTRY_PAD = 0.7
 /** How far a bracket's serifs reach inwards, in bond lengths. */
 const SERIF = 0.25
 /** No bracket is shorter than this, in bond lengths, so one round a single atom still reads as a bracket. */
@@ -95,13 +97,13 @@ function attachmentReach(marks: readonly AttachmentMark[], inside: Set<number>):
   })
 }
 
-function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLabel | null | undefined, attachments: readonly AttachmentMark[]): BracketMark | null {
+function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLabel | null | undefined, room: BracketRoom): BracketMark | null {
   const inside = new Set(bracket.atoms)
   const atoms = mol.atoms.filter((atom) => inside.has(atom.id))
   if (atoms.length === 0) return null
   const length = bondLengthAt(mol, atoms[0].id)
   const pad = PAD * length
-  const reach = [...atoms.map((atom) => extent(atom, labelOf(atom))), ...attachmentReach(attachments, inside)]
+  const reach = [...atoms.map((atom) => extent(atom, labelOf(atom))), ...attachmentReach(room.attachments ?? [], inside)]
   const content = {
     left: Math.min(...reach.map((box) => box.left)),
     right: Math.max(...reach.map((box) => box.right)),
@@ -112,6 +114,14 @@ function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLa
   let right = content.right + pad
   let top = content.top - pad
   let bottom = content.bottom + pad
+  // A side a bond comes in through stands further off, so the bond ends inside clear of what is there.
+  const entry = ENTRY_PAD * length
+  for (const from of room.entries?.get(bracket.id) ?? []) {
+    if (from.x > content.right) right = Math.max(right, content.right + entry)
+    else if (from.x < content.left) left = Math.min(left, content.left - entry)
+    else if (from.y < content.top) top = Math.min(top, content.top - entry)
+    else if (from.y > content.bottom) bottom = Math.max(bottom, content.bottom + entry)
+  }
   const short = MIN_HEIGHT * length - (bottom - top)
   if (short > 0) {
     top -= short / 2
@@ -144,18 +154,25 @@ function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLa
 }
 
 /**
- * Square brackets as drawn around their atoms: wide and tall enough for the atoms and their
- * labels with some room, and for what of the drawn `attachments` belongs to those atoms (an
- * ellipse round them, an "(Rx)n" hanging inside); a repeat unit's reaching across the bonds
- * that leave it, its count at the lower right. `labels` are the scene's; left out, the
- * bracketed atoms' labels are worked out here. Shared by the canvas, every export and
- * hit-testing (through draw/marks.ts), so all agree.
+ * What else a bracket makes room for: the drawn attachments (what of them belongs to its
+ * atoms goes inside), and, by bracket id, where the atoms bonded into it from outside are
+ * (the side each comes in through stands further off).
  */
-export function bracketMarks(mol: Molecule, brackets: readonly Bracket[] | undefined, labels?: readonly AtomLabel[], attachments: readonly AttachmentMark[] = []): BracketMark[] {
+export type BracketRoom = { attachments?: readonly AttachmentMark[]; entries?: ReadonlyMap<number, readonly Point[]> }
+
+/**
+ * Square brackets as drawn around their atoms: wide and tall enough for the atoms and their
+ * labels with some room, and for what `room` says (an ellipse round them, an "(Rx)n"
+ * hanging inside, a bond coming in); a repeat unit's reaching across the bonds that leave
+ * it, its count at the lower right. `labels` are the scene's; left out, the bracketed
+ * atoms' labels are worked out here. Shared by the canvas, every export and hit-testing
+ * (through draw/marks.ts), so all agree.
+ */
+export function bracketMarks(mol: Molecule, brackets: readonly Bracket[] | undefined, labels?: readonly AtomLabel[], room: BracketRoom = {}): BracketMark[] {
   if (!brackets || brackets.length === 0) return []
   const given = labels && new Map(labels.map((label) => [label.atomId, label]))
   const labelOf = (atom: Atom) => (given ? given.get(atom.id) : labelFor(mol, atom, false))
-  return brackets.flatMap((bracket) => markOf(mol, bracket, labelOf, attachments) ?? [])
+  return brackets.flatMap((bracket) => markOf(mol, bracket, labelOf, room) ?? [])
 }
 
 /** How far `point` is from a bracket's strokes. */

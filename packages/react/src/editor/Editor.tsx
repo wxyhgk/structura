@@ -5,6 +5,7 @@ import { ContextMenu, ContextMenuTrigger } from "../components/ui/context-menu.t
 import { AnalysisDialog } from "./analysis/AnalysisDialog.tsx"
 import { writeClipboard } from "./browser.ts"
 import { CanvasMenu } from "./canvas/CanvasMenu.tsx"
+import { canvasSlice } from "./canvas/slice.ts"
 import { useCanvasMenu } from "./canvas/useCanvasMenu.ts"
 import { Flash } from "./shell/Flash.tsx"
 import { useFlash } from "./shell/useFlash.ts"
@@ -131,25 +132,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             <ContextMenu>
               <ContextMenuTrigger asChild>
                 <div className="flex min-h-0 min-w-0 flex-1" onContextMenu={menu.onContextMenu}>
-                <Canvas
-                  ref={canvasRef}
-                  mol={shownMol}
-                  arrows={editor.arrows}
-                  tool={editor.tool}
-                  bondStyle={editor.bondStyle}
-                  ringKind={editor.ringKind}
-                  scaffold={editor.scaffold}
-                  atomEl={editor.atomEl}
-                  selection={editor.selection}
-                  colorHetero={editor.colorHetero}
-                  drawOptions={labelStyle}
-                  attachments={editor.attachments}
-                  run={editor.run}
-                  latest={editor.latest}
-                  setSelection={editor.setSelection}
-                  undo={editor.undo}
-                  viewport={viewport}
-                />
+                <Canvas ref={canvasRef} {...canvasSlice(editor, { mol: shownMol, drawOptions: labelStyle, attachments: editor.attachments, viewport })} />
                 </div>
               </ContextMenuTrigger>
               <CanvasMenu

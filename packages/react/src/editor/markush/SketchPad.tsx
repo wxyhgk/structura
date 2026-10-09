@@ -4,6 +4,7 @@ import type { BondStyle, Molecule, RingKind } from "@structura/core/types"
 import type { SiteKind } from "@structura/markush"
 import { createEditor, createViewport, pickSite, sitesOf, sitesProblem, sitesShown, type ToolId } from "@structura/engine"
 import { Canvas } from "../canvas/Canvas.tsx"
+import { canvasSlice } from "../canvas/slice.ts"
 import type { CanvasHandle } from "../canvas/types.ts"
 import { drawOptions } from "../drawOptions.ts"
 import { SiteBadges } from "./SiteBadges.tsx"
@@ -195,24 +196,7 @@ export function SketchPad({
         onKeyDown={handleKey}
         data-testid="sketch-pad"
       >
-        <Canvas
-          ref={canvasRef}
-          mol={mol}
-          arrows={snapshot.history.present.arrows}
-          tool={snapshot.tool}
-          bondStyle={snapshot.bondStyle}
-          ringKind={snapshot.ringKind}
-          scaffold={snapshot.scaffold}
-          atomEl={snapshot.atomEl}
-          selection={snapshot.selection}
-          colorHetero={snapshot.colorHetero}
-          drawOptions={NO_LABELS}
-          run={editor.run}
-          latest={editor.latest}
-          setSelection={editor.setSelection}
-          undo={editor.undo}
-          viewport={viewport}
-        />
+        <Canvas ref={canvasRef} {...canvasSlice({ ...editor, ...snapshot, arrows: snapshot.history.present.arrows }, { mol, drawOptions: NO_LABELS, viewport })} />
         <SiteBadges mol={mol} sites={shown.sites} assumed={shown.assumed} viewport={viewport} />
         {marking && <p className="pointer-events-none absolute top-1.5 left-2 rounded-sm bg-[#1a73e8] px-1.5 py-0.5 text-white">设位点：点原子（再点一次去掉）</p>}
       </div>

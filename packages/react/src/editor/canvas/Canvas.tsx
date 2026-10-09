@@ -1,18 +1,17 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
-import { atomById, bondById, bondsLeaving, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
-import type { Drawing, Molecule, Point, Selection } from "@structura/core/types"
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
+import { atomById, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
+import type { Molecule } from "@structura/core/types"
 import { AtomLabelInput } from "./AtomLabelInput.tsx"
 import { SceneView } from "./SceneView.tsx"
-import { defaultPick, doubleClickAction, hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type RingHintShape, sameHover, scaffoldOps } from "@structura/engine"
+import { hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type RingHintShape } from "@structura/engine"
 import { frameHandleCursor } from "./frameHandleCursor.ts"
 import { QuickScaffold } from "./QuickScaffold.tsx"
-import type { CanvasHandle, EditorSlice, Gesture, HoverTarget, PointerHost, Preview } from "./types.ts"
+import type { CanvasHandle, EditorSlice, Gesture, PointerHost, Preview } from "./types.ts"
+import { useDoubleClick } from "./useDoubleClick.ts"
 import { useHotspot } from "./useHotspot.ts"
+import { useLabelEditor } from "./useLabelEditor.ts"
+import { useQuickScaffold } from "./useQuickScaffold.ts"
 import { useViewport } from "./useViewport.ts"
-
-/** Two presses this close in time (ms) and space (px) make a double click. */
-const DOUBLE_CLICK_MS = 500
-const DOUBLE_CLICK_SLOP = 6
 
 /** The drawing surface: pointer gestures, hover keys, the label field and the view. */
 export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(props, ref) {
@@ -28,19 +27,16 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const [panning, setPanning] = useState(false)
   const [handleCursor, setHandleCursor] = useState<string | null>(null)
   const [rotating, setRotating] = useState(false)
-  /** The label field: on one atom, or on a selected fragment to replace (`replace` lists its atoms). */
-  /** The quick template field `/` opened: what it acts on (fixed when it opened) and where it shows. */
-  const [quick, setQuick] = useState<{ target: HoverTarget; world: Point; screen: Point } | null>(null)
   /** Where the pointer last was over the canvas, in client coordinates. */
   const lastPointer = useRef<{ x: number; y: number } | null>(null)
-  const [labelEdit, setLabelEdit] = useState<{ id: number; initial: string; replace?: number[] } | null>(null)
   /**
    * The molecule as of the last edit, ahead of the re-render when keys come fast, as shown:
    * collapsed abbreviations are their labels, so nothing behind a label can be pointed at.
    */
   const current = () => displayMolecule(props.latest().molecule)
-  /** What the last press hit and the drawing before it, to spot a double click. */
-  const firstClick = useRef<{ hit: HoverTarget; before: Drawing; selection: Selection; tool: string; time: number; x: number; y: number } | null>(null)
+  const label = useLabelEditor({ current, hotspot, run: props.run })
+  const quick = useQuickScaffold({ current, hotspot, viewport, lastPointer, run: props.run })
+  const { doubleClick, press } = useDoubleClick({ props, current, openLabel: label.openLabel })
 
   function cancelGesture() {
     gesture.current = { kind: "idle" }
@@ -77,46 +73,6 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
    * Hover hotkeys: g, Tab, Enter and chemistry keys on the atom or bond under the pointer.
    * Returns whether the key was used; the editor's key router asks here first.
    */
-  /** Opens the label field on an atom; false if the atom is gone. */
-  function openLabel(id: number): boolean {
-    const atom = atomById(current(), id)
-    if (!atom) return false
-    // The field covers the atom, so the canvas sees the pointer leave; pinning keeps the
-    // atom as the hotspot, so Enter after Escape reopens it and keys go on from there.
-    hotspot.pin(atom.id)
-    setLabelEdit({ id: atom.id, initial: atom.alias ?? (atom.el === "C" ? "" : atom.el) })
-    return true
-  }
-
-  /**
-   * The second press of a double click on the same atom or bond: soon after the first and
-   * close to it. (Pointer events carry no click count, so it is timed here.) The first
-   * press was an ordinary click, which may have drawn a bond, changed a bond order or
-   * selected something; that is undone before the double click acts. Returns whether it acted.
-   */
-  function doubleClick(event: PointerEvent<SVGSVGElement>): boolean {
-    const first = firstClick.current
-    firstClick.current = null
-    if (event.button !== 0 || !first) return false
-    if (event.timeStamp - first.time > DOUBLE_CLICK_MS || Math.hypot(event.clientX - first.x, event.clientY - first.y) > DOUBLE_CLICK_SLOP) return false
-    // Two presses with different tools are two separate clicks, however quick.
-    if (first.tool !== props.tool) return false
-    const hit = hitOf(current(), viewport.toWorld(event.clientX, event.clientY), viewport.get().zoom)
-    if (!hit || !sameHover(first.hit, hit)) return false
-    const action = doubleClickAction(current(), hit)
-    // Selecting the molecule is for the selection tools, as in ChemDraw: with the bond tool,
-    // two quick clicks on a bond are two clicks, stepping its order twice.
-    if (action?.kind === "select" && props.tool !== "lasso" && props.tool !== "marquee") return false
-    if (props.latest() !== first.before) props.undo()
-    // The first press may have selected what it hit; a double click leaves the selection as it found it.
-    if (action?.kind === "label") {
-      props.setSelection(first.selection)
-      openLabel(action.atom)
-    }
-    else if (action?.kind === "select") props.setSelection(action.selection)
-    return action != null
-  }
-
   function handleKey(event: KeyboardEvent): boolean {
     if (event.metaKey || event.ctrlKey || event.altKey) return false
     if (gesture.current.kind !== "idle") return false
@@ -133,7 +89,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
       hotspot.unpin()
       return true
     }
-    if (event.key === "Enter" && hot.type === "atom") return openLabel(hot.id)
+    if (event.key === "Enter" && hot.type === "atom") return label.openLabel(hot.id)
     // A key that means nothing here falls through to the tool keys. One that means something
     // but cannot apply (no room for the ring) is still used up, so it never switches tools.
     const ops = hotkeyOps(mol, hot, key)
@@ -167,27 +123,10 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     hotspot: () => hotspot.active(current()),
     pointed: () => hotspot.under(),
     focusAtom: hotspot.pin,
-    editLabel: (id) => void openLabel(id),
+    editLabel: (id) => void label.openLabel(id),
     targetAt: (clientX, clientY) => hitOf(current(), viewport.toWorld(clientX, clientY), viewport.get().zoom),
-    quickScaffold() {
-      // What it will act on is fixed now: the pointer's atom or bond, else the hotspot, else
-      // the spot under the pointer, so moving the pointer while typing changes nothing.
-      const mol = current()
-      const target = hotspot.under() ?? hotspot.active(mol)
-      const { zoom: scale, pan: shift } = viewport.get()
-      const client = lastPointer.current
-      const world = client ? viewport.toWorld(client.x, client.y) : viewport.centre()
-      const anchor = target?.type === "atom" ? atomById(mol, target.id) : target?.type === "bond" ? bondMiddle(mol, target.id) : world
-      if (target?.type === "atom") hotspot.pin(target.id)
-      setQuick({ target, world, screen: { x: shift.x + (anchor ?? world).x * scale, y: shift.y + (anchor ?? world).y * scale } })
-    },
-    replaceFragment(ids: number[]) {
-      const mol = current()
-      // The field sits on the atom that joins the fragment to the rest, where the new piece goes.
-      const [join] = bondsLeaving(mol, ids)
-      const at = join ? (ids.includes(join.a) ? join.a : join.b) : ids[0]
-      if (at != null && atomById(mol, at)) setLabelEdit({ id: at, initial: "", replace: ids })
-    },
+    quickScaffold: quick.open,
+    replaceFragment: label.replaceFragment,
   }))
 
   // Selecting something starts afresh: an old hotspot must not take the keys meant for the selection.
@@ -201,6 +140,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   }, [props.tool, props.ringKind])
 
   const shown = draft ?? props.mol
+  const labelEdit = label.edit
   const labelAtom = labelEdit ? atomById(shown, labelEdit.id) : undefined
   const cursor = panning ? "grab" : handleCursor ?? (props.tool === "lasso" || props.tool === "marquee" ? "default" : "crosshair")
 
@@ -218,18 +158,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             event.preventDefault()
             return
           }
-          if (event.button === 0) {
-            const world = viewport.toWorld(event.clientX, event.clientY)
-            firstClick.current = {
-              hit: hitOf(current(), world, viewport.get().zoom),
-              before: props.latest(),
-              selection: props.selection,
-              tool: props.tool,
-              time: event.timeStamp,
-              x: event.clientX,
-              y: event.clientY,
-            }
-          }
+          press(event)
           // The canvas keeps the pointer while a drag goes on, even off its edge.
           if (event.button === 0 || event.button === 1) event.currentTarget.setPointerCapture(event.pointerId)
           pointerDown(host, event)
@@ -278,26 +207,10 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
           placeholder={labelEdit.replace ? "替换为" : undefined}
           left={pan.x + labelAtom.x * zoom}
           top={pan.y + labelAtom.y * zoom}
-          onDone={(text) => {
-            setLabelEdit(null)
-            if (text == null) return
-            if (labelEdit.replace) props.run([{ op: "replace", atoms: labelEdit.replace, with: { label: text } }])
-            else props.run([{ op: "label", atom: labelEdit.id, text }], { keepSelection: true })
-          }}
+          onDone={label.done}
         />
       )}
-      {quick && (
-        <QuickScaffold
-          left={quick.screen.x}
-          top={quick.screen.y}
-          target={quick.target?.type ?? null}
-          onCancel={() => setQuick(null)}
-          onPick={(scaffold) => {
-            setQuick(null)
-            props.run(scaffoldOps(defaultPick(scaffold.name), quick.target, quick.world))
-          }}
-        />
-      )}
+      {quick.quick && <QuickScaffold left={quick.quick.screen.x} top={quick.quick.screen.y} target={quick.quick.target?.type ?? null} onCancel={quick.cancel} onPick={quick.pick} />}
       {shown.atoms.length === 0 && preview == null && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-[14px] leading-6 text-[#9a9a9a]">
           在空白处点击，画一条键
@@ -309,9 +222,3 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   )
 })
 
-/** The middle of a bond, where the quick template field shows when it will fuse there. */
-function bondMiddle(mol: Molecule, id: number): Point | undefined {
-  const bond = bondById(mol, id)
-  const [a, b] = bond ? [atomById(mol, bond.a), atomById(mol, bond.b)] : []
-  return a && b ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } : undefined
-}

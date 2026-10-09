@@ -43,22 +43,24 @@ test("Markush: dragging out of a ring's middle makes R1 attached anywhere on the
 
 test("Markush: (R1)m with m = 0–2 enumerates 1 + 12 + 60 = 73 compounds", async ({ page }) => {
   await openFile(page, fixture("benzene-R1-anywhere.structura"))
+  await page.getByRole("tab", { name: "通式" }).click()
+  await page.getByRole("tablist", { name: "通式约束" }).getByRole("tab", { name: "位置" }).click()
   await page.getByLabel("R1 重复出现").check()
   await page.getByLabel("最多次数").fill("2")
   await expect.poll(async () => (await doc(page)).attachments?.[0]?.repeat).toEqual({ min: 0, max: 2, name: "m" })
   await expect(page.getByTestId("repeat-marks")).toBeVisible()
-  // Counted before anything is generated, in the variables panel.
+  // Counted before anything is generated, in the constraints' overview.
+  await page.getByRole("tablist", { name: "通式约束" }).getByRole("tab", { name: "概览" }).click()
   await expect(page.getByTestId("library-size")).toContainText("可展开为 73 种组合")
-  await page.getByRole("button", { name: "批量生成化合物…" }).click()
-  await expect(page.getByRole("dialog")).toContainText("共 73 种组合")
   // Repeats are dropped by RDKit's canonical SMILES (loaded in the page): 12 different compounds.
-  await expect(page.getByRole("dialog")).toContainText("得到 12 个不同的化合物（合并了 61 个重复的）")
+  await expect(page.getByTestId("results-summary")).toContainText("共 73 种组合，得到 12 个不同的化合物（合并了 61 个重复的）")
 })
 
 test("import: a MOL file's R# atom arrives as the variable R1, with no notice", async ({ page }) => {
   await openFile(page, fixture("phenyl-R1.mol"))
-  await expect(page.getByTestId("variables-panel")).toContainText("R1")
   await expect(page.getByTestId("import-notes")).toHaveCount(0)
+  await page.getByRole("tab", { name: "通式" }).click()
+  await expect(page.getByTestId("variable-R1")).toBeVisible()
   const atoms = (await doc(page)).molecule.atoms
   expect(atoms.filter((atom) => atom.alias === "R1")).toHaveLength(1)
 })
@@ -71,7 +73,7 @@ test("undo and redo: every step back, then forward again, to exactly the same dr
   await page.getByRole("button", { name: "键 (B)" }).click()
   await page.mouse.click(centre.x + 250, centre.y)
   await openFile(page, fixture("phenyl-R1.mol"))
-  await expect(page.getByTestId("variables-panel")).toBeVisible()
+  await expect.poll(async () => (await doc(page)).molecule.atoms.some((atom) => atom.alias === "R1")).toBe(true)
   const after = await drawnText(page)
   for (let step = 0; step < 3; step++) await page.keyboard.press("ControlOrMeta+z")
   await expect.poll(() => drawnText(page)).toBe(before)

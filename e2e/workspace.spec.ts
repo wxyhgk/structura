@@ -10,8 +10,6 @@ test("the 通式 workspace shows the same document, and its results follow every
   await page.getByRole("tab", { name: "通式" }).click()
   const workspace = page.getByTestId("markush-workspace")
   await expect(workspace).toBeVisible()
-  // The old sidebar is the drawing workspace's; here the variables have a board of their own.
-  await expect(page.getByTestId("variables-panel")).toHaveCount(0)
 
   const results = workspace.getByTestId("results-summary")
   await expect(results).toContainText("得到 2 个不同的化合物")

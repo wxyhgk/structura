@@ -1,4 +1,4 @@
-import { groupBracket, labelledBracket, longerRepeat, repeatBracket } from "../figures/brackets.ts"
+import { groupBracket, intoBracket, labelledBracket, longerRepeat, repeatBracket, repeatExpanded } from "../figures/brackets.ts"
 import { Figure } from "../ui/Figure.tsx"
 import { H, P, Steps, Table, Tip } from "../ui/parts.tsx"
 import { definePage } from "../types.ts"
@@ -7,7 +7,7 @@ export const bracketsPage = definePage({
   id: "brackets",
   group: "绘图",
   title: "方括号",
-  keywords: "方括号 括号 [ ] 重复单元 聚合物 (CH2)n n 次数 基团 稠环 SRU Sgroup",
+  keywords: "方括号 括号 [ ] 重复单元 聚合物 (CH2)n n 次数 基团 稠环 SRU Sgroup 连进括号 任意位置 L1 椭圆 (Rx)n 批量生成 展开",
   body: (context) => (
     <>
       <P>方括号是结构的一部分，不是另外画上去的线：它属于一组原子，按这些原子的位置画出来。原子移动、增删时括号跟着变，原子全删掉括号也就没了；保存、导出 SVG 和 MOL、复制粘贴都带着它。</P>
@@ -20,8 +20,8 @@ export const bracketsPage = definePage({
       <H>两种括号</H>
       <Table
         rows={[
-          ["基团", "括住的片段当作一个整体，比如一个稠环体系，外面的键可以接在它的任意位置（专利里“接在括号内基团的任意位置”）"],
-          ["重复单元", "[ … ]n、(CH2)n：括号横穿两边断开的键，次数的名字写在右括号右下角；“重复次数…”里填名字（n、m）和范围，比如 n = 1 到 4"],
+          ["基团", "括住的片段当作一个整体，比如一个稠环体系，外面的键可以连进括号、接在它的任意位置（专利里“接在括号内基团的任意位置”，见下文）"],
+          ["重复单元", "[ … ]n、(CH2)n：括号横穿两边断开的键，次数的名字写在右括号右下角；“重复次数…”里填名字（n、m）和范围，比如 n = 1 到 4；批量生成时按每个次数展开"],
         ]}
       />
       <Figure
@@ -35,6 +35,23 @@ export const bracketsPage = definePage({
           { drawing: longerRepeat(), caption: "两个碳一起重复，次数叫 m" },
           { drawing: labelledBracket(), caption: "括住带标签的基团，标签留在括号里面" },
         ]}
+      />
+      <H>连进括号：接在括号内基团的任意位置</H>
+      <P>专利里常见：一个稠环用方括号括起来，外面的 L1 画一根键穿过右括号、停在括号里面，不落在任何原子上，意思是“L1 接在括号内基团的任意位置”。</P>
+      <Steps>
+        <li>先给基团加方括号（基团括号）。</li>
+        <li>用键工具从括号外的原子（如 L1）拖进括号里，在不落在原子上、也不在某个环中心的地方松开（括号竖线和环之间的空白，或环边上的键上都可以）。拖动时会预览这根键和可接的原子。拖进环的中心，仍是“接在这个环的任意位置”。</li>
+        <li>松开后得到一个可变连接，候选位置就是括号里的所有原子；画成一根穿过近处竖线、止于括号里面的直线，有键连进来的那一侧括号会离得远一些，让这根键停在空白处。</li>
+        <li>括号里的原子删掉或增加，可变连接的候选位置跟着变；删掉括号，就按椭圆或弧线画。画法里多一个“括号”，只在连进括号时出现。</li>
+        <li>批量生成时和别的可变连接一样，逐个原子展开；稠合处这类没有氢的原子自动跳过。</li>
+      </Steps>
+      <P>括号也会让出地方给属于它的东西：椭圆圈住的原子都在括号里时，椭圆整个在括号里面；取代基本身也在括号里时（如 (Rx)n），它的标签和连线也在里面。</P>
+      <Figure panels={[{ drawing: intoBracket(), caption: "(Rx)n 接在三亚苯任意位置，L1 接在括号内基团的任意位置" }]} />
+      <H>重复单元在批量生成里</H>
+      <P>批量生成时，[ … ]n 按 n 从最少到最多逐个写出：重复单元复制 n 份，经穿过括号的两根键首尾相接（锯齿链接着锯齿，对位亚苯基排成一列），括号外后面的部分跟着往后移；n = 0 就是两端直接相连。单元里的变量（R1）每份各选各的。结果里 n 像变量一样写出来（n = 3），组合数乘上次数的个数。穿过括号的键必须正好两根，否则在提示里说明，按画的样子只算一次。在通式工作区的“位置”里可以直接改次数。</P>
+      <Figure
+        panels={[{ drawing: repeatExpanded().drawing, caption: "n = 1 到 3" }, ...repeatExpanded().products.map((drawing, index) => ({ drawing, caption: `n = ${index + 1}` }))]}
+        steps={["生成", "", ""]}
       />
       <H>文件里的括号</H>
       <P>保存的 .structura 文件原样保留括号和次数。导出 MOL 时，重复单元写成 SRU（右下角的名字作标签），基团写成 GEN，其他软件也能读出括号；打开或粘贴这样的 MOL 文件，括号会回到原子上。MOL 文件只记名字，不记次数范围，读回来是 1 到 4，需要时再改。</P>

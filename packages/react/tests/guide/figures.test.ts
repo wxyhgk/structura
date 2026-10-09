@@ -37,4 +37,12 @@ test("the brackets page's figures carry their brackets into the picture", () => 
   assert.equal(brackets.longerRepeat().brackets?.[0].repeat?.name, "m")
   assert.deepEqual(brackets.labelledBracket().brackets?.[0].atoms, [7, 8])
   assert.match(figureSvg(brackets.repeatBracket()), /font-style="italic"[^>]*>n</)
+  // The patent picture: (Rx)n's ellipse inside the bracket, L1's bond into it.
+  const into = brackets.intoBracket()
+  assert.deepEqual(into.brackets?.map((bracket) => bracket.kind), ["group"])
+  const svg = figureSvg(into)
+  assert.match(svg, /<path d="M [^"]+ Z"/, "the ellipse round triphenylene")
+  assert.equal((svg.match(/<line [^>]*stroke-linecap="round"/g) ?? []).length, 1, "L1's bond into the bracket, straight")
+  // Generating Cl–[CH2]n–OH writes the unit out once, twice, three times.
+  assert.deepEqual(brackets.repeatExpanded().products.map((drawing) => plainFormula(drawing.molecule)), ["C2H5ClO", "C3H7ClO", "C4H9ClO"])
 })

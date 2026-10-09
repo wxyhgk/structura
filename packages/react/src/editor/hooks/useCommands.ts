@@ -9,6 +9,7 @@ import type { CanvasHandle } from "../canvas/types.ts"
 import { type Command, command as engineCommand, type CommandOptions, drawingPoints, joinOps, ROTATE_STEP, type Viewport } from "@structura/engine"
 import { drawOptions } from "../drawOptions.ts"
 import type { DocumentFile } from "./useDocumentFile.ts"
+import type { EditorDialogs } from "./useEditorDialogs.ts"
 import type { EditorState } from "../useEditor.ts"
 
 /** A command, its shortcut written the way this platform does (⌘ or Ctrl). */
@@ -27,11 +28,8 @@ export function useCommands({
   viewport,
   clipboard,
   openFileDialog,
-  openSmilesDialog,
-  openEnumerate,
-  openGuide,
-  openRecognize,
-  openFill,
+  dialogs,
+  models,
   file,
 }: {
   editor: EditorState
@@ -39,13 +37,10 @@ export function useCommands({
   viewport: Viewport
   clipboard: { copy: () => void; cut: () => void; paste: () => void; copyImage: () => void }
   openFileDialog: () => void
-  openSmilesDialog: () => void
-  openEnumerate: () => void
-  openGuide: () => void
-  /** Absent when the host has no way to reach a model. */
-  openRecognize?: () => void
-  /** 从专利文字填写; absent when the host has no way to reach a model. */
-  openFill?: () => void
+  /** The dialogs the commands open. */
+  dialogs: Pick<EditorDialogs, "open" | "showGuide">
+  /** Which model-backed dialogs the host can serve: 从图片识别结构 and 从专利文字填写. */
+  models: { recognize: boolean; fill: boolean }
   /** Which file this is: the names things are saved under, and what counts as saved. */
   file: DocumentFile
 }) {
@@ -70,11 +65,15 @@ export function useCommands({
       { keys: [{ key: "n", meta: true }], inFields: true },
     ),
     open: command("打开…", openFileDialog, { keys: [{ key: "o", meta: true }], inFields: true }),
-    importSmiles: command("导入 SMILES…", openSmilesDialog),
-    recognizeImage: command("从图片识别结构…", () => openRecognize?.(), { enabled: openRecognize != null }),
+    importSmiles: command("导入 SMILES…", () => dialogs.open("smiles")),
+    recognizeImage: command("从图片识别结构…", () => {
+      if (models.recognize) dialogs.open("recognize")
+    }, { enabled: models.recognize }),
     // Filling needs variables to fill: labels such as R1, X on the formula, or ones already defined (as the variables panel shows them).
-    fillFromText: command("从专利文字填写变量…", () => openFill?.(), {
-      enabled: openFill != null && (variableLabels(editor.mol).length > 0 || Object.keys(editor.variables ?? {}).length > 0),
+    fillFromText: command("从专利文字填写变量…", () => {
+      if (models.fill) dialogs.open("fill")
+    }, {
+      enabled: models.fill && (variableLabels(editor.mol).length > 0 || Object.keys(editor.variables ?? {}).length > 0),
     }),
     save: command(
       "保存",
@@ -143,7 +142,7 @@ export function useCommands({
       keys: [{ key: "j", meta: true }],
       enabled: joinOps(editor.mol, editor.selection) != null,
     }),
-    enumerate: command("批量生成化合物…", openEnumerate, {
+    enumerate: command("批量生成化合物…", () => dialogs.open("enumerate"), {
       enabled: placeholders({ molecule: editor.mol, arrows: editor.arrows, nextArrowId: 0, variables: editor.variables }).length > 0,
     }),
     nudge: perArrow((direction, key) =>
@@ -180,8 +179,8 @@ export function useCommands({
       keys: [{ key: "9", meta: true }],
       enabled: editor.mol.atoms.length > 0 || editor.arrows.length > 0,
     }),
-    guide: command("使用说明", openGuide, { keys: [{ key: "F1" }], inFields: true }),
-    help: command("快捷键", () => editor.setHelpOpen(true)),
+    guide: command("使用说明", () => dialogs.showGuide("start"), { keys: [{ key: "F1" }], inFields: true }),
+    help: command("快捷键", () => dialogs.open("help")),
   }
 }
 

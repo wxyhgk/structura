@@ -4,13 +4,12 @@ import { canTransform, createEditor, statusOf } from "@structura/engine"
 
 /**
  * The editor's state for React: the engine's editor (state, write path, actions), read
- * through useSyncExternalStore so a render always shows the latest snapshot. Only the help
- * dialog's open state, which no other part of the editor needs, is kept here.
+ * through useSyncExternalStore so a render always shows the latest snapshot. Which dialogs
+ * are open is useEditorDialogs'.
  */
 export function useEditor(initial: Molecule[] | Drawing = []) {
   const [editor] = useState(() => createEditor(initial))
   const snapshot = useSyncExternalStore(editor.subscribe, editor.get)
-  const [helpOpen, setHelpOpen] = useState(false)
   const { history, selection } = snapshot
   const drawing = history.present
   const mol = drawing.molecule
@@ -37,8 +36,6 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
     canRedo: history.future.length > 0,
     canTransform: canTransform(mol, selection),
     ...status,
-    helpOpen,
-    setHelpOpen,
   }
 }
 

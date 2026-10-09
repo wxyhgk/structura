@@ -1,21 +1,21 @@
 import { forwardRef, useMemo, useRef, useState } from "react"
-import { componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
+import { displayMolecule } from "@structura/core/molecule"
 import { TooltipProvider } from "../components/ui/tooltip.tsx"
 import { ContextMenu, ContextMenuTrigger } from "../components/ui/context-menu.tsx"
 import { AnalysisDialog } from "./analysis/AnalysisDialog.tsx"
-import { reportFor, type Report } from "./analysis/report.ts"
 import { writeClipboard } from "./browser.ts"
 import { CanvasMenu } from "./canvas/CanvasMenu.tsx"
-import { identifierOf, IDENTIFIER_NAMES, type IdentifierKind } from "./identifiers.ts"
+import { useCanvasMenu } from "./canvas/useCanvasMenu.ts"
 import { Flash } from "./shell/Flash.tsx"
 import { useFlash } from "./shell/useFlash.ts"
 import { Canvas } from "./canvas/Canvas.tsx"
 import type { CanvasHandle } from "./canvas/types.ts"
 import { useZoom } from "./canvas/useViewport.ts"
-import { contextAtoms, contextTarget, type ContextTarget, createViewport, placeDrawing, toolLabel } from "@structura/engine"
+import { createViewport, placeDrawing, toolLabel } from "@structura/engine"
 import { selectionClipboard } from "./clipboard.ts"
 import { useCommands } from "./hooks/useCommands.ts"
 import { useDocumentFile } from "./hooks/useDocumentFile.ts"
+import { useEditorDialogs } from "./hooks/useEditorDialogs.ts"
 import { RAISED_NUMBERS, useRememberedSetting } from "./hooks/useRememberedSetting.ts"
 import { drawOptions } from "./drawOptions.ts"
 import { useEditorHandle, type EditorHandle } from "./hooks/useEditorHandle.ts"
@@ -26,7 +26,6 @@ import { useEditorInput } from "./input/useEditorInput.ts"
 import { ToolPalette } from "./palette/ToolPalette.tsx"
 import { HelpDialog } from "./shell/dialogs/HelpDialog.tsx"
 import { EditorGuide } from "./shell/EditorGuide.tsx"
-import type { GuideTopic } from "../guide/index.ts"
 import { ImportNotesDialog } from "./shell/dialogs/ImportNotesDialog.tsx"
 import { EnumerateDialog } from "./markush/EnumerateDialog.tsx"
 import { FillDialog } from "./markush/FillDialog.tsx"
@@ -96,13 +95,9 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const fileRef = useRef<HTMLInputElement>(null)
   const [viewport] = useState(createViewport)
   const zoom = useZoom(viewport)
-  const [smilesOpen, setSmilesOpen] = useState(false)
-  const [enumerateOpen, setEnumerateOpen] = useState(false)
-  const [fillOpen, setFillOpen] = useState(false)
+  const dialogs = useEditorDialogs()
   /** The molecule as the canvas shows it: collapsed abbreviations as labels. */
   const shownMol = useMemo(() => displayMolecule(editor.mol), [editor.mol])
-  const [recognizeOpen, setRecognizeOpen] = useState(false)
-  const [guide, setGuide] = useState<GuideTopic | null>(null)
   /** Drawing, or the generic formula's workspace; both show the same document. */
   const [workspace, setWorkspace] = useState<Workspace>("draw")
 
@@ -111,21 +106,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   /** How labels are written, the same on the canvas as in what is exported. */
   const labelStyle = useMemo(() => drawOptions(editor.raisedNumbers), [editor.raisedNumbers])
   const setRaisedNumbers = useRememberedSetting(RAISED_NUMBERS, editor.raisedNumbers, editor.setRaisedNumbers)
-  /** What the last right-click was about, for the menu it opens. */
-  const [menuTarget, setMenuTarget] = useState<ContextTarget | null>(null)
-  const [report, setReport] = useState<Report | null>(null)
   const { message, flash } = useFlash()
-  /** The atoms the menu's copying and analysis act on. */
-  const menuAtoms = () => contextAtoms(editor.mol, editor.selection, menuTarget)
-  async function copyAs(kind: IdentifierKind) {
-    try {
-      const text = await identifierOf(editor.mol, menuAtoms(), kind)
-      writeClipboard(text)
-      flash(`已复制 ${IDENTIFIER_NAMES[kind]}：${text.length > 48 ? `${text.slice(0, 48)}…` : text}`)
-    } catch (error) {
-      flash(`没能生成 ${IDENTIFIER_NAMES[kind]}：${error instanceof Error ? error.message : String(error)}`)
-    }
-  }
+  const menu = useCanvasMenu({ editor, shownMol, canvas: canvasRef, flash, showReport: dialogs.showReport })
   const file = useDocumentFile(editor.drawing, editor.latest, onDirtyChange)
   /** Opens a file and, if it opened, remembers it as this document's file. */
   const openFile = async (picked: File) => {
@@ -138,11 +120,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     viewport,
     clipboard: { ...clipboard, paste: () => void imports.pasteClipboard() },
     openFileDialog: () => fileRef.current?.click(),
-    openSmilesDialog: () => setSmilesOpen(true),
-    openEnumerate: () => setEnumerateOpen(true),
-    openGuide: () => setGuide("start"),
-    openRecognize: recognizeStructure ? () => setRecognizeOpen(true) : undefined,
-    openFill: fillVariables ? () => setFillOpen(true) : undefined,
+    dialogs,
+    models: { recognize: recognizeStructure != null, fill: fillVariables != null },
   })
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
   useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange })
@@ -151,7 +130,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const canvasArea = (
             <ContextMenu>
               <ContextMenuTrigger asChild>
-                <div className="flex min-h-0 min-w-0 flex-1" onContextMenu={(event) => setMenuTarget(contextTarget(shownMol, editor.selection, canvasRef.current?.targetAt(event.clientX, event.clientY) ?? null))}>
+                <div className="flex min-h-0 min-w-0 flex-1" onContextMenu={menu.onContextMenu}>
                 <Canvas
                   ref={canvasRef}
                   mol={shownMol}
@@ -174,13 +153,13 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
                 </div>
               </ContextMenuTrigger>
               <CanvasMenu
-                target={menuTarget}
+                target={menu.target}
                 commands={commands}
                 run={(ops) => void editor.run(ops)}
                 onEditLabel={(atom) => canvasRef.current?.editLabel(atom)}
-                onSelectMolecule={(atom) => editor.setSelection(selectionFromAtoms(editor.mol, componentOf(editor.mol, atom)))}
-                onCopyAs={(kind) => void copyAs(kind)}
-                onAnalyze={() => setReport(reportFor(editor.mol, menuAtoms()))}
+                onSelectMolecule={menu.selectMolecule}
+                onCopyAs={menu.copyAs}
+                onAnalyze={menu.analyze}
               />
             </ContextMenu>
   )
@@ -239,8 +218,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
                   editor.appendMolecules([mol], viewport.centre())
                   setWorkspace("draw")
                 }}
-                onHelp={setGuide}
-                onFill={fillVariables ? () => setFillOpen(true) : undefined}
+                onHelp={dialogs.showGuide}
+                onFill={fillVariables ? () => dialogs.open("fill") : undefined}
                 templates={templates}
               />
             )}
@@ -254,8 +233,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               run={editor.run}
               canEnumerate={commands.enumerate.enabled}
               onEnumerate={commands.enumerate.run}
-              onFill={fillVariables ? () => setFillOpen(true) : undefined}
-              onHelp={setGuide}
+              onFill={fillVariables ? () => dialogs.open("fill") : undefined}
+              onHelp={dialogs.showGuide}
             />}
           </div>
 
@@ -269,14 +248,14 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
           />
 
           <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
-          <AnalysisDialog report={report} onOpenChange={(open) => !open && setReport(null)} onCopy={(text, what) => {
+          <AnalysisDialog report={dialogs.report} onOpenChange={(open) => !open && dialogs.showReport(null)} onCopy={(text, what) => {
             writeClipboard(text)
             flash(`已复制${what}`)
           }} />
           <Flash message={message} />
           <EnumerateDialog
-            open={enumerateOpen}
-            onOpenChange={setEnumerateOpen}
+            open={dialogs.enumerate}
+            onOpenChange={dialogs.setOpen("enumerate")}
             drawing={editor.latest()}
             colorHetero={editor.colorHetero}
             base={file.base}
@@ -284,8 +263,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
           />
           {recognizeStructure && (
             <StructureDialog
-              open={recognizeOpen}
-              onOpenChange={setRecognizeOpen}
+              open={dialogs.recognize}
+              onOpenChange={dialogs.setOpen("recognize")}
               recognize={recognizeStructure}
               onApply={(drawing) => {
                 const place = placeDrawing(editor.latest(), drawing)
@@ -294,23 +273,16 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               }}
             />
           )}
-          {fillVariables && <FillDialog open={fillOpen} onOpenChange={setFillOpen} drawing={editor.latest()} run={editor.run} fill={fillVariables} />}
+          {fillVariables && <FillDialog open={dialogs.fill} onOpenChange={dialogs.setOpen("fill")} drawing={editor.latest()} run={editor.run} fill={fillVariables} />}
           <SmilesDialog
-            open={smilesOpen}
-            onOpenChange={setSmilesOpen}
+            open={dialogs.smiles}
+            onOpenChange={dialogs.setOpen("smiles")}
             onImport={imports.importSmiles}
             onNotes={(lines) => imports.showNotes({ opened: true, lines })}
             loadFailed={imports.rdkitFailed}
           />
-          <HelpDialog open={editor.helpOpen} onOpenChange={editor.setHelpOpen} commands={commands} />
-          <EditorGuide
-            topic={guide}
-            onTopic={setGuide}
-            openShortcuts={() => {
-              setGuide(null)
-              editor.setHelpOpen(true)
-            }}
-          />
+          <HelpDialog open={dialogs.help} onOpenChange={dialogs.setOpen("help")} commands={commands} />
+          <EditorGuide topic={dialogs.guide} onTopic={dialogs.showGuide} openShortcuts={dialogs.guideToShortcuts} />
         </div>
       </OverlayScope>
     </TooltipProvider>

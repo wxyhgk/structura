@@ -1,31 +1,24 @@
 import { useMemo } from "react"
-import { type Attachment, librarySize, type RingClosure, type Variable } from "@structura/markush"
-import type { Molecule } from "@structura/core/types"
+import { librarySize } from "@structura/markush"
+import type { Drawing } from "@structura/core/types"
 import { sizeText } from "./sizeText.ts"
 
 /**
  * How many compounds the formula stands for, counted as it is edited, before anything is
- * generated (classes by their typical members, as the generate dialog does by default).
+ * generated (classes by their typical members, as the generate dialog does by default):
+ * every count of each repeat unit, every placement, every choice.
  */
-export function LibrarySizeLine({
-  mol,
-  variables,
-  attachments,
-  ringClosures,
-}: {
-  mol: Molecule
-  variables: Record<string, Variable> | undefined
-  attachments: Attachment[] | undefined
-  ringClosures: RingClosure[] | undefined
-}) {
+export function LibrarySizeLine({ drawing }: { drawing: Drawing }) {
+  const { molecule, variables, attachments, ringClosures, brackets } = drawing
   const text = useMemo(() => {
-    if (!variables || Object.keys(variables).length === 0) return null
+    const repeats = brackets?.some((bracket) => bracket.kind === "repeat") ?? false
+    if ((!variables || Object.keys(variables).length === 0) && !repeats) return null
     try {
-      return sizeText(librarySize({ molecule: mol, arrows: [], nextArrowId: 1, variables, attachments, ringClosures }))
+      return sizeText(librarySize({ molecule, arrows: [], nextArrowId: 1, variables, attachments, ringClosures, brackets }))
     } catch {
       return null
     }
-  }, [mol, variables, attachments, ringClosures])
+  }, [molecule, variables, attachments, ringClosures, brackets])
   if (!text) return null
   return (
     <div className="px-0.5 text-[11px] leading-snug text-[#555]" data-testid="library-size">

@@ -16,7 +16,9 @@ test("a structure without variables asks for some", () => {
   assert.equal(emptyReason({ ...benzene, variables: {}, attachments: [] })?.title, "这个结构还没有变量")
 })
 
-test("a variable, or a variable attachment, is enough to generate", () => {
+test("a variable, a variable attachment or a repeat unit is enough to generate", () => {
   assert.equal(emptyReason({ ...benzene, variables: { R1: { alternatives: [label("Cl")] } } }), null)
   assert.equal(emptyReason({ ...benzene, attachments: [{}] } as unknown as Drawing), null)
+  assert.equal(emptyReason({ ...benzene, brackets: [{ id: 1, atoms: [1], kind: "group" }] })?.title, "这个结构还没有变量", "a group bracket alone generates nothing")
+  assert.equal(emptyReason({ ...benzene, brackets: [{ id: 1, atoms: [1], kind: "repeat", repeat: { min: 1, max: 3, name: "n" } }] }), null)
 })

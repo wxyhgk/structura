@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { Drawing } from "@structura/core/types"
 import type { Run } from "@structura/engine"
+import { repeatSkipText } from "../describe.ts"
 import { LibrarySizeLine } from "../LibrarySizeLine.tsx"
 import type { FormulaFacts } from "./formulaFacts.ts"
 import { widerSystem } from "./widerSystem.ts"
@@ -19,6 +20,9 @@ export function OverviewTab({ drawing, facts, run }: { drawing: Drawing; facts: 
       ? [{ id: "undefined", text: `${facts.undefinedNames.length} 个变量未定义`, detail: `${facts.undefinedNames.join("、")} 还没有候选项，在右侧变量里添加。` }]
       : []),
     ...(facts.unused.length > 0 ? [{ id: "unused", text: `${facts.unused.length} 个变量不在结构上`, detail: `${facts.unused.join("、")} 定义了，但结构上没有用到，生成时不参与。` }] : []),
+    ...(facts.skippedRepeats.length > 0
+      ? [{ id: "repeats", text: `${facts.skippedRepeats.length} 个重复单元展不开`, detail: facts.skippedRepeats.map(repeatSkipText).join("") }]
+      : []),
   ]
   const widenable = (drawing.attachments ?? []).flatMap((attachment) => {
     const system = widerSystem(mol, attachment)
@@ -29,8 +33,8 @@ export function OverviewTab({ drawing, facts, run }: { drawing: Drawing; facts: 
   return (
     <div className="space-y-2 px-3 py-2.5 text-[12px] text-[#333]" data-testid="constraints-overview">
       <div>
-        <LibrarySizeLine mol={mol} variables={drawing.variables} attachments={drawing.attachments} ringClosures={drawing.ringClosures} />
-        {facts.defined.length === 0 && <span className="text-[#888]">还没有定义任何变量的候选项</span>}
+        <LibrarySizeLine drawing={drawing} />
+        {facts.defined.length === 0 && facts.repeats.length === 0 && <span className="text-[#888]">还没有定义任何变量的候选项</span>}
       </div>
       <div className="flex items-center gap-3 text-[#555]" data-testid="variable-counts">
         <span>
@@ -43,6 +47,14 @@ export function OverviewTab({ drawing, facts, run }: { drawing: Drawing; facts: 
         <span>
           未定义 <b className={`font-medium ${facts.undefinedNames.length > 0 ? "text-[#c5221f]" : "text-[#222]"}`}>{facts.undefinedNames.length}</b>
         </span>
+        {facts.repeats.length > 0 && (
+          <>
+            <span className="text-[#ccc]">|</span>
+            <span data-testid="repeat-counts">
+              重复单元 <b className="font-medium text-[#222]">{facts.repeats.length}</b> 个（<i>{facts.repeats.join("，")}</i>）
+            </span>
+          </>
+        )}
       </div>
       {warnings.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">

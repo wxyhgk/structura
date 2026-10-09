@@ -11,8 +11,9 @@ import type { WorkspaceProps } from "./types.ts"
 
 /**
  * The formula-level settings under its canvas, kept compact so the canvas keeps the height:
- * an overview, the provisos, the ring closures and the variable positions, one tab at a time.
- * Folds down to its tab strip; which tab and whether it is open are remembered.
+ * an overview, the provisos, the ring closures and the positions (variable attachments and
+ * brackets), one tab at a time. Folds down to its tab strip; which tab and whether it is
+ * open are remembered.
  */
 export function ConstraintsPane({ drawing, run }: WorkspaceProps) {
   const { open, tab, setOpen, setTab } = usePaneMemory()
@@ -25,7 +26,7 @@ export function ConstraintsPane({ drawing, run }: WorkspaceProps) {
     { id: "overview", label: "概览" },
     { id: "provisos", label: "附加条件", count: provisos.length },
     { id: "closures", label: "成环", count: closures.length },
-    { id: "positions", label: "位置", count: attachments.length },
+    { id: "positions", label: "位置", count: attachments.length + (drawing.brackets?.length ?? 0) },
   ]
   const folded = facts.names.length > 0 && `变量 ${facts.defined.length}/${facts.names.length} 已定义`
 

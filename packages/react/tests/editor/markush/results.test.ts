@@ -20,6 +20,7 @@ test("what the variables became reads briefly, each name once", () => {
   assert.equal(picksText(picks("Cl", "#2, #4")), "R1 在 #2、#4，R1 = Cl")
   assert.equal(picksText([...picks("Cl", "#2, #4"), { name: "R1", choice: { kind: "label", text: "F" } }]), "R1 在 #2、#4，R1 = Cl、F")
   assert.equal(picksText([{ name: "R1", position: "none" }]), "R1 不出现")
+  assert.equal(picksText([{ name: "n", count: 3 }, ...picks("Cl", "#2")]), "R1 在 #2，n = 3，R1 = Cl", "a repeat unit's count reads like a variable")
 })
 
 test("the filter keeps rows whose formula or picks hold every word", () => {

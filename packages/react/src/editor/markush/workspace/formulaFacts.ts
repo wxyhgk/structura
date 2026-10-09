@@ -1,4 +1,4 @@
-import { alternativesOf, nestedVariables, variableLabels } from "@structura/markush"
+import { alternativesOf, nestedVariables, repeatSkips, type RepeatSkip, variableLabels } from "@structura/markush"
 import type { Drawing } from "@structura/core/types"
 
 /** What the constraints pane says about the formula's variables at a glance. */
@@ -11,6 +11,10 @@ export type FormulaFacts = {
   undefinedNames: string[]
   /** Variables defined but neither on the drawing nor inside another variable's pieces. */
   unused: string[]
+  /** The repeat units [ … ]n, by their count's name and range ("n = 1–4"). */
+  repeats: string[]
+  /** Repeat units that cannot be written out when generating. */
+  skippedRepeats: RepeatSkip[]
 }
 
 /** The facts the overview shows, from the drawing as it stands. */
@@ -23,5 +27,6 @@ export function formulaFacts(drawing: Drawing): FormulaFacts {
   const defined = names.filter((name) => alternativesOf(variables, name).length > 0)
   const undefinedNames = names.filter((name) => !defined.includes(name) && (onDrawing.includes(name) || nested.has(name)))
   const unused = listed.filter((name) => !onDrawing.includes(name) && !nested.has(name))
-  return { names, defined, undefinedNames, unused }
+  const repeats = (drawing.brackets ?? []).flatMap((bracket) => (bracket.kind === "repeat" && bracket.repeat ? [`${bracket.repeat.name} = ${bracket.repeat.min}–${bracket.repeat.max}`] : []))
+  return { names, defined, undefinedNames, unused, repeats, skippedRepeats: repeatSkips(drawing) }
 }

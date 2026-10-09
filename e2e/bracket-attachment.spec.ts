@@ -54,7 +54,8 @@ test("a bond dragged from an outside atom into a group bracket attaches anywhere
   // In the 通式 workspace: listed under the bracket, counted at every atom, the two fusion carbons skipped.
   await page.getByRole("tab", { name: "通式" }).click()
   await constraintTab(page, "位置").click()
-  await expect(page.getByTestId("group-bracket-row")).toContainText("连在括号里任一位置")
+  await expect(page.getByTestId("group-bracket-row")).toContainText("连在括号里任一位置（8 个可接位置之一）")
+  await expect(page.getByTestId("attachment-row")).toContainText("连在方括号里的基团上，8 个可接位置之一")
   await expect(page.getByTestId("attachment-row").getByRole("radio", { name: "括号" })).toBeVisible()
   await constraintTab(page, "概览").click()
   await expect(page.getByTestId("library-size")).toContainText("可展开为 8 种组合")

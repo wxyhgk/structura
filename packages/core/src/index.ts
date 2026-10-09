@@ -15,4 +15,4 @@ export { displayFormula, molecularWeight, plainFormula } from "./formula.ts"
 export { ELECTRON, elementalAnalysis, exactMass, netCharge } from "./analysis.ts"
 export { sceneToSvg } from "./draw.ts"
 // Whether text typed on an atom is an element or a known abbreviation (so not a variable).
-export { knownLabel } from "./label.ts"
+export { knownLabel } from "./label/known.ts"

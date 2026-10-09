@@ -150,7 +150,7 @@ export type Alternative =
       alsoAt?: number[]
     }
 
-/** The divalent rings a linker can be (see markush/bridges.ts for how each is built). */
+/** The divalent rings a linker can be (see markush/joinBridge.ts for how each is built). */
 export type BridgeName = "p-phenylene" | "m-phenylene" | "4,4'-biphenylene" | "2,5-pyridinediyl"
 
 /** One concrete thing a placeholder can become: an alternative that is not a class. */

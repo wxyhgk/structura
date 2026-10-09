@@ -1,4 +1,4 @@
-import { knownLabel } from "../label.ts"
+import { knownLabel } from "../label/known.ts"
 import { BRIDGES } from "./bridges.ts"
 import { alsoAtProblem, fragmentProblemText, fragmentVariables } from "./fragments.ts"
 import { isVariableName } from "./names.ts"

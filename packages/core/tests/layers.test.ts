@@ -83,6 +83,14 @@ test("chemistry, file exchange and history do not reach layout even through a ba
   assert.deepEqual(leaks, [])
 })
 
+test("the document model does not reach layout or rendering even through a barrel", () => {
+  const pure = ["document.ts", "markush/names.ts", "markush/variables.ts", "markush/provisos.ts", "markush/closures.ts", "markush/attachments.ts", "markush/fragments.ts", "markush/bridges.ts", "label/known.ts"]
+  const leaks = pure.flatMap((file) =>
+    [...reachable(file)].filter((target) => isLayout(target) || isDraw(target) || target === "markush/templates.ts").map((target) => `${file} ⇒ ${target}`),
+  )
+  assert.deepEqual(leaks, [])
+})
+
 test("rendering does not reach layout even through a barrel", () => {
   const leaks = imports
     .filter(({ file }) => isDraw(file))

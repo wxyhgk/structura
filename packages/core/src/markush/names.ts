@@ -1,4 +1,4 @@
-import { knownLabel } from "../label.ts"
+import { knownLabel } from "../label/known.ts"
 
 /**
  * How a variable's label may look: R, R1, R', X, L, Ar, Ar1, ETU… A short name starting with a

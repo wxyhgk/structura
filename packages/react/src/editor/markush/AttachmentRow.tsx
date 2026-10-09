@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react"
-import { type Attachment, type Repeat, ringSystemPositions } from "@structura/markush"
+import type { Attachment, Repeat } from "@structura/markush"
 import type { Molecule } from "@structura/core/types"
 import type { Run } from "@structura/engine"
+import { widerSystem } from "./workspace/widerSystem.ts"
 
 const FIELD = "h-6 rounded border border-[#d0d0d0] bg-white px-1 text-center text-[12px] outline-none focus:border-[#1a73e8]"
 
 /**
- * One variable point of attachment in the panel: which piece, how many positions, and how
+ * One variable point of attachment in the 位置 tab: which piece, how many positions, and how
  * many times it appears, "(R1)m, m = 0–4". Once by default; the count is ticked on here.
  */
 export function AttachmentRow({ attachment, mol, run }: { attachment: Attachment; mol: Molecule; run: Run }) {
@@ -15,10 +16,7 @@ export function AttachmentRow({ attachment, mol, run }: { attachment: Attachment
   const positions = attachment.to.length
   const repeat = attachment.repeat
   /** The whole fused system's free positions, when it is wider than the ring drawn into (carbazole from one benzo ring). */
-  const system = useMemo(() => {
-    const all = ringSystemPositions(mol, attachment.to)
-    return all && all.length > positions && attachment.to.every((id) => all.includes(id)) ? all : null
-  }, [mol, attachment.to, positions])
+  const system = useMemo(() => widerSystem(mol, attachment), [mol, attachment])
   /** What is being typed, until it makes a valid count. */
   const [draft, setDraft] = useState<{ min: string; max: string; name: string } | null>(null)
   const [problem, setProblem] = useState<string | null>(null)

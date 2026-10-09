@@ -40,7 +40,7 @@ export function ConstraintsPane({ drawing, run }: WorkspaceProps) {
               <Empty>先在右侧定义变量，再在这里排除某些组合或化合物。</Empty>
             ) : (
               <div className="max-w-[640px]">
-                <ProvisosSection provisos={drawing.provisos} variables={drawing.variables} run={run} heading={false} />
+                <ProvisosSection provisos={drawing.provisos} variables={drawing.variables} run={run} />
               </div>
             ))}
           {tab === "closures" &&
@@ -48,7 +48,7 @@ export function ConstraintsPane({ drawing, run }: WorkspaceProps) {
               <Empty>至少定义两个变量后，才能设置“两个变量一起成环”。</Empty>
             ) : (
               <div className="max-w-[640px]">
-                <ClosuresSection closures={drawing.ringClosures} variables={drawing.variables} run={run} heading={false} />
+                <ClosuresSection closures={drawing.ringClosures} variables={drawing.variables} run={run} />
               </div>
             ))}
           {tab === "positions" && <PositionsTab drawing={drawing} run={run} />}

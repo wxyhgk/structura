@@ -3,7 +3,7 @@ import type { GuideTopic } from "../../guide/index.ts"
 import type { Report } from "../analysis/report.ts"
 
 /** The dialogs that are simply open or shut. */
-export type DialogName = "smiles" | "enumerate" | "fill" | "recognize" | "help"
+export type DialogName = "smiles" | "fill" | "recognize" | "help"
 
 /** Which of the editor's dialogs are open: the plain ones, the guide's page, and the analysis report shown. */
 export type DialogsState = Record<DialogName, boolean> & { guide: GuideTopic | null; report: Report | null }
@@ -14,7 +14,7 @@ type Action =
   | { type: "report"; report: Report | null }
   | { type: "shortcuts" }
 
-const closed: DialogsState = { smiles: false, enumerate: false, fill: false, recognize: false, help: false, guide: null, report: null }
+const closed: DialogsState = { smiles: false, fill: false, recognize: false, help: false, guide: null, report: null }
 
 function reduce(state: DialogsState, action: Action): DialogsState {
   switch (action.type) {
@@ -32,7 +32,7 @@ function reduce(state: DialogsState, action: Action): DialogsState {
 
 /**
  * The editor's dialogs and overlays in one place: which are open, and the calls that open
- * and close them, the same for the menus, the commands and the panels.
+ * and close them, the same for the menus, the commands and the 通式 workspace.
  */
 export function useEditorDialogs() {
   const [state, dispatch] = useReducer(reduce, closed)

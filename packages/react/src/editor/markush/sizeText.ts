@@ -10,7 +10,7 @@ export function countText(count: number): string {
 }
 
 /**
- * The library's size for the variables panel, before anything is generated: the headline,
+ * The library's size for the 概览 tab, before anything is generated: the headline,
  * and what it leaves out (classes stand in by typical members, so the real scope is wider).
  */
 export function sizeText(size: LibrarySize): { headline: string; notes: string[] } {

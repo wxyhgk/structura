@@ -14,6 +14,9 @@ const same = (a: Choice, b: Choice) => JSON.stringify(a) === JSON.stringify(b)
 /** How deep pieces may sit inside pieces (Ar = N–R5, R5 = …) before the rest is left out. */
 const NESTING = 4
 
+/** The name of a piece joined by its `index`-th joining atom (0-based): "C₅H₄N（位点 2）". */
+export const joiningSiteName = (base: string, index: number): string => `${base}（位点 ${index + 1}）`
+
 /**
  * Whether a choice can go where a placeholder sits. A branch end takes a group or an atom
  * (never a bond or a divalent ring); a ring position takes an element; a linker takes a
@@ -86,13 +89,13 @@ export function choiceResolver(variables: Record<string, Variable>, representati
   }
   /**
    * A piece that may join by several of its atoms, as one choice per joining atom, each named
-   * by its site ("C₅H₄N（位点 2）") so the compounds made from them can be told apart.
+   * by its site (see joiningSiteName) so the compounds made from them can be told apart.
    */
   function joinings(piece: Extract<Choice, { kind: "fragment" }>): Choice[] {
     const { alsoAt, ...plain } = piece
     if (!alsoAt?.length) return [plain]
     const base = piece.name ?? fragmentFormula(piece.molecule)
-    return fragmentVersions(piece.molecule, alsoAt).map((molecule, index) => ({ kind: "fragment", molecule, name: `${base}（位点 ${index + 1}）` }))
+    return fragmentVersions(piece.molecule, alsoAt).map((molecule, index) => ({ kind: "fragment", molecule, name: joiningSiteName(base, index) }))
   }
   /** Every concrete version of a piece, its inner placeholders filled with the choices that fit them. */
   function filled(piece: Extract<Choice, { kind: "fragment" }>, stack: string[]): Choice[] {

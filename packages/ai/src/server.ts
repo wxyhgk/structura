@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http"
+import { readJsonBody } from "./body.ts"
 import { MAX_TEXT, requestProblem } from "./check.ts"
 import { providerFrom, type AiEnv } from "./provider.ts"
 import { structureHandler } from "./structure/handler.ts"
@@ -12,16 +13,6 @@ export { askOpenAI, OPENAI_MODEL } from "./openai.ts"
 export { providerFrom, type AiEnv, type Provider } from "./provider.ts"
 export { structureHandler } from "./structure/handler.ts"
 export { FILL_PATH, STRUCTURE_PATH }
-
-async function body(req: IncomingMessage): Promise<string> {
-  let text = ""
-  for await (const chunk of req) {
-    text += chunk
-    // The text limit plus room for the variables and JSON escaping.
-    if (text.length > MAX_TEXT * 4) throw new Error("请求太大")
-  }
-  return text
-}
 
 function send(res: ServerResponse, status: number, result: FillResult) {
   res.statusCode = status
@@ -38,12 +29,10 @@ export function fillHandler(env: AiEnv = process.env) {
   const provider = providerFrom(env)
   return async (req: IncomingMessage, res: ServerResponse) => {
     if (req.method !== "POST") return send(res, 405, { ok: false, error: "只接受 POST" })
-    let request: unknown
-    try {
-      request = JSON.parse(await body(req))
-    } catch (error) {
-      return send(res, 400, { ok: false, error: error instanceof Error && error.message === "请求太大" ? "请求太大" : "请求不是有效的 JSON" })
-    }
+    // The text limit plus room for the variables and JSON escaping.
+    const read = await readJsonBody(req, MAX_TEXT * 4)
+    if ("error" in read) return send(res, 400, { ok: false, error: read.error })
+    const request = read.value
     const problem = requestProblem(request)
     if (problem) return send(res, 400, { ok: false, error: problem })
     if ("error" in provider) return send(res, 503, { ok: false, error: provider.error })

@@ -1,17 +1,18 @@
 import { usableRecords } from "@structura/core/import"
 import { readSdf } from "@structura/core/sdf"
 import { readDocument } from "@structura/core/document"
-import type { Drawing, Molecule } from "@structura/core/types"
+import type { Bracket, Drawing, Molecule } from "@structura/core/types"
 import { importNotes } from "./notes.ts"
 
 /**
- * The molecules in molfile or SD text that the editor can hold, and one line per problem
- * for the user. Throws only when the text cannot be read at all.
+ * The molecules in molfile or SD text that the editor can hold (with each one's brackets,
+ * from its Sgroups), and one line per problem for the user. Throws only when the text
+ * cannot be read at all.
  */
-export function readMolText(text: string): { molecules: Molecule[]; lines: string[] } {
+export function readMolText(text: string): { molecules: Molecule[]; brackets: Array<Bracket[] | undefined>; lines: string[] } {
   const records = readSdf(text)
   const imported = usableRecords(records)
-  return { molecules: imported.molecules, lines: importNotes(records, imported.problems) }
+  return { molecules: imported.molecules, brackets: imported.brackets, lines: importNotes(records, imported.problems) }
 }
 
 /** Molecules to start the editor with; text that cannot be read starts it empty. */

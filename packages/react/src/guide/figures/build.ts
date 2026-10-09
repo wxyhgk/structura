@@ -19,7 +19,7 @@ export function build(ops: Op[], from: Drawing = emptyDrawing()): Drawing {
  * card the page puts it on.
  */
 export function figureSvg(drawing: Drawing): string {
-  return sceneToSvg(drawing.molecule, true, drawing.arrows, drawing.attachments).replace(/<rect [^>]*fill="#ffffff"\s*\/>\n?/, "")
+  return sceneToSvg(drawing.molecule, true, drawing.arrows, drawing.attachments, {}, { brackets: drawing.brackets }).replace(/<rect [^>]*fill="#ffffff"\s*\/>\n?/, "")
 }
 
 /** Built the first time it is shown, then kept: the pictures never change. */

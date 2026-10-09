@@ -4,6 +4,7 @@ import { plainFormula } from "@structura/core/formula"
 import { figureSvg } from "../../src/guide/figures/build.ts"
 import * as drawing from "../../src/guide/figures/drawing.ts"
 import * as markush from "../../src/guide/figures/markush.ts"
+import * as brackets from "../../src/guide/figures/brackets.ts"
 import { hotkeyOps } from "@structura/engine"
 import type { PressKey } from "../../src/guide/types.ts"
 
@@ -28,4 +29,12 @@ test("every guide figure is built by the real ops, and shows what it says", () =
   const { carbazolyl, naphthylene, nR5 } = figures.pieces()
   for (const [piece, stars] of [[carbazolyl, 1], [naphthylene, 2], [nR5, 2]] as const) assert.equal(piece.molecule.atoms.filter((atom) => atom.alias === "*").length, stars)
   assert.equal(figures.expanded().length, 4)
+})
+
+test("the brackets page's figures carry their brackets into the picture", () => {
+  assert.deepEqual(brackets.groupBracket().brackets?.map((bracket) => bracket.kind), ["group"])
+  assert.equal(brackets.repeatBracket().brackets?.[0].repeat?.name, "n")
+  assert.equal(brackets.longerRepeat().brackets?.[0].repeat?.name, "m")
+  assert.deepEqual(brackets.labelledBracket().brackets?.[0].atoms, [7, 8])
+  assert.match(figureSvg(brackets.repeatBracket()), /font-style="italic"[^>]*>n</)
 })

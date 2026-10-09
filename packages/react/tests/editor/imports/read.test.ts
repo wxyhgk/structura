@@ -24,6 +24,13 @@ test("molfile text reads into molecules the editor can hold", () => {
   assert.deepEqual(lines, [])
 })
 
+test("a molfile's repeat unit comes in as a bracket on its molecule", () => {
+  const { molecules, brackets, lines } = readMolText(ETHANOL.replace("M  END", "M  STY  1   1 SRU\nM  SAL   1  1   2\nM  SMT   1 n\nM  END"))
+  assert.equal(molecules.length, 1)
+  assert.deepEqual(brackets, [[{ id: 1, atoms: [2], kind: "repeat", repeat: { min: 1, max: 4, name: "n" } }]])
+  assert.deepEqual(lines, [])
+})
+
 test("the starting document is empty for missing, blank or unreadable text", () => {
   assert.deepEqual(initialMolecules(undefined), [])
   assert.deepEqual(initialMolecules("  \n"), [])

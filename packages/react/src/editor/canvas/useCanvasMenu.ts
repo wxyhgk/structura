@@ -19,7 +19,7 @@ export function useCanvasMenu({
   flash,
   showReport,
 }: {
-  editor: Pick<EditorState, "mol" | "selection" | "setSelection">
+  editor: Pick<EditorState, "mol" | "selection" | "setSelection" | "brackets">
   /** The molecule as the canvas shows it, which is what a right-click lands on. */
   shownMol: Molecule
   canvas: RefObject<CanvasHandle | null>
@@ -28,7 +28,7 @@ export function useCanvasMenu({
 }) {
   const [target, setTarget] = useState<ContextTarget | null>(null)
   /** The atoms the menu's copying and analysis act on. */
-  const atoms = () => contextAtoms(editor.mol, editor.selection, target)
+  const atoms = () => contextAtoms(editor.mol, editor.selection, target, editor.brackets)
 
   async function copyAs(kind: IdentifierKind) {
     try {
@@ -42,9 +42,13 @@ export function useCanvasMenu({
 
   return {
     target,
-    onContextMenu: (event: MouseEvent) => setTarget(contextTarget(shownMol, editor.selection, canvas.current?.targetAt(event.clientX, event.clientY) ?? null)),
+    onContextMenu: (event: MouseEvent) => {
+      const at = canvas.current
+      setTarget(contextTarget(shownMol, editor.selection, at?.targetAt(event.clientX, event.clientY) ?? null, at?.bracketAt(event.clientX, event.clientY) ?? null))
+    },
     copyAs: (kind: IdentifierKind) => void copyAs(kind),
     analyze: () => showReport(reportFor(editor.mol, atoms())),
     selectMolecule: (atom: number) => editor.setSelection(selectionFromAtoms(editor.mol, componentOf(editor.mol, atom))),
+    selectAtoms: (atoms: number[]) => editor.setSelection(selectionFromAtoms(editor.mol, atoms)),
   }
 }

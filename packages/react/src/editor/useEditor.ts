@@ -24,6 +24,8 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
     drawing,
     variables: drawing.variables,
     attachments: drawing.attachments,
+    /** Square brackets round parts of the structure. */
+    brackets: drawing.brackets,
     tool: snapshot.tool,
     bondStyle: snapshot.bondStyle,
     ringKind: snapshot.ringKind,

@@ -5,9 +5,9 @@ export type CanvasSource = Pick<EditorSlice, "arrows" | "tool" | "bondStyle" | "
 
 /**
  * A canvas's props: the editor's state and actions, with what this canvas shows on its own
- * (the molecule as drawn, how labels are written, attachments) and its view.
+ * (the molecule as drawn, how labels are written, attachments, brackets) and its view.
  */
-export function canvasSlice(source: CanvasSource, shown: Pick<EditorSlice, "mol" | "drawOptions" | "attachments" | "viewport">): EditorSlice {
+export function canvasSlice(source: CanvasSource, shown: Pick<EditorSlice, "mol" | "drawOptions" | "attachments" | "brackets" | "viewport">): EditorSlice {
   return {
     arrows: source.arrows,
     tool: source.tool,

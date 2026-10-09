@@ -1,6 +1,7 @@
 import type { ContextTarget, Command } from "@structura/engine"
 import type { Op } from "@structura/core/ops"
 import type { Attachment } from "@structura/markush"
+import type { Bracket } from "@structura/core/types"
 import {
   ContextMenuContent,
   ContextMenuItem,
@@ -14,6 +15,7 @@ import type { Commands } from "../hooks/useCommands.ts"
 import { IDENTIFIER_NAMES, type IdentifierKind } from "../identifiers.ts"
 import { useOverlayMark } from "../input/overlays.ts"
 import { AttachmentShapeMenu } from "../markush/AttachmentShapeMenu.tsx"
+import { BracketMenuItems } from "./BracketMenuItems.tsx"
 
 /** Elements offered on an atom's menu, the ones drawn most. */
 const ELEMENTS = ["C", "N", "O", "S", "P", "F", "Cl", "Br", "I", "H", "B", "Si"]
@@ -48,10 +50,10 @@ function Identify({ onCopyAs, onAnalyze }: { onCopyAs: (kind: IdentifierKind) =>
 
 /**
  * The canvas's right-click menu, by what was clicked: the selection (edit, transform,
- * structure), one atom (element, charge, label), one bond (order, wedge), or empty canvas
- * (paste, select all). Copying as SMILES and the analysis act on the selection, or on the
- * whole molecule of the atom or bond clicked. An atom with a variable attachment also offers
- * how that is drawn.
+ * structure), one atom (element, charge, label), one bond (order, wedge), a bracket (group
+ * or repeat unit, its count), or empty canvas (paste, select all). Copying as SMILES and the
+ * analysis act on the selection, or on the whole molecule of the atom or bond clicked. An
+ * atom with a variable attachment also offers how that is drawn.
  */
 export function CanvasMenu({
   target,
@@ -62,11 +64,19 @@ export function CanvasMenu({
   onSelectMolecule,
   onCopyAs,
   onAnalyze,
+  brackets,
+  onBracketCount,
+  onSelectAtoms,
 }: {
   target: ContextTarget | null
   attachments?: Attachment[]
   commands: Commands
   run: (ops: Op[]) => void
+  /** The drawing's brackets, for a bracket's menu. */
+  brackets?: Bracket[]
+  /** Opens 重复次数 for this bracket. */
+  onBracketCount: (id: number) => void
+  onSelectAtoms: (atoms: number[]) => void
   onEditLabel: (atom: number) => void
   onSelectMolecule: (atom: number) => void
   onCopyAs: (kind: IdentifierKind) => void
@@ -75,6 +85,7 @@ export function CanvasMenu({
   const overlayMark = useOverlayMark()
   if (!target) return null
   const attachment = target.kind === "atom" ? attachments?.find((item) => item.atom === target.id) : undefined
+  const bracket = target.kind === "bracket" ? brackets?.find((item) => item.id === target.id) : undefined
   return (
     <ContextMenuContent {...overlayMark} data-testid="canvas-menu">
       {target.kind === "selection" && (
@@ -98,6 +109,7 @@ export function CanvasMenu({
           <Item command={c.clean} />
           <Item command={c.join} />
           <Item command={c.replace} />
+          <Item command={c.bracket} />
           {c.expandGroups.enabled && <Item command={c.expandGroups} />}
           {c.collapseGroups.enabled && <Item command={c.collapseGroups} />}
           <ContextMenuSeparator />
@@ -172,6 +184,7 @@ export function CanvasMenu({
           <ContextMenuItem onSelect={() => run([{ op: "remove", bonds: [target.id] }])}>删除这根键</ContextMenuItem>
         </>
       )}
+      {bracket && <BracketMenuItems bracket={bracket} run={run} onCount={onBracketCount} onSelect={onSelectAtoms} />}
       {target.kind === "canvas" && (
         <>
           <Item command={c.paste} />

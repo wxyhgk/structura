@@ -4,6 +4,7 @@ import { TooltipProvider } from "../components/ui/tooltip.tsx"
 import { ContextMenu, ContextMenuTrigger } from "../components/ui/context-menu.tsx"
 import { AnalysisDialog } from "./analysis/AnalysisDialog.tsx"
 import { writeClipboard } from "./browser.ts"
+import { BracketCountDialog } from "./canvas/BracketCountDialog.tsx"
 import { CanvasMenu } from "./canvas/CanvasMenu.tsx"
 import { canvasSlice } from "./canvas/slice.ts"
 import { useCanvasMenu } from "./canvas/useCanvasMenu.ts"
@@ -116,6 +117,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const padSlot = useMemo<PadSlot>(() => ({ claim: claimPalette, colorHetero: editor.colorHetero, drawOptions: labelStyle }), [claimPalette, editor.colorHetero, labelStyle])
   const setRaisedNumbers = useRememberedSetting(RAISED_NUMBERS, editor.raisedNumbers, editor.setRaisedNumbers)
   const { message, flash } = useFlash()
+  /** The bracket whose 重复次数 dialog is open. */
+  const [countFor, setCountFor] = useState<number | null>(null)
   const menu = useCanvasMenu({ editor, shownMol, canvas: canvasRef, flash, showReport: dialogs.showReport })
   const file = useDocumentFile(editor.drawing, editor.latest, onDirtyChange)
   /** Opens a file and, if it opened, remembers it as this document's file. */
@@ -141,7 +144,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             <ContextMenu>
               <ContextMenuTrigger asChild>
                 <div className="flex min-h-0 min-w-0 flex-1" onContextMenu={menu.onContextMenu}>
-                <Canvas ref={canvasRef} {...canvasSlice(editor, { mol: shownMol, drawOptions: labelStyle, attachments: editor.attachments, viewport })} />
+                <Canvas ref={canvasRef} {...canvasSlice(editor, { mol: shownMol, drawOptions: labelStyle, attachments: editor.attachments, brackets: editor.brackets, viewport })} />
                 </div>
               </ContextMenuTrigger>
               <CanvasMenu
@@ -153,6 +156,9 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
                 onSelectMolecule={menu.selectMolecule}
                 onCopyAs={menu.copyAs}
                 onAnalyze={menu.analyze}
+                brackets={editor.brackets}
+                onBracketCount={setCountFor}
+                onSelectAtoms={menu.selectAtoms}
               />
             </ContextMenu>
   )
@@ -242,6 +248,11 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               onImport={imports.importSmiles}
               onNotes={(lines) => imports.showNotes({ opened: true, lines })}
               loadFailed={imports.rdkitFailed}
+            />
+            <BracketCountDialog
+              bracket={editor.brackets?.find((bracket) => bracket.id === countFor) ?? null}
+              onSave={(id, repeat) => editor.run([{ op: "set_bracket", id, kind: "repeat", repeat }], { keepSelection: true }) != null}
+              onClose={() => setCountFor(null)}
             />
             <HelpDialog open={dialogs.help} onOpenChange={dialogs.setOpen("help")} commands={commands} />
             <EditorGuide topic={dialogs.guide} onTopic={dialogs.showGuide} openShortcuts={dialogs.guideToShortcuts} />

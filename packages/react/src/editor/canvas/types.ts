@@ -1,5 +1,5 @@
 import type { DrawOptions } from "@structura/core/draw"
-import type { Arrow, BondStyle, Drawing, Molecule, RingKind, Selection } from "@structura/core/types"
+import type { Arrow, BondStyle, Bracket, Drawing, Molecule, RingKind, Selection } from "@structura/core/types"
 import type { Attachment } from "@structura/markush"
 import type { HoverTarget, Run, ScaffoldPick, ToolId, Viewport } from "@structura/engine"
 
@@ -20,6 +20,8 @@ export type CanvasHandle = {
   editLabel: (id: number) => void
   /** The atom or bond at a point on the screen (client coordinates), as shown; null for empty canvas. */
   targetAt: (clientX: number, clientY: number) => HoverTarget
+  /** The id of the bracket whose stroke is at a point on the screen (client coordinates), or null. */
+  bracketAt: (clientX: number, clientY: number) => number | null
   /** Opens the quick template field by the pointer, acting on what the pointer (or hotspot) is on now. */
   quickScaffold: () => void
   /** Opens a field on the fragment made of these atoms; what is typed replaces it. */
@@ -40,6 +42,8 @@ export type EditorSlice = {
   drawOptions: DrawOptions
   /** The generic formula's variable points of attachment, drawn as lines into rings. */
   attachments?: Attachment[]
+  /** Square brackets round parts of the structure, drawn from their atoms. */
+  brackets?: Bracket[]
   /** Applies ops to the latest drawing and commits them; see useEditor. */
   run: Run
   /** The drawing as of the last edit, ahead of the re-render when keys come fast. */

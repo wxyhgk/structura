@@ -7,6 +7,7 @@ export type Doc = {
   molecule: { atoms: Atom[]; bonds: Array<{ a: number; b: number }> }
   attachments?: Array<{ atom: number; to: number[]; repeat?: { min: number; max: number; name: string }; shape?: "line" | "loop" | "arc" }>
   variables?: Record<string, unknown>
+  brackets?: Array<{ id: number; atoms: number[]; kind: string; repeat?: { min: number; max: number; name: string } }>
 }
 type Handle = { getDocument(): string; setDocument(text: string): string[] }
 

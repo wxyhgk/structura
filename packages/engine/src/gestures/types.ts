@@ -1,4 +1,4 @@
-import type { BondStyle, Molecule, Point, RingKind, Selection } from "@structura/core/types"
+import type { BondStyle, Bracket, Molecule, Point, RingKind, Selection } from "@structura/core/types"
 import type { Run } from "../ops/builders.ts"
 import type { FrameHandle } from "../pointer/targeting.ts"
 import type { HoverTarget } from "../pointer/types.ts"
@@ -37,6 +37,8 @@ export type GestureContext = {
   scaffold: ScaffoldPick
   atomEl: string
   selection: Selection
+  /** The drawing's brackets: pressing one's stroke with a select tool selects (and drags) its atoms. */
+  brackets?: readonly Bracket[]
   run: Run
   setSelection: (selection: Selection) => void
 }

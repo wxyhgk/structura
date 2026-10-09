@@ -1,11 +1,12 @@
 import { memo, useMemo } from "react"
 import { bondFigures, buildScene, type AtomLabel, type Figure, type DrawOptions } from "@structura/core/draw"
 import { atomById } from "@structura/core/molecule"
-import type { Arrow, Molecule, Selection } from "@structura/core/types"
+import type { Arrow, Bracket, Molecule, Selection } from "@structura/core/types"
 import type { Attachment } from "@structura/markush"
 import { type RingHintShape, selectionFrame, type ToolId } from "@structura/engine"
 import { AttachmentLines } from "../markush/AttachmentLines.tsx"
 import { RingHint } from "../markush/RingHint.tsx"
+import { BracketMarks } from "./BracketMarks.tsx"
 import { atomCircle } from "./rings.ts"
 import { SelectionMarks } from "./SelectionMarks.tsx"
 import type { HoverTarget, Preview } from "./types.ts"
@@ -22,6 +23,7 @@ export function SceneView({
   drawOptions,
   showFrame,
   attachments,
+  brackets,
   ringHint,
 }: {
   mol: Molecule
@@ -37,6 +39,7 @@ export function SceneView({
   drawOptions: DrawOptions
   showFrame: boolean
   attachments?: Attachment[]
+  brackets?: Bracket[]
   /** While drawing a line into a ring (chain tool, dragging an end): where it will attach. */
   ringHint?: RingHintShape | null
 }) {
@@ -46,6 +49,7 @@ export function SceneView({
     <>
       <Figures figures={scene.figures} />
       <AttachmentLines mol={mol} attachments={attachments} labels={scene.labels} />
+      <BracketMarks mol={mol} brackets={brackets} labels={scene.labels} />
       <Arrows arrows={arrows} />
       <SelectionMarks mol={mol} selection={selection} labels={scene.labels} zoom={zoom} />
       <Labels labels={scene.labels} />

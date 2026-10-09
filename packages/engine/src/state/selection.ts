@@ -1,4 +1,5 @@
 import { atomIdsOfSelection, boundsCenter, neighbors, selectAll, selectionFromAtoms, subMolecule } from "@structura/core/molecule"
+import { bracketsWithin } from "@structura/core/drawing"
 import { toMolfile } from "@structura/core/molfile"
 import type { BondStyle, Molecule } from "@structura/core/types"
 import { selectionHotkeyOps, selectionTips } from "../hotkeys/lookup.ts"
@@ -34,10 +35,16 @@ export function selectionActions(store: EditorStore) {
       const copy = store.run([{ op: "duplicate", atoms: ids }], { keepSelection: true })
       if (copy) store.setSelection(selectionFromAtoms(copy.drawing.molecule, copy.added.atoms))
     },
-    /** The selection as molfile text for the clipboard, or null when nothing is selected. */
+    /** The selection as molfile text for the clipboard, or null when nothing is selected; brackets wholly inside go along. */
     selectionMolfile(): string | null {
       const { now, ids } = selected()
-      return ids.length > 0 ? toMolfile(subMolecule(now, ids), "Structura") : null
+      return ids.length > 0 ? toMolfile(subMolecule(now, ids), "Structura", bracketsWithin(store.latest().brackets, ids)) : null
+    },
+    /** Puts square brackets round the selected atoms, a group bracket to start with; the selection stays. */
+    bracketSelection() {
+      const { ids } = selected()
+      if (ids.length === 0) return
+      store.run([{ op: "add_bracket", atoms: ids }], { keepSelection: true })
     },
     selectEverything: () => store.setSelection(selectAll(store.latest().molecule)),
     /** An element key or palette click: selected atoms become it, else it becomes the atom tool's element. */

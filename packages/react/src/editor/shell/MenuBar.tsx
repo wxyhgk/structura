@@ -102,6 +102,7 @@ export function MenuBar({
         <Item command={c.collapseGroups} />
         <Item command={c.replace} />
         <Item command={c.join} />
+        <Item command={c.bracket} />
         <Item command={c.quickScaffold} />
         <DropdownMenuSeparator />
         <Item command={c.enumerate} />

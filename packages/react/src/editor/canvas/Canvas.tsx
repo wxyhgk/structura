@@ -3,7 +3,7 @@ import { atomById, componentOf, displayMolecule, selectionFromAtoms } from "@str
 import type { Molecule } from "@structura/core/types"
 import { AtomLabelInput } from "./AtomLabelInput.tsx"
 import { SceneView } from "./SceneView.tsx"
-import { hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type RingHintShape } from "@structura/engine"
+import { bracketAt, hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type RingHintShape } from "@structura/engine"
 import { frameHandleCursor } from "./frameHandleCursor.ts"
 import { QuickScaffold } from "./QuickScaffold.tsx"
 import type { CanvasHandle, EditorSlice, Gesture, PointerHost, Preview } from "./types.ts"
@@ -52,7 +52,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     // The molecule as of the last edit, not as of the last render: a second click or key that
     // comes before React has drawn the first one's result must act on that result.
     get props() {
-      return { ...props, mol: current() }
+      return { ...props, mol: current(), brackets: props.brackets && props.latest().brackets }
     },
     gesture,
     space,
@@ -125,6 +125,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     focusAtom: hotspot.pin,
     editLabel: (id) => void label.openLabel(id),
     targetAt: (clientX, clientY) => hitOf(current(), viewport.toWorld(clientX, clientY), viewport.get().zoom),
+    bracketAt: (clientX, clientY) => bracketAt(current(), props.latest().brackets, viewport.toWorld(clientX, clientY), viewport.get().zoom)?.id ?? null,
     quickScaffold: quick.open,
     replaceFragment: label.replaceFragment,
   }))
@@ -197,6 +198,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             drawOptions={props.drawOptions}
             showFrame={!rotating}
             attachments={props.attachments}
+            brackets={props.brackets}
           />
         </g>
       </svg>

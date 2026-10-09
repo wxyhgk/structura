@@ -1,6 +1,6 @@
 import { emptyMolecule } from "./molecule/graph.ts"
 import { readMolfile } from "./molfile/read.ts"
-import type { Molecule } from "./types.ts"
+import type { Bracket, Molecule } from "./types.ts"
 import type { Problem } from "./validate.ts"
 
 export { readMolfile }
@@ -11,6 +11,8 @@ export type MolRecord = {
   /** SDF data items, such as `> <name>`, in file order. */
   properties: Record<string, string>
   problems: Problem[]
+  /** Repeat units and groups the record's Sgroups bracket, on its atoms' ids. */
+  brackets?: Bracket[]
 }
 
 /** Reads every record of an SDF file, or a single molfile. */

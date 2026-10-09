@@ -1,10 +1,11 @@
 import type { Point } from "@structura/core/types"
+import { bracketAt } from "../pointer/brackets.ts"
 import { hitOf } from "../pointer/targeting.ts"
 import { bond, startBond } from "./bond.ts"
 import { chain, startChain } from "./chain.ts"
 import { clickTool } from "./click.ts"
 import { hover } from "./hover.ts"
-import { lasso, marquee, pressEmpty, pressOn } from "./select.ts"
+import { lasso, marquee, pressBracket, pressEmpty, pressOn } from "./select.ts"
 import { move, rotate, scale, startFrameGesture } from "./transform.ts"
 import type { Gesture, GestureKind, PointerHost, PointerInput } from "./types.ts"
 
@@ -46,6 +47,8 @@ function startPress(host: PointerHost, world: Point, event: PointerInput): Gestu
   if (tool === "lasso" || tool === "marquee") {
     const onFrame = startFrameGesture(host, world)
     if (onFrame) return onFrame
+    const bracket = hit ? null : bracketAt(mol, host.props.brackets, world, host.zoom())
+    if (bracket) return pressBracket(host, bracket.atoms, world, event.shiftKey)
   }
   if (clickTool(host, hit, world)) return null
   if (tool === "bond") return startBond(host, hit, world, event)

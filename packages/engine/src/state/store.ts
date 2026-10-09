@@ -2,7 +2,7 @@ import { emptyDrawing } from "@structura/core/drawing"
 import { emptyHistory, historyReducer, type History, type HistoryAction } from "@structura/core/history"
 import { emptySelection } from "@structura/core/molecule"
 import { applyOps, type Op } from "@structura/core/ops"
-import type { BondStyle, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
+import type { BondStyle, Bracket, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
 import type { Run, RunOptions } from "../ops/builders.ts"
 import { defaultPick } from "../tools/scaffoldPick.ts"
 import type { ScaffoldPick, ToolId } from "../tools/types.ts"
@@ -112,10 +112,10 @@ export function createEditorStore(initial: Molecule[] | Drawing = []) {
     pickScaffold: (pick: ScaffoldPick) => set({ scaffold: pick, tool: "scaffold" }),
     // Opening, importing and starting over replace or extend the document as a whole, so
     // they stay history actions rather than ops; each is still one undoable step.
-    /** Replaces the drawing with an opened file's molecules, centred on `at`. */
-    openMolecules: (molecules: Molecule[], at?: Point) => step({ type: "open", molecules, at }),
+    /** Replaces the drawing with an opened file's molecules, centred on `at`; `brackets[i]` are molecule i's. */
+    openMolecules: (molecules: Molecule[], at?: Point, brackets?: Array<Bracket[] | undefined>) => step({ type: "open", molecules, at, brackets }),
     /** Adds imported molecules beside the drawing as it is when they arrive; round `at` on an empty page. */
-    appendMolecules: (molecules: Molecule[], at?: Point) => step({ type: "append", molecules, at }),
+    appendMolecules: (molecules: Molecule[], at?: Point, brackets?: Array<Bracket[] | undefined>) => step({ type: "append", molecules, at, brackets }),
     /** Replaces the drawing with a saved Structura document, as one undoable step. */
     loadDrawing: (saved: Drawing) => step({ type: "load", drawing: saved }),
     newDocument() {

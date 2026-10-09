@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { isDocument, readDocument } from "@structura/core/document"
 import { usableRecords } from "@structura/core/import"
-import type { Molecule } from "@structura/core/types"
+import type { Bracket, Molecule } from "@structura/core/types"
 import { looksLikeSmiles, smilesLines, smilesRecords } from "@structura/rdkit"
 import { clipboardBlocked, failure, MOD, readClipboard } from "../browser.ts"
 import type { Viewport } from "@structura/engine"
@@ -24,9 +24,9 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
    * endless and the view never moves on its own: on an empty page they land in the middle
    * of what the user is looking at.
    */
-  function addBeside(molecules: Molecule[]) {
+  function addBeside(molecules: Molecule[], brackets?: Array<Bracket[] | undefined>) {
     if (molecules.length === 0) return
-    editor.appendMolecules(molecules, viewport.centre())
+    editor.appendMolecules(molecules, viewport.centre(), brackets)
   }
 
   /**
@@ -54,9 +54,9 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
       editor.loadDrawing(read.drawing)
       return { opened: true, lines: [] }
     }
-    const { molecules, lines } = readMolText(text)
+    const { molecules, brackets, lines } = readMolText(text)
     if (molecules.length === 0) return { opened: false, lines: lines.length > 0 ? lines : ["文件里没有可以读取的分子。"] }
-    editor.openMolecules(molecules, viewport.centre())
+    editor.openMolecules(molecules, viewport.centre(), brackets)
     return { opened: true, lines }
   }
 
@@ -79,8 +79,8 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
   function pasteText(text: string): boolean {
     if (/^\s*M {2}END/m.test(text)) {
       try {
-        const { molecules, lines } = readMolText(text)
-        addBeside(molecules)
+        const { molecules, brackets, lines } = readMolText(text)
+        addBeside(molecules, brackets)
         if (lines.length > 0) setNotes({ opened: molecules.length > 0, lines })
       } catch (error) {
         setNotes({ opened: false, lines: [`粘贴的内容无法读取：${failure(error)}`] })

@@ -13,7 +13,7 @@ export type RunResult = Extract<OpsResult, { ok: true }> | { ok: false; index: n
 
 /** What a host page can do with an embedded editor, through its ref. */
 export type EditorHandle = {
-  /** The drawing as molfile text (the molecule only: a generic formula's variables are not in it). */
+  /** The drawing as molfile text: the molecule and its brackets (as Sgroups); a generic formula's variables are not in it. */
   getMolfile(): string
   /**
    * Replaces the drawing with molfile or SD text as one undoable step and fits it in view;
@@ -76,7 +76,7 @@ export function useEditorHandle(
       quiet.current = false
       return
     }
-    if (last.mol !== editor.mol) onChange?.(toMolfile(editor.mol))
+    if (last.mol !== editor.mol || last.drawing.brackets !== editor.drawing.brackets) onChange?.(toMolfile(editor.mol, "Structura", editor.drawing.brackets))
     onDocumentChange?.(toDocument(editor.drawing))
   }, [editor.drawing, editor.mol, onChange, onDocumentChange])
 
@@ -88,7 +88,7 @@ export function useEditorHandle(
   })
 
   useImperativeHandle(ref, () => ({
-    getMolfile: () => toMolfile(editor.latest().molecule),
+    getMolfile: () => toMolfile(editor.latest().molecule, "Structura", editor.latest().brackets),
     setMolfile(text: string) {
       if (!text.trim()) {
         const now = editor.latest()

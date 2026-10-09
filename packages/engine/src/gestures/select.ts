@@ -68,6 +68,18 @@ export function pressOn(host: PointerHost, hit: NonNullable<ReturnType<typeof hi
   return { kind: "move", mol, ids: dragIds(mol, next, hit), origin: world }
 }
 
+/**
+ * A press on a bracket's stroke with a select tool: its atoms become the selection (Shift
+ * adds them), and dragging moves them, the bracket with them.
+ */
+export function pressBracket(host: PointerHost, atoms: readonly number[], world: Point, shift: boolean): Gesture | null {
+  const { mol, selection, setSelection } = host.props
+  const shown = atoms.filter((id) => mol.atoms.some((atom) => atom.id === id))
+  const next = selectionFromAtoms(mol, shift ? [...new Set([...selection.atoms, ...shown])] : shown)
+  setSelection(next)
+  return shift ? null : { kind: "move", mol, ids: next.atoms, origin: world }
+}
+
 /** A press on empty canvas: clears the selection (unless Shift) and starts a box or a lasso. */
 export function pressEmpty(host: PointerHost, world: Point, shift: boolean): Gesture {
   const { tool, selection, setSelection } = host.props

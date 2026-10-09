@@ -92,10 +92,10 @@ export function useCommands({
       inFields: true,
     }),
     exportSvg: command("导出 SVG", () => {
-      const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows, editor.attachments, drawOptions(editor.raisedNumbers))
+      const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows, editor.attachments, drawOptions(editor.raisedNumbers), { brackets: editor.brackets })
       if (svg) download(`${file.base}.svg`, svg, "image/svg+xml")
     }),
-    exportMol: command("导出 MOL", () => download(`${file.base}.mol`, toMolfile(editor.mol), "chemical/x-mdl-molfile")),
+    exportMol: command("导出 MOL", () => download(`${file.base}.mol`, toMolfile(editor.mol, "Structura", editor.brackets), "chemical/x-mdl-molfile")),
     undo: command("撤销", editor.undo, { keys: [{ key: "z", meta: true }], enabled: editor.canUndo }),
     redo: command("重做", editor.redo, {
       keys: [{ key: "z", meta: true, shift: true }, { key: "y", meta: true }],
@@ -140,6 +140,8 @@ export function useCommands({
       // Only a fragment joined to the rest by one bond (or a whole molecule) can be swapped.
       { keys: [{ key: "e", meta: true }], enabled: selected && bondsLeaving(editor.mol, selectedAtoms).length <= 1 },
     ),
+    // Square brackets round the selection, as part of the structure; right-click one to make it a repeat unit.
+    bracket: command("加方括号", editor.bracketSelection, { enabled: selectedAtoms.length > 0 }),
     // A field by the pointer: no single key per template, so none clashes with the hover keys.
     quickScaffold: command("快速放模板…", () => canvas.current?.quickScaffold(), { keys: [{ key: "/" }] }),
     // Two atoms (or two bonds) of two pieces selected: join the pieces there.

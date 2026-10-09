@@ -1,10 +1,12 @@
 import type { MolRecord } from "./sdf.ts"
-import type { Molecule } from "./types.ts"
+import type { Bracket, Molecule } from "./types.ts"
 import { validate, type Problem } from "./validate.ts"
 
 export type Imported = {
   /** Records that can go on the canvas. */
   molecules: Molecule[]
+  /** Each of those molecules' brackets, if its record had any (on that molecule's atom ids). */
+  brackets: Array<Bracket[] | undefined>
   /** Everything worth telling the user, each tagged with its record number. */
   problems: Problem[]
   /** How many records were left out. */
@@ -18,6 +20,7 @@ export type Imported = {
  */
 export function usableRecords(records: MolRecord[]): Imported {
   const molecules: Molecule[] = []
+  const brackets: Array<Bracket[] | undefined> = []
   const problems: Problem[] = []
   let skipped = 0
   records.forEach((record, index) => {
@@ -33,8 +36,9 @@ export function usableRecords(records: MolRecord[]): Imported {
       if (!errors) found.push({ code: "bad-molfile", severity: "error", message: "the record has no atoms" })
     } else {
       molecules.push(record.mol)
+      brackets.push(record.brackets)
     }
     problems.push(...found.map((problem) => ({ ...problem, record: number })))
   })
-  return { molecules, problems, skipped }
+  return { molecules, brackets, problems, skipped }
 }

@@ -52,6 +52,24 @@ const drawings: Array<[string, () => Drawing]> = [
       ])
     },
   ],
+  ...[true, false].map((inside): [string, () => Drawing] => [
+    `an attachment ${inside ? "inside" : "across"} a repeat unit`,
+    () => {
+      // R1–[CH2–CH2]n–CH3 with R2 at either unit carbon, R2 in the brackets or not; and (R1)m on the benzene.
+      const start = crowded()
+      const first = start.molecule.nextAtomId
+      const r2 = first + 4
+      return run(start, [
+        { op: "draw_chain", points: [{ x: 0, y: 300 }, { x: 35, y: 280 }, { x: 70, y: 300 }, { x: 105, y: 280 }] },
+        { op: "label", atom: first, text: "R1" },
+        { op: "place_atom", el: "C", at: { x: 52, y: 230 } },
+        { op: "label", atom: r2, text: "R2" },
+        { op: "add_bracket", atoms: inside ? [first + 1, first + 2, r2] : [first + 1, first + 2], kind: "repeat", repeat: { min: 0, max: 2, name: "n" } },
+        { op: "set_attachment", atom: r2, to: [first + 1, first + 2] },
+        { op: "set_variable", name: "R2", alternatives: [label("F"), label("OMe")] },
+      ])
+    },
+  ]),
   ["only classes", () => run(pair(), [{ op: "set_variable", name: "R2", alternatives: [{ kind: "class", class: "aryl", min: 6, max: 30 }] }])],
 ]
 
@@ -62,7 +80,7 @@ test("the library size is what enumerate() counts, with and without representati
       const made = enumerate(drawing(), { limit: 0, representatives })
       assert.deepEqual(
         size,
-        { combinations: made.total, represented: made.represented, classesLeftOut: made.classesLeftOut, onlyClasses: made.onlyClasses, skippedRepeats: made.skippedRepeats },
+        { combinations: made.total, represented: made.represented, classesLeftOut: made.classesLeftOut, onlyClasses: made.onlyClasses, skippedRepeats: made.skippedRepeats, straddlingAttachments: made.straddlingAttachments },
         `${what}, representatives ${representatives}`,
       )
     }

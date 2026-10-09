@@ -4,7 +4,7 @@ import { choiceResolver } from "./choices.ts"
 import { formulasOf } from "./formulas.ts"
 import { planFormulas, type Tally } from "./plans.ts"
 import { placeholders } from "./queries.ts"
-import type { RepeatSkip } from "./repeats.ts"
+import type { RepeatSkip, RepeatStraddle } from "./repeats.ts"
 
 /** How big a generic formula's library is, known before any compound is built. */
 export type LibrarySize = {
@@ -21,6 +21,8 @@ export type LibrarySize = {
   onlyClasses: string[]
   /** Repeat units that cannot be written out (not exactly two bonds through the brackets): counted once, as drawn. */
   skippedRepeats: RepeatSkip[]
+  /** Attachments across a repeat unit's brackets: made once, as drawn, not with every copy. */
+  straddlingAttachments: RepeatStraddle[]
 }
 
 /**
@@ -30,8 +32,8 @@ export type LibrarySize = {
 export function librarySize(drawing: Drawing, { representatives = true }: { representatives?: boolean } = {}): LibrarySize {
   const resolver = choiceResolver(drawing.variables ?? {}, representatives)
   for (const { name } of placeholders(drawing)) resolver.choicesFor(name)
-  const tally: Tally = { total: 0, occupied: 0, onlyClasses: [], skippedRepeats: [] }
+  const tally: Tally = { total: 0, occupied: 0, onlyClasses: [], skippedRepeats: [], straddlingAttachments: [] }
   const planning = planFormulas(drawing, formulasOf(drawing), resolver, tally)
   while (!planning.next().done);
-  return { combinations: tally.total, represented: resolver.represented, classesLeftOut: resolver.classesLeftOut, onlyClasses: tally.onlyClasses, skippedRepeats: tally.skippedRepeats }
+  return { combinations: tally.total, represented: resolver.represented, classesLeftOut: resolver.classesLeftOut, onlyClasses: tally.onlyClasses, skippedRepeats: tally.skippedRepeats, straddlingAttachments: tally.straddlingAttachments }
 }

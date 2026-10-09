@@ -3,7 +3,7 @@ import test from "node:test"
 import { plainFormula } from "@structura/core/formula"
 import type { Op } from "@structura/core/ops"
 import type { Drawing, Molecule } from "@structura/core/types"
-import { enumerate, librarySize, pickFields, repeatSkips } from "@structura/markush"
+import { enumerate, librarySize, pickFields, repeatSkips, repeatStraddles } from "@structura/markush"
 import { build, label, run } from "@structura/testkit"
 
 // Brackets in a generic formula: a group bracket an attachment goes into (no meaning beyond
@@ -121,4 +121,77 @@ test("a repeat unit beside a variable elsewhere: each count with each choice, th
   assert.equal(librarySize(drawing).combinations, 4)
   assert.deepEqual(result.molecules.map((mol) => plainFormula(mol)), ["C2H5Cl", "C2H5Br", "C3H7Cl", "C3H7Br"])
   assert.deepEqual(pickFields(result.picks[3]), { n: "2", R1: "Br" })
+})
+
+/**
+ * CH3–[CH2–CH2]n–CH3 (chain atoms 1–4, the unit 2–3) and R1 (atom 5) attached at any of
+ * `to`, R1 = Cl or Br; R1 inside the repeat bracket when `inside`.
+ */
+function butaneWithR1(to: number[], inside: boolean, min = 1, max = 2): Drawing {
+  return build([
+    { op: "draw_chain", points: [{ x: 0, y: 0 }, { x: 35, y: -20 }, { x: 70, y: 0 }, { x: 105, y: -20 }] },
+    { op: "place_atom", el: "C", at: { x: 52, y: -70 } },
+    { op: "label", atom: 5, text: "R1" },
+    { op: "add_bracket", atoms: inside ? [2, 3, 5] : [2, 3], kind: "repeat", repeat: { min, max, name: "n" } },
+    { op: "set_attachment", atom: 5, to },
+    { op: "set_variable", name: "R1", alternatives: [label("Cl"), label("Br")] },
+  ])
+}
+
+/** Whether a molecule is one piece, nothing left floating. */
+function joined(mol: Molecule): boolean {
+  const seen = new Set([mol.atoms[0].id])
+  for (let grew = true; grew; ) {
+    grew = false
+    for (const bond of mol.bonds) {
+      if (seen.has(bond.a) !== seen.has(bond.b)) {
+        seen.add(bond.a)
+        seen.add(bond.b)
+        grew = true
+      }
+    }
+  }
+  return seen.size === mol.atoms.length
+}
+
+test("an attachment wholly inside a repeat unit goes with every copy, each placed and chosen on its own", () => {
+  const drawing = butaneWithR1([2, 3], true)
+  // n = 1: 2 positions × 2 choices; n = 2: (2 × 2) positions × (2 × 2) choices.
+  assert.equal(librarySize(drawing).combinations, 4 + 16)
+  const result = enumerate(drawing)
+  assert.equal(result.total, 20)
+  assert.equal(result.molecules.length, 20)
+  assert.deepEqual(result.straddlingAttachments, [])
+  assert.ok(result.molecules.every(joined), "every R1 bonded in, no copy left floating")
+  const formulas = result.molecules.map((mol) => plainFormula(mol))
+  assert.equal(formulas.filter((formula) => formula === "C6H12Cl2").length, 4, "both copies Cl: 2 × 2 positions")
+  assert.equal(formulas.filter((formula) => formula === "C6H12BrCl").length, 8)
+  const last = result.picks[result.picks.length - 1]
+  assert.equal(last.filter((pick) => pick.name === "R1" && "position" in pick).length, 2, "each copy's attachment is its own pick")
+  // Counted from 0, the unit and its R1 go together.
+  const none = butaneWithR1([2, 3], true, 0, 1)
+  assert.deepEqual(enumerate(none).molecules.map((mol) => plainFormula(mol)), ["C2H6", "C4H9Cl", "C4H9Br", "C4H9Cl", "C4H9Br"])
+  assert.equal(librarySize(none).combinations, 5)
+})
+
+test("an attachment across a repeat unit's brackets is made once, as drawn, and reported", () => {
+  // R1 outside, its positions inside: on the first unit only.
+  const outside = butaneWithR1([2, 3], false)
+  const across = [{ name: "n", bracket: 1, atom: 5, attachment: "R1" }]
+  assert.deepEqual(repeatStraddles(outside), across)
+  const result = enumerate(outside)
+  assert.deepEqual(result.straddlingAttachments, across)
+  assert.deepEqual(librarySize(outside).straddlingAttachments, across)
+  assert.equal(librarySize(outside).combinations, 4 + 4)
+  assert.equal(result.molecules.length, 8)
+  assert.ok(result.molecules.every(joined))
+  // R1 inside, its positions the chain ends outside: its piece is not copied either.
+  const ends = butaneWithR1([1, 4], true)
+  assert.deepEqual(repeatStraddles(ends), across)
+  const made = enumerate(ends)
+  assert.equal(made.molecules.length, 8)
+  assert.ok(made.molecules.every(joined), "no copy of R1 left floating")
+  assert.deepEqual([...new Set(made.molecules.map((mol) => plainFormula(mol)))].sort(), ["C4H9Br", "C4H9Cl", "C6H13Br", "C6H13Cl"])
+  // Counted only 0 times with every position in the unit, the attachment goes with it.
+  assert.deepEqual(enumerate(butaneWithR1([2, 3], false, 0, 0)).molecules.map((mol) => plainFormula(mol)), ["C2H6"])
 })

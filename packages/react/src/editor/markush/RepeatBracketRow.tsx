@@ -1,18 +1,18 @@
 import { useState } from "react"
-import type { RepeatSkip } from "@structura/markush"
+import type { RepeatSkip, RepeatStraddle } from "@structura/markush"
 import type { Bracket } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import { bracketCountOf, type CountDraft } from "./bracketCount.ts"
-import { repeatSkipText } from "./describe.ts"
+import { repeatSkipText, repeatStraddleText } from "./describe.ts"
 
 const FIELD = "h-6 rounded border border-[#d0d0d0] bg-white px-1 text-center text-[12px] outline-none focus:border-[#1a73e8]"
 
 /**
  * One repeat unit [ … ]n in the 位置 tab: how many atoms it holds, and its count "n = 1 到 4
  * 次", changed in place; each valid change is one undoable step. `skip` says why it cannot
- * be written out, if it cannot.
+ * be written out, if it cannot; `straddles`, the attachments across it that are not copied.
  */
-export function RepeatBracketRow({ bracket, skip, run }: { bracket: Bracket; skip?: RepeatSkip; run: Run }) {
+export function RepeatBracketRow({ bracket, skip, straddles = [], run }: { bracket: Bracket; skip?: RepeatSkip; straddles?: RepeatStraddle[]; run: Run }) {
   const repeat = bracket.repeat ?? { name: "n", min: 1, max: 4 }
   /** What is being typed, until it makes a valid count. */
   const [draft, setDraft] = useState<CountDraft | null>(null)
@@ -47,6 +47,11 @@ export function RepeatBracketRow({ bracket, skip, run }: { bracket: Bracket; ski
       </div>
       {problem && <p className="mt-1 text-[11px] text-[#d1242f]">{problem}</p>}
       {skip && <p className="mt-1 text-[11px] text-[#8a5300]">{repeatSkipText(skip)}</p>}
+      {straddles.map((straddle) => (
+        <p key={straddle.atom} className="mt-1 text-[11px] text-[#8a5300]">
+          {repeatStraddleText(straddle)}
+        </p>
+      ))}
     </div>
   )
 }

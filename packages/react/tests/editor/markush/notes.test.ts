@@ -28,6 +28,7 @@ function result(made: number, more: Partial<Enumeration> = {}): Enumeration {
     excluded: 0,
     uncheckedCompounds: 0,
     skippedRepeats: [],
+    straddlingAttachments: [],
     ...more,
   }
 }

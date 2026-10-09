@@ -1,5 +1,5 @@
 import { displayFormula } from "@structura/core/formula"
-import { type Alternative, type BridgeName, type Choice, fragmentFormula, type GroupClass, type Proviso, type RepeatSkip, REPRESENTATIVES, type RingClosure, sizeUnitOf } from "@structura/markush"
+import { type Alternative, type BridgeName, type Choice, fragmentFormula, type GroupClass, type Proviso, type RepeatSkip, type RepeatStraddle, REPRESENTATIVES, type RingClosure, sizeUnitOf } from "@structura/markush"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.
 
@@ -67,6 +67,11 @@ export function provisoText(proviso: Proviso): string {
 /** Why a repeat unit was not written out: it needs exactly two bonds through its brackets, head and tail. */
 export function repeatSkipText(skip: RepeatSkip): string {
   return `重复单元 [ … ]${skip.name} 要正好有两根键穿过括号（首尾各一根），现在是 ${skip.crossing} 根，所以没有按 ${skip.name} 展开，只按画的样子算一次。`
+}
+
+/** Why an attachment was not copied with a repeat unit: it lies across the unit's brackets. */
+export function repeatStraddleText(straddle: RepeatStraddle): string {
+  return `${straddle.attachment} 的可变连接跨在重复单元 [ … ]${straddle.name} 的括号内外（它和候选位置要全在括号里才随单元复制），所以不随 ${straddle.name} 复制，只按画的样子接在第一份上。`
 }
 
 /** A ring closure as the claim says it: "R1 与 R2 可一起成环：(CH2)3、(CH2)4". */

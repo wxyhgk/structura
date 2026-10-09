@@ -9,10 +9,12 @@ test("library sizes read naturally, small or huge", () => {
 })
 
 test("the panel says how many combinations, and that classes count only by their representatives", () => {
-  const plain = sizeText({ combinations: 73, represented: {}, classesLeftOut: {}, onlyClasses: [], skippedRepeats: [] })
+  const plain = sizeText({ combinations: 73, represented: {}, classesLeftOut: {}, onlyClasses: [], skippedRepeats: [], straddlingAttachments: [] })
   assert.deepEqual(plain, { headline: "可展开为 73 种组合", notes: [] })
-  const withClass = sizeText({ combinations: 778, represented: { R1: [{ kind: "label", text: "Me" }] }, classesLeftOut: {}, onlyClasses: [], skippedRepeats: [] })
+  const withClass = sizeText({ combinations: 778, represented: { R1: [{ kind: "label", text: "Me" }] }, classesLeftOut: {}, onlyClasses: [], skippedRepeats: [], straddlingAttachments: [] })
   assert.equal(withClass.headline, "可展开为 778 种组合")
   assert.match(withClass.notes[0], /^R1 的基团类别按代表结构计.*实际范围更大$/)
-  assert.equal(sizeText({ combinations: 0, represented: {}, classesLeftOut: {}, onlyClasses: ["R2"], skippedRepeats: [] }).headline, "还不能计数")
+  const across = sizeText({ combinations: 4, represented: {}, classesLeftOut: {}, onlyClasses: [], skippedRepeats: [], straddlingAttachments: [{ name: "n", bracket: 1, atom: 7, attachment: "R1" }] })
+  assert.match(across.notes[0], /^R1 的可变连接跨在重复单元 \[ … \]n 的括号内外/)
+  assert.equal(sizeText({ combinations: 0, represented: {}, classesLeftOut: {}, onlyClasses: ["R2"], skippedRepeats: [], straddlingAttachments: [] }).headline, "还不能计数")
 })

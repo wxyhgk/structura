@@ -1,14 +1,39 @@
 import { crossingBonds } from "@structura/core/drawing"
-import { atomById, deleteSelection, duplicateAtoms } from "@structura/core/molecule"
+import type { Attachment } from "@structura/core/markush"
+import { atomById, componentOf, deleteSelection, duplicateAtoms } from "@structura/core/molecule"
 import type { Bond, Bracket, Drawing, Molecule, Point } from "@structura/core/types"
 import { odometer } from "./odometer.ts"
 import type { Pick } from "./picks.ts"
 
 // Repeat units [ … ]n written out: the unit k times over, chained head to tail through the
-// two bonds that cross its brackets, for each k from the count's min to its max.
+// two bonds that cross its brackets, for each k from the count's min to its max. A variable
+// attachment wholly inside the unit (its piece and every candidate) goes with each copy.
 
 /** A repeat bracket that cannot be written out, and why: not exactly two bonds cross it. */
 export type RepeatSkip = { name: string; bracket: number; crossing: number }
+
+/**
+ * A variable attachment partly inside a repeat unit that is written out (its piece inside
+ * and some candidates outside, or the other way round): it is not copied with the unit but
+ * made once, as drawn. `atom` is its atom, `attachment` its label (R1) or #id.
+ */
+export type RepeatStraddle = { name: string; bracket: number; atom: number; attachment: string }
+
+/** A molecule with its variable attachments, as writing out repeat units changes both. */
+type Formula = { mol: Molecule; attachments: Attachment[] }
+
+/** The atoms an attachment carries: its own fragment, unless that already holds a candidate (then the atom alone). */
+function pieceOf(mol: Molecule, attachment: Attachment): number[] {
+  const piece = componentOf(mol, attachment.atom)
+  return piece.some((id) => attachment.to.includes(id)) ? [attachment.atom] : piece
+}
+
+/** Where an attachment stands against a unit: wholly inside (copied with it), wholly outside, or across. */
+function sideOf(mol: Molecule, attachment: Attachment, unit: ReadonlySet<number>): "inside" | "outside" | "across" {
+  const atoms = [...pieceOf(mol, attachment), ...attachment.to]
+  const inside = atoms.filter((id) => unit.has(id)).length
+  return inside === atoms.length ? "inside" : inside === 0 ? "outside" : "across"
+}
 
 /** A rigid motion of the page, p ↦ m·p + t, as [a b; c d] and t; `mirror` when it turns the page over. */
 type Motion = { a: number; b: number; c: number; d: number; tx: number; ty: number; mirror: boolean }
@@ -117,28 +142,45 @@ function throughBonds(mol: Molecule, bracket: Bracket): { head: { bond: Bond; in
 }
 
 /**
- * The molecule with a repeat unit written out `times` times (0: gone, its two neighbours
+ * The formula with a repeat unit written out `times` times (0: gone, its two neighbours
  * bonded directly): the copies follow on from the unit, each where the next would grow, and
  * what lies beyond the tail moves along with the last of them (unless it is joined round to
  * the head, as in a ring, where it stays). Atoms keep their labels, so a placeholder inside
- * the unit is one more placeholder in each copy.
+ * the unit is one more placeholder in each copy. An attachment wholly inside the unit gets
+ * one more attachment in each copy, on the copy's atoms (the same label, so the same
+ * choices); one across the unit's brackets stays as drawn, on the first unit, its piece not
+ * copied, and goes when the unit does if every candidate went with it.
  */
-function writeOut(mol: Molecule, bracket: Bracket, times: number): Molecule {
+function writeOut({ mol, attachments }: Formula, bracket: Bracket, times: number): Formula {
   const through = throughBonds(mol, bracket)
-  if (typeof through === "number" || times === 1) return mol
+  if (typeof through === "number" || times === 1) return { mol, attachments }
   const { head, tail } = through
   const at = (id: number) => atomById(mol, id)!
   const step = stepOf(at(head.outer), at(head.inner), at(tail.inner), at(tail.outer))
-  const unit = mol.atoms.filter((atom) => bracket.atoms.includes(atom.id)).map((atom) => atom.id)
+  const inBracket = new Set(bracket.atoms)
+  const carried = attachments.filter((attachment) => sideOf(mol, attachment, inBracket) === "inside")
+  // The pieces of attachments that stay as drawn are not part of what is copied.
+  const kept = new Set(attachments.filter((attachment) => !carried.includes(attachment)).flatMap((attachment) => pieceOf(mol, attachment)))
+  const unit = mol.atoms.filter((atom) => inBracket.has(atom.id) && !kept.has(atom.id)).map((atom) => atom.id)
   const beyond = reachable(mol, tail.outer, new Set(unit))
-  const carried = beyond.has(head.outer) ? new Set<number>() : beyond
+  const following = beyond.has(head.outer) ? new Set<number>() : beyond
   let next: Molecule = { ...mol, bonds: mol.bonds.filter((bond) => bond.id !== tail.bond.id) }
   if (times === 0) {
-    next = moved(deleteSelection(next, { atoms: unit, bonds: [] }), carried, power(step, -1))
-    return bondLike(next, tail.bond, head.outer, tail.outer)
+    next = moved(deleteSelection(next, { atoms: unit, bonds: [] }), following, power(step, -1))
+    next = bondLike(next, tail.bond, head.outer, tail.outer)
+    // What is left of each other attachment: the candidates still there; with none, it goes.
+    const left: Attachment[] = []
+    for (const attachment of attachments) {
+      if (carried.includes(attachment)) continue
+      const to = attachment.to.filter((id) => atomById(next, id))
+      if (to.length > 0) left.push(to.length === attachment.to.length ? attachment : { ...attachment, to })
+      else next = deleteSelection(next, { atoms: pieceOf(next, attachment), bonds: [] })
+    }
+    return { mol: next, attachments: left }
   }
   // The tail bond's own direction, for the bonds between units and on to what follows.
   const ends = (from: number, to: number): [number, number] => (tail.bond.a === tail.inner ? [from, to] : [to, from])
+  const copies: Attachment[] = []
   let last = tail.inner
   for (let copy = 1; copy < times; copy++) {
     const made = duplicateAtoms(next, unit)
@@ -153,9 +195,10 @@ function writeOut(mol: Molecule, bracket: Bracket, times: number): Molecule {
     }
     next = bondLike(next, tail.bond, ...ends(last, map.get(head.inner)!))
     last = map.get(tail.inner)!
+    for (const attachment of carried) copies.push({ ...attachment, atom: map.get(attachment.atom)!, to: attachment.to.map((id) => map.get(id)!) })
   }
-  next = moved(next, carried, power(step, times - 1))
-  return bondLike(next, tail.bond, ...ends(last, tail.outer))
+  next = moved(next, following, power(step, times - 1))
+  return { mol: bondLike(next, tail.bond, ...ends(last, tail.outer)), attachments: [...attachments, ...copies] }
 }
 
 /** The formula's repeat brackets: those of `drawing` wholly on its atoms. */
@@ -171,10 +214,22 @@ export function repeatSkips(drawing: Drawing): RepeatSkip[] {
   })
 }
 
+/** The variable attachments across the brackets of a repeat unit that is written out: each made once, as drawn. */
+export function repeatStraddles(drawing: Drawing): RepeatStraddle[] {
+  const mol = drawing.molecule
+  return repeatBrackets(drawing).flatMap((bracket) => {
+    if (typeof throughBonds(mol, bracket) === "number") return []
+    const unit = new Set(bracket.atoms)
+    return (drawing.attachments ?? []).flatMap((attachment) =>
+      sideOf(mol, attachment, unit) === "across" ? [{ name: bracket.repeat!.name, bracket: bracket.id, atom: attachment.atom, attachment: atomById(mol, attachment.atom)?.alias ?? `#${attachment.atom}` }] : [],
+    )
+  })
+}
+
 /**
  * Every way of counting the formula's repeat units, each repeat bracket on its own from its
- * min to its max: the formula with the units written out (those brackets gone) and the
- * counts as picks ("n" = 3). A bracket that cannot be written out (see repeatSkips) stays
+ * min to its max: the formula with the units written out (those brackets gone, the
+ * attachments inside them one per copy) and the counts as picks ("n" = 3). A bracket that cannot be written out (see repeatSkips) stays
  * as drawn. With no repeat brackets, the formula itself.
  */
 export function* repeatVariants(drawing: Drawing): Generator<{ drawing: Drawing; where: Pick[] }> {
@@ -184,16 +239,17 @@ export function* repeatVariants(drawing: Drawing): Generator<{ drawing: Drawing;
   const gone = new Set(brackets.map((bracket) => bracket.id))
   const rest = (drawing.brackets ?? []).filter((bracket) => !gone.has(bracket.id))
   for (const choice of odometer(counts.map((list) => list.length))) {
-    let mol = drawing.molecule
+    let formula: Formula = { mol: drawing.molecule, attachments: drawing.attachments ?? [] }
     const where: Pick[] = []
     for (const [index, bracket] of brackets.entries()) {
       const times = counts[index][choice[index]]
       // An earlier unit written out no times may have taken this one's atoms with it.
-      if (bracket.atoms.every((id) => atomById(mol, id))) mol = writeOut(mol, bracket, times)
+      if (bracket.atoms.every((id) => atomById(formula.mol, id))) formula = writeOut(formula, bracket, times)
       where.push({ name: bracket.repeat!.name, count: times })
     }
+    const { mol, attachments } = formula
     const kept = rest.filter((bracket) => bracket.atoms.every((id) => atomById(mol, id)))
-    const { brackets: _all, ...plain } = drawing
-    yield { drawing: { ...plain, molecule: mol, ...(kept.length > 0 ? { brackets: kept } : {}) }, where }
+    const { brackets: _all, attachments: _drawn, ...plain } = drawing
+    yield { drawing: { ...plain, molecule: mol, ...(kept.length > 0 ? { brackets: kept } : {}), ...(attachments.length > 0 ? { attachments } : {}) }, where }
   }
 }

@@ -1,5 +1,5 @@
 import type { Enumeration } from "@structura/markush"
-import { choiceName, repeatSkipText } from "./describe.ts"
+import { choiceName, repeatSkipText, repeatStraddleText } from "./describe.ts"
 
 /**
  * What the user should know about what was, and was not, generated. While generation is
@@ -21,6 +21,7 @@ export function notesOf(result: Enumeration, { limit, status = "done" }: { limit
     if (!result.onlyClasses.includes(name)) notes.push(`${name} 有 ${count} 个基团类别没有展开，只用了具体候选项。`)
   }
   for (const skip of result.skippedRepeats) notes.push(repeatSkipText(skip))
+  for (const straddle of result.straddlingAttachments) notes.push(repeatStraddleText(straddle))
   if (result.occupied > 0) notes.push(`有 ${result.occupied} 种连接位置已经接了别的基团，没有空位，已跳过。`)
   if (result.undefinedNames.length > 0) notes.push(`${result.undefinedNames.join("、")} 还没有候选项，生成的结构里保留为占位符。`)
   if (result.failed > 0) {

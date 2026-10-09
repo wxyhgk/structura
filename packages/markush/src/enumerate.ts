@@ -12,7 +12,7 @@ import { opsForAll } from "./place.ts"
 import { planFormulas, type Plan } from "./plans.ts"
 import { excludedBy } from "./provisos.ts"
 import { placeholders, undefinedVariables } from "./queries.ts"
-import type { RepeatSkip } from "./repeats.ts"
+import type { RepeatSkip, RepeatStraddle } from "./repeats.ts"
 
 export type Enumeration = {
   /** Concrete molecules, in order, at most `limit` of them. */
@@ -55,6 +55,8 @@ export type Enumeration = {
   uncheckedCompounds: number
   /** Repeat units that cannot be written out (not exactly two bonds through their brackets), left as drawn. */
   skippedRepeats: RepeatSkip[]
+  /** Variable attachments across a repeat unit's brackets: made once, as drawn, not with every copy. */
+  straddlingAttachments: RepeatStraddle[]
 }
 
 /**
@@ -153,6 +155,7 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     excluded: 0,
     uncheckedCompounds: 0,
     skippedRepeats: [],
+    straddlingAttachments: [],
   }
   const provisos = drawing.provisos ?? []
   const combinations = provisos.flatMap((proviso) => (proviso.kind === "combination" ? [proviso] : []))

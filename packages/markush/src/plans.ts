@@ -4,13 +4,13 @@ import { closeRing } from "./closures.ts"
 import { layouts, type Layout } from "./layouts.ts"
 import type { Site } from "./place.ts"
 import { placeholders } from "./queries.ts"
-import { repeatSkips, repeatVariants, type RepeatSkip } from "./repeats.ts"
+import { repeatSkips, repeatStraddles, repeatVariants, type RepeatSkip, type RepeatStraddle } from "./repeats.ts"
 
 /** A laid-out formula ready to build: which formula, its sites with the choices that fit, and how many combinations they make. */
 export type Plan = { formula: number; layout: Exclude<Layout, { occupied: true }>; sites: Site[]; count: number }
 
 /** The counts planning keeps up to date as it goes (an Enumeration has them all). */
-export type Tally = { total: number; occupied: number; onlyClasses: string[]; skippedRepeats: RepeatSkip[] }
+export type Tally = { total: number; occupied: number; onlyClasses: string[]; skippedRepeats: RepeatSkip[]; straddlingAttachments: RepeatStraddle[] }
 
 /** Every layout of a formula with each count of its repeat units, the counts first among the picks (they are settled first). */
 function* countedLayouts(formula: Drawing): Generator<Layout> {
@@ -39,6 +39,7 @@ export function* planFormulas(drawing: Drawing, formulas: Drawing[], resolver: C
       continue
     }
     tally.skippedRepeats.push(...repeatSkips(formula))
+    tally.straddlingAttachments.push(...repeatStraddles(formula))
     for (const layout of countedLayouts(formula)) {
       if ("occupied" in layout) {
         tally.occupied++

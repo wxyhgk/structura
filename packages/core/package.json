@@ -16,6 +16,11 @@
       "types": "./dist/analysis.d.ts",
       "default": "./dist/analysis.js"
     },
+    "./cdxml": {
+      "structura-source": "./src/cdxml.ts",
+      "types": "./dist/cdxml.d.ts",
+      "default": "./dist/cdxml.js"
+    },
     "./constants": {
       "structura-source": "./src/constants.ts",
       "types": "./dist/constants.d.ts",

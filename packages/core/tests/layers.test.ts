@@ -53,7 +53,7 @@ test("nothing below the renderer imports it", () => {
 
 test("chemistry and file exchange never reach for layout or rendering", () => {
   const pure = (file: string) =>
-    ["formula.ts", "validate.ts", "molfile.ts", "sdf.ts", "import.ts", "molecule/kekule.ts", "molecule/graph.ts", "molecule/selection.ts", "molecule/transform.ts", "molecule/cycles.ts"].includes(file)
+    ["formula.ts", "validate.ts", "molfile.ts", "cdxml.ts", "sdf.ts", "import.ts", "molecule/kekule.ts", "molecule/graph.ts", "molecule/selection.ts", "molecule/transform.ts", "molecule/cycles.ts"].includes(file)
   assert.deepEqual(violations(pure, (target) => isLayout(target) || isDraw(target)), [])
 })
 
@@ -74,7 +74,7 @@ function reachable(file: string): Set<string> {
 const isTemplates = (path: string) => path === "templates.ts" || path.startsWith("templates/")
 
 test("chemistry, file exchange and history do not reach layout even through a barrel", () => {
-  const pure = ["formula.ts", "validate.ts", "molfile.ts", "sdf.ts", "import.ts", "drawing.ts", "history.ts", "molecule/kekule.ts", "molecule/graph.ts", "molecule/selection.ts", "molecule/transform.ts", "molecule/cycles.ts"]
+  const pure = ["formula.ts", "validate.ts", "molfile.ts", "cdxml.ts", "sdf.ts", "import.ts", "drawing.ts", "history.ts", "molecule/kekule.ts", "molecule/graph.ts", "molecule/selection.ts", "molecule/transform.ts", "molecule/cycles.ts"]
   const leaks = pure.flatMap((file) =>
     [...reachable(file)]
       .filter((target) => isLayout(target) || isDraw(target) || isTemplates(target))

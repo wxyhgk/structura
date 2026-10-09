@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../../components/ui/dialog.tsx"
-import { allCommands, ATOM_KEYS, BOND_KEYS, describeAtomAction, describeBondAction, hotkeyLabel, keyLabel, TOOL_KEYS } from "@structura/engine"
+import { allCommands, ATOM_KEYS, BOND_KEYS, describeAtomAction, describeBondAction, hotkeyLabel, keyLabel, TOOL_KEYS, toolKeyLabel } from "@structura/engine"
 import { MOD } from "../../browser.ts"
 import type { Commands } from "../../hooks/useCommands.ts"
 import { useOverlayMark } from "../../input/overlays.ts"
@@ -54,7 +54,7 @@ export function HelpDialog({
   const toolRows = byAction(
     TOOL_KEYS.map((entry) => ({
       key: entry.key !== entry.key.toLowerCase() ? `⇧${entry.key}` : entry.key.toUpperCase(),
-      action: entry.label,
+      action: toolKeyLabel(entry),
     })),
   )
   const commandRows = byAction(

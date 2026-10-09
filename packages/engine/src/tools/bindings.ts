@@ -1,4 +1,5 @@
 import type { BondStyle, RingKind } from "@structura/core/types"
+import { toolLabel } from "./catalog.ts"
 import type { ToolId } from "./types.ts"
 
 /**
@@ -7,35 +8,43 @@ import type { ToolId } from "./types.ts"
  * exists (W is the hashed wedge, w the solid one), mirroring the hover keys on bonds.
  */
 export type ToolKey =
-  | { key: string; tool: "bond"; style: BondStyle; label: string }
-  | { key: string; tool: "ring"; ring: RingKind; label: string }
-  | { key: string; tool: Exclude<ToolId, "bond" | "ring">; label: string }
-  | { key: string; tool: "ring-current"; label: string }
+  | { key: string; tool: "bond"; style: BondStyle }
+  | { key: string; tool: "ring"; ring: RingKind }
+  | { key: string; tool: Exclude<ToolId, "bond" | "ring"> }
+  | { key: string; tool: "ring-current" }
 
 export const TOOL_KEYS: ToolKey[] = [
-  { key: "v", tool: "lasso", label: "套索" },
-  { key: "m", tool: "marquee", label: "框选" },
-  { key: "k", tool: "chain", label: "碳链" },
-  { key: "e", tool: "eraser", label: "橡皮" },
-  { key: "b", tool: "bond", style: { order: 1, stereo: "none" }, label: "单键" },
-  { key: "x", tool: "bond", style: { order: 1, stereo: "none" }, label: "单键" },
-  { key: "1", tool: "bond", style: { order: 1, stereo: "none" }, label: "单键" },
-  { key: "2", tool: "bond", style: { order: 2, stereo: "none" }, label: "双键" },
-  { key: "3", tool: "bond", style: { order: 3, stereo: "none" }, label: "三键" },
-  { key: "z", tool: "bond", style: { order: 3, stereo: "none" }, label: "三键" },
-  { key: "w", tool: "bond", style: { order: 1, stereo: "up" }, label: "楔形键" },
-  { key: "W", tool: "bond", style: { order: 1, stereo: "down" }, label: "虚楔键" },
-  { key: "y", tool: "bond", style: { order: 1, stereo: "either" }, label: "波浪键" },
-  { key: "r", tool: "ring-current", label: "环（上次的种类）" },
-  { key: "j", tool: "ring", ring: "benzene", label: "苯" },
-  { key: "a", tool: "ring", ring: "benzene", label: "苯" },
-  { key: "t", tool: "ring", ring: "cyclopropane", label: "环丙烷" },
-  { key: "4", tool: "ring", ring: "cyclobutane", label: "环丁烷" },
-  { key: "5", tool: "ring", ring: "cyclopentane", label: "环戊烷" },
-  { key: "6", tool: "ring", ring: "cyclohexane", label: "环己烷" },
-  { key: "7", tool: "ring", ring: "cycloheptane", label: "环庚烷" },
-  { key: "8", tool: "ring", ring: "cyclooctane", label: "环辛烷" },
+  { key: "v", tool: "lasso" },
+  { key: "m", tool: "marquee" },
+  { key: "k", tool: "chain" },
+  { key: "e", tool: "eraser" },
+  { key: "b", tool: "bond", style: { order: 1, stereo: "none" } },
+  { key: "x", tool: "bond", style: { order: 1, stereo: "none" } },
+  { key: "1", tool: "bond", style: { order: 1, stereo: "none" } },
+  { key: "2", tool: "bond", style: { order: 2, stereo: "none" } },
+  { key: "3", tool: "bond", style: { order: 3, stereo: "none" } },
+  { key: "z", tool: "bond", style: { order: 3, stereo: "none" } },
+  { key: "w", tool: "bond", style: { order: 1, stereo: "up" } },
+  { key: "W", tool: "bond", style: { order: 1, stereo: "down" } },
+  { key: "y", tool: "bond", style: { order: 1, stereo: "either" } },
+  { key: "r", tool: "ring-current" },
+  { key: "j", tool: "ring", ring: "benzene" },
+  { key: "a", tool: "ring", ring: "benzene" },
+  { key: "t", tool: "ring", ring: "cyclopropane" },
+  { key: "4", tool: "ring", ring: "cyclobutane" },
+  { key: "5", tool: "ring", ring: "cyclopentane" },
+  { key: "6", tool: "ring", ring: "cyclohexane" },
+  { key: "7", tool: "ring", ring: "cycloheptane" },
+  { key: "8", tool: "ring", ring: "cyclooctane" },
 ]
+
+const SINGLE: BondStyle = { order: 1, stereo: "none" }
+
+/** What a tool key picks, in words: the palette's name for that tool, bond or ring. */
+export function toolKeyLabel(entry: ToolKey): string {
+  if (entry.tool === "ring-current") return "环（上次的种类）"
+  return toolLabel(entry.tool, entry.tool === "bond" ? entry.style : SINGLE, entry.tool === "ring" ? entry.ring : "benzene", "")
+}
 
 export function toolForKey(key: string): ToolKey | undefined {
   return TOOL_KEYS.find((entry) => entry.key === key) ?? TOOL_KEYS.find((entry) => entry.key === key.toLowerCase() && !TOOL_KEYS.some((other) => other.key === key))

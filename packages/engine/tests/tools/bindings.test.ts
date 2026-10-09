@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { ELEMENTS } from "@structura/core/elements"
-import { TOOL_KEYS, toolForKey } from "@structura/engine"
+import { TOOL_KEYS, toolForKey, toolKeyLabel } from "@structura/engine"
 
 function describe(key: string): string {
   const entry = toolForKey(key)
@@ -32,4 +32,13 @@ test("every key means one thing and none shadows an element shortcut", () => {
   assert.equal(new Set(keys).size, keys.length)
   const elementKeys = new Set(ELEMENTS.flatMap((element) => (element.shortcut ? [element.shortcut] : [])))
   assert.deepEqual(keys.filter((key) => elementKeys.has(key.toLowerCase())), [])
+})
+
+test("each tool key is named as the palette names its tool", () => {
+  const named = Object.fromEntries(TOOL_KEYS.map((entry) => [entry.key, toolKeyLabel(entry)]))
+  assert.deepEqual(named, {
+    v: "套索", m: "框选", k: "碳链", e: "橡皮",
+    b: "单键", x: "单键", 1: "单键", 2: "双键", 3: "三键", z: "三键", w: "楔形键", W: "虚楔键", y: "波浪键",
+    r: "环（上次的种类）", j: "苯", a: "苯", t: "环丙烷", 4: "环丁烷", 5: "环戊烷", 6: "环己烷", 7: "环庚烷", 8: "环辛烷",
+  })
 })

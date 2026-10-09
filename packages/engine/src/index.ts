@@ -11,7 +11,7 @@ export { BOND_KEYS } from "./hotkeys/bond-keys.ts"
 export { hasHotkey, hotkeyOps, selectionHotkeyOps, selectionTips } from "./hotkeys/lookup.ts"
 
 export type { ScaffoldPick, ToolId } from "./tools/types.ts"
-export { keysFor, TOOL_KEYS, toolForKey, withKeys, type ToolKey } from "./tools/bindings.ts"
+export { keysFor, TOOL_KEYS, toolForKey, toolKeyLabel, withKeys, type ToolKey } from "./tools/bindings.ts"
 export { BOND_STYLES, RING_KINDS, RING_NAMES, sameStyle, toolLabel } from "./tools/catalog.ts"
 export { describeAtomAction, describeBondAction, hotkeyLabel } from "./tools/describe.ts"
 export { defaultPick } from "./tools/scaffoldPick.ts"

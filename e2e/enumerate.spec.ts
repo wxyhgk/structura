@@ -146,7 +146,7 @@ test("a candidate drawn in the sketch pad joins the variable's list, and the com
   const centre = await padCentre(page)
   // A bond, then its first atom made O: methoxy, joined by the O (the first atom drawn).
   await page.mouse.click(centre.x, centre.y)
-  await sketch.getByRole("button", { name: "O", exact: true }).click()
+  await page.getByTestId("tool-atom-O").click()
   await page.mouse.click(centre.x, centre.y)
   // The main drawing is untouched while drawing in the pad.
   expect((await doc(page)).molecule.atoms.length).toBe(7)
@@ -202,7 +202,7 @@ test("a candidate drawn with two sites makes one compound for each: methoxy join
   // A click on empty canvas draws a bond to the right, one bond length (40 at 100%) long.
   const second = { x: first.x + 40, y: first.y }
   await page.mouse.click(first.x, first.y)
-  await sketch.getByRole("button", { name: "O", exact: true }).click()
+  await page.getByTestId("tool-atom-O").click()
   await page.mouse.click(first.x, first.y)
   await sketch.getByRole("button", { name: "◎ 设位点" }).click()
   await page.mouse.click(first.x, first.y)

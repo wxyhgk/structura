@@ -22,7 +22,7 @@ async function drawMethoxy(page: Page) {
   const pad = (await sketch.getByTestId("sketch-pad").boundingBox())!
   const centre = { x: pad.x + pad.width / 2, y: pad.y + pad.height / 2 }
   await page.mouse.click(centre.x, centre.y)
-  await sketch.getByRole("button", { name: "O", exact: true }).click()
+  await page.getByTestId("tool-atom-O").click()
   await page.mouse.click(centre.x, centre.y)
 }
 

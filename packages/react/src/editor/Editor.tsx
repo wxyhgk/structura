@@ -1,4 +1,4 @@
-import { forwardRef, useMemo, useRef, useState } from "react"
+import { forwardRef, useCallback, useMemo, useRef, useState } from "react"
 import { displayMolecule } from "@structura/core/molecule"
 import { TooltipProvider } from "../components/ui/tooltip.tsx"
 import { ContextMenu, ContextMenuTrigger } from "../components/ui/context-menu.tsx"
@@ -12,7 +12,7 @@ import { useFlash } from "./shell/useFlash.ts"
 import { Canvas } from "./canvas/Canvas.tsx"
 import type { CanvasHandle } from "./canvas/types.ts"
 import { useZoom } from "./canvas/useViewport.ts"
-import { createViewport, placeDrawing, toolLabel } from "@structura/engine"
+import { createViewport, placeDrawing } from "@structura/engine"
 import { selectionClipboard } from "./clipboard.ts"
 import { useCommands } from "./hooks/useCommands.ts"
 import { useDocumentFile } from "./hooks/useDocumentFile.ts"
@@ -24,7 +24,9 @@ import { useImports } from "./hooks/useImports.ts"
 import { initialContent } from "./imports/read.ts"
 import { OverlayScope } from "./input/overlays.ts"
 import { useEditorInput } from "./input/useEditorInput.ts"
-import { ToolPalette } from "./palette/ToolPalette.tsx"
+import { BoundPalette } from "./palette/BoundPalette.tsx"
+import { PadSlotContext, type Pad, type PadSlot } from "./palette/padSlot.ts"
+import { useToolLabel } from "./palette/useToolLabel.ts"
 import { HelpDialog } from "./shell/dialogs/HelpDialog.tsx"
 import { EditorGuide } from "./shell/EditorGuide.tsx"
 import { ImportNotesDialog } from "./shell/dialogs/ImportNotesDialog.tsx"
@@ -104,6 +106,14 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const clipboard = selectionClipboard(editor, (line) => imports.showNotes({ opened: false, title: "复制为图片", lines: [line] }))
   /** How labels are written, the same on the canvas as in what is exported. */
   const labelStyle = useMemo(() => drawOptions(editor.raisedNumbers), [editor.raisedNumbers])
+  /** A sketch pad that is open: the palette is its until it closes. */
+  const [pad, setPad] = useState<Pad | null>(null)
+  const claimPalette = useCallback((claimed: Pad) => {
+    setPad(claimed)
+    return () => setPad((current) => (current === claimed ? null : current))
+  }, [])
+  const paletteTool = useToolLabel(pad?.editor ?? editor)
+  const padSlot = useMemo<PadSlot>(() => ({ claim: claimPalette, colorHetero: editor.colorHetero, drawOptions: labelStyle }), [claimPalette, editor.colorHetero, labelStyle])
   const setRaisedNumbers = useRememberedSetting(RAISED_NUMBERS, editor.raisedNumbers, editor.setRaisedNumbers)
   const { message, flash } = useFlash()
   const menu = useCanvasMenu({ editor, shownMol, canvas: canvasRef, flash, showReport: dialogs.showReport })
@@ -149,102 +159,93 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   return (
     <TooltipProvider delayDuration={350}>
       <OverlayScope value={input.overlayScope}>
-        <div
-          className="chem-app relative flex h-full w-full min-h-0 flex-col overflow-hidden"
-          {...input.rootProps}
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault()
-            const dropped = event.dataTransfer.files[0]
-            if (dropped) void openFile(dropped)
-          }}
-        >
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".structura,.mol,.sdf,.sd,.mdl"
-            className="hidden"
-            data-testid="open-file"
-            onChange={(event) => {
-              const picked = event.target.files?.[0]
-              event.target.value = ""
-              if (picked) void openFile(picked)
+        <PadSlotContext value={padSlot}>
+          <div
+            className="chem-app relative flex h-full w-full min-h-0 flex-col overflow-hidden"
+            {...input.rootProps}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault()
+              const dropped = event.dataTransfer.files[0]
+              if (dropped) void openFile(dropped)
             }}
-          />
-          <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} raisedNumbers={editor.raisedNumbers} onRaisedNumbers={setRaisedNumbers} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} tabs={<WorkspaceTabs value={workspace} onChange={setWorkspace} />} />
-          <Toolbar commands={commands} zoom={zoom} />
-
-          <div className="flex min-h-0 flex-1">
-            <ToolPalette
-              tool={editor.tool}
-              bondStyle={editor.bondStyle}
-              ringKind={editor.ringKind}
-              atomEl={editor.atomEl}
-              scaffold={editor.scaffold}
-              onScaffold={editor.pickScaffold}
-              onTool={editor.setTool}
-              onBondStyle={editor.setBondStyle}
-              onRingKind={editor.setRingKind}
-              onElement={editor.applyElement}
-            />
-            {workspace === "draw" && canvasArea}
-            {workspace === "markush" && (
-              <MarkushWorkspace
-                canvas={canvasArea}
-                drawing={editor.drawing}
-                run={editor.run}
-                selected={editor.selection.atoms}
-                colorHetero={editor.colorHetero}
-                base={file.base}
-                onPlace={(mol) => {
-                  editor.appendMolecules([mol], viewport.centre())
-                  setWorkspace("draw")
-                }}
-                onHelp={dialogs.showGuide}
-                onFill={fillVariables ? () => dialogs.open("fill") : undefined}
-                templates={templates}
-              />
-            )}
-          </div>
-
-          <StatusBar
-            toolLabel={toolLabel(editor.tool, editor.bondStyle, editor.ringKind, editor.atomEl, editor.scaffold)}
-            formula={editor.formula}
-            weight={editor.weight}
-            valenceErrors={editor.valenceErrors}
-            atomCount={editor.mol.atoms.length}
-            zoom={zoom}
-          />
-
-          <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
-          <AnalysisDialog report={dialogs.report} onOpenChange={(open) => !open && dialogs.showReport(null)} onCopy={(text, what) => {
-            writeClipboard(text)
-            flash(`已复制${what}`)
-          }} />
-          <Flash message={message} />
-          {recognizeStructure && (
-            <StructureDialog
-              open={dialogs.recognize}
-              onOpenChange={dialogs.setOpen("recognize")}
-              recognize={recognizeStructure}
-              onApply={(drawing) => {
-                const place = placeDrawing(editor.latest(), drawing)
-                if ("load" in place) editor.loadDrawing(place.load)
-                else editor.appendMolecules([place.append], viewport.centre())
+          >
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".structura,.mol,.sdf,.sd,.mdl"
+              className="hidden"
+              data-testid="open-file"
+              onChange={(event) => {
+                const picked = event.target.files?.[0]
+                event.target.value = ""
+                if (picked) void openFile(picked)
               }}
             />
-          )}
-          {fillVariables && <FillDialog open={dialogs.fill} onOpenChange={dialogs.setOpen("fill")} drawing={editor.latest()} run={editor.run} fill={fillVariables} />}
-          <SmilesDialog
-            open={dialogs.smiles}
-            onOpenChange={dialogs.setOpen("smiles")}
-            onImport={imports.importSmiles}
-            onNotes={(lines) => imports.showNotes({ opened: true, lines })}
-            loadFailed={imports.rdkitFailed}
-          />
-          <HelpDialog open={dialogs.help} onOpenChange={dialogs.setOpen("help")} commands={commands} />
-          <EditorGuide topic={dialogs.guide} onTopic={dialogs.showGuide} openShortcuts={dialogs.guideToShortcuts} />
-        </div>
+            <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} raisedNumbers={editor.raisedNumbers} onRaisedNumbers={setRaisedNumbers} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} tabs={<WorkspaceTabs value={workspace} onChange={setWorkspace} />} />
+            <Toolbar commands={commands} zoom={zoom} />
+
+            <div className="flex min-h-0 flex-1">
+              <BoundPalette editor={pad?.editor ?? editor} onPick={pad?.onPick} />
+              {workspace === "draw" && canvasArea}
+              {workspace === "markush" && (
+                <MarkushWorkspace
+                  canvas={canvasArea}
+                  drawing={editor.drawing}
+                  run={editor.run}
+                  selected={editor.selection.atoms}
+                  colorHetero={editor.colorHetero}
+                  base={file.base}
+                  onPlace={(mol) => {
+                    editor.appendMolecules([mol], viewport.centre())
+                    setWorkspace("draw")
+                  }}
+                  onHelp={dialogs.showGuide}
+                  onFill={fillVariables ? () => dialogs.open("fill") : undefined}
+                  templates={templates}
+                />
+              )}
+            </div>
+
+            <StatusBar
+              toolLabel={paletteTool}
+              formula={editor.formula}
+              weight={editor.weight}
+              valenceErrors={editor.valenceErrors}
+              atomCount={editor.mol.atoms.length}
+              zoom={zoom}
+            />
+
+            <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
+            <AnalysisDialog report={dialogs.report} onOpenChange={(open) => !open && dialogs.showReport(null)} onCopy={(text, what) => {
+              writeClipboard(text)
+              flash(`已复制${what}`)
+            }} />
+            <Flash message={message} />
+            {recognizeStructure && (
+              <StructureDialog
+                open={dialogs.recognize}
+                onOpenChange={dialogs.setOpen("recognize")}
+                recognize={recognizeStructure}
+                onApply={(drawing) => {
+                  const place = placeDrawing(editor.latest(), drawing)
+                  if ("load" in place) editor.loadDrawing(place.load)
+                  else editor.appendMolecules([place.append], viewport.centre())
+                }}
+              />
+            )}
+            {fillVariables && <FillDialog open={dialogs.fill} onOpenChange={dialogs.setOpen("fill")} drawing={editor.latest()} run={editor.run} fill={fillVariables} />}
+            <SmilesDialog
+              open={dialogs.smiles}
+              onOpenChange={dialogs.setOpen("smiles")}
+              onImport={imports.importSmiles}
+              onNotes={(lines) => imports.showNotes({ opened: true, lines })}
+              loadFailed={imports.rdkitFailed}
+            />
+            <HelpDialog open={dialogs.help} onOpenChange={dialogs.setOpen("help")} commands={commands} />
+            <EditorGuide topic={dialogs.guide} onTopic={dialogs.showGuide} openShortcuts={dialogs.guideToShortcuts} />
+          </div>
+        </PadSlotContext>
       </OverlayScope>
     </TooltipProvider>
   )

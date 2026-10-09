@@ -3,6 +3,7 @@ import test from "node:test"
 import { plainFormula } from "@structura/core/formula"
 import { MOST_STEPS, recognize } from "../src/structure/agent.ts"
 import { firstObject } from "../src/structure/json.ts"
+import { STRUCTURE_PROMPT } from "../src/structure/prompt.ts"
 import { createSession } from "../src/structure/session.ts"
 import { READING, type Format } from "../src/structure/schema.ts"
 import type { Action, StructureStep, Turn } from "../src/structure/types.ts"
@@ -129,4 +130,21 @@ test("a variable written onto a ring atom is flagged; one on a new substituent a
   const outside = session.act(build([{ op: "add_atom", el: "C", to: "b.C3", as: "r2" }, { op: "label", atom: "r2", text: "R2" }]))
   assert.ok(outside.ok)
   assert.doesNotMatch(outside.message, /Warning/)
+})
+
+test("the prompt documents the generic-formula drawing ops, and they work as it says", () => {
+  for (const op of ["set_attachment", "set_attachment_shape", "add_bracket", "set_bracket", "remove_bracket"]) assert.ok(STRUCTURE_PROMPT.includes(`{"op":"${op}"`), op)
+  for (const shape of ["line", "loop", "arc", "bracket"]) assert.ok(STRUCTURE_PROMPT.includes(`"${shape}"`), shape)
+  const session = createSession()
+  const ring = ["b.C1", "b.C2", "b.C3", "b.C4", "b.C5", "b.C6"]
+  const steps = [
+    [{ op: "add_scaffold", name: "benzene", as: "b" }, { op: "add_atom", el: "C", as: "r" }, { op: "label", atom: "r", text: "R1" }],
+    [{ op: "set_attachment", atom: "r", to: ring, shape: "loop" }],
+    [{ op: "set_attachment_shape", atom: "r", shape: null }],
+    [{ op: "add_bracket", atoms: ring, kind: "group" }],
+    [{ op: "set_attachment_shape", atom: "r", shape: "bracket" }],
+    [{ op: "set_bracket", id: 1, kind: "repeat", repeat: { min: 0, max: 3, name: "m" } }],
+    [{ op: "remove_bracket", id: 1 }],
+  ]
+  for (const ops of steps) assert.ok(session.act(build(ops)).ok, JSON.stringify(ops))
 })

@@ -29,8 +29,10 @@ Ops (atoms are referred to by their id, or by a name given with "as" in this or 
 - {"op":"set_bond","bond":{"between":[5,6]},"order":2}: bond order 1, 2 or 3; {"op":"set_bond","bond":{"between":[5,6]},"stereo":"up"} for a wedge (or "down" for a hash), starting at the first atom.
 - {"op":"remove","atoms":[7],"bonds":[{"between":[5,6]}]}
 - {"op":"join","atoms":[5,20]}: two separate pieces become one by MERGING those two atoms into a single atom (one atom fewer). This is not how to link two ring systems by a single bond: for a biaryl bond use add_bond between two atoms that each still carry a hydrogen, or add_scaffold with site/to.
-- {"op":"set_attachment","atom":30,"to":[1,2,3,4,5,6]}: a substituent drawn as a line into a ring's middle, attached at any of those ring atoms (generic formulas).
-- {"op":"add_bracket","atoms":[3,4],"kind":"repeat","repeat":{"min":1,"max":4,"name":"n"}}: square brackets round those atoms, a repeat unit [ ]n (the bonds leaving them pass through the brackets); "kind":"group" (no repeat) brackets a piece treated as one unit, such as a ring system.
+- {"op":"set_attachment","atom":30,"to":[1,2,3,4,5,6]}: a substituent drawn as a line into a ring's middle, attached at any of those ring atoms (generic formulas). Optional "shape" says how it is drawn, as in the picture: "line" (a straight line into one ring), "loop" (an ellipse round the rings, with a line to it), "arc" (the bond sweeping round the rings), "bracket" (a bond into a group bracket whose atoms are exactly "to"); leave it out to let the editor choose.
+- {"op":"set_attachment_shape","atom":30,"shape":"loop"}: redraws atom 30's attachment in that shape; "shape":null lets the editor choose again.
+- {"op":"add_bracket","atoms":[3,4],"kind":"repeat","repeat":{"min":1,"max":4,"name":"n"}}: square brackets round those atoms, a repeat unit [ ]n (the bonds leaving them pass through the brackets); "kind":"group" (no repeat) brackets a piece treated as one unit, such as a ring system. Brackets are numbered 1, 2… in the order they are added.
+- {"op":"set_bracket","id":1,"kind":"repeat","repeat":{"min":0,"max":3,"name":"m"}}: makes bracket 1 a group or a repeat unit, or changes its count (min to max times; the name as drawn at the lower right); {"op":"remove_bracket","id":1} takes it away (its atoms stay).
 
 Scaffold templates (name (Chinese name): atoms; outer bonds by letter):
 ${scaffoldCatalog()}`

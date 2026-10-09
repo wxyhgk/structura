@@ -10,6 +10,8 @@ const PAD = 0.35
 const SERIF = 0.25
 /** No bracket is shorter than this, in bond lengths, so one round a single atom still reads as a bracket. */
 const MIN_HEIGHT = 1.1
+/** The least room a repeat bracket keeps from what it holds where a bond runs through it, in bond lengths. */
+const NEAR = 0.15
 /** How far past a bond running through it a repeat bracket reaches, in bond lengths. */
 const OVERHANG = 0.3
 /** The count's size, and its gap from "]", in drawing units and bond lengths. */
@@ -53,6 +55,31 @@ function upright(x: number, top: number, bottom: number, inward: number, serif: 
   }
 }
 
+/** A bond leaving a repeat unit through one side: its atoms, the side (-1 left, +1 right), and the middle of what shows of it. */
+type Exit = { inner: Atom; outer: Atom; side: -1 | 1; middle: number }
+
+/**
+ * The bonds that leave the atoms in `inside` sideways (not steeper than about 75°), each
+ * with the x halfway along the part drawn between the two atoms' labels.
+ */
+function sideExits(mol: Molecule, inside: Set<number>, content: Box, labelOf: (atom: Atom) => AtomLabel | null | undefined): Exit[] {
+  const byId = new Map(mol.atoms.map((atom) => [atom.id, atom]))
+  return mol.bonds.flatMap((bond): Exit[] => {
+    if (inside.has(bond.a) === inside.has(bond.b)) return []
+    const inner = byId.get(inside.has(bond.a) ? bond.a : bond.b)
+    const outer = byId.get(inside.has(bond.a) ? bond.b : bond.a)
+    if (!inner || !outer) return []
+    const side = outer.x < content.left ? -1 : outer.x > content.right ? 1 : 0
+    if (side === 0 || Math.abs(outer.y - inner.y) > 3.5 * Math.abs(outer.x - inner.x)) return []
+    // Where the drawn line starts and ends: at the edge of a label, else at the atom.
+    const from = labelOf(inner)?.box
+    const to = labelOf(outer)?.box
+    const start = from ? (side < 0 ? from.left : from.right) : inner.x
+    const end = to ? (side < 0 ? to.right : to.left) : outer.x
+    return [{ inner, outer, side, middle: (start + end) / 2 }]
+  })
+}
+
 function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLabel | null | undefined): BracketMark | null {
   const inside = new Set(bracket.atoms)
   const atoms = mol.atoms.filter((atom) => inside.has(atom.id))
@@ -60,32 +87,35 @@ function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLa
   const length = bondLengthAt(mol, atoms[0].id)
   const pad = PAD * length
   const reach = atoms.map((atom) => extent(atom, labelOf(atom)))
-  const left = Math.min(...reach.map((box) => box.left)) - pad
-  const right = Math.max(...reach.map((box) => box.right)) + pad
-  let top = Math.min(...reach.map((box) => box.top)) - pad
-  let bottom = Math.max(...reach.map((box) => box.bottom)) + pad
+  const content = {
+    left: Math.min(...reach.map((box) => box.left)),
+    right: Math.max(...reach.map((box) => box.right)),
+    top: Math.min(...reach.map((box) => box.top)),
+    bottom: Math.max(...reach.map((box) => box.bottom)),
+  }
+  let left = content.left - pad
+  let right = content.right + pad
+  let top = content.top - pad
+  let bottom = content.bottom + pad
   const short = MIN_HEIGHT * length - (bottom - top)
   if (short > 0) {
     top -= short / 2
     bottom += short / 2
   }
   // A repeat unit's brackets cut across the bonds leaving it, as patents draw -[CH2]n-:
-  // each upright reaches past the point where such a bond runs through it.
+  // each upright stands halfway along such a bond and reaches past where it runs through.
   if (bracket.kind === "repeat") {
-    const byId = new Map(mol.atoms.map((atom) => [atom.id, atom]))
-    // Only bonds that leave through the sides: one leaving upwards is not stretched for.
-    const [low, high] = [top - 0.5 * length, bottom + 0.5 * length]
-    for (const bond of mol.bonds) {
-      if (inside.has(bond.a) === inside.has(bond.b)) continue
-      const inner = byId.get(inside.has(bond.a) ? bond.a : bond.b)
-      const outer = byId.get(inside.has(bond.a) ? bond.b : bond.a)
-      if (!inner || !outer) continue
-      for (const x of [left, right]) {
-        const y = crossingAt(inner, outer, x)
-        if (y == null || y < low || y > high) continue
-        top = Math.min(top, y - OVERHANG * length)
-        bottom = Math.max(bottom, y + OVERHANG * length)
-      }
+    const exits = sideExits(mol, inside, content, labelOf)
+    const near = NEAR * length
+    const lefts = exits.filter((exit) => exit.side < 0)
+    const rights = exits.filter((exit) => exit.side > 0)
+    if (lefts.length > 0) left = Math.min(content.left - near, ...lefts.map((exit) => exit.middle))
+    if (rights.length > 0) right = Math.max(content.right + near, ...rights.map((exit) => exit.middle))
+    for (const exit of exits) {
+      const y = crossingAt(exit.inner, exit.outer, exit.side < 0 ? left : right)
+      if (y == null) continue
+      top = Math.min(top, y - OVERHANG * length)
+      bottom = Math.max(bottom, y + OVERHANG * length)
     }
   }
   const serif = SERIF * length

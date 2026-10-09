@@ -74,6 +74,10 @@ const CASES: Record<string, { ops: Op[]; colour?: boolean; markush?: boolean; op
     ],
     markush: true,
   },
+  "a group bracket round naphthalene": { ops: [{ op: "add_scaffold", name: "naphthalene" }, { op: "add_bracket", atoms: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }] },
+  "-[CH2]n-, a repeat bracket across the chain": {
+    ops: [{ op: "draw_chain", points: [{ x: 0, y: 0 }, { x: 35, y: -20 }, { x: 70, y: 0 }, { x: 105, y: -20 }] }, { op: "add_bracket", atoms: [2, 3], kind: "repeat" }],
+  },
   "a reaction arrow": { ops: [RING, { op: "add_arrow", atoms: [1, 2, 3, 4, 5, 6], direction: "right" }] },
   "two pieces side by side": { ops: [RING, { op: "add_ring", at: { x: 200, y: 0 }, kind: "cyclopentane" }] },
 }
@@ -81,6 +85,6 @@ const CASES: Record<string, { ops: Op[]; colour?: boolean; markush?: boolean; op
 for (const [name, { ops, colour = false, markush = false, options }] of Object.entries(CASES)) {
   test(`renders ${name}`, (t) => {
     const drawing = build(ops)
-    t.assert.snapshot(normalized(sceneToSvg(drawing.molecule, colour, drawing.arrows, markush ? drawing.attachments : undefined, options)))
+    t.assert.snapshot(normalized(sceneToSvg(drawing.molecule, colour, drawing.arrows, markush ? drawing.attachments : undefined, options, { brackets: drawing.brackets })))
   })
 }

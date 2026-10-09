@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
-import type { BondStyle, RingKind } from "@structura/core/types"
+import type { AttachmentShape } from "@structura/markush"
+import type { BondStyle, Bracket, RingKind } from "@structura/core/types"
 
 function Frame({ children }: { children: ReactNode }) {
   return (
@@ -141,6 +142,67 @@ export function ChargeMinusIcon() {
     <Frame>
       <circle cx="12" cy="12" r="7" />
       <path d="M8.5 12h7" />
+    </Frame>
+  )
+}
+
+/** Square brackets round a bit of chain; a repeat unit's with its n at the lower right. */
+export function BracketIcon({ kind }: { kind: Bracket["kind"] }) {
+  if (kind === "repeat") {
+    return (
+      <Frame>
+        <path d="M6 4.5H3.5v15H6M14.5 4.5H17v15h-2.5" />
+        <path d="M6.8 14.2 10.2 9.6l3.4 4.6" strokeWidth="1.4" />
+        <text x="20.6" y="20.4" fontSize="8" fontStyle="italic" fontFamily="Arial, Helvetica, sans-serif" textAnchor="middle" fill="currentColor" stroke="none">
+          n
+        </text>
+      </Frame>
+    )
+  }
+  return (
+    <Frame>
+      <path d="M7.5 4.5H5v15h2.5M16.5 4.5H19v15h-2.5" />
+      <path d="M8.6 14.2 12 9.6l3.4 4.6" strokeWidth="1.4" />
+    </Frame>
+  )
+}
+
+/** A small hexagon, flat sides left and right, round a centre. */
+function hexagonAt(cx: number, cy: number, radius: number): string {
+  return Array.from({ length: 6 }, (_, index) => {
+    const angle = -Math.PI / 2 + (index * Math.PI) / 3
+    return `${(cx + radius * Math.cos(angle)).toFixed(2)},${(cy + radius * Math.sin(angle)).toFixed(2)}`
+  }).join(" ")
+}
+
+/**
+ * A variable attachment, drawn the way `shape` draws it: a line into the ring's middle, a
+ * line to an ellipse round it, the bond sweeping round it; "auto" (the flyout's 自动) a
+ * dashed ring round it, as it is up to the drawing.
+ */
+export function AttachIcon({ shape }: { shape: AttachmentShape | "auto" }) {
+  if (shape === "line") {
+    return (
+      <Frame>
+        <polygon points={hexagonAt(14.5, 12, 6.6)} strokeWidth="1.3" />
+        <path d="M2.5 12h12" />
+      </Frame>
+    )
+  }
+  const ring = <polygon points={hexagonAt(15, 12, 4.2)} strokeWidth="1.2" />
+  if (shape === "arc" || shape === "bracket") {
+    return (
+      <Frame>
+        {ring}
+        <path d="M2 12h6a7 7 0 1 1 5.78 6.89" />
+      </Frame>
+    )
+  }
+  return (
+    <Frame>
+      {ring}
+      <path d="M2 12h6" />
+      <circle cx="15" cy="12" r="7" strokeDasharray={shape === "auto" ? "2.2 1.8" : undefined} />
     </Frame>
   )
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type Keyboa
 import { atomById } from "@structura/core/molecule"
 import type { BondStyle, Molecule } from "@structura/core/types"
 import type { SiteKind } from "@structura/markush"
-import { command, createEditor, createViewport, pickSite, routeKey, sitesOf, sitesProblem, sitesShown } from "@structura/engine"
+import { command, createEditor, createViewport, keyOf, pickSite, routeKey, sitesOf, sitesProblem, sitesShown } from "@structura/engine"
 import { Canvas } from "../canvas/Canvas.tsx"
 import { canvasSlice } from "../canvas/slice.ts"
 import type { CanvasHandle } from "../canvas/types.ts"
@@ -111,6 +111,7 @@ export function SketchPad({
       event.preventDefault()
       return
     }
+    if (keyOf(event.nativeEvent) === "[") return // The pad draws no brackets.
     routeKey(event.nativeEvent, { editor, commands, canvas: canvasRef.current })
   }
 
@@ -153,7 +154,7 @@ export function SketchPad({
         pad
       ) : (
         <div className={`flex gap-2 ${fill ? "min-h-0 flex-1" : ""}`}>
-          <BoundPalette editor={editor} onPick={() => setMarking(false)} />
+          <BoundPalette editor={editor} onPick={() => setMarking(false)} structureTools={false} />
           {pad}
         </div>
       )}

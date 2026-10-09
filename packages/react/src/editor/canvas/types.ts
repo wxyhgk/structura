@@ -1,7 +1,7 @@
 import type { DrawOptions } from "@structura/core/draw"
 import type { Arrow, BondStyle, Bracket, Drawing, Molecule, RingKind, Selection } from "@structura/core/types"
 import type { Attachment } from "@structura/markush"
-import type { HoverTarget, Run, ScaffoldPick, ToolId, Viewport } from "@structura/engine"
+import type { HoverTarget, Run, ScaffoldPick, ToolId, ToolSettings, Viewport } from "@structura/engine"
 
 export type CanvasHandle = {
   /** Hover hotkeys; returns whether the key was used. */
@@ -36,6 +36,8 @@ export type EditorSlice = {
   ringKind: RingKind
   scaffold: ScaffoldPick
   atomEl: string
+  bracketKind: ToolSettings["bracketKind"]
+  attachShape: ToolSettings["attachShape"]
   selection: Selection
   colorHetero: boolean
   /** How labels are written (raised variable numbers or not). */

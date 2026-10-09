@@ -13,6 +13,25 @@ export const TOOL_NAMES = {
   ring: "环",
   "ring-current": "环（上次的种类）",
   scaffold: "模板",
+  bracket: "方括号",
+  attach: "可变连接",
+}
+
+/** A tool's name with how it is set: "方括号（基团 [ ]）". */
+export const toolSetTo = (tool: string, setting: string) => `${tool}（${setting}）`
+
+export const BRACKET_NAMES = {
+  group: "基团 [ ]",
+  repeat: "重复单元 [ ]n",
+}
+
+/** How a variable attachment is drawn; "auto" lets the drawing choose. */
+export const ATTACH_SHAPE_NAMES = {
+  auto: "自动",
+  line: "直线",
+  loop: "椭圆",
+  arc: "弧线",
+  bracket: "括号",
 }
 
 export const BOND_NAMES = {

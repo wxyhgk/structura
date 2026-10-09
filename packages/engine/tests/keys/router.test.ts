@@ -50,3 +50,14 @@ test("in a text field only commands that work anywhere take a key", () => {
   assert.equal(routeFieldKey(key("a", { metaKey: true }), commands), false)
   assert.equal(saved, 1)
 })
+
+test("[ picks the bracket tool, and with atoms selected brackets them; a Chinese input method's 【 does the same", () => {
+  const editor = createEditor()
+  editor.run([{ op: "place_atom", el: "C", at: { x: 0, y: 0 } }, { op: "add_atom", el: "C", to: 1 }])
+  routeKey(key("["), { editor, canvas: idleCanvas, commands: [] })
+  assert.equal(editor.get().tool, "bracket")
+  assert.equal(editor.latest().brackets, undefined)
+  editor.selectEverything()
+  routeKey({ ...key("【"), code: "BracketLeft" }, { editor, canvas: idleCanvas, commands: [] })
+  assert.deepEqual(editor.latest().brackets, [{ id: 1, atoms: [1, 2], kind: "group" }])
+})

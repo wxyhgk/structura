@@ -1,13 +1,16 @@
 import { useState, type ReactNode } from "react"
 import { scaffoldNamed } from "@structura/core/scaffolds"
-import type { BondStyle, RingKind } from "@structura/core/types"
-import { BOND_STYLES, keysFor, RING_KINDS, sameStyle, type ScaffoldPick, type ToolId, withKeys } from "@structura/engine"
+import type { AttachmentShape } from "@structura/markush"
+import type { BondStyle, Bracket, RingKind } from "@structura/core/types"
+import { ATTACH_SHAPES, BOND_STYLES, BRACKET_KINDS, keysFor, RING_KINDS, sameStyle, type ScaffoldPick, type ToolId, withKeys } from "@structura/engine"
 import { ScrollArea } from "../../components/ui/scroll-area.tsx"
 import { Separator } from "../../components/ui/separator.tsx"
 import { ElementPalette } from "./ElementPalette.tsx"
 import { ScaffoldPicker } from "./ScaffoldPicker.tsx"
 import {
+  AttachIcon,
   BondIcon,
+  BracketIcon,
   ChainIcon,
   ChargeMinusIcon,
   ChargePlusIcon,
@@ -25,11 +28,34 @@ type PaletteProps = {
   ringKind: RingKind
   atomEl: string
   scaffold: ScaffoldPick
+  bracketKind: Bracket["kind"]
+  attachShape: AttachmentShape | null
+  /** Whether to offer the bracket and attachment tools (not in a sketch pad, which draws neither). */
+  structureTools?: boolean
   onTool: (tool: ToolId) => void
+  /** The bracket tool, of a kind if picked; selected atoms are bracketed at once. */
+  onBracket: (kind?: Bracket["kind"]) => void
+  /** The attachment tool, with a shape if picked; selected attachments take it. */
+  onAttach: (shape?: AttachmentShape | null) => void
   onBondStyle: (style: BondStyle) => void
   onRingKind: (kind: RingKind) => void
   onElement: (el: string) => void
   onScaffold: (pick: ScaffoldPick) => void
+}
+
+/** What each bracket kind is for, as its flyout entry's tooltip. */
+const BRACKET_HINTS: Record<Bracket["kind"], string> = {
+  group: "基团 [ ]：括住的部分当作一个整体，外面的键可以连进括号",
+  repeat: "重复单元 [ ]n：括住的部分重复 n 次（先是 1–4，右键括号可改）",
+}
+
+/** What each way of drawing does, as its flyout entry's tooltip; picking one also redraws the selected attachments. */
+const SHAPE_HINTS: Record<AttachmentShape | "auto", string> = {
+  auto: "自动：一个环里画直线，跨几个环画椭圆或弧线（也改选中的可变连接）",
+  line: "直线：一根线连进环的中心（也改选中的可变连接）",
+  loop: "椭圆：椭圆圈住这些环，取代基连到椭圆上（也改选中的可变连接）",
+  arc: "弧线：键绕这些环转大约四分之三圈（也改选中的可变连接）",
+  bracket: "括号：一根键连进方括号",
 }
 
 /** Label with the keys that select this tool, taken from the key table. */
@@ -93,6 +119,44 @@ export function ToolPalette(props: PaletteProps) {
           {simple("eraser", "橡皮", <EraserIcon />)}
           {simple("charge-plus", "正电荷", <ChargePlusIcon />)}
           {simple("charge-minus", "负电荷", <ChargeMinusIcon />)}
+          {props.structureTools !== false && (
+            <>
+              <ToolFlyout
+                label={toolTitle("方括号：拖框括住原子；先选中原子再点也可以", "bracket")}
+                caretLabel="括号的种类"
+                testId="tool-bracket"
+                active={props.tool === "bracket"}
+                icon={<BracketIcon kind={props.bracketKind} />}
+                onClick={() => props.onBracket()}
+                labelled
+                items={BRACKET_KINDS.map((item) => ({
+                  id: item.kind,
+                  label: item.label,
+                  title: BRACKET_HINTS[item.kind],
+                  active: item.kind === props.bracketKind,
+                  icon: <BracketIcon kind={item.kind} />,
+                  onPick: () => props.onBracket(item.kind),
+                }))}
+              />
+              <ToolFlyout
+                label={toolTitle("可变连接：从原子拖过环，划过的环都是可接的位置", "attach")}
+                caretLabel="可变连接的画法"
+                testId="tool-attach"
+                active={props.tool === "attach"}
+                icon={<AttachIcon shape={props.attachShape ?? "arc"} />}
+                onClick={() => props.onAttach()}
+                labelled
+                items={ATTACH_SHAPES.map((item) => ({
+                  id: item.shape ?? "auto",
+                  label: item.label,
+                  title: SHAPE_HINTS[item.shape ?? "auto"],
+                  active: item.shape === props.attachShape,
+                  icon: <AttachIcon shape={item.shape ?? "auto"} />,
+                  onPick: () => props.onAttach(item.shape),
+                }))}
+              />
+            </>
+          )}
         </div>
         <Separator />
         <div className="p-1">

@@ -31,6 +31,8 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
     ringKind: snapshot.ringKind,
     atomEl: snapshot.atomEl,
     scaffold: snapshot.scaffold,
+    bracketKind: snapshot.bracketKind,
+    attachShape: snapshot.attachShape,
     selection,
     colorHetero: snapshot.colorHetero,
     raisedNumbers: snapshot.raisedNumbers,

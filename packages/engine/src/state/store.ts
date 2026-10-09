@@ -5,7 +5,7 @@ import { applyOps, type Op } from "@structura/core/ops"
 import type { BondStyle, Bracket, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
 import type { Run, RunOptions } from "../ops/builders.ts"
 import { defaultPick } from "../tools/scaffoldPick.ts"
-import type { ScaffoldPick, ToolId } from "../tools/types.ts"
+import type { ScaffoldPick, ToolId, ToolSettings } from "../tools/types.ts"
 
 /** Everything the editor holds, as one immutable snapshot: a new object whenever anything changes. */
 export type EditorSnapshot = {
@@ -16,6 +16,8 @@ export type EditorSnapshot = {
   ringKind: RingKind
   atomEl: string
   scaffold: ScaffoldPick
+  bracketKind: ToolSettings["bracketKind"]
+  attachShape: ToolSettings["attachShape"]
   colorHetero: boolean
   /** Variables' numbers raised as patents print them (R¹), instead of lowered (R₁). */
   raisedNumbers: boolean
@@ -51,6 +53,8 @@ export function createEditorStore(initial: Molecule[] | Drawing = []) {
     ringKind: "benzene",
     atomEl: "N",
     scaffold: defaultPick("benzene"),
+    bracketKind: "group",
+    attachShape: null,
     colorHetero: true,
     raisedNumbers: false,
   }
@@ -106,6 +110,8 @@ export function createEditorStore(initial: Molecule[] | Drawing = []) {
     setBondStyle: field("bondStyle"),
     setRingKind: field("ringKind"),
     setAtomEl: field("atomEl"),
+    setBracketKind: field("bracketKind"),
+    setAttachShape: field("attachShape"),
     setColorHetero: field("colorHetero"),
     setRaisedNumbers: field("raisedNumbers"),
     /** Chooses the scaffold to place, and takes up the template tool. */

@@ -7,17 +7,22 @@ import type { Drawing, Molecule, Point } from "../types.ts"
 // of that ring". A drawing convention of the pointer tools, used only when asked for.
 
 /**
- * The ring whose inside the point is in, as the atoms a substituent could hang from: the
- * ring's atoms that are in no other ring (not the fusion atoms). Null when the point is in
- * no ring, the ring contains `except` (the atom the line starts from), or it leaves fewer
- * than two such atoms.
+ * The ring whose inside the point is in (its atoms in order round it), with the atoms a
+ * substituent could hang from: the ring's atoms that are in no other ring (not the fusion
+ * atoms). Null when the point is in no ring, the ring contains `except` (the atom the line
+ * starts from), or it leaves fewer than two such atoms.
  */
-export function ringPositionsAt(mol: Molecule, point: Point, except?: number): number[] | null {
+export function ringAt(mol: Molecule, point: Point, except?: number): { ring: number[]; positions: number[] } | null {
   const { rings, count } = ringMembership(mol)
   const ring = rings.find((ids) => pointInPolygon(point, ids.map((id) => atomById(mol, id)!)))
   if (!ring || (except != null && ring.includes(except))) return null
   const positions = ring.filter((id) => count.get(id) === 1)
-  return positions.length >= 2 ? positions : null
+  return positions.length >= 2 ? { ring, positions } : null
+}
+
+/** The free positions of the ring whose inside the point is in, as ringAt finds it; null for none. */
+export function ringPositionsAt(mol: Molecule, point: Point, except?: number): number[] | null {
+  return ringAt(mol, point, except)?.positions ?? null
 }
 
 /**

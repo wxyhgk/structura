@@ -10,7 +10,7 @@ export type KeyEvent = KeyEventLike & { preventDefault(): void }
 
 /** What a key can reach: the editor's actions, the canvas under the pointer (if any), and the commands. */
 export type KeyRoutes = {
-  editor: Pick<Editor, "get" | "hotkeySelection" | "applyBondOrder" | "setBondStyle" | "setRingKind" | "setTool" | "applyElement">
+  editor: Pick<Editor, "get" | "hotkeySelection" | "applyBondOrder" | "setBondStyle" | "setRingKind" | "setTool" | "applyElement" | "takeBracketTool">
   canvas: { pointed(): HoverTarget; handleKey(event: KeyEvent): boolean; hasGesture(): boolean } | null
   commands: Command[]
 }
@@ -83,6 +83,7 @@ export function routeKey(event: KeyEvent, { editor, canvas, commands }: KeyRoute
       editor.setRingKind(toolKey.ring)
       editor.setTool("ring")
     } else if (toolKey.tool === "ring-current") editor.setTool("ring")
+    else if (toolKey.tool === "bracket") editor.takeBracketTool()
     else editor.setTool(toolKey.tool)
     return
   }

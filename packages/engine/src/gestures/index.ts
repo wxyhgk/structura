@@ -1,7 +1,9 @@
 import type { Point } from "@structura/core/types"
 import { bracketAt } from "../pointer/brackets.ts"
 import { hitOf } from "../pointer/targeting.ts"
+import { attach, startAttach } from "./attach.ts"
 import { bond, startBond } from "./bond.ts"
+import { bracketBox, startBracket } from "./bracket.ts"
 import { chain, startChain } from "./chain.ts"
 import { clickTool } from "./click.ts"
 import { hover } from "./hover.ts"
@@ -22,7 +24,7 @@ const pan: GestureKind<Pan> = {
 }
 
 /** Each kind of drag, by name: what moving and letting go do. */
-const KINDS: { [K in Exclude<Gesture["kind"], "idle">]: GestureKind<Extract<Gesture, { kind: K }>> } = { bond, chain, move, rotate, scale, marquee, lasso, pan }
+const KINDS: { [K in Exclude<Gesture["kind"], "idle">]: GestureKind<Extract<Gesture, { kind: K }>> } = { bond, chain, bracket: bracketBox, attach, move, rotate, scale, marquee, lasso, pan }
 
 /**
  * A press: the middle button or Space pans; otherwise the frame's handles, then the tools
@@ -53,6 +55,8 @@ function startPress(host: PointerHost, world: Point, event: PointerInput): Gestu
   if (clickTool(host, hit, world)) return null
   if (tool === "bond") return startBond(host, hit, world, event)
   if (tool === "chain") return startChain(host, hit, world)
+  if (tool === "bracket") return startBracket(host, hit, world)
+  if (tool === "attach") return startAttach(host, hit, world)
   return hit ? pressOn(host, hit, world, event.shiftKey) : pressEmpty(host, world, event.shiftKey)
 }
 

@@ -37,14 +37,14 @@ export const TOOL_KEYS: ToolKey[] = [
   { key: "6", tool: "ring", ring: "cyclohexane" },
   { key: "7", tool: "ring", ring: "cycloheptane" },
   { key: "8", tool: "ring", ring: "cyclooctane" },
+  // With atoms selected it also brackets them, as the palette's button does (see takeBracketTool).
+  { key: "[", tool: "bracket" },
 ]
-
-const SINGLE: BondStyle = { order: 1, stereo: "none" }
 
 /** What a tool key picks, in words: the palette's name for that tool, bond or ring. */
 export function toolKeyLabel(entry: ToolKey): string {
   if (entry.tool === "ring-current") return TOOL_NAMES["ring-current"]
-  return toolLabel(entry.tool, entry.tool === "bond" ? entry.style : SINGLE, entry.tool === "ring" ? entry.ring : "benzene", "")
+  return toolLabel(entry.tool, { bondStyle: entry.tool === "bond" ? entry.style : undefined, ringKind: entry.tool === "ring" ? entry.ring : undefined })
 }
 
 export function toolForKey(key: string): ToolKey | undefined {

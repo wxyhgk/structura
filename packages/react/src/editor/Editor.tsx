@@ -193,7 +193,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
             <Toolbar commands={commands} zoom={zoom} />
 
             <div className="flex min-h-0 flex-1">
-              <BoundPalette editor={pad?.editor ?? editor} onPick={pad?.onPick} />
+              <BoundPalette editor={pad?.editor ?? editor} onPick={pad?.onPick} structureTools={!pad} />
               {workspace === "draw" && canvasArea}
               {workspace === "markush" && (
                 <MarkushWorkspace

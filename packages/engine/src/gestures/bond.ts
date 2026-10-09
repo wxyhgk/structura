@@ -1,7 +1,7 @@
 import { ringPositionsAt } from "@structura/markush"
 import { SNAP_ATOM, atomById, nearestAtom } from "@structura/core/molecule"
-import type { Op } from "@structura/core/ops"
-import type { Molecule, Point } from "@structura/core/types"
+import type { Point } from "@structura/core/types"
+import { attachmentOps } from "../markush/attachmentOps.ts"
 import { bracketDropAt } from "../pointer/brackets.ts"
 import { bondEnd, hitOf } from "../pointer/targeting.ts"
 import type { Gesture, GestureContext, GestureKind, PointerHost } from "./types.ts"
@@ -44,14 +44,6 @@ function attachmentTarget(gesture: BondGesture, world: Point, zoom: number, cont
   return { atom: null, end: world, positions }
 }
 
-/** The first R number the drawing does not use yet: R1, or R2 when R1 is taken, and so on. */
-function nextRName(mol: Molecule): string {
-  const used = new Set(mol.atoms.flatMap((atom) => (atom.alias && /^R\d+$/.test(atom.alias) ? [atom.alias] : [])))
-  let n = 1
-  while (used.has(`R${n}`)) n++
-  return `R${n}`
-}
-
 const originOf = (gesture: BondGesture) => (gesture.fromId == null ? gesture.origin : (atomById(gesture.mol, gesture.fromId) ?? gesture.origin))
 
 /** The bond tool: a click draws a bond from the atom (or a horizontal one); a drag draws to where it ends. */
@@ -86,16 +78,11 @@ export const bond: GestureKind<BondGesture> = {
     const attachment = attachmentTarget(gesture, world, host.zoom(), host.props)
     if (attachment) {
       // A new atom takes the next id, so the attachment can name it in the same step.
-      const ops: Op[] =
+      host.props.run(
         attachment.atom == null
-          ? [
-              { op: "place_atom", el: "C", at: attachment.end },
-              // What hangs off a ring "at any position" is nearly always an R group: it is labelled one at once.
-              { op: "label", atom: gesture.mol.nextAtomId, text: nextRName(gesture.mol) },
-              { op: "set_attachment", atom: gesture.mol.nextAtomId, to: attachment.positions },
-            ]
-          : [{ op: "set_attachment", atom: attachment.atom, to: attachment.positions }]
-      host.props.run(ops)
+          ? attachmentOps(gesture.mol, gesture.mol.nextAtomId, attachment.positions, { made: attachment.end })
+          : attachmentOps(gesture.mol, attachment.atom, attachment.positions),
+      )
       return
     }
     const origin = originOf(gesture)

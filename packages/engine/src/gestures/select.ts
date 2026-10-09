@@ -14,17 +14,21 @@ function picked(mol: Molecule, atoms: number[], gesture: Marquee | Lasso): Selec
   return { atoms: [...new Set([...gesture.base.atoms, ...fresh.atoms])], bonds: [...new Set([...gesture.base.bonds, ...fresh.bonds])] }
 }
 
+/** The atoms inside the box with corners `a` and `b`. */
+export function atomsInBox(mol: Molecule, a: Point, b: Point): number[] {
+  const [minX, maxX] = [Math.min(a.x, b.x), Math.max(a.x, b.x)]
+  const [minY, maxY] = [Math.min(a.y, b.y), Math.max(a.y, b.y)]
+  return mol.atoms.filter((atom) => atom.x >= minX && atom.x <= maxX && atom.y >= minY && atom.y <= maxY).map((atom) => atom.id)
+}
+
 /** The box select tool: the atoms inside the box. */
 export const marquee: GestureKind<Marquee> = {
   move(host, gesture, world) {
     host.setPreview({ kind: "marquee", a: gesture.origin, b: world })
   },
   up(host, gesture, world) {
-    const [minX, maxX] = [Math.min(gesture.origin.x, world.x), Math.max(gesture.origin.x, world.x)]
-    const [minY, maxY] = [Math.min(gesture.origin.y, world.y), Math.max(gesture.origin.y, world.y)]
     const mol = host.props.mol
-    const atoms = mol.atoms.filter((atom) => atom.x >= minX && atom.x <= maxX && atom.y >= minY && atom.y <= maxY).map((atom) => atom.id)
-    host.props.setSelection(picked(mol, atoms, gesture))
+    host.props.setSelection(picked(mol, atomsInBox(mol, gesture.origin, world), gesture))
     host.setPreview(null)
   },
 }

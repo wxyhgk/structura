@@ -1,4 +1,4 @@
-import type { Attachment } from "@structura/markush"
+import type { Attachment, AttachmentShape } from "@structura/markush"
 import type { BondStyle, Bracket, Molecule, Point, RingKind, Selection } from "@structura/core/types"
 import type { Run } from "../ops/builders.ts"
 import type { FrameHandle } from "../pointer/targeting.ts"
@@ -17,6 +17,18 @@ export type Gesture =
   | { kind: "pan"; clientX: number; clientY: number; pan: Point }
   | { kind: "rotate"; mol: Molecule; ids: number[]; center: Point; startAngle: number }
   | { kind: "scale"; mol: Molecule; ids: number[]; center: Point; anchor: "n" | "s" | "e" | "w" | "nw" | "ne" | "se" | "sw"; origin: Point }
+  | { kind: "bracket"; origin: Point }
+  /**
+   * The attachment tool's sweep. `mol` is the molecule as pressed, with the new R atom in it
+   * when the press was on empty canvas (`fresh`); `from` is the atom the attachment hangs
+   * from, or null when it is made where the drag ends (pressed in a ring's middle). `rings`
+   * are the rings passed over so far (atoms in order, and free positions); `bracket` the
+   * group bracket gone into.
+   */
+  | { kind: "attach"; mol: Molecule; from: number | null; fresh: boolean; origin: Point; rings: SweptRing[]; bracket: Bracket | null }
+
+/** A ring the attachment tool passed over: its atoms in order round it, and the free positions among them. */
+export type SweptRing = { ring: number[]; positions: number[] }
 
 /** What the canvas draws for a gesture before it is let go: a bond, a chain, a ring, a selection box… */
 export type Preview =
@@ -31,6 +43,13 @@ export type Preview =
    * `centre`. Into a bracket, the line stops at `end`, just past the bracket's upright.
    */
   | { kind: "attachment"; a: Point; centre: Point; positions: Point[]; end?: Point }
+  /** The bracket tool's box: the atoms inside it (`atoms`) get a bracket of this kind. */
+  | { kind: "bracket"; a: Point; b: Point; atoms: number[]; bracketKind: Bracket["kind"] }
+  /**
+   * The attachment tool's sweep: a line from `a` to the pointer `b`, the rings passed over
+   * (outlines) and the positions the attachment will choose from, meeting them at `centre`.
+   */
+  | { kind: "sweep"; a: Point; b: Point; rings: Point[][]; positions: Point[]; centre: Point | null }
 
 /** The editor as gestures see it: what is drawn, the tool settings, the selection, and the write path. */
 export type GestureContext = {
@@ -40,6 +59,10 @@ export type GestureContext = {
   ringKind: RingKind
   scaffold: ScaffoldPick
   atomEl: string
+  /** The kind of bracket the bracket tool makes. */
+  bracketKind: Bracket["kind"]
+  /** How the attachment tool draws what it makes; null chooses by itself. */
+  attachShape: AttachmentShape | null
   selection: Selection
   /** The drawing's brackets: pressing one's stroke with a select tool selects (and drags) its atoms. */
   brackets?: readonly Bracket[]

@@ -7,6 +7,8 @@ import { type RingHintShape, selectionFrame, type ToolId } from "@structura/engi
 import { AttachmentLines } from "../markush/AttachmentLines.tsx"
 import { RingHint } from "../markush/RingHint.tsx"
 import { BracketMarks } from "./BracketMarks.tsx"
+import { BracketPreview } from "./BracketPreview.tsx"
+import { SweepPreview } from "./SweepPreview.tsx"
 import { atomCircle } from "./rings.ts"
 import { SelectionMarks } from "./SelectionMarks.tsx"
 import type { HoverTarget, Preview } from "./types.ts"
@@ -58,7 +60,9 @@ export function SceneView({
       {showFrame && (tool === "lasso" || tool === "marquee") && (
         <SelectionChrome mol={mol} selection={selection} zoom={zoom} />
       )}
-      {preview && <PreviewLayer preview={preview} />}
+      {preview?.kind === "bracket" && <BracketPreview preview={preview} mol={mol} attachments={attachments} brackets={brackets} />}
+      {preview?.kind === "sweep" && <SweepPreview preview={preview} />}
+      {preview && preview.kind !== "bracket" && preview.kind !== "sweep" && <PreviewLayer preview={preview} />}
       {ringHint && <RingHint hint={ringHint} />}
     </>
   )
@@ -240,7 +244,7 @@ function SelectionChrome({ mol, selection, zoom }: { mol: Molecule; selection: S
   )
 }
 
-function PreviewLayer({ preview }: { preview: Exclude<Preview, null> }) {
+function PreviewLayer({ preview }: { preview: Exclude<Preview, null | { kind: "bracket" | "sweep" }> }) {
   if (preview.kind === "attachment") {
     return (
       <g data-testid="attachment-preview">

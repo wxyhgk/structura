@@ -12,7 +12,10 @@ export type FlyoutItem = {
   onPick: () => void
 }
 
-/** A tool button with a caret that opens a grid of variants (bond styles, ring kinds). */
+/**
+ * A tool button with a caret that opens its variants: a grid of icons (bond styles, ring
+ * kinds), or with `labelled` a list of icons with their names (bracket kinds, attachment shapes).
+ */
 export function ToolFlyout({
   label,
   caretLabel,
@@ -21,6 +24,7 @@ export function ToolFlyout({
   icon,
   onClick,
   items,
+  labelled = false,
 }: {
   label: string
   caretLabel: string
@@ -29,6 +33,7 @@ export function ToolFlyout({
   icon: ReactNode
   onClick: () => void
   items: FlyoutItem[]
+  labelled?: boolean
 }) {
   const [open, setOpen] = useState(false)
   return (
@@ -38,18 +43,20 @@ export function ToolFlyout({
       </ToolButton>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button type="button" className="flyout-caret" aria-label={caretLabel}>
+          <button type="button" className="flyout-caret" aria-label={caretLabel} data-testid={`${testId}-caret`}>
             <Caret />
           </button>
         </PopoverTrigger>
         <PopoverContent side="right" align="start" className="w-auto p-1">
-          <div className="grid grid-cols-3 gap-0.5">
+          <div className={labelled ? "flex flex-col gap-0.5" : "grid grid-cols-3 gap-0.5"}>
             {items.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                className="tool-button"
+                className={labelled ? "tool-button gap-2 pr-3 pl-1 text-[12px] whitespace-nowrap" : "tool-button"}
+                style={labelled ? { width: "auto", justifyContent: "flex-start" } : undefined}
                 data-active={item.active ? "true" : "false"}
+                data-testid={`${testId}-option-${item.id}`}
                 aria-label={item.label}
                 title={item.title}
                 onClick={() => {
@@ -58,6 +65,7 @@ export function ToolFlyout({
                 }}
               >
                 {item.icon}
+                {labelled && <span>{item.label}</span>}
               </button>
             ))}
           </div>

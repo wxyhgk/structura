@@ -1,5 +1,6 @@
 import type { ContextTarget, Command } from "@structura/engine"
 import type { Op } from "@structura/core/ops"
+import type { Attachment } from "@structura/markush"
 import {
   ContextMenuContent,
   ContextMenuItem,
@@ -12,6 +13,7 @@ import {
 import type { Commands } from "../hooks/useCommands.ts"
 import { IDENTIFIER_NAMES, type IdentifierKind } from "../identifiers.ts"
 import { useOverlayMark } from "../input/overlays.ts"
+import { AttachmentShapeMenu } from "../markush/AttachmentShapeMenu.tsx"
 
 /** Elements offered on an atom's menu, the ones drawn most. */
 const ELEMENTS = ["C", "N", "O", "S", "P", "F", "Cl", "Br", "I", "H", "B", "Si"]
@@ -48,10 +50,12 @@ function Identify({ onCopyAs, onAnalyze }: { onCopyAs: (kind: IdentifierKind) =>
  * The canvas's right-click menu, by what was clicked: the selection (edit, transform,
  * structure), one atom (element, charge, label), one bond (order, wedge), or empty canvas
  * (paste, select all). Copying as SMILES and the analysis act on the selection, or on the
- * whole molecule of the atom or bond clicked.
+ * whole molecule of the atom or bond clicked. An atom with a variable attachment also offers
+ * how that is drawn.
  */
 export function CanvasMenu({
   target,
+  attachments,
   commands: c,
   run,
   onEditLabel,
@@ -60,6 +64,7 @@ export function CanvasMenu({
   onAnalyze,
 }: {
   target: ContextTarget | null
+  attachments?: Attachment[]
   commands: Commands
   run: (ops: Op[]) => void
   onEditLabel: (atom: number) => void
@@ -69,6 +74,7 @@ export function CanvasMenu({
 }) {
   const overlayMark = useOverlayMark()
   if (!target) return null
+  const attachment = target.kind === "atom" ? attachments?.find((item) => item.atom === target.id) : undefined
   return (
     <ContextMenuContent {...overlayMark} data-testid="canvas-menu">
       {target.kind === "selection" && (
@@ -128,6 +134,7 @@ export function CanvasMenu({
             编辑标签…<ContextMenuShortcut>Enter</ContextMenuShortcut>
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => onSelectMolecule(target.id)}>选中整个分子</ContextMenuItem>
+          {attachment && <AttachmentShapeMenu attachment={attachment} run={run} />}
           <ContextMenuSeparator />
           <Identify onCopyAs={onCopyAs} onAnalyze={onAnalyze} />
           <ContextMenuSeparator />

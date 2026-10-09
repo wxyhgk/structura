@@ -67,7 +67,11 @@ export function OverviewTab({ drawing, facts, run }: { drawing: Drawing; facts: 
           key={attachment.atom}
           type="button"
           className="block text-[11px] text-[#1a73e8] hover:underline"
-          onClick={() => run([{ op: "set_attachment", atom: attachment.atom, to: system, ...(attachment.repeat ? { repeat: attachment.repeat } : {}) }], { keepSelection: true })}
+          onClick={() =>
+            run([{ op: "set_attachment", atom: attachment.atom, to: system, ...(attachment.repeat ? { repeat: attachment.repeat } : {}), ...(attachment.shape ? { shape: attachment.shape } : {}) }], {
+              keepSelection: true,
+            })
+          }
         >
           {name}：扩大到整个稠环体系（{system.length} 个位置）
         </button>

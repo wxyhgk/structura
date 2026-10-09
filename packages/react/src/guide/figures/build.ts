@@ -14,23 +14,12 @@ export function build(ops: Op[], from: Drawing = emptyDrawing()): Drawing {
 }
 
 /**
- * A drawing as SVG text, its variable attachments drawn the way the canvas draws them, on
- * no background of its own, so it sits on whatever card the page puts it on.
+ * A drawing as SVG text, its variable attachments drawn the way the canvas draws them (the
+ * renderer shares their geometry), on no background of its own, so it sits on whatever
+ * card the page puts it on.
  */
 export function figureSvg(drawing: Drawing): string {
-  const svg = sceneToSvg(drawing.molecule, true, drawing.arrows, drawing.attachments).replace(/<rect [^>]*fill="#ffffff"\s*\/>\n?/, "")
-  const atoms = new Map(drawing.molecule.atoms.map((atom) => [atom.id, atom]))
-  const lines = (drawing.attachments ?? []).flatMap((attachment) => {
-    const from = atoms.get(attachment.atom)
-    const targets = attachment.to.flatMap((id) => atoms.get(id) ?? [])
-    if (!from || targets.length === 0) return []
-    const to = { x: targets.reduce((sum, atom) => sum + atom.x, 0) / targets.length, y: targets.reduce((sum, atom) => sum + atom.y, 0) / targets.length }
-    // Leave room for the label the line starts from.
-    const gap = from.alias ? 11 / Math.hypot(to.x - from.x, to.y - from.y) : 0
-    const start = { x: from.x + (to.x - from.x) * gap, y: from.y + (to.y - from.y) * gap }
-    return [`<line x1="${start.x}" y1="${start.y}" x2="${to.x}" y2="${to.y}" stroke="#222" stroke-width="1.55" stroke-linecap="round"/>`]
-  })
-  return lines.length > 0 ? svg.replace("</svg>", `${lines.join("")}</svg>`) : svg
+  return sceneToSvg(drawing.molecule, true, drawing.arrows, drawing.attachments).replace(/<rect [^>]*fill="#ffffff"\s*\/>\n?/, "")
 }
 
 /** Built the first time it is shown, then kept: the pictures never change. */

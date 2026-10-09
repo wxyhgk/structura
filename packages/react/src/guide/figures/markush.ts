@@ -1,4 +1,4 @@
-import { type Alternative, enumerate } from "@structura/markush"
+import { type Alternative, enumerate, ringSystemPositions } from "@structura/markush"
 import type { Drawing } from "@structura/core/types"
 import { build, label, once, star } from "./build.ts"
 
@@ -72,4 +72,28 @@ export const expanded = once(() => {
     formula(),
   )
   return enumerate(drawing).molecules
+})
+
+/**
+ * Curved attachments over fused systems, as patents draw them: (R1)n anywhere on naphthalene
+ * (an ellipse round it), and –L2 joined anywhere on carbazole (the bond sweeping round it).
+ */
+export const curvedAttachments = once(() => {
+  const loop = build([
+    { op: "add_scaffold", name: "naphthalene", at: { x: 0, y: 0 } },
+    { op: "place_atom", el: "C", at: { x: 125, y: -85 } },
+    { op: "label", atom: 11, text: "R1" },
+  ])
+  const arc = build([
+    { op: "add_scaffold", name: "carbazole", at: { x: 0, y: 0 } },
+    { op: "place_atom", el: "C", at: { x: -150, y: -10 } },
+    { op: "label", atom: 14, text: "L2" },
+    { op: "place_atom", el: "C", at: { x: -195, y: -75 } },
+    { op: "label", atom: 15, text: "Ar" },
+    { op: "add_bond", a: 14, b: 15 },
+  ])
+  return {
+    loop: build([{ op: "set_attachment", atom: 11, to: ringSystemPositions(loop.molecule, [1])!, repeat: { min: 0, max: 4, name: "n" } }], loop),
+    arc: build([{ op: "set_attachment", atom: 14, to: ringSystemPositions(arc.molecule, [1])! }], arc),
+  }
 })

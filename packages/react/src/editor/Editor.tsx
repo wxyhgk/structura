@@ -146,6 +146,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               </ContextMenuTrigger>
               <CanvasMenu
                 target={menu.target}
+                attachments={editor.attachments}
                 commands={commands}
                 run={(ops) => void editor.run(ops)}
                 onEditLabel={(atom) => canvasRef.current?.editLabel(atom)}

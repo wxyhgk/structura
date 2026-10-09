@@ -5,7 +5,7 @@ import { expect, type Page } from "@playwright/test"
 type Atom = { id: number; el: string; x: number; y: number; alias?: string }
 export type Doc = {
   molecule: { atoms: Atom[]; bonds: Array<{ a: number; b: number }> }
-  attachments?: Array<{ atom: number; to: number[]; repeat?: { min: number; max: number; name: string } }>
+  attachments?: Array<{ atom: number; to: number[]; repeat?: { min: number; max: number; name: string }; shape?: "line" | "loop" | "arc" }>
   variables?: Record<string, unknown>
 }
 type Handle = { getDocument(): string; setDocument(text: string): string[] }

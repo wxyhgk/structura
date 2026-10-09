@@ -2,13 +2,15 @@ import { useMemo, useState } from "react"
 import type { Attachment, Repeat } from "@structura/markush"
 import type { Molecule } from "@structura/core/types"
 import type { Run } from "@structura/engine"
+import { AttachmentShapePicker } from "./AttachmentShapePicker.tsx"
 import { widerSystem } from "./workspace/widerSystem.ts"
 
 const FIELD = "h-6 rounded border border-[#d0d0d0] bg-white px-1 text-center text-[12px] outline-none focus:border-[#1a73e8]"
 
 /**
- * One variable point of attachment in the 位置 tab: which piece, how many positions, and how
- * many times it appears, "(R1)m, m = 0–4". Once by default; the count is ticked on here.
+ * One variable point of attachment in the 位置 tab: which piece, how many positions, how it
+ * is drawn, and how many times it appears, "(R1)m, m = 0–4". Once by default; the count is
+ * ticked on here.
  */
 export function AttachmentRow({ attachment, mol, run }: { attachment: Attachment; mol: Molecule; run: Run }) {
   const hub = mol.atoms.find((atom) => atom.id === attachment.atom)
@@ -52,11 +54,12 @@ export function AttachmentRow({ attachment, mol, run }: { attachment: Attachment
         <button
           type="button"
           className="mt-1 text-[11px] text-[#1a73e8] hover:underline"
-          onClick={() => run([{ op: "set_attachment", atom: attachment.atom, to: system, ...(repeat ? { repeat } : {}) }], { keepSelection: true })}
+          onClick={() => run([{ op: "set_attachment", atom: attachment.atom, to: system, ...(repeat ? { repeat } : {}), ...(attachment.shape ? { shape: attachment.shape } : {}) }], { keepSelection: true })}
         >
           扩大到整个稠环体系（{system.length} 个位置）
         </button>
       )}
+      <AttachmentShapePicker attachment={attachment} mol={mol} run={run} />
       <label className="mt-1.5 flex items-center gap-1.5 text-[#555]">
         <input
           type="checkbox"

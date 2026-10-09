@@ -20,6 +20,11 @@ test("every guide figure is built by the real ops, and shows what it says", () =
   assert.equal(drawing.attachments?.length, 1)
   assert.match(figures.figureSvg(drawing), /<line /)
   assert.equal(products.length, 3)
+  // Over a fused system: a closed ellipse for (R1)n, an open curve for L2.
+  const curved = figures.curvedAttachments()
+  assert.match(figures.figureSvg(curved.loop), /<path d="M [^"]+ Z"/)
+  assert.match(figures.figureSvg(curved.arc), /<path d="M [^"Z]+"/)
+  assert.ok(!/<line [^>]*stroke-linecap="round"/.test(figures.figureSvg(curved.arc)), "no straight line drawn over the curve")
   const { carbazolyl, naphthylene, nR5 } = figures.pieces()
   for (const [piece, stars] of [[carbazolyl, 1], [naphthylene, 2], [nR5, 2]] as const) assert.equal(piece.molecule.atoms.filter((atom) => atom.alias === "*").length, stars)
   assert.equal(figures.expanded().length, 4)

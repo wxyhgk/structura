@@ -2,12 +2,14 @@ import { elementOf } from "../elements/index.ts"
 import { hasVariableShape } from "../markush/shape.ts"
 import type { Attachment } from "../markush/types.ts"
 import type { Atom, Bond, Drawing, Group, Point } from "../types.ts"
+import { attachmentCourse, curveElement } from "./curves.ts"
 import { elementLabel, type Label, LABEL_SIZE, pointsLeft, repeated, runsWidth, textWidth, typedRuns } from "./labels.ts"
 import { el, num, type XmlNode } from "./xml.ts"
 
 // The molecule as CDXML fragments: one per connected piece (a variable attachment joins
 // its atom to its ring), atoms as nodes, bonds, collapsed abbreviations as Fragment nodes
-// holding their atoms, and variable attachments as ChemDraw's own VariableAttachment node.
+// holding their atoms, and variable attachments as ChemDraw's own VariableAttachment node
+// (with a Curve graphic for an ellipse, an arc or a custom curve).
 
 /** The Arial font the labels are written in (its id in the font table). */
 export const LABEL_FONT = 3
@@ -163,7 +165,8 @@ export function writeStructure(drawing: Drawing, context: StructureContext): Str
     outerBonds.set(bond.id, bondElement(id, nodeOf(bond.a)!, nodeOf(bond.b)!, bond))
   }
 
-  // "Attached at any of these atoms": a node at their middle naming them, bonded to the attached atom.
+  // "Attached at any of these atoms": a node naming them, bonded to the attached atom: at
+  // their middle, or, drawn curved, where the straight part ends, the curve beside it.
   const attachmentNodes = new Map<number, XmlNode[]>()
   for (const attachment of drawing.attachments ?? []) {
     const written = variableAttachment(attachment)
@@ -173,13 +176,15 @@ export function writeStructure(drawing: Drawing, context: StructureContext): Str
     const from = atoms.get(attachment.atom)
     const targets = attachment.to.flatMap((id) => atoms.get(id) ?? [])
     if (!from || targets.length === 0) return null
-    const middle = { x: targets.reduce((sum, atom) => sum + atom.x, 0) / targets.length, y: targets.reduce((sum, atom) => sum + atom.y, 0) / targets.length }
+    const course = attachmentCourse(mol, attachment, drawing.brackets)
+    const middle = course?.join ?? { x: targets.reduce((sum, atom) => sum + atom.x, 0) / targets.length, y: targets.reduce((sum, atom) => sum + atom.y, 0) / targets.length }
     const id = nextId()
     const bond = nextId()
     const group = collapsed.get(from.id)
     if (group) enter(group, from.id, middle)
     const candidates = [...new Set(targets.map((atom) => nodeOf(atom.id)!))]
-    return [el("n", { id, p: point(middle), NodeType: "VariableAttachment", Attachments: candidates.join(" ") }), bondElement(bond, id, nodeOf(from.id)!)]
+    const curve = course ? curveElement(nextId(), course.cubics, course.closed, at) : null
+    return [el("n", { id, p: point(middle), NodeType: "VariableAttachment", Attachments: candidates.join(" ") }), bondElement(bond, id, nodeOf(from.id)!), ...(curve ? [curve] : [])]
   }
 
   const fragmentAt = new Map<number, XmlNode>()
@@ -194,7 +199,8 @@ export function writeStructure(drawing: Drawing, context: StructureContext): Str
     const attachments = ids.flatMap((id) => attachmentNodes.get(id) ?? [])
     const vaNodes = attachments.filter((node) => node.tag === "n")
     const vaBonds = attachments.filter((node) => node.tag === "b")
-    const fragment = el("fragment", { id: nextId() }, [...nodes, ...vaNodes, ...bonds, ...vaBonds])
+    const vaCurves = attachments.filter((node) => node.tag === "curve")
+    const fragment = el("fragment", { id: nextId() }, [...nodes, ...vaNodes, ...bonds, ...vaBonds, ...vaCurves])
     for (const id of ids) fragmentAt.set(id, fragment)
     return fragment
   })

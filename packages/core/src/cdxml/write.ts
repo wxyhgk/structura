@@ -2,6 +2,7 @@ import { crossingBonds } from "../drawing/brackets.ts"
 import { bondLengthAt } from "../molecule/measure.ts"
 import type { Atom, Bracket, Drawing, Point } from "../types.ts"
 import { type BracketBox, bracketBox } from "./brackets.ts"
+import { curveReach } from "./curves.ts"
 import { elementLabel, textWidth } from "./labels.ts"
 import { LABEL_FONT, type Structure, writeStructure } from "./structure.ts"
 import { el, num, serialize, type XmlNode } from "./xml.ts"
@@ -33,9 +34,10 @@ const CJK_FONT = 4
 const CJK = /[⺀-鿿＀-￯]/
 
 /** Every point the drawing reaches, in drawing units. */
-function extentOf(drawing: Drawing, boxes: readonly BracketBox[]): { left: number; top: number } {
+function extentOf(drawing: Drawing, boxes: readonly BracketBox[], curves: readonly Point[]): { left: number; top: number } {
   const points: Point[] = [
     ...drawing.molecule.atoms,
+    ...curves,
     ...drawing.arrows.flatMap((arrow) => [{ x: arrow.x1, y: arrow.y1 }, { x: arrow.x2, y: arrow.y2 }]),
     ...boxes.flatMap((box) => [{ x: box.left, y: box.top }]),
   ]
@@ -111,7 +113,8 @@ export function toCdxml(drawing: Drawing, options: CdxmlOptions = {}): string {
     const box = bracketBox(mol, bracket, bondLength, labelled)
     return box ? [{ bracket, box }] : []
   })
-  const origin = extentOf(drawing, boxes.map((item) => item.box))
+  const curves = curveReach(drawing)
+  const origin = extentOf(drawing, boxes.map((item) => item.box), curves)
   const at = (p: Point): Point => ({ x: (p.x - origin.left) * scale + MARGIN, y: (p.y - origin.top) * scale + MARGIN })
   let lastId = 0
   const nextId = () => ++lastId
@@ -127,7 +130,7 @@ export function toCdxml(drawing: Drawing, options: CdxmlOptions = {}): string {
   const arrows = drawing.arrows.map((arrow) => writeArrow(nextId(), at({ x: arrow.x1, y: arrow.y1 }), at({ x: arrow.x2, y: arrow.y2 })))
 
   // How far everything reaches on the page, for the notes under it and the page's size.
-  const placed = [...mol.atoms.map(at), ...drawing.arrows.flatMap((arrow) => [at({ x: arrow.x1, y: arrow.y1 }), at({ x: arrow.x2, y: arrow.y2 })]), ...boxes.flatMap(({ box }) => [at({ x: box.right, y: box.bottom })])]
+  const placed = [...mol.atoms.map(at), ...curves.map(at), ...drawing.arrows.flatMap((arrow) => [at({ x: arrow.x1, y: arrow.y1 }), at({ x: arrow.x2, y: arrow.y2 })]), ...boxes.flatMap(({ box }) => [at({ x: box.right, y: box.bottom })])]
   let right = Math.max(MARGIN, ...placed.map((p) => p.x))
   let bottom = Math.max(MARGIN, ...placed.map((p) => p.y))
   const notes = (options.notes ?? []).filter((line) => line.trim() !== "")

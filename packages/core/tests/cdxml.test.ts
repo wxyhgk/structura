@@ -175,6 +175,50 @@ test("a variable attachment is ChemDraw's VariableAttachment node naming every c
   assert.equal(labelOf(r1), "(R1)m", "the repeat is written round the label")
 })
 
+test("a curved attachment: the VariableAttachment node where the straight part ends, and the rest as a ChemDraw Curve", () => {
+  /** The curve's points in threes (handle in, point, handle out), and the node and R1 as written. */
+  const written = (ops: Op[]) => {
+    const root = parse(toCdxml(build([...R1_ANYWHERE, { op: "set_attachment", atom: "r", to: [1, 2, 3, 4, 5, 6] }, ...ops])))
+    const curves = all(root, "curve")
+    assert.equal(curves.length, 1)
+    const numbers = ids(curves[0].attrs.CurvePoints)
+    assert.equal(numbers.length % 6, 0, "points in threes")
+    const triples = Array.from({ length: numbers.length / 6 }, (_, i) => [0, 1, 2].map((k) => [numbers[6 * i + 2 * k], numbers[6 * i + 2 * k + 1]]))
+    const nodes = all(root, "n")
+    const attachment = nodes.find((node) => node.attrs.NodeType === "VariableAttachment")!
+    assert.ok(all(root, "fragment")[0].children.includes(curves[0]), "in the fragment, beside the node")
+    return { curve: curves[0], triples, at: point(attachment) }
+  }
+  const near = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.05
+
+  // A loop: a closed curve round the ring; the node on it, where the line from R1 meets it.
+  const loop = written([{ op: "set_attachment_shape", atom: "r", shape: "loop" }])
+  assert.equal(loop.curve.attrs.Closed, "yes")
+  assert.ok(loop.triples.length >= 4)
+  // Smooth at each point: the handles either side in line with it.
+  for (const [a, p, b] of loop.triples) assert.ok(Math.abs((p[0] - a[0]) * (b[1] - p[1]) - (p[1] - a[1]) * (b[0] - p[0])) < 0.5)
+
+  // An open custom curve through three nodes: the bond runs to the first, the curve on through the rest.
+  const nodes: Array<[number, number]> = [
+    [60, -60],
+    [0, -70],
+    [-60, -30],
+  ]
+  const custom = written([{ op: "set_attachment_curve", atom: "r", nodes, closed: false }])
+  assert.equal(custom.curve.attrs.Closed, undefined)
+  assert.equal(custom.triples.length, 3, "a point for each node")
+  assert.ok(near(custom.triples[0][0], custom.triples[0][1]) && near(custom.triples[2][1], custom.triples[2][2]), "an open curve's ends have no outer handle")
+  assert.ok(near(custom.at, custom.triples[0][1]), "the node at the first point of the curve")
+  // On the page the nodes keep their spacing: 14.4 pt to a 40-unit bond.
+  const scale = 14.4 / 40
+  const step = Math.hypot(custom.triples[1][1][0] - custom.triples[0][1][0], custom.triples[1][1][1] - custom.triples[0][1][1])
+  assert.ok(Math.abs(step - Math.hypot(60, 10) * scale) < 0.1, `${step}`)
+
+  // Straight into the ring's middle: no curve.
+  const root = parse(toCdxml(build([...R1_ANYWHERE, { op: "set_attachment", atom: "r", to: [1, 2, 3, 4, 5, 6] }])))
+  assert.equal(all(root, "curve").length, 0)
+})
+
 test("a repeat bracket: two square brackets, a bracketed SRU group naming its atoms and the bonds through each side", () => {
   const drawing = build([{ op: "draw_chain", points: [{ x: 0, y: 0 }, { x: 35, y: -20 }, { x: 70, y: 0 }, { x: 105, y: -20 }] }, { op: "add_bracket", atoms: [2, 3], kind: "repeat" }])
   const root = parse(toCdxml(drawing))

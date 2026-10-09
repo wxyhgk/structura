@@ -1,5 +1,5 @@
 import { displayFormula, molecularWeight, plainFormula } from "@structura/core/formula"
-import { pickFields, type Enumeration, type Pick } from "@structura/markush"
+import { compoundFields, pickFields, type Enumeration, type Pick } from "@structura/markush"
 import type { Molecule } from "@structura/core/types"
 
 // The generated compounds as the dialog lists, filters and exports them. Pure, so tested
@@ -18,7 +18,7 @@ export function rowsOf(result: Enumeration): Row[] {
 
 /** A row's fields as SD data items and CSV columns: which formula first (when there are several), then each variable. */
 export function rowFields(row: Row): Record<string, string> {
-  return { ...(row.formula != null ? { "Formula No": String(row.formula) } : {}), ...pickFields(row.picks) }
+  return compoundFields(row.picks, row.formula)
 }
 
 /**

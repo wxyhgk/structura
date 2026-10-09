@@ -11,8 +11,9 @@ import { sizeText } from "./sizeText.ts"
 export function LibrarySizeLine({ drawing }: { drawing: Drawing }) {
   const { molecule, variables, attachments, ringClosures, brackets } = drawing
   const text = useMemo(() => {
+    // Something varies: a variable, a variable attachment or a repeat unit.
     const repeats = brackets?.some((bracket) => bracket.kind === "repeat") ?? false
-    if ((!variables || Object.keys(variables).length === 0) && !repeats) return null
+    if (Object.keys(variables ?? {}).length === 0 && !attachments?.length && !repeats) return null
     try {
       return sizeText(librarySize({ molecule, arrows: [], nextArrowId: 1, variables, attachments, ringClosures, brackets }))
     } catch {

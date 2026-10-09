@@ -1,5 +1,5 @@
 import { forwardRef, useMemo, useRef, useState } from "react"
-import { atomIdsOfSelection, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
+import { componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
 import { TooltipProvider } from "../components/ui/tooltip.tsx"
 import { ContextMenu, ContextMenuTrigger } from "../components/ui/context-menu.tsx"
 import { AnalysisDialog } from "./analysis/AnalysisDialog.tsx"
@@ -12,7 +12,7 @@ import { useFlash } from "./shell/useFlash.ts"
 import { Canvas } from "./canvas/Canvas.tsx"
 import type { CanvasHandle } from "./canvas/types.ts"
 import { useZoom } from "./canvas/useViewport.ts"
-import { contextTarget, type ContextTarget, createViewport, toolLabel } from "@structura/engine"
+import { contextAtoms, contextTarget, type ContextTarget, createViewport, placeDrawing, toolLabel } from "@structura/engine"
 import { selectionClipboard } from "./clipboard.ts"
 import { useCommands } from "./hooks/useCommands.ts"
 import { useDocumentFile } from "./hooks/useDocumentFile.ts"
@@ -115,17 +115,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   const [menuTarget, setMenuTarget] = useState<ContextTarget | null>(null)
   const [report, setReport] = useState<Report | null>(null)
   const { message, flash } = useFlash()
-  /** The atoms the menu's copying and analysis act on: the selection, the molecule of the atom or bond clicked, or everything. */
-  const menuAtoms = (): number[] => {
-    const mol = editor.mol
-    if (menuTarget?.kind === "selection") return atomIdsOfSelection(mol, editor.selection)
-    if (menuTarget?.kind === "atom") return componentOf(mol, menuTarget.id)
-    if (menuTarget?.kind === "bond") {
-      const bond = mol.bonds.find((item) => item.id === menuTarget.id)
-      return bond ? componentOf(mol, bond.a) : []
-    }
-    return []
-  }
+  /** The atoms the menu's copying and analysis act on. */
+  const menuAtoms = () => contextAtoms(editor.mol, editor.selection, menuTarget)
   async function copyAs(kind: IdentifierKind) {
     try {
       const text = await identifierOf(editor.mol, menuAtoms(), kind)
@@ -297,10 +288,9 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               onOpenChange={setRecognizeOpen}
               recognize={recognizeStructure}
               onApply={(drawing) => {
-                // On an empty page the whole drawing goes in (variable attachments too); beside a drawing, its molecule.
-                const now = editor.latest()
-                if (now.molecule.atoms.length === 0 && now.arrows.length === 0) editor.loadDrawing(drawing)
-                else editor.appendMolecules([drawing.molecule], viewport.centre())
+                const place = placeDrawing(editor.latest(), drawing)
+                if ("load" in place) editor.loadDrawing(place.load)
+                else editor.appendMolecules([place.append], viewport.centre())
               }}
             />
           )}

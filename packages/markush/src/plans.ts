@@ -4,17 +4,27 @@ import { closeRing } from "./closures.ts"
 import { layouts, type Layout } from "./layouts.ts"
 import type { Site } from "./place.ts"
 import { placeholders } from "./queries.ts"
+import { repeatSkips, repeatVariants, type RepeatSkip } from "./repeats.ts"
 
 /** A laid-out formula ready to build: which formula, its sites with the choices that fit, and how many combinations they make. */
 export type Plan = { formula: number; layout: Exclude<Layout, { occupied: true }>; sites: Site[]; count: number }
 
 /** The counts planning keeps up to date as it goes (an Enumeration has them all). */
-export type Tally = { total: number; occupied: number; onlyClasses: string[] }
+export type Tally = { total: number; occupied: number; onlyClasses: string[]; skippedRepeats: RepeatSkip[] }
+
+/** Every layout of a formula with each count of its repeat units, the counts first among the picks (they are settled first). */
+function* countedLayouts(formula: Drawing): Generator<Layout> {
+  for (const written of repeatVariants(formula)) {
+    for (const layout of layouts(written.drawing)) yield "occupied" in layout ? layout : { ...layout, where: [...written.where, ...layout.where] }
+  }
+}
 
 /**
  * Lays out every formula of a drawing, one attachment placement per step, and counts the
- * combinations each layout (as drawn, and with each ring closed) allows. Returns the plans
- * to build and the variables with nothing concrete, which stop their formula altogether.
+ * combinations each layout (as drawn, and with each ring closed) allows. Repeat units are
+ * written out first, once for each count, and each of those is laid out in turn. Returns
+ * the plans to build and the variables with nothing concrete, which stop their formula
+ * altogether.
  */
 export function* planFormulas(drawing: Drawing, formulas: Drawing[], resolver: ChoiceResolver, tally: Tally): Generator<void, { plans: Plan[]; unfilled: Set<string> }> {
   // Variables with nothing concrete: their formula cannot be expanded at all.
@@ -28,7 +38,8 @@ export function* planFormulas(drawing: Drawing, formulas: Drawing[], resolver: C
       tally.onlyClasses = [...unfilled]
       continue
     }
-    for (const layout of layouts(formula)) {
+    tally.skippedRepeats.push(...repeatSkips(formula))
+    for (const layout of countedLayouts(formula)) {
       if ("occupied" in layout) {
         tally.occupied++
         yield

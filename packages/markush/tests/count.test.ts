@@ -40,6 +40,18 @@ const drawings: Array<[string, () => Drawing]> = [
   ["two placeholders with classes", pair],
   ["a ring closure", () => run(pair(), [{ op: "set_ring_closure", closure: { a: "R1", b: "R2", ring: alternativesFromText("(CH2)3-4").add } }])],
   ["repeats, an attachment and two formulas", crowded],
+  [
+    "a repeat unit [ … ]n beside them",
+    () => {
+      const start = crowded()
+      const first = start.molecule.nextAtomId
+      return run(start, [
+        { op: "draw_chain", points: [{ x: 0, y: 300 }, { x: 35, y: 280 }, { x: 70, y: 300 }] },
+        { op: "label", atom: first, text: "R1" },
+        { op: "add_bracket", atoms: [first + 1], kind: "repeat", repeat: { min: 1, max: 3, name: "n" } },
+      ])
+    },
+  ],
   ["only classes", () => run(pair(), [{ op: "set_variable", name: "R2", alternatives: [{ kind: "class", class: "aryl", min: 6, max: 30 }] }])],
 ]
 
@@ -50,7 +62,7 @@ test("the library size is what enumerate() counts, with and without representati
       const made = enumerate(drawing(), { limit: 0, representatives })
       assert.deepEqual(
         size,
-        { combinations: made.total, represented: made.represented, classesLeftOut: made.classesLeftOut, onlyClasses: made.onlyClasses },
+        { combinations: made.total, represented: made.represented, classesLeftOut: made.classesLeftOut, onlyClasses: made.onlyClasses, skippedRepeats: made.skippedRepeats },
         `${what}, representatives ${representatives}`,
       )
     }

@@ -1,5 +1,5 @@
 import { displayFormula } from "@structura/core/formula"
-import { type Alternative, type BridgeName, type Choice, fragmentFormula, type GroupClass, type Proviso, REPRESENTATIVES, type RingClosure, sizeUnitOf } from "@structura/markush"
+import { type Alternative, type BridgeName, type Choice, fragmentFormula, type GroupClass, type Proviso, type RepeatSkip, REPRESENTATIVES, type RingClosure, sizeUnitOf } from "@structura/markush"
 
 // Generic-formula wording for the editor: class, ring and representative names in Chinese.
 
@@ -62,6 +62,11 @@ export function choiceName(choice: Choice): string {
 export function provisoText(proviso: Proviso): string {
   if (proviso.kind === "compound") return `排除化合物：${proviso.smiles}`
   return `排除：${proviso.when.map((condition) => `${condition.name} = ${condition.is.map(describeAlternative).join(" 或 ")}`).join(" 且 ")}`
+}
+
+/** Why a repeat unit was not written out: it needs exactly two bonds through its brackets, head and tail. */
+export function repeatSkipText(skip: RepeatSkip): string {
+  return `重复单元 [ … ]${skip.name} 要正好有两根键穿过括号（首尾各一根），现在是 ${skip.crossing} 根，所以没有按 ${skip.name} 展开，只按画的样子算一次。`
 }
 
 /** A ring closure as the claim says it: "R1 与 R2 可一起成环：(CH2)3、(CH2)4". */

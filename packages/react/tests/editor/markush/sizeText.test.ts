@@ -9,10 +9,10 @@ test("library sizes read naturally, small or huge", () => {
 })
 
 test("the panel says how many combinations, and that classes count only by their representatives", () => {
-  const plain = sizeText({ combinations: 73, represented: {}, classesLeftOut: {}, onlyClasses: [] })
+  const plain = sizeText({ combinations: 73, represented: {}, classesLeftOut: {}, onlyClasses: [], skippedRepeats: [] })
   assert.deepEqual(plain, { headline: "可展开为 73 种组合", notes: [] })
-  const withClass = sizeText({ combinations: 778, represented: { R1: [{ kind: "label", text: "Me" }] }, classesLeftOut: {}, onlyClasses: [] })
+  const withClass = sizeText({ combinations: 778, represented: { R1: [{ kind: "label", text: "Me" }] }, classesLeftOut: {}, onlyClasses: [], skippedRepeats: [] })
   assert.equal(withClass.headline, "可展开为 778 种组合")
   assert.match(withClass.notes[0], /^R1 的基团类别按代表结构计.*实际范围更大$/)
-  assert.equal(sizeText({ combinations: 0, represented: {}, classesLeftOut: {}, onlyClasses: ["R2"] }).headline, "还不能计数")
+  assert.equal(sizeText({ combinations: 0, represented: {}, classesLeftOut: {}, onlyClasses: ["R2"], skippedRepeats: [] }).headline, "还不能计数")
 })

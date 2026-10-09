@@ -27,6 +27,7 @@ function result(made: number, more: Partial<Enumeration> = {}): Enumeration {
     formulaOf: Array.from({ length: made }, () => 1),
     excluded: 0,
     uncheckedCompounds: 0,
+    skippedRepeats: [],
     ...more,
   }
 }

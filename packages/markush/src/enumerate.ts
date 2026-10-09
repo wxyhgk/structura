@@ -12,6 +12,7 @@ import { opsForAll } from "./place.ts"
 import { planFormulas, type Plan } from "./plans.ts"
 import { excludedBy } from "./provisos.ts"
 import { placeholders, undefinedVariables } from "./queries.ts"
+import type { RepeatSkip } from "./repeats.ts"
 
 export type Enumeration = {
   /** Concrete molecules, in order, at most `limit` of them. */
@@ -52,6 +53,8 @@ export type Enumeration = {
   excluded: number
   /** Excluded compounds (by SMILES) that could not be checked, for want of `identifySmiles`. */
   uncheckedCompounds: number
+  /** Repeat units that cannot be written out (not exactly two bonds through their brackets), left as drawn. */
+  skippedRepeats: RepeatSkip[]
 }
 
 /**
@@ -102,11 +105,12 @@ export type EnumerateOptions = {
 }
 
 /**
- * Expands a generic formula into concrete molecules: every placement of each variable
- * attachment, and every combination of each placeholder's choices that fit where it sits,
- * each placeholder choosing on its own. A class ("(C1-C30)alkyl") is never expanded in
- * full; it is left out, or with `representatives` a few typical members inside its range
- * stand in for it. The result says which, and what was skipped as not fitting.
+ * Expands a generic formula into concrete molecules: every count of each repeat unit
+ * [ … ]n (written out head to tail), every placement of each variable attachment, and
+ * every combination of each placeholder's choices that fit where it sits, each
+ * placeholder choosing on its own. A class ("(C1-C30)alkyl") is never expanded in full; it
+ * is left out, or with `representatives` a few typical members inside its range stand in
+ * for it. The result says which, and what was skipped as not fitting.
  */
 export function enumerate(drawing: Drawing, options: EnumerateOptions = {}): Enumeration {
   const steps = enumerateSteps(drawing, options)
@@ -148,6 +152,7 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     formulaOf: [],
     excluded: 0,
     uncheckedCompounds: 0,
+    skippedRepeats: [],
   }
   const provisos = drawing.provisos ?? []
   const combinations = provisos.flatMap((proviso) => (proviso.kind === "combination" ? [proviso] : []))

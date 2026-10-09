@@ -1,5 +1,5 @@
 import type { LibrarySize } from "@structura/markush"
-import { choiceName } from "./describe.ts"
+import { choiceName, repeatSkipText } from "./describe.ts"
 
 /** A count as people read it: 1 234, or 2.3 × 10⁶ once it is large. */
 export function countText(count: number): string {
@@ -15,6 +15,9 @@ export function countText(count: number): string {
  */
 export function sizeText(size: LibrarySize): { headline: string; notes: string[] } {
   if (size.onlyClasses.length > 0) return { headline: "还不能计数", notes: [`${size.onlyClasses.join("、")} 只有基团类别，没有具体候选项`] }
-  const notes = Object.entries(size.represented).map(([name, choices]) => `${name} 的基团类别按代表结构计（${choices.map(choiceName).join("、")}），实际范围更大`)
+  const notes = [
+    ...Object.entries(size.represented).map(([name, choices]) => `${name} 的基团类别按代表结构计（${choices.map(choiceName).join("、")}），实际范围更大`),
+    ...size.skippedRepeats.map(repeatSkipText),
+  ]
   return { headline: `可展开为 ${countText(size.combinations)} 种组合`, notes }
 }

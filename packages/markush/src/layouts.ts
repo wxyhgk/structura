@@ -1,10 +1,10 @@
-import { atomHydrogens } from "@structura/core/formula"
 import { pointFrom } from "@structura/core/geometry"
-import { atomById, bondLengthAt, componentOf, deleteSelection, duplicateAtoms, neighbors, sproutAngle, subMolecule } from "@structura/core/molecule"
+import { atomById, bondLengthAt, componentOf, deleteSelection, duplicateAtoms, sproutAngle, subMolecule } from "@structura/core/molecule"
 import { applyOps } from "@structura/core/ops"
 import type { Drawing, Molecule } from "@structura/core/types"
 import type { Attachment } from "@structura/core/markush"
 import { odometer } from "./odometer.ts"
+import { displacedAt, hasRoom } from "./positions.ts"
 import type { Pick } from "./picks.ts"
 
 /** A way of making every variable attachment's bond, with the placeholders it displaces gone. */
@@ -58,9 +58,9 @@ export function* layouts(drawing: Drawing): Generator<Layout> {
       }
       const positions: string[] = []
       for (const [at, target] of targets.entries()) {
-        const displaced = neighbors(laid.molecule, target).filter((atom) => atom.alias && names.has(atom.alias) && neighbors(laid.molecule, atom.id).length === 1)
-        positions.push(displaced[0]?.alias ?? `#${target}`)
-        const placed = attach(laid, hubs[at], target, displaced.map((atom) => atom.id))
+        const displaced = displacedAt(laid.molecule, target, names)
+        positions.push(displaced.length > 0 ? label(laid.molecule, displaced[0]) : `#${target}`)
+        const placed = attach(laid, hubs[at], target, displaced)
         if ("occupied" in placed) occupied = true
         else if ("error" in placed) error = placed.error
         else laid = placed.drawing
@@ -83,7 +83,7 @@ function attach(drawing: Drawing, hub: number, target: number, displaced: number
   if (!freed.ok) return { error: freed.error }
   const mol = freed.drawing.molecule
   // A position is free only while it has a hydrogen to give up.
-  if (atomHydrogens(mol, target).h < 1) return { occupied: true }
+  if (!hasRoom(mol, target)) return { occupied: true }
   const piece = componentOf(mol, hub)
   if (piece.includes(target)) return { error: `atom #${hub} is already joined to the ring it attaches to` }
   const from = atomById(mol, hub)!

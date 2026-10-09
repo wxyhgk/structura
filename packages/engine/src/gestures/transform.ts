@@ -45,7 +45,7 @@ export const move: GestureKind<Move> = {
     // A line's end dragged into a ring will attach there.
     const end = gesture.ids.length === 1 ? atomById(gesture.mol, gesture.ids[0]) : undefined
     const positions = end ? ringPointerAt(gesture.mol, end.id, { x: end.x + dx, y: end.y + dy }) : null
-    host.setRingHint(positions ? ringHint(positions.map((id) => atomById(gesture.mol, id)!)) : null)
+    host.setRingHint(positions ? ringHint(gesture.mol, positions) : null)
   },
   up(host, gesture, world) {
     const { dx, dy } = snappedMove(gesture.mol, gesture.ids, world.x - gesture.origin.x, world.y - gesture.origin.y, host.zoom())

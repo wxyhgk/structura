@@ -4,6 +4,7 @@ import type { Point } from "@structura/core/types"
 import { attachmentOps } from "../markush/attachmentOps.ts"
 import { bracketDropAt } from "../pointer/brackets.ts"
 import { hitOf } from "../pointer/targeting.ts"
+import { ringHint } from "./hints.ts"
 import type { Gesture, GestureKind, PointerHost } from "./types.ts"
 
 type Attach = Extract<Gesture, { kind: "attach" }>
@@ -37,10 +38,9 @@ function gather(host: PointerHost, gesture: Attach, world: Point) {
 function show(host: PointerHost, gesture: Attach, world: Point) {
   const mol = gesture.mol
   const at = (ids: readonly number[]) => ids.flatMap((id) => atomById(mol, id) ?? [])
-  const positions = at(candidates(gesture))
-  const centre = positions.length > 0 ? { x: positions.reduce((sum, p) => sum + p.x, 0) / positions.length, y: positions.reduce((sum, p) => sum + p.y, 0) / positions.length } : null
+  const positions = candidates(gesture)
   const a = gesture.from != null ? (atomById(mol, gesture.from) ?? gesture.origin) : gesture.origin
-  host.setPreview({ kind: "sweep", a, b: world, rings: gesture.bracket ? [] : gesture.rings.map((ring) => at(ring.ring)), positions, centre })
+  host.setPreview({ kind: "sweep", a, b: world, rings: gesture.bracket ? [] : gesture.rings.map((ring) => at(ring.ring)), hint: positions.length > 0 ? ringHint(mol, positions) : null })
 }
 
 /**

@@ -39,17 +39,17 @@ export type Preview =
   | { kind: "marquee"; a: Point; b: Point }
   | { kind: "lasso"; points: Point[] }
   /**
-   * A bond dragged into a ring: it will attach at any of `positions`, meeting the ring at
-   * `centre`. Into a bracket, the line stops at `end`, just past the bracket's upright.
+   * A bond dragged into a ring: it will attach at any of the positions `hint` marks, meeting
+   * them at its centre. Into a bracket, the line stops at `end`, just past the bracket's upright.
    */
-  | { kind: "attachment"; a: Point; centre: Point; positions: Point[]; end?: Point }
+  | { kind: "attachment"; a: Point; hint: RingHintShape; end?: Point }
   /** The bracket tool's box: the atoms inside it (`atoms`) get a bracket of this kind. */
   | { kind: "bracket"; a: Point; b: Point; atoms: number[]; bracketKind: Bracket["kind"] }
   /**
    * The attachment tool's sweep: a line from `a` to the pointer `b`, the rings passed over
-   * (outlines) and the positions the attachment will choose from, meeting them at `centre`.
+   * (outlines) and the positions the attachment will choose from (`hint`, once there are any).
    */
-  | { kind: "sweep"; a: Point; b: Point; rings: Point[][]; positions: Point[]; centre: Point | null }
+  | { kind: "sweep"; a: Point; b: Point; rings: Point[][]; hint: RingHintShape | null }
 
 /** The editor as gestures see it: what is drawn, the tool settings, the selection, and the write path. */
 export type GestureContext = {

@@ -248,8 +248,8 @@ function PreviewLayer({ preview }: { preview: Exclude<Preview, null | { kind: "b
   if (preview.kind === "attachment") {
     return (
       <g data-testid="attachment-preview">
-        <line x1={preview.a.x} y1={preview.a.y} x2={(preview.end ?? preview.centre).x} y2={(preview.end ?? preview.centre).y} stroke="#1a73e8" strokeWidth={1.8} strokeLinecap="round" />
-        <RingHint hint={{ centre: preview.centre, positions: preview.positions }} />
+        <line x1={preview.a.x} y1={preview.a.y} x2={(preview.end ?? preview.hint.centre).x} y2={(preview.end ?? preview.hint.centre).y} stroke="#1a73e8" strokeWidth={1.8} strokeLinecap="round" />
+        <RingHint hint={preview.hint} />
       </g>
     )
   }

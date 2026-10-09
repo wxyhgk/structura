@@ -88,7 +88,7 @@ test("the attachment tool: dragged from an atom across both rings of naphthalene
   move({ x: (centres[0].x + centres[1].x) / 2, y: centres[0].y - 60 })
   move(centres[1])
   assert.equal(shown.preview?.kind === "sweep" && shown.preview.rings.length, 2, "then both")
-  assert.equal(shown.preview?.kind === "sweep" && shown.preview.positions.length, 8)
+  assert.equal(shown.preview?.kind === "sweep" && shown.preview.hint?.positions.length, 8)
   // Leaving the rings keeps them: what was passed over counts.
   release({ x: centres[1].x + 200, y: centres[1].y })
   const drawing = editor.latest()

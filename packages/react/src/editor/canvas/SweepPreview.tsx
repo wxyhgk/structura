@@ -20,7 +20,7 @@ export function SweepPreview({ preview }: { preview: Extract<Preview, { kind: "s
         />
       ))}
       <line x1={preview.a.x} y1={preview.a.y} x2={preview.b.x} y2={preview.b.y} stroke="#1a73e8" strokeWidth={1.6} strokeLinecap="round" strokeDasharray="5 3" />
-      {preview.centre && <RingHint hint={{ centre: preview.centre, positions: preview.positions }} />}
+      {preview.hint && <RingHint hint={preview.hint} />}
     </g>
   )
 }

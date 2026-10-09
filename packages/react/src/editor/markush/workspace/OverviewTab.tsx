@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { Drawing } from "@structura/core/types"
 import type { Run } from "@structura/engine"
+import { openPositions } from "@structura/markush"
 import { repeatSkipText } from "../describe.ts"
 import { LibrarySizeLine } from "../LibrarySizeLine.tsx"
 import type { FormulaFacts } from "./formulaFacts.ts"
@@ -85,7 +86,7 @@ export function OverviewTab({ drawing, facts, run }: { drawing: Drawing; facts: 
             })
           }
         >
-          {name}：扩大到整个稠环体系（{system.length} 个位置）
+          {name}：扩大到整个稠环体系（{openPositions(drawing, system).length} 个位置）
         </button>
       ))}
     </div>

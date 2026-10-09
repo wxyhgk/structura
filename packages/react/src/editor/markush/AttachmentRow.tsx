@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
-import type { Attachment, Repeat } from "@structura/markush"
+import { type Attachment, openPositions, type Repeat } from "@structura/markush"
 import { bracketInto } from "@structura/core/drawing"
-import type { Bracket, Molecule } from "@structura/core/types"
+import type { Drawing } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import { AttachmentShapePicker } from "./AttachmentShapePicker.tsx"
 import { widerSystem } from "./workspace/widerSystem.ts"
@@ -9,14 +9,16 @@ import { widerSystem } from "./workspace/widerSystem.ts"
 const FIELD = "h-6 rounded border border-[#d0d0d0] bg-white px-1 text-center text-[12px] outline-none focus:border-[#1a73e8]"
 
 /**
- * One variable point of attachment in the 位置 tab: which piece, how many positions, how it
- * is drawn, and how many times it appears, "(R1)m, m = 0–4". Once by default; the count is
- * ticked on here.
+ * One variable point of attachment in the 位置 tab: which piece, how many positions it can
+ * take (those with a hydrogen to give up, as generating finds them), how it is drawn, and
+ * how many times it appears, "(R1)m, m = 0–4". Once by default; the count is ticked on here.
  */
-export function AttachmentRow({ attachment, mol, brackets, run }: { attachment: Attachment; mol: Molecule; brackets?: readonly Bracket[]; run: Run }) {
+export function AttachmentRow({ attachment, drawing, run }: { attachment: Attachment; drawing: Drawing; run: Run }) {
+  const { molecule: mol, brackets } = drawing
   const hub = mol.atoms.find((atom) => atom.id === attachment.atom)
   const name = hub?.alias ?? `#${attachment.atom}`
   const positions = attachment.to.length
+  const open = useMemo(() => openPositions(drawing, attachment.to).length, [drawing, attachment])
   const intoBracket = bracketInto(brackets, attachment) != null
   const repeat = attachment.repeat
   /** The whole fused system's free positions, when it is wider than the ring drawn into (carbazole from one benzo ring). */
@@ -50,7 +52,7 @@ export function AttachmentRow({ attachment, mol, brackets, run }: { attachment: 
     <div className="border-b border-[#e8e8e8] px-3 py-2" data-testid="attachment-row">
       <div className="flex items-center gap-1.5 text-[#333]">
         <span className="font-medium">{repeat ? `(${name})${repeat.name}` : name}</span>
-        <span className="text-[#888]">{intoBracket ? `连在方括号里的基团上，${positions} 个原子之一` : `连在环上 ${positions} 个位置之一`}</span>
+        <span className="text-[#888]">{intoBracket ? `连在方括号里的基团上，${open} 个可接位置之一` : `连在环上 ${open} 个可接位置之一`}</span>
       </div>
       {system && (
         <button
@@ -58,7 +60,7 @@ export function AttachmentRow({ attachment, mol, brackets, run }: { attachment: 
           className="mt-1 text-[11px] text-[#1a73e8] hover:underline"
           onClick={() => run([{ op: "set_attachment", atom: attachment.atom, to: system, ...(repeat ? { repeat } : {}), ...(attachment.shape ? { shape: attachment.shape } : {}) }], { keepSelection: true })}
         >
-          扩大到整个稠环体系（{system.length} 个位置）
+          扩大到整个稠环体系（{openPositions(drawing, system).length} 个位置）
         </button>
       )}
       <AttachmentShapePicker attachment={attachment} mol={mol} brackets={brackets} run={run} />

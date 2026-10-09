@@ -6,7 +6,7 @@ import { applyOps } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
 import { closestPair, label, run } from "@structura/testkit"
 import { chemistry } from "@structura/testkit/chem"
-import { enumerate, linkerNames, siteKind } from "@structura/markush"
+import { enumerate, linkerNames, openPositions, siteKind } from "@structura/markush"
 
 const { canonicalAll } = await chemistry()
 
@@ -38,6 +38,37 @@ test("a variable attachment is placed at each candidate in turn, displacing the 
   const orthoFluoro = "Fc1ccccc1Oc1ccccc1"
   assert.deepEqual(canonicalAll(result.molecules), canonicalAll([diphenylEther, diphenylEther, diphenylEther, orthoFluoro, orthoFluoro]))
   for (const mol of result.molecules) assert.ok(mol.atoms.every((atom) => !atom.alias), "no placeholder is left")
+})
+
+test("the positions an attachment can take are those enumeration does not find occupied", () => {
+  // Atom 2 carries R2, which makes way; a methyl on atom 4 does not.
+  const drawing = run(formula(), [
+    { op: "add_atom", el: "C", to: 4 },
+    { op: "set_attachment", atom: 8, to: [1, 2, 3, 4, 5, 6] },
+    { op: "set_variable", name: "R2", alternatives: [label("H")] },
+  ])
+  assert.deepEqual(openPositions(drawing, [1, 2, 3, 4, 5, 6]), [1, 2, 3, 5, 6])
+  const result = enumerate(drawing)
+  assert.equal(result.molecules.length, 5)
+  assert.equal(result.occupied, 1)
+  // An undefined label is no variable that makes way: then atom 2 is taken too.
+  const { R2: _gone, ...variables } = drawing.variables!
+  assert.deepEqual(openPositions({ ...drawing, variables }, [1, 2, 3, 4, 5, 6]), [1, 3, 5, 6])
+})
+
+test("into a bracket round naphthalene and an X, only the CH carbons can take it: not the fusion carbons, not the X", () => {
+  const drawing = run(emptyDrawing(), [
+    { op: "add_scaffold", name: "naphthalene", at: { x: 0, y: 0 } },
+    { op: "place_atom", el: "C", at: { x: 0, y: -120 } },
+    { op: "label", atom: 11, text: "X" },
+    { op: "place_atom", el: "C", at: { x: 250, y: 0 } },
+    { op: "add_bracket", atoms: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+    { op: "set_attachment", atom: 12, to: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+  ])
+  const open = openPositions(drawing, drawing.attachments![0].to)
+  assert.equal(open.length, 8)
+  assert.ok(!open.includes(11))
+  assert.equal(enumerate(drawing).molecules.length, open.length)
 })
 
 test("a linker such as L becomes a single bond or a divalent ring between its two neighbours", () => {

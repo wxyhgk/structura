@@ -31,7 +31,7 @@ export const chain: GestureKind<ChainGesture> = {
   move(host, gesture, world, event) {
     const { points, positions } = chainTo(gesture, world, event.altKey)
     host.setPreview({ kind: "chain", points })
-    host.setRingHint(positions ? ringHint(positions.map((id) => atomById(gesture.mol, id)!)) : null)
+    host.setRingHint(positions ? ringHint(gesture.mol, positions) : null)
   },
   up(host, gesture, world, event) {
     const { points } = chainTo(gesture, world, event.altKey)

@@ -2,10 +2,10 @@ import type { RingHintShape } from "@structura/engine"
 
 /**
  * Shown while drawing: letting go here makes a variable attachment, "any free position of
- * this ring". Dashed circles on the candidates and a count under the ring.
+ * this ring". Dashed circles on the positions that can take it and their count under the ring.
  */
 export function RingHint({ hint }: { hint: RingHintShape }) {
-  const reach = Math.max(...hint.positions.map((point) => Math.hypot(point.x - hint.centre.x, point.y - hint.centre.y)))
+  const { reach } = hint
   return (
     <g data-testid="ring-hint">
       {hint.positions.map((point, index) => (

@@ -22,7 +22,7 @@ export function PositionsTab({ drawing, run }: { drawing: Drawing; run: Run }) {
   return (
     <div data-testid="constraints-positions">
       {attachments.map((attachment) => (
-        <AttachmentRow key={attachment.atom} attachment={attachment} mol={drawing.molecule} brackets={drawing.brackets} run={run} />
+        <AttachmentRow key={attachment.atom} attachment={attachment} drawing={drawing} run={run} />
       ))}
       {brackets.map((bracket) =>
         bracket.kind === "repeat" ? (

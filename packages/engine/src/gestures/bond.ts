@@ -4,6 +4,7 @@ import type { Point } from "@structura/core/types"
 import { attachmentOps } from "../markush/attachmentOps.ts"
 import { bracketDropAt } from "../pointer/brackets.ts"
 import { bondEnd, hitOf } from "../pointer/targeting.ts"
+import { ringHint } from "./hints.ts"
 import type { Gesture, GestureContext, GestureKind, PointerHost } from "./types.ts"
 
 type BondGesture = Extract<Gesture, { kind: "bond" }>
@@ -57,11 +58,9 @@ export const bond: GestureKind<BondGesture> = {
     // Between a ring's inside (or a bracket's) and an atom, letting go makes a variable attachment; show where it could land.
     const attachment = attachmentTarget(gesture, world, zoom, host.props)
     if (attachment) {
-      const atoms = attachment.positions.map((id) => atomById(gesture.mol, id)!)
-      const centre = { x: atoms.reduce((sum, atom) => sum + atom.x, 0) / atoms.length, y: atoms.reduce((sum, atom) => sum + atom.y, 0) / atoms.length }
       const from = attachment.atom == null ? attachment.end : atomById(gesture.mol, attachment.atom)!
       const end = attachment.atom != null ? attachment.into : undefined
-      host.setPreview({ kind: "attachment", a: from, centre, positions: atoms, ...(end ? { end } : {}) })
+      host.setPreview({ kind: "attachment", a: from, hint: ringHint(gesture.mol, attachment.positions), ...(end ? { end } : {}) })
       return
     }
     const origin = originOf(gesture)

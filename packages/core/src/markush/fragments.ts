@@ -23,23 +23,62 @@ export function fragmentEnds(piece: Molecule): Array<{ star: number; head: numbe
     .map((star) => ({ star: star.id, head: neighbors(piece, star.id)[0]?.id ?? -1 }))
 }
 
+/** Why a drawn piece cannot be an alternative, as a code each caller words in its own language. */
+export type FragmentProblem =
+  | { code: "no-star" }
+  | { code: "too-many-stars"; count: number }
+  | { code: "disconnected" }
+  | { code: "too-many-atoms"; count: number }
+  | { code: "invalid"; message: string }
+  | { code: "star-neighbours" }
+  | { code: "star-order" }
+  | { code: "unknown-label"; label: string }
+
 /** Why a drawn piece cannot be an alternative, or null. */
-export function fragmentProblem(piece: Molecule): string | null {
-  if (piece.atoms.length > MOST_ATOMS) return `a piece has at most ${MOST_ATOMS} atoms, not ${piece.atoms.length}`
-  const broken = errorsOf(validate(piece))
-  if (broken.length > 0) return `the piece is not a valid molecule: ${broken[0].message}`
+export function fragmentProblem(piece: Molecule): FragmentProblem | null {
   const ends = fragmentEnds(piece)
-  if (ends.length === 0) return 'mark where the piece joins the formula with an atom labelled "*"'
-  if (ends.length > 2) return `a piece joins the formula at one or two "*" atoms, not ${ends.length}`
+  if (ends.length === 0) return { code: "no-star" }
+  if (ends.length > 2) return { code: "too-many-stars", count: ends.length }
+  if (componentOf(piece, ends[0].star).length !== piece.atoms.length) return { code: "disconnected" }
+  if (piece.atoms.length > MOST_ATOMS) return { code: "too-many-atoms", count: piece.atoms.length }
+  const broken = errorsOf(validate(piece))
+  if (broken.length > 0) return { code: "invalid", message: broken[0].message }
   for (const { star } of ends) {
     const around = neighbors(piece, star)
-    if (around.length !== 1 || around[0].alias === STAR) return 'each "*" is bonded to exactly one atom of the piece'
-    if (piece.bonds.some((bond) => (bond.a === star || bond.b === star) && bond.order !== 1)) return 'a "*" is joined by a single bond'
+    if (around.length !== 1 || around[0].alias === STAR) return { code: "star-neighbours" }
+    if (piece.bonds.some((bond) => (bond.a === star || bond.b === star) && bond.order !== 1)) return { code: "star-order" }
   }
-  if (componentOf(piece, ends[0].star).length !== piece.atoms.length) return "the piece is in one piece: every atom joined to the rest"
   const odd = piece.atoms.find((atom) => atom.alias && atom.alias !== STAR && !knownLabel(atom.alias) && !isVariableName(atom.alias))
-  if (odd) return `"${odd.alias}" in the piece is no element, abbreviation or variable`
+  if (odd) return { code: "unknown-label", label: odd.alias! }
   return null
+}
+
+/** A fragment problem in English words. */
+export function fragmentMessage(problem: FragmentProblem): string {
+  switch (problem.code) {
+    case "no-star":
+      return 'mark where the piece joins the formula with an atom labelled "*"'
+    case "too-many-stars":
+      return `a piece joins the formula at one or two "*" atoms, not ${problem.count}`
+    case "disconnected":
+      return "the piece is in one piece: every atom joined to the rest"
+    case "too-many-atoms":
+      return `a piece has at most ${MOST_ATOMS} atoms, not ${problem.count}`
+    case "invalid":
+      return `the piece is not a valid molecule: ${problem.message}`
+    case "star-neighbours":
+      return 'each "*" is bonded to exactly one atom of the piece'
+    case "star-order":
+      return 'a "*" is joined by a single bond'
+    case "unknown-label":
+      return `"${problem.label}" in the piece is no element, abbreviation or variable`
+  }
+}
+
+/** Why a drawn piece cannot be an alternative, in English, or null. */
+export function fragmentProblemText(piece: Molecule): string | null {
+  const problem = fragmentProblem(piece)
+  return problem && fragmentMessage(problem)
 }
 
 /** The piece without its "*" marks, as a molecule of its own. */
@@ -121,7 +160,7 @@ export type Placed = { mol: Molecule; added: number[]; head: number; ids: Map<nu
  * sits between: the larger side stays, the smaller is carried to where the far "*" lies.
  */
 export function placeFragment(mol: Molecule, site: number, piece: Molecule): Placed | { error: string } {
-  const problem = fragmentProblem(piece)
+  const problem = fragmentProblemText(piece)
   if (problem) return { error: problem }
   if (!atomById(mol, site)) return { error: `there is no atom #${site}` }
   if (!fragmentFits(mol, site, piece)) return { error: `the piece does not fit where atom #${site} sits` }

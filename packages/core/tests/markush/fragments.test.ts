@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { BOND_LENGTH } from "@structura/core/constants"
 import { emptyDrawing } from "@structura/core/drawing"
-import { fragmentFrom, fragmentProblem, fragmentVariables } from "@structura/core/markush"
+import { fragmentFrom, fragmentProblem, fragmentProblemText, fragmentVariables } from "@structura/core/markush"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Alternative, Molecule } from "@structura/core/types"
 import { run } from "@structura/testkit"
@@ -41,14 +41,16 @@ const nR5 = () =>
 
 test("a piece needs one or two single-bonded * marks and must hang together", () => {
   assert.equal(fragmentProblem((piperidinyl() as { molecule: Molecule }).molecule), null)
-  assert.match(fragmentProblem(run(emptyDrawing(), [{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).molecule)!, /\*/)
+  assert.deepEqual(fragmentProblem(run(emptyDrawing(), [{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).molecule), { code: "no-star" })
+  assert.match(fragmentProblemText(run(emptyDrawing(), [{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).molecule)!, /\*/)
   const loose = run(emptyDrawing(), [
     { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
     { op: "add_atom", el: "C", to: 1, as: "s" },
     { op: "label", atom: "s", text: "*" },
     { op: "place_atom", el: "O", at: { x: 300, y: 0 } },
   ]).molecule
-  assert.match(fragmentProblem(loose)!, /one piece/)
+  assert.deepEqual(fragmentProblem(loose), { code: "disconnected" })
+  assert.match(fragmentProblemText(loose)!, /one piece/)
 })
 
 test("a variable cannot contain itself through its pieces", () => {

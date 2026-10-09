@@ -1,16 +1,15 @@
-import { fragmentEnds, fragmentFrom, fragmentProblem } from "@structura/markush"
-import { componentOf } from "@structura/core/molecule"
+import { fragmentFrom, fragmentMessage, fragmentProblem } from "@structura/markush"
 import type { Op } from "@structura/core/ops"
 import type { Alternative, Molecule } from "@structura/core/types"
 
 /** Why a drawn piece will not do as an alternative, in words the chemist can act on; null when it will. */
 export function pieceProblem(piece: Molecule): string | null {
-  const ends = fragmentEnds(piece).length
-  if (ends === 0) return "片段里要有标成 * 的原子，表示从哪里接到通式上（双击原子输入 *）。"
-  if (ends > 2) return `片段里有 ${ends} 个 *，最多两个：接一端用一个，连接基用两个。`
-  if (componentOf(piece, piece.atoms[0].id).length !== piece.atoms.length) return "画的是几块互不相连的结构，片段要连成一整块。"
   const problem = fragmentProblem(piece)
-  return problem ? `这个片段用不了：${problem}` : null
+  if (!problem) return null
+  if (problem.code === "no-star") return "片段里要有标成 * 的原子，表示从哪里接到通式上（双击原子输入 *）。"
+  if (problem.code === "too-many-stars") return `片段里有 ${problem.count} 个 *，最多两个：接一端用一个，连接基用两个。`
+  if (problem.code === "disconnected") return "画的是几块互不相连的结构，片段要连成一整块。"
+  return `这个片段用不了：${fragmentMessage(problem)}`
 }
 
 /**

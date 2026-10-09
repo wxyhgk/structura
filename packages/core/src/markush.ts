@@ -10,13 +10,15 @@ export {
   fragmentFits,
   fragmentFormula,
   fragmentFrom,
+  fragmentMessage,
   fragmentProblem,
+  fragmentProblemText,
   fragmentVariables,
   fragmentVersions,
   placeFragment,
   STAR,
 } from "./markush/fragments.ts"
-export type { Placed } from "./markush/fragments.ts"
+export type { FragmentProblem, Placed } from "./markush/fragments.ts"
 export { closureNames, ringClosureProblem } from "./markush/closures.ts"
 export { provisoNames, provisoProblem } from "./markush/provisos.ts"
 export { absorbRingPointers, ringPointerAt, ringPositionsAt, ringSystemPositions } from "./markush/pointer.ts"

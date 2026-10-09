@@ -1,14 +1,12 @@
 import { memo } from "react"
-import { bracketMarks, type AtomLabel } from "@structura/core/draw"
-import type { Bracket, Molecule } from "@structura/core/types"
+import type { BracketMark } from "@structura/core/draw"
 
 /**
  * Square brackets round parts of the structure, drawn from where their atoms are (so they
- * follow every move), a repeat unit's count at the lower right. The geometry is core's, the
- * same as in every export.
+ * follow every move), a repeat unit's count at the lower right. The geometry is core's
+ * (structureMarks), the same as in every export.
  */
-export const BracketMarks = memo(function BracketMarks({ mol, brackets, labels }: { mol: Molecule; brackets: Bracket[] | undefined; labels: AtomLabel[] }) {
-  const marks = bracketMarks(mol, brackets, labels)
+export const BracketMarks = memo(function BracketMarks({ marks }: { marks: BracketMark[] }) {
   if (marks.length === 0) return null
   return (
     <g data-testid="brackets">

@@ -1,9 +1,9 @@
 import type { Arrow, Bracket, Molecule } from "../types.ts"
 import type { Attachment } from "../markush/types.ts"
 import { displayMolecule } from "../molecule/collapse.ts"
-import { attachmentMarks, markTextExtent, type MarkText } from "./attachments.ts"
-import { bracketMarks } from "./brackets.ts"
+import { markTextExtent, type MarkText } from "./attachments.ts"
 import type { AtomLabel, DrawOptions } from "./labels.ts"
+import { structureMarks } from "./marks.ts"
 import type { Figure } from "./primitives.ts"
 import { buildScene } from "./scene.ts"
 
@@ -57,8 +57,7 @@ export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: 
   // Fitted around what is shown: atoms behind a collapsed label take no room.
   const mol = displayMolecule(molecule)
   const scene = buildScene(mol, colorHetero, options)
-  const marks = attachmentMarks(mol, attachments, scene.labels)
-  const brackets = bracketMarks(mol, svg.brackets, scene.labels)
+  const { attachments: marks, brackets } = structureMarks(mol, attachments, svg.brackets, scene.labels)
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity

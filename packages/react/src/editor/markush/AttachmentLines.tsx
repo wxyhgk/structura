@@ -1,24 +1,13 @@
 import { memo } from "react"
-import { attachmentMarks, type AtomLabel } from "@structura/core/draw"
-import type { Molecule } from "@structura/core/types"
-import type { Attachment } from "@structura/markush"
+import type { AttachmentMark } from "@structura/core/draw"
 
 /**
  * Variable points of attachment, the way patents draw "attached at any free position": a
  * line into one ring's middle, an ellipse round a fused system with a line to it, or the
- * bond sweeping round the system; a repeated one is written (R1)m. The geometry is core's,
- * the same as in every export.
+ * bond sweeping round the system; a repeated one is written (R1)m. The geometry is core's
+ * (structureMarks), the same as in every export.
  */
-export const AttachmentLines = memo(function AttachmentLines({
-  mol,
-  attachments,
-  labels,
-}: {
-  mol: Molecule
-  attachments: Attachment[] | undefined
-  labels: AtomLabel[]
-}) {
-  const marks = attachmentMarks(mol, attachments, labels)
+export const AttachmentLines = memo(function AttachmentLines({ marks }: { marks: AttachmentMark[] }) {
   if (marks.length === 0) return null
   return (
     <g data-testid="attachments">

@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react"
-import { bondFigures, buildScene, type AtomLabel, type Figure, type DrawOptions } from "@structura/core/draw"
+import { bondFigures, buildScene, structureMarks, type AtomLabel, type Figure, type DrawOptions } from "@structura/core/draw"
 import { atomById } from "@structura/core/molecule"
 import type { Arrow, Bracket, Molecule, Selection } from "@structura/core/types"
 import type { Attachment } from "@structura/markush"
@@ -45,11 +45,12 @@ export function SceneView({
 }) {
   // Hover, previews and panning re-render often; the scene only changes with the molecule.
   const scene = useMemo(() => buildScene(mol, colorHetero, drawOptions), [mol, colorHetero, drawOptions])
+  const marks = useMemo(() => structureMarks(mol, attachments, brackets, scene.labels), [mol, attachments, brackets, scene])
   return (
     <>
       <Figures figures={scene.figures} />
-      <AttachmentLines mol={mol} attachments={attachments} labels={scene.labels} />
-      <BracketMarks mol={mol} brackets={brackets} labels={scene.labels} />
+      <AttachmentLines marks={marks.attachments} />
+      <BracketMarks marks={marks.brackets} />
       <Arrows arrows={arrows} />
       <SelectionMarks mol={mol} selection={selection} labels={scene.labels} zoom={zoom} />
       <Labels labels={scene.labels} />

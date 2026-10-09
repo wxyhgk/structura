@@ -1,16 +1,21 @@
-import { bracketDistance, bracketMarks } from "@structura/core/draw"
+import { bracketDistance, structureMarks } from "@structura/core/draw"
+import type { Attachment } from "@structura/markush"
 import type { Bracket, Molecule, Point } from "@structura/core/types"
 
 /** Clicking a bracket's stroke, in screen pixels. */
 const BRACKET_HIT = 6
 
-/** The bracket whose "[" or "]" is under `point` (the nearest, if several), or null. */
-export function bracketAt(mol: Molecule, brackets: readonly Bracket[] | undefined, point: Point, zoom: number): Bracket | null {
+/**
+ * The bracket whose "[" or "]" is under `point` (the nearest, if several), or null. The
+ * drawing's `attachments` count: a bracket widens for the ellipse round its atoms.
+ */
+export function bracketAt(mol: Molecule, brackets: readonly Bracket[] | undefined, point: Point, zoom: number, attachments?: readonly Attachment[]): Bracket | null {
+  if (!brackets || brackets.length === 0) return null
   let best: { bracket: Bracket; distance: number } | null = null
-  for (const mark of bracketMarks(mol, brackets)) {
+  for (const mark of structureMarks(mol, attachments, brackets).brackets) {
     const distance = bracketDistance(mark, point)
     if (distance > BRACKET_HIT / zoom || (best && best.distance <= distance)) continue
-    best = { bracket: brackets!.find((item) => item.id === mark.id)!, distance }
+    best = { bracket: brackets.find((item) => item.id === mark.id)!, distance }
   }
   return best?.bracket ?? null
 }

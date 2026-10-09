@@ -52,7 +52,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     // The molecule as of the last edit, not as of the last render: a second click or key that
     // comes before React has drawn the first one's result must act on that result.
     get props() {
-      return { ...props, mol: current(), brackets: props.brackets && props.latest().brackets }
+      return { ...props, mol: current(), brackets: props.brackets && props.latest().brackets, attachments: props.latest().attachments }
     },
     gesture,
     space,
@@ -125,7 +125,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     focusAtom: hotspot.pin,
     editLabel: (id) => void label.openLabel(id),
     targetAt: (clientX, clientY) => hitOf(current(), viewport.toWorld(clientX, clientY), viewport.get().zoom),
-    bracketAt: (clientX, clientY) => bracketAt(current(), props.latest().brackets, viewport.toWorld(clientX, clientY), viewport.get().zoom)?.id ?? null,
+    bracketAt: (clientX, clientY) => bracketAt(current(), props.latest().brackets, viewport.toWorld(clientX, clientY), viewport.get().zoom, props.latest().attachments)?.id ?? null,
     quickScaffold: quick.open,
     replaceFragment: label.replaceFragment,
   }))

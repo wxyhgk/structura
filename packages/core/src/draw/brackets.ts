@@ -1,6 +1,6 @@
 import { bondLengthAt } from "../molecule/measure.ts"
 import type { Atom, Bracket, Molecule, Point } from "../types.ts"
-import type { MarkText } from "./attachments.ts"
+import { markTextExtent, type AttachmentMark, type MarkText } from "./attachments.ts"
 import { labelFor, type AtomLabel } from "./labels.ts"
 import type { DrawPolyline } from "./primitives.ts"
 
@@ -80,13 +80,26 @@ function sideExits(mol: Molecule, inside: Set<number>, content: Box, labelOf: (a
   })
 }
 
-function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLabel | null | undefined): BracketMark | null {
+/**
+ * What of the attachments belongs inside a bracket round `inside`: the ellipse of one whose
+ * candidates are all inside, and, when its own atom is inside too, all of it (the line, the
+ * "(Rx)n" round its label).
+ */
+function attachmentReach(marks: readonly AttachmentMark[], inside: Set<number>): Box[] {
+  return marks.flatMap((mark): Box[] => {
+    if (!mark.targets.every((id) => inside.has(id))) return []
+    if (inside.has(mark.atom)) return [mark.bounds, ...mark.texts.map(markTextExtent)]
+    return mark.curve ? [mark.curve] : []
+  })
+}
+
+function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLabel | null | undefined, attachments: readonly AttachmentMark[]): BracketMark | null {
   const inside = new Set(bracket.atoms)
   const atoms = mol.atoms.filter((atom) => inside.has(atom.id))
   if (atoms.length === 0) return null
   const length = bondLengthAt(mol, atoms[0].id)
   const pad = PAD * length
-  const reach = atoms.map((atom) => extent(atom, labelOf(atom)))
+  const reach = [...atoms.map((atom) => extent(atom, labelOf(atom))), ...attachmentReach(attachments, inside)]
   const content = {
     left: Math.min(...reach.map((box) => box.left)),
     right: Math.max(...reach.map((box) => box.right)),
@@ -130,15 +143,17 @@ function markOf(mol: Molecule, bracket: Bracket, labelOf: (atom: Atom) => AtomLa
 
 /**
  * Square brackets as drawn around their atoms: wide and tall enough for the atoms and their
- * labels with some room, a repeat unit's reaching across the bonds that leave it, its count
- * at the lower right. `labels` are the scene's; left out, the bracketed atoms' labels are
- * worked out here. Shared by the canvas, every export and hit-testing, so all agree.
+ * labels with some room, and for what of the drawn `attachments` belongs to those atoms (an
+ * ellipse round them, an "(Rx)n" hanging inside); a repeat unit's reaching across the bonds
+ * that leave it, its count at the lower right. `labels` are the scene's; left out, the
+ * bracketed atoms' labels are worked out here. Shared by the canvas, every export and
+ * hit-testing (through draw/marks.ts), so all agree.
  */
-export function bracketMarks(mol: Molecule, brackets: readonly Bracket[] | undefined, labels?: readonly AtomLabel[]): BracketMark[] {
+export function bracketMarks(mol: Molecule, brackets: readonly Bracket[] | undefined, labels?: readonly AtomLabel[], attachments: readonly AttachmentMark[] = []): BracketMark[] {
   if (!brackets || brackets.length === 0) return []
   const given = labels && new Map(labels.map((label) => [label.atomId, label]))
   const labelOf = (atom: Atom) => (given ? given.get(atom.id) : labelFor(mol, atom, false))
-  return brackets.flatMap((bracket) => markOf(mol, bracket, labelOf) ?? [])
+  return brackets.flatMap((bracket) => markOf(mol, bracket, labelOf, attachments) ?? [])
 }
 
 /** How far `point` is from a bracket's strokes. */

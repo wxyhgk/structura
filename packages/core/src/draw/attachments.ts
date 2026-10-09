@@ -13,9 +13,20 @@ export type Extent = { left: number; right: number; top: number; bottom: number 
 /**
  * One variable point of attachment as drawn: its `shape`, the stroke as an SVG path (`from`
  * where it leaves the atom, `to` where it meets the ring's middle or the ellipse), the box
- * round all of it, and the repeat marks if any.
+ * round all of it, the box round just the ellipse (`curve`, for a loop or an arc), the
+ * candidate atoms (`targets`), and the repeat marks if any.
  */
-export type AttachmentMark = { atom: number; shape: AttachmentShape; from: Point; to: Point; path: string; bounds: Extent; texts: MarkText[] }
+export type AttachmentMark = {
+  atom: number
+  targets: number[]
+  shape: AttachmentShape
+  from: Point
+  to: Point
+  path: string
+  bounds: Extent
+  curve: Extent | null
+  texts: MarkText[]
+}
 
 /** How far along the way from `from` to `to` the line leaves a label's box, padded a little. */
 function leaveBox(from: Point, to: Point, label: AtomLabel | undefined): number {
@@ -87,6 +98,7 @@ export function attachmentMarks(mol: Molecule, attachments: readonly Attachment[
     const label = labels.find((item) => item.atomId === from.id)
     const texts = attachment.repeat && label ? repeatTexts(label, attachment.repeat.name) : []
     const shape = attachmentShape(mol, attachment)
+    const base = { atom: attachment.atom, targets: targets.map((atom) => atom.id), texts }
     const leaving = (toward: Point) => {
       const t = leaveBox(from, toward, label)
       return { x: from.x + (toward.x - from.x) * t, y: from.y + (toward.y - from.y) * t }
@@ -94,19 +106,20 @@ export function attachmentMarks(mol: Molecule, attachments: readonly Attachment[
     if (shape === "line") {
       const to = { x: targets.reduce((sum, atom) => sum + atom.x, 0) / targets.length, y: targets.reduce((sum, atom) => sum + atom.y, 0) / targets.length }
       const start = leaving(to)
-      return [{ atom: attachment.atom, shape, from: start, to, path: `M ${fixed(start)} L ${fixed(to)}`, bounds: extentOf([start, to]), texts }]
+      return [{ ...base, shape, from: start, to, path: `M ${fixed(start)} L ${fixed(to)}`, bounds: extentOf([start, to]), curve: null }]
     }
     const ellipse = fitEllipse(targets)
-    const bounds = (start: Point, end: Point) => extentOf([start, end], ellipseBounds(ellipse))
+    const curve = ellipseBounds(ellipse)
+    const bounds = (start: Point, end: Point) => extentOf([start, end], curve)
     if (shape === "arc") {
       const join = arcJoin(ellipse, from, heading(mol, from))
       const start = leaving(join.point)
-      return [{ atom: attachment.atom, shape, from: start, to: join.point, path: arcPath(start, ellipse, join), bounds: bounds(start, join.point), texts }]
+      return [{ ...base, shape, from: start, to: join.point, path: arcPath(start, ellipse, join), bounds: bounds(start, join.point), curve }]
     }
     // The line leaves the label towards the ellipse's nearest point.
     const start = leaving(ellipsePoint(ellipse, nearestOnEllipse(ellipse, from)))
     const { path, end } = loopPath(start, ellipse)
-    return [{ atom: attachment.atom, shape, from: start, to: end, path, bounds: bounds(start, end), texts }]
+    return [{ ...base, shape, from: start, to: end, path, bounds: bounds(start, end), curve }]
   })
 }
 

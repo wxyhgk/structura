@@ -47,7 +47,7 @@ function startPress(host: PointerHost, world: Point, event: PointerInput): Gestu
   if (tool === "lasso" || tool === "marquee") {
     const onFrame = startFrameGesture(host, world)
     if (onFrame) return onFrame
-    const bracket = hit ? null : bracketAt(mol, host.props.brackets, world, host.zoom())
+    const bracket = hit ? null : bracketAt(mol, host.props.brackets, world, host.zoom(), host.props.attachments)
     if (bracket) return pressBracket(host, bracket.atoms, world, event.shiftKey)
   }
   if (clickTool(host, hit, world)) return null

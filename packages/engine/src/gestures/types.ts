@@ -1,3 +1,4 @@
+import type { Attachment } from "@structura/markush"
 import type { BondStyle, Bracket, Molecule, Point, RingKind, Selection } from "@structura/core/types"
 import type { Run } from "../ops/builders.ts"
 import type { FrameHandle } from "../pointer/targeting.ts"
@@ -39,6 +40,8 @@ export type GestureContext = {
   selection: Selection
   /** The drawing's brackets: pressing one's stroke with a select tool selects (and drags) its atoms. */
   brackets?: readonly Bracket[]
+  /** The drawing's variable attachments: a bracket widens for the ellipse round its atoms. */
+  attachments?: readonly Attachment[]
   run: Run
   setSelection: (selection: Selection) => void
 }

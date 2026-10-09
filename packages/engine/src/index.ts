@@ -12,13 +12,14 @@ export { hasHotkey, hotkeyOps, selectionHotkeyOps, selectionTips } from "./hotke
 
 export type { ScaffoldPick, ToolId } from "./tools/types.ts"
 export { keysFor, TOOL_KEYS, toolForKey, toolKeyLabel, withKeys, type ToolKey } from "./tools/bindings.ts"
-export { BOND_STYLES, RING_KINDS, RING_NAMES, sameStyle, toolLabel } from "./tools/catalog.ts"
+export { BOND_STYLES, RING_KINDS, sameStyle, toolLabel } from "./tools/catalog.ts"
+export { RING_NAMES } from "./i18n/zh.ts"
 export { describeAtomAction, describeBondAction, hotkeyLabel } from "./tools/describe.ts"
 export { defaultPick } from "./tools/scaffoldPick.ts"
 
 export type { HoverTarget } from "./pointer/types.ts"
 export { contextTarget, type ContextTarget } from "./pointer/context.ts"
-export { bondEnd, clampScale, dragIds, frameAt, handleCursor, hitOf, hoverOf, sameHover, selectionFrame, type FrameHandle, type SelectionFrame } from "./pointer/targeting.ts"
+export { bondEnd, clampScale, dragIds, frameAt, hitOf, hoverOf, sameHover, selectionFrame, type FrameHandle, type SelectionFrame } from "./pointer/targeting.ts"
 export { doubleClickAction, type DoubleClick } from "./pointer/doubleClick.ts"
 export { snappedMove } from "./pointer/moveSnap.ts"
 

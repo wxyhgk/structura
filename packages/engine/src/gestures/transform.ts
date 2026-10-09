@@ -3,7 +3,7 @@ import { atomById, moveAtoms, rotateAtoms, scaleAtoms } from "@structura/core/mo
 import { angleTo, dist, signedDelta, snapAngle } from "@structura/core/geometry"
 import type { Point } from "@structura/core/types"
 import { snappedMove } from "../pointer/moveSnap.ts"
-import { clampScale, frameAt, handleCursor, selectionFrame } from "../pointer/targeting.ts"
+import { clampScale, frameAt, selectionFrame } from "../pointer/targeting.ts"
 import { ringHint } from "./hints.ts"
 import type { Gesture, GestureKind, PointerHost } from "./types.ts"
 
@@ -63,7 +63,7 @@ export const rotate: GestureKind<Rotate> = {
     const angle = turned(gesture, world, event.altKey)
     if (angle !== 0) host.props.run([{ op: "rotate", atoms: gesture.ids, angle, center: gesture.center }], { keepSelection: true })
     host.setDraft(null)
-    host.setCursor(null)
+    host.setFrameHandle(null)
     host.setRotating(false)
   },
 }
@@ -77,7 +77,7 @@ export const scale: GestureKind<Scale> = {
     const [sx, sy] = scaleFactors(gesture, world)
     if (sx !== 1 || sy !== 1) host.props.run([{ op: "scale", atoms: gesture.ids, sx, sy, center: gesture.center }], { keepSelection: true })
     host.setDraft(null)
-    host.setCursor(null)
+    host.setFrameHandle(null)
   },
 }
 
@@ -90,13 +90,13 @@ export function startFrameGesture(host: PointerHost, world: Point): Gesture | nu
   if (!frame || !which) return null
   if (which === "rotate") {
     host.assignHover(null)
-    host.setCursor(handleCursor(which))
+    host.setFrameHandle(which)
     host.setRotating(true)
     return { kind: "rotate", mol, ids: frame.ids, center: frame.center, startAngle: angleTo(frame.center, world) }
   }
   const handle = frame.handles.find((item) => item.kind === which)
   if (!handle) return null
   host.assignHover(null)
-  host.setCursor(handleCursor(which))
+  host.setFrameHandle(which)
   return { kind: "scale", mol, ids: frame.ids, center: frame.center, anchor: which, origin: { x: handle.x, y: handle.y } }
 }

@@ -27,7 +27,7 @@ export function fakeCanvas(editor: Editor) {
     setDraft: (draft) => (shown.draft = draft),
     setPanning: () => {},
     assignHover: (hover) => (shown.hover = hover),
-    setCursor: () => {},
+    setFrameHandle: () => {},
     setRotating: () => {},
     setRingHint: () => {},
   }

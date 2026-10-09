@@ -1,5 +1,6 @@
 import type { BondStyle, Molecule, Point, RingKind, Selection } from "@structura/core/types"
 import type { Run } from "../ops/builders.ts"
+import type { FrameHandle } from "../pointer/targeting.ts"
 import type { HoverTarget } from "../pointer/types.ts"
 import type { ScaffoldPick, ToolId } from "../tools/types.ts"
 import type { RingHintShape } from "./hints.ts"
@@ -60,7 +61,8 @@ export type PointerHost = {
   setDraft: (mol: Molecule | null) => void
   setPanning: (panning: boolean) => void
   assignHover: (hover: HoverTarget) => void
-  setCursor: (cursor: string | null) => void
+  /** The selection-frame handle under the pointer or being dragged, for the screen to pick a cursor; null for none. */
+  setFrameHandle: (handle: FrameHandle | null) => void
   setRotating: (rotating: boolean) => void
   /** Where a line being drawn into a ring will attach, or null. */
   setRingHint: (hint: RingHintShape | null) => void

@@ -1,4 +1,5 @@
 import type { BondStyle, RingKind } from "@structura/core/types"
+import { TOOL_NAMES } from "../i18n/zh.ts"
 import { toolLabel } from "./catalog.ts"
 import type { ToolId } from "./types.ts"
 
@@ -42,7 +43,7 @@ const SINGLE: BondStyle = { order: 1, stereo: "none" }
 
 /** What a tool key picks, in words: the palette's name for that tool, bond or ring. */
 export function toolKeyLabel(entry: ToolKey): string {
-  if (entry.tool === "ring-current") return "环（上次的种类）"
+  if (entry.tool === "ring-current") return TOOL_NAMES["ring-current"]
   return toolLabel(entry.tool, entry.tool === "bond" ? entry.style : SINGLE, entry.tool === "ring" ? entry.ring : "benzene", "")
 }
 
@@ -57,7 +58,7 @@ export function keysFor(match: (entry: ToolKey) => boolean): string {
     .join(" / ")
 }
 
-/** "苯 (J / A)", or just the label when no key picks it. */
+/** The label with its keys, "label (J / A)", or just the label when no key picks it. */
 export function withKeys(label: string, keys: string): string {
   return keys ? `${label} (${keys})` : label
 }

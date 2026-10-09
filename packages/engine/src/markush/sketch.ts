@@ -3,6 +3,7 @@ import { emptyDrawing } from "@structura/core/drawing"
 import { atomById, deleteSelection, neighbors } from "@structura/core/molecule"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Molecule } from "@structura/core/types"
+import { SITE_PROBLEMS } from "../i18n/zh.ts"
 import { pieceProblem } from "./capture.ts"
 
 // The sketch pad's points of attachment ("sites"): kept beside the drawing as atom ids, not
@@ -40,10 +41,10 @@ export function sitesShown(mol: Molecule, sites: number[], kind: SiteKind): { si
 
 /** What still has to be done about the sites, in words; null when they are complete. */
 export function sitesProblem(mol: Molecule, sites: number[], kind: SiteKind): string | null {
-  if (mol.atoms.length === 0) return "还没有画结构。"
+  if (mol.atoms.length === 0) return SITE_PROBLEMS.empty
   const shown = sitesShown(mol, sites, kind).sites
-  if (kind === "link" && shown.length < 2) return `连接基要两个位点（两端各一个），${shown.length === 0 ? "还没有设" : "还差一个"}：点“设位点”，再点原子。`
-  if (kind === "ring" && shown.length === 0) return "环里的原子要指定由哪个原子占住环里的位置：点“设位点”，再点那个原子。"
+  if (kind === "link" && shown.length < 2) return SITE_PROBLEMS.linkNeedsTwo(shown.length === 0)
+  if (kind === "ring" && shown.length === 0) return SITE_PROBLEMS.ringNeedsOne
   return null
 }
 

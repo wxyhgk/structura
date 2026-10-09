@@ -107,14 +107,6 @@ export function frameAt(frame: SelectionFrame, point: Point, zoom: number): Fram
   return null
 }
 
-export function handleCursor(kind: FrameHandle): string {
-  if (kind === "rotate") return "grab"
-  if (kind === "n" || kind === "s") return "ns-resize"
-  if (kind === "e" || kind === "w") return "ew-resize"
-  if (kind === "ne" || kind === "sw") return "nesw-resize"
-  return "nwse-resize"
-}
-
 export function clampScale(value: number): number {
   const sign = value < 0 ? -1 : 1
   return sign * Math.min(6, Math.max(0.2, Math.abs(value)))

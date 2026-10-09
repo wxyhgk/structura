@@ -4,6 +4,7 @@ import type { Drawing, Molecule, Point, Selection } from "@structura/core/types"
 import { AtomLabelInput } from "./AtomLabelInput.tsx"
 import { SceneView } from "./SceneView.tsx"
 import { defaultPick, doubleClickAction, hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type RingHintShape, sameHover, scaffoldOps } from "@structura/engine"
+import { frameHandleCursor } from "./frameHandleCursor.ts"
 import { QuickScaffold } from "./QuickScaffold.tsx"
 import type { CanvasHandle, EditorSlice, Gesture, HoverTarget, PointerHost, Preview } from "./types.ts"
 import { useHotspot } from "./useHotspot.ts"
@@ -68,7 +69,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     setRingHint,
     setPanning,
     assignHover: hotspot.assignHover,
-    setCursor: setHandleCursor,
+    setFrameHandle: (handle) => setHandleCursor(handle && frameHandleCursor(handle)),
     setRotating,
   }
 

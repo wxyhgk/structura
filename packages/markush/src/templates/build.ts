@@ -1,7 +1,8 @@
 import { emptyDrawing } from "@structura/core/drawing"
-import { fragmentFrom, STAR, type Template, type TemplateInput } from "@structura/core/markush"
+import { fragmentFrom, STAR } from "@structura/core/markush"
 import { applyOps, type Op, type Ref } from "@structura/core/ops"
 import type { Alternative, BridgeName, GroupClass, SizeUnit } from "@structura/core/types"
+import type { Template, TemplateInput } from "./model.ts"
 
 // Small makers for the built-in templates, so each shelf reads as a list of names and
 // structures. Drawn pieces are built with the editor's own ops, never with coordinates.

@@ -1,4 +1,4 @@
-import type { Template } from "@structura/core/markush"
+import type { Template } from "./model.ts"
 import { arylGroups } from "./aryl.ts"
 import { classes } from "./classes.ts"
 import { heteroarylGroups } from "./heteroaryl.ts"

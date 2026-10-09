@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { emptyDrawing } from "../../src/drawing.ts"
-import { libraryProblem, templateProblem, type TemplateInput } from "../../src/markush.ts"
-import { applyOps, type Op } from "../../src/ops.ts"
-import type { Alternative } from "../../src/types.ts"
+import { emptyDrawing } from "@structura/core/drawing"
+import { applyOps, type Op } from "@structura/core/ops"
+import type { Alternative } from "@structura/core/types"
+import { libraryProblem, templateProblem, type TemplateInput } from "@structura/markush"
 
 const piece = (ops: Op[]): Alternative => {
   const result = applyOps(emptyDrawing(), ops)

@@ -1,4 +1,4 @@
-import type { Template } from "@structura/core/markush"
+import type { Template } from "./model.ts"
 import type { Op } from "@structura/core/ops"
 import { at, drawn, scaffold, shelf } from "./build.ts"
 

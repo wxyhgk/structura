@@ -1,4 +1,4 @@
-import type { Template } from "@structura/core/markush"
+import type { Template } from "./model.ts"
 import { at, drawn, label, scaffold, shelf } from "./build.ts"
 
 // Aryl groups at a branch end. Where a patent's name covers several positions ("naphthyl"),

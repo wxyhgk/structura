@@ -15,11 +15,9 @@ export {
   STAR,
 } from "./markush/fragments.ts"
 export type { FragmentProblem } from "./markush/fragments.ts"
-export { fragmentAt, fragmentFits, fragmentVersions, placeFragment } from "./markush/placement.ts"
+export { fragmentFits, placeFragment } from "./markush/placement.ts"
 export type { Placed } from "./markush/placement.ts"
 export { closureNames, ringClosureProblem } from "./markush/closures.ts"
 export { provisoNames, provisoProblem } from "./markush/provisos.ts"
 export { absorbRingPointers, ringPointerAt, ringPositionsAt, ringSystemPositions } from "./markush/pointer.ts"
 export { alternativeProblem, alternativesOf, GROUP_CLASSES, isVariableName, nestedVariables, sharers, sizeUnitOf, variableProblem } from "./markush/variables.ts"
-export { libraryProblem, TEMPLATE_SITES, templateProblem } from "./markush/templates.ts"
-export type { ImportReport, Template, TemplateInput, TemplateLibrary, TemplateSite } from "./markush/templates.ts"

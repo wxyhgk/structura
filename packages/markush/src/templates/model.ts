@@ -1,6 +1,5 @@
-import type { Alternative } from "../types.ts"
-import { fragmentEnds } from "./fragments.ts"
-import { alternativeProblem } from "./variables.ts"
+import { alternativeProblem, fragmentEnds } from "@structura/core/markush"
+import type { Alternative } from "@structura/core/types"
 
 // The group library: named alternatives kept to be reused, built in or the user's own. A
 // template is an alternative as a variable holds it (a drawn piece with its sites, a class,

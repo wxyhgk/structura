@@ -2,7 +2,7 @@
 
 The backend keeps the user's own group templates in SQLite. It is single-user for now (no
 accounts); the shapes are `Template`, `TemplateInput`, `TemplateLibrary` and `ImportReport`
-from `@structura/core/markush` (`packages/core/src/markush/templates.ts`), and every template
+from `@structura/markush` (`packages/markush/src/templates/model.ts`), and every template
 is checked with `templateProblem` before it is stored. Built-in templates are not stored
 here: they ship with the app (`builtinTemplates()` in `@structura/markush`).
 

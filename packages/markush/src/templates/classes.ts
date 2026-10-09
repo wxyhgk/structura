@@ -1,4 +1,4 @@
-import type { Template } from "@structura/core/markush"
+import type { Template } from "./model.ts"
 import { range, shelf } from "./build.ts"
 
 // Classes kept as classes, with the size ranges claims most often state. Heteroaryl and

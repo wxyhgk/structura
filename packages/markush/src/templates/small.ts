@@ -1,4 +1,4 @@
-import type { Template } from "@structura/core/markush"
+import type { Template } from "./model.ts"
 import { label, shelf } from "./build.ts"
 
 // Atoms and small groups at a branch end (R1 = H, F, Me, OMe…): plain labels, each an element

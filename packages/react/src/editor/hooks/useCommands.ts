@@ -1,4 +1,4 @@
-import type { RefObject } from "react"
+import { useMemo, type RefObject } from "react"
 import { toDocument } from "@structura/core/document"
 import { sceneToSvg } from "@structura/core/draw"
 import { placeholders, variableLabels } from "@structura/markush"
@@ -45,13 +45,16 @@ export function useCommands({
   file: DocumentFile
 }) {
   const selected = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
+  // Worked out once a render, for the several commands that ask.
+  const selectedAtoms = useMemo(() => atomIdsOfSelection(editor.mol, editor.selection), [editor.mol, editor.selection])
+  const join = useMemo(() => joinOps(editor.mol, editor.selection), [editor.mol, editor.selection])
   /** The abbreviations the expand/collapse commands act on that are now collapsed (or not). */
   const groupsIn = (collapsed: boolean) => {
-    const ids = new Set(groupsTouching(editor.mol, selected ? atomIdsOfSelection(editor.mol, editor.selection) : null))
+    const ids = new Set(groupsTouching(editor.mol, selected ? selectedAtoms : null))
     return editor.mol.groups.filter((group) => ids.has(group.id) && group.collapsed === collapsed)
   }
   const setCollapsed = (collapsed: boolean) =>
-    editor.run([{ op: "set_collapsed", ...(selected ? { atoms: atomIdsOfSelection(editor.mol, editor.selection) } : {}), collapsed }], { keepSelection: true })
+    editor.run([{ op: "set_collapsed", ...(selected ? { atoms: selectedAtoms } : {}), collapsed }], { keepSelection: true })
   const perArrow = (make: (direction: Arrow, key: string) => Command) =>
     Object.fromEntries(arrows.map((name) => [name.toLowerCase(), make(name.toLowerCase() as Arrow, `Arrow${name}`)])) as Record<Arrow, Command>
 
@@ -129,18 +132,17 @@ export function useCommands({
     replace: command(
       "替换选中部分…",
       () => {
-        const ids = atomIdsOfSelection(editor.mol, editor.selection)
-        if (ids.length > 0) canvas.current?.replaceFragment(ids)
+        if (selectedAtoms.length > 0) canvas.current?.replaceFragment(selectedAtoms)
       },
       // Only a fragment joined to the rest by one bond (or a whole molecule) can be swapped.
-      { keys: [{ key: "e", meta: true }], enabled: selected && bondsLeaving(editor.mol, atomIdsOfSelection(editor.mol, editor.selection)).length <= 1 },
+      { keys: [{ key: "e", meta: true }], enabled: selected && bondsLeaving(editor.mol, selectedAtoms).length <= 1 },
     ),
     // A field by the pointer: no single key per template, so none clashes with the hover keys.
     quickScaffold: command("快速放模板…", () => canvas.current?.quickScaffold(), { keys: [{ key: "/" }] }),
     // Two atoms (or two bonds) of two pieces selected: join the pieces there.
-    join: command("连接所选", () => editor.run(joinOps(editor.mol, editor.selection) ?? []), {
+    join: command("连接所选", () => editor.run(join ?? []), {
       keys: [{ key: "j", meta: true }],
-      enabled: joinOps(editor.mol, editor.selection) != null,
+      enabled: join != null,
     }),
     enumerate: command("批量生成化合物…", () => dialogs.open("enumerate"), {
       enabled: placeholders({ molecule: editor.mol, arrows: editor.arrows, nextArrowId: 0, variables: editor.variables }).length > 0,

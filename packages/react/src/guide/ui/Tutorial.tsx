@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react"
 import { stepPictures } from "../figures/marks.ts"
-import type { PanelSketch, TutorialStep } from "../types.ts"
+import type { CardSketch, TutorialStep } from "../types.ts"
 import { WithKeys } from "./parts.tsx"
 
 /** How long each step stays on screen while playing. */
 const PLAY_MS = 2600
 
-function Panel({ sketch }: { sketch: PanelSketch }) {
+/** What a step sets on the variable's card in the 通式 workspace. */
+function Card({ sketch }: { sketch: CardSketch }) {
   return (
     <div className="w-44 shrink-0 self-center rounded-xl bg-white p-3 text-[12px] shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-      <div className="mb-1.5 text-[11px] font-medium text-[#8e8e93]">通式变量</div>
+      <div className="mb-1.5 text-[11px] font-medium text-[#8e8e93]">变量卡片</div>
       <div className="mb-1.5 text-[14px] font-semibold">{sketch.name}</div>
       <div className="flex flex-wrap gap-1">
         {sketch.chips.map((chip) => (
@@ -52,7 +53,7 @@ export function Tutorial({ title, steps }: { title: string; steps: TutorialStep[
       </header>
       <div className="flex min-h-56 items-center justify-center gap-6 py-4">
         <img src={pictures[at]} alt="" className="max-h-60 max-w-full object-contain" data-testid="tutorial-picture" />
-        {step.panel && <Panel sketch={step.panel} />}
+        {step.card && <Card sketch={step.card} />}
       </div>
       <p className="mx-auto min-h-14 max-w-[520px] text-center text-[15px] leading-7" data-testid="tutorial-text">
         <WithKeys text={step.text} />

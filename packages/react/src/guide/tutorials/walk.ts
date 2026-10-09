@@ -3,7 +3,7 @@ import type { Op } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
 import { build } from "../figures/build.ts"
 import type { Mark } from "../figures/marks.ts"
-import type { GuideContext, PanelSketch, PressKey, TutorialStep } from "../types.ts"
+import type { CardSketch, GuideContext, PressKey, TutorialStep } from "../types.ts"
 
 /**
  * Writing a tutorial: do what the user would (as ops, the editor's own), and after each
@@ -21,12 +21,12 @@ export class Walk {
   }
 
   /** Shows a drawing in place of the current one (a generated compound, say) without changing it. */
-  show(drawing: Drawing, text: string, marks?: Mark[], panel?: PanelSketch) {
-    this.steps.push({ text, drawing, marks, panel })
+  show(drawing: Drawing, text: string, marks?: Mark[], card?: CardSketch) {
+    this.steps.push({ text, drawing, marks, card })
   }
 
-  step(text: string, marks?: Mark[], panel?: PanelSketch) {
-    this.show(this.drawing, text, marks, panel)
+  step(text: string, marks?: Mark[], card?: CardSketch) {
+    this.show(this.drawing, text, marks, card)
   }
 
   /** The atom of `among` farthest from `from`: the para position of a ring, say. */

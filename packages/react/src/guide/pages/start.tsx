@@ -13,7 +13,7 @@ export const startPage = definePage({
   body: (context) => (
     <>
       <Tutorial title="从空白画布到一个分子" steps={firstMolecule(context)} />
-      <P>左边是工具和元素，中间是画布，画了通式变量时右边会出现“通式变量”面板。画布没有边界，视图不会自己移动或缩放。</P>
+      <P>左边是工具和元素，中间是画布。通式的变量和批量生成在通式工作区里，点菜单栏右侧的“通式”切换过去。画布没有边界，视图不会自己移动或缩放。</P>
       <H>移动视图</H>
       <Table
         rows={[

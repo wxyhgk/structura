@@ -13,14 +13,14 @@ export const firstVariable = perHost(({ pressKey }) => {
   walk.step(`画一个苯环，悬停一个原子按 [1]，接出一根键。`, [{ kind: "key", key: "1", atom: 1 }])
   walk.step(`双击这根键末端的原子。`, [{ kind: "double", atom: end }])
   walk.act([{ op: "label", atom: end, text: "R1" }])
-  walk.step(`输入 R1，按 [Enter]。右边出现“通式变量”面板，R1 还没有定义。`, [], { name: "R1", chips: [], note: "未定义" })
+  walk.step(`输入 R1，按 [Enter]。点菜单栏右侧的“通式”切换到通式工作区：R1 有了一张卡片，还没有定义。`, [], { name: "R1", chips: [], note: "未定义" })
   walk.act([{ op: "set_variable", name: "R1", alternatives: [label("H"), label("Cl"), label("Me")] }])
-  walk.step(`在 R1 下面的输入框里填 “H, Cl, Me”，回车。`, [], { name: "R1", chips: ["H", "Cl", "Me"] })
+  walk.step(`在 R1 卡片的输入框里填 “H, Cl, Me”，回车。`, [], { name: "R1", chips: ["H", "Cl", "Me"] })
   walk.act([{ op: "set_variable", name: "R1", alternatives: [label("H"), label("Cl"), label("Me"), { kind: "class", class: "alkyl", min: 1, max: 30 }] }])
-  walk.step(`再点 “+ C1–C30 烷基”：范围类的候选项保持为类别，不展开。`, [], { name: "R1", chips: ["H", "Cl", "Me", "取代或未取代的(C1–C30)烷基"] })
+  walk.step(`再点模板 “C1–C30 烷基”：范围类的候选项保持为类别，不展开。`, [], { name: "R1", chips: ["H", "Cl", "Me", "取代或未取代的(C1–C30)烷基"] })
   const made = enumerate(walk.drawing, { representatives: true })
   const chloro = made.molecules[1]
-  walk.show({ molecule: chloro, arrows: [], nextArrowId: 1 }, `点面板底部的“批量生成化合物…”：每个候选项生成一个化合物，烷基用甲基、乙基等代表结构。这里共 ${made.molecules.length} 个，图中是 R1 = Cl 的那个。`)
+  walk.show({ molecule: chloro, arrows: [], nextArrowId: 1 }, `底部的生成结果随之更新：每个候选项生成一个化合物，烷基用甲基、乙基等代表结构。这里共 ${made.molecules.length} 个，图中是 R1 = Cl 的那个。`)
   return walk.steps
 })
 
@@ -36,7 +36,7 @@ export const anywhereOnRing = perHost(({ pressKey }) => {
   walk.act([{ op: "set_attachment", atom: r, to: [2, 3, 4, 5, 6] }])
   walk.step(`松开后键变成一根指向环心的线：R1 可以接在这个环的任一空位上。`)
   walk.act([{ op: "set_variable", name: "R1", alternatives: [label("Cl")] }])
-  walk.step(`在面板里给 R1 填 Cl。`, [], { name: "R1", chips: ["Cl"] })
+  walk.step(`在 R1 的卡片上填 Cl。`, [], { name: "R1", chips: ["Cl"] })
   const made = enumerate(walk.drawing)
   walk.show({ molecule: made.molecules[1], arrows: [], nextArrowId: 1 }, `批量生成时 Cl 依次接到每个空位上，甲基所在的位置自动跳过（共 ${made.molecules.length} 个，图中是间位的那个）。`)
   return walk.steps
@@ -69,8 +69,8 @@ export const drawnPiece = perHost(({ pressKey }) => {
     { op: "set_variable", name: "R1", alternatives: [label("H"), { kind: "fragment", molecule: fragmentFrom(walk.drawing.molecule, piece) }] },
     { op: "remove", atoms: piece },
   ])
-  walk.step(`在 R1 那一行点 “+ 用选中的结构”：片段离开画布，成为 R1 的候选项（这里还填了 H）。`, [], { name: "R1", chips: ["H", "片段 C₅H₁₀N"] })
+  walk.step(`在 R1 的卡片上点 “+ 用选中的结构”：片段离开画布，成为 R1 的候选项（这里还填了 H）。`, [], { name: "R1", chips: ["H", "片段 C₅H₁₀N"] })
   const made = enumerate(walk.drawing)
-  walk.show({ molecule: made.molecules[1], arrows: [], nextArrowId: 1 }, `批量生成：片段接在 R1 的位置上，N 和苯环相连。`)
+  walk.show({ molecule: made.molecules[1], arrows: [], nextArrowId: 1 }, `生成结果里，片段接在 R1 的位置上，N 和苯环相连。`)
   return walk.steps
 })

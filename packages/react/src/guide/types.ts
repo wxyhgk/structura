@@ -39,8 +39,8 @@ export function definePage<const T extends Page>(page: T): T {
   return page
 }
 
-/** A small stand-in for a row of the 通式变量 panel, to show what a step sets there. */
-export type PanelSketch = { name: string; chips: string[]; note?: string }
+/** A small stand-in for a variable's card in the 通式 workspace, to show what a step sets there. */
+export type CardSketch = { name: string; chips: string[]; note?: string }
 
 export type TutorialStep = {
   /** What to do, in a sentence or two; keys in square brackets ("按 [1]") show as keys. */
@@ -48,5 +48,5 @@ export type TutorialStep = {
   /** The drawing as it looks once this step is done (or, with marks, just before). */
   drawing: Drawing
   marks?: Mark[]
-  panel?: PanelSketch
+  card?: CardSketch
 }

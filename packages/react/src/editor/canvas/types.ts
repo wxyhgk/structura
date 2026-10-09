@@ -1,7 +1,7 @@
 import type { DrawOptions } from "@structura/core/draw"
 import type { Arrow, BondStyle, Bracket, Drawing, Molecule, RingKind, Selection } from "@structura/core/types"
 import type { Attachment } from "@structura/markush"
-import type { HoverTarget, Run, ScaffoldPick, ToolId, ToolSettings, Viewport } from "@structura/engine"
+import type { CurveFocus, HoverTarget, Run, ScaffoldPick, ToolId, ToolSettings, Viewport } from "@structura/engine"
 
 export type CanvasHandle = {
   /** Hover hotkeys; returns whether the key was used. */
@@ -39,6 +39,8 @@ export type EditorSlice = {
   bracketKind: ToolSettings["bracketKind"]
   attachShape: ToolSettings["attachShape"]
   selection: Selection
+  /** The custom attachment curve whose nodes are shown for editing, and the node picked on it. */
+  curveFocus: CurveFocus | null
   colorHetero: boolean
   /** How labels are written (raised variable numbers or not). */
   drawOptions: DrawOptions
@@ -51,6 +53,7 @@ export type EditorSlice = {
   /** The drawing as of the last edit, ahead of the re-render when keys come fast. */
   latest: () => Drawing
   setSelection: (selection: Selection) => void
+  setCurveFocus: (focus: CurveFocus | null) => void
   /** Takes back the last edit; a double click uses it to drop what its first press drew. */
   undo: () => void
   viewport: Viewport

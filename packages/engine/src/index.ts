@@ -33,6 +33,8 @@ export { steppedZoom, ZOOM_LEVELS } from "./view/zoomLevels.ts"
 
 export { joinOps, paintOps, scaffoldOps, type Run, type RunOptions } from "./ops/builders.ts"
 export { captureOps } from "./markush/capture.ts"
+export { curveKey, curveOp, type CurveFocus } from "./markush/curveEdit.ts"
+export { freehandCurve } from "./markush/freehand.ts"
 export { pickSite, sitesOf, sitesProblem, sitesShown, sketchedPiece } from "./markush/sketch.ts"
 
 export { createEditor, type Editor } from "./state/editor.ts"
@@ -44,4 +46,4 @@ export { allCommands, command, type Command, type CommandOptions, type CommandTa
 export { routeFieldKey, routeKey, type KeyEvent, type KeyRoutes } from "./keys/router.ts"
 export { pointerDown, pointerMove, pointerUp } from "./gestures/index.ts"
 export { ringHint, type RingHintShape } from "./gestures/hints.ts"
-export type { Gesture, GestureContext, PointerHost, PointerInput, Preview, SweptRing } from "./gestures/types.ts"
+export type { CurveHover, Gesture, GestureContext, PointerHost, PointerInput, Preview, SweptRing } from "./gestures/types.ts"

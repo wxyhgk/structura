@@ -22,8 +22,12 @@ export const RING_KINDS: { kind: RingKind; label: string }[] = (
 /** The brackets the bracket tool puts round atoms: a group, or a repeat unit [ … ]n. */
 export const BRACKET_KINDS: { kind: Bracket["kind"]; label: string }[] = (["group", "repeat"] as const).map((kind) => ({ kind, label: BRACKET_NAMES[kind] }))
 
-/** How the attachment tool draws what it makes; null chooses from the attachment. A bracket's look follows from where it goes, so it is not offered. */
-export const ATTACH_SHAPES: { shape: AttachmentShape | null; label: string }[] = ([null, "line", "loop", "arc"] as const).map((shape) => ({
+/**
+ * How the attachment tool draws what it makes; null chooses from the attachment; "custom"
+ * takes the path dragged as the curve. A bracket's look follows from where it goes, so it
+ * is not offered.
+ */
+export const ATTACH_SHAPES: { shape: AttachmentShape | null; label: string }[] = ([null, "line", "loop", "arc", "custom"] as const).map((shape) => ({
   shape,
   label: ATTACH_SHAPE_NAMES[shape ?? "auto"],
 }))

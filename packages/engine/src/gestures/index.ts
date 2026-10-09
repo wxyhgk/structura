@@ -6,6 +6,7 @@ import { bond, startBond } from "./bond.ts"
 import { bracketBox, startBracket } from "./bracket.ts"
 import { chain, startChain } from "./chain.ts"
 import { clickTool } from "./click.ts"
+import { curveNode, pressCurve } from "./curve.ts"
 import { hover } from "./hover.ts"
 import { lasso, marquee, pressBracket, pressEmpty, pressOn } from "./select.ts"
 import { move, rotate, scale, startFrameGesture } from "./transform.ts"
@@ -24,11 +25,11 @@ const pan: GestureKind<Pan> = {
 }
 
 /** Each kind of drag, by name: what moving and letting go do. */
-const KINDS: { [K in Exclude<Gesture["kind"], "idle">]: GestureKind<Extract<Gesture, { kind: K }>> } = { bond, chain, bracket: bracketBox, attach, move, rotate, scale, marquee, lasso, pan }
+const KINDS: { [K in Exclude<Gesture["kind"], "idle">]: GestureKind<Extract<Gesture, { kind: K }>> } = { bond, chain, bracket: bracketBox, attach, curveNode, move, rotate, scale, marquee, lasso, pan }
 
 /**
- * A press: the middle button or Space pans; otherwise the frame's handles, then the tools
- * that act on a click, then the drawing tools' drags, then selecting (and moving) what was
+ * A press: the middle button or Space pans; otherwise the frame's handles, then custom
+ * curves (their nodes, the curve itself), then the tools that act on a click, then the drawing tools' drags, then selecting (and moving) what was
  * pressed, then a box or lasso on empty canvas. Whatever starts is kept in `host.gesture`.
  */
 export function pointerDown(host: PointerHost, event: PointerInput) {
@@ -49,6 +50,8 @@ function startPress(host: PointerHost, world: Point, event: PointerInput): Gestu
   if (tool === "lasso" || tool === "marquee") {
     const onFrame = startFrameGesture(host, world)
     if (onFrame) return onFrame
+    const onCurve = pressCurve(host, world, hit, event)
+    if (onCurve) return onCurve === "done" ? null : onCurve
     const bracket = hit ? null : bracketAt(mol, host.props.brackets, world, host.zoom(), host.props.attachments)
     if (bracket) return pressBracket(host, bracket.atoms, world, event.shiftKey)
   }

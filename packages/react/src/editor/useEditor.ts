@@ -34,6 +34,7 @@ export function useEditor(initial: Molecule[] | Drawing = []) {
     bracketKind: snapshot.bracketKind,
     attachShape: snapshot.attachShape,
     selection,
+    curveFocus: snapshot.curveFocus,
     colorHetero: snapshot.colorHetero,
     raisedNumbers: snapshot.raisedNumbers,
     canUndo: history.past.length > 0,

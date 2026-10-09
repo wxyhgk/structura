@@ -177,7 +177,7 @@ function hexagonAt(cx: number, cy: number, radius: number): string {
 
 /**
  * A variable attachment, drawn the way `shape` draws it: a line into the ring's middle, a
- * line to an ellipse round it, the bond sweeping round it; "auto" (the flyout's 自动) a
+ * line to an ellipse round it, the bond sweeping round it, a free curve with nodes; "auto" (the flyout's 自动) a
  * dashed ring round it, as it is up to the drawing.
  */
 export function AttachIcon({ shape }: { shape: AttachmentShape | "auto" }) {
@@ -191,6 +191,17 @@ export function AttachIcon({ shape }: { shape: AttachmentShape | "auto" }) {
   }
   // Kept up and to the left, clear of the flyout's caret in the button's corner.
   const ring = <polygon points={hexagonAt(14, 11, 4)} strokeWidth="1.2" />
+  if (shape === "custom") {
+    // A free curve round the ring, with two of its nodes as small squares.
+    return (
+      <Frame>
+        {ring}
+        <path d="M2 11c3-1 4-6 9-6.5s9 2.5 8.5 7-5 6.5-9 5.5" />
+        <rect x="9.6" y="3.4" width="2.6" height="2.6" fill="currentColor" stroke="none" />
+        <rect x="18" y="10.2" width="2.6" height="2.6" fill="currentColor" stroke="none" />
+      </Frame>
+    )
+  }
   if (shape === "arc" || shape === "bracket") {
     return (
       <Frame>

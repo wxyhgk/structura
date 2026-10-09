@@ -1,9 +1,10 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 import { atomById, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
 import type { Molecule } from "@structura/core/types"
+import type { Attachment } from "@structura/markush"
 import { AtomLabelInput } from "./AtomLabelInput.tsx"
 import { SceneView } from "./SceneView.tsx"
-import { bracketAt, hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type RingHintShape } from "@structura/engine"
+import { bracketAt, curveKey, hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type CurveHover, type RingHintShape } from "@structura/engine"
 import { frameHandleCursor } from "./frameHandleCursor.ts"
 import { QuickScaffold } from "./QuickScaffold.tsx"
 import type { CanvasHandle, EditorSlice, Gesture, PointerHost, Preview } from "./types.ts"
@@ -12,6 +13,9 @@ import { useHotspot } from "./useHotspot.ts"
 import { useLabelEditor } from "./useLabelEditor.ts"
 import { useQuickScaffold } from "./useQuickScaffold.ts"
 import { useViewport } from "./useViewport.ts"
+
+/** The cursor over a custom curve: moving a node, putting one in, picking the curve. */
+const CURVE_CURSORS: Record<NonNullable<CurveHover>, string> = { node: "move", insert: "copy", pick: "pointer" }
 
 /** The drawing surface: pointer gestures, hover keys, the label field and the view. */
 export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(props, ref) {
@@ -23,6 +27,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const spaceDragged = useRef(false)
   const [preview, setPreview] = useState<Preview>(null)
   const [draft, setDraft] = useState<Molecule | null>(null)
+  const [attachmentsDraft, setAttachmentsDraft] = useState<Attachment[] | null>(null)
+  const [curveHover, setCurveHover] = useState<CurveHover>(null)
   const [ringHint, setRingHint] = useState<RingHintShape | null>(null)
   const [panning, setPanning] = useState(false)
   const [handleCursor, setHandleCursor] = useState<string | null>(null)
@@ -44,6 +50,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     setRingHint(null)
     hotspot.clearHover()
     setDraft(null)
+    setAttachmentsDraft(null)
     setPanning(false)
     setRotating(false)
   }
@@ -62,6 +69,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     setView: (nextZoom, nextPan) => viewport.set({ zoom: nextZoom, pan: nextPan }),
     setPreview,
     setDraft,
+    setAttachmentsDraft,
+    setCurveHover,
     setRingHint,
     setPanning,
     assignHover: hotspot.assignHover,
@@ -71,11 +80,13 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
 
   /**
    * Hover hotkeys: g, Tab, Enter and chemistry keys on the atom or bond under the pointer.
-   * Returns whether the key was used; the editor's key router asks here first.
+   * Returns whether the key was used; the editor's key router asks here first. While a
+   * custom curve is being edited, Delete and Escape are its own.
    */
   function handleKey(event: KeyboardEvent): boolean {
     if (event.metaKey || event.ctrlKey || event.altKey) return false
     if (gesture.current.kind !== "idle") return false
+    if (curveKey(event.key, { drawing: props.latest(), focus: props.curveFocus, setFocus: props.setCurveFocus, run: props.run })) return true
     const mol = current()
     const hot = hotspot.active(mol)
     if (!hot) return false
@@ -143,7 +154,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const shown = draft ?? props.mol
   const labelEdit = label.edit
   const labelAtom = labelEdit ? atomById(shown, labelEdit.id) : undefined
-  const cursor = panning ? "grab" : handleCursor ?? (props.tool === "lasso" || props.tool === "marquee" ? "default" : "crosshair")
+  const selecting = props.tool === "lasso" || props.tool === "marquee"
+  const cursor = panning ? "grab" : (handleCursor ?? (curveHover ? CURVE_CURSORS[curveHover] : selecting ? "default" : "crosshair"))
 
   return (
     <div className="relative h-full min-w-0 flex-1 bg-white">
@@ -175,12 +187,14 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
           setPreview(null)
           hotspot.clearHover()
           setDraft(null)
+          setAttachmentsDraft(null)
           setRotating(false)
           if (!space.current) setPanning(false)
         }}
         onPointerLeave={() => {
           hotspot.clearHover()
           setHandleCursor(null)
+          setCurveHover(null)
           if (gesture.current.kind === "idle" && props.tool === "ring") setPreview(null)
         }}
       >
@@ -197,8 +211,9 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             colorHetero={props.colorHetero}
             drawOptions={props.drawOptions}
             showFrame={!rotating}
-            attachments={props.attachments}
+            attachments={attachmentsDraft ?? props.attachments}
             brackets={props.brackets}
+            curveFocus={selecting ? props.curveFocus : null}
           />
         </g>
       </svg>

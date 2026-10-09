@@ -3,6 +3,7 @@ import { atomById, bondLengthAt, growRingPreview, ringOnBond, ringPoints } from 
 import { fuseReach, fusionSide, fusionTarget } from "../pointer/fusion.ts"
 import type { Point } from "@structura/core/types"
 import { frameAt, hitOf, hoverOf, selectionFrame } from "../pointer/targeting.ts"
+import { curveHover } from "./curve.ts"
 import type { PointerHost } from "./types.ts"
 
 /** With the ring tool and no drag: where the ring would go, shown before the click. */
@@ -22,13 +23,15 @@ function ringPreview(host: PointerHost, world: Point) {
   host.setPreview({ kind: "ring", points: ringPoints(world, RING_SIZE[ringKind], bondLengthAt(mol)), doubles })
 }
 
-/** The pointer moving with nothing pressed: what it is over, the frame handle under it, and the ring preview. */
+/** The pointer moving with nothing pressed: what it is over, the frame handle or custom curve under it, and the ring preview. */
 export function hover(host: PointerHost, world: Point) {
   const { mol, tool, selection } = host.props
   const zoom = host.zoom()
   host.assignHover(hoverOf(mol, world, zoom))
-  const frame = tool === "lasso" || tool === "marquee" ? selectionFrame(mol, selection) : null
+  const selecting = tool === "lasso" || tool === "marquee"
+  const frame = selecting ? selectionFrame(mol, selection) : null
   const which = frame ? frameAt(frame, world, zoom) : null
   host.setFrameHandle(which)
+  host.setCurveHover(selecting && !which ? curveHover(host, world, hitOf(mol, world, zoom)) : null)
   if (tool === "ring") ringPreview(host, world)
 }

@@ -92,8 +92,23 @@ export const curvedAttachments = once(() => {
     { op: "label", atom: 15, text: "Ar" },
     { op: "add_bond", a: 14, b: 15 },
   ])
+  const custom = build([
+    { op: "add_scaffold", name: "carbazole", at: { x: 0, y: 0 } },
+    { op: "place_atom", el: "C", at: { x: -165, y: -60 } },
+    { op: "label", atom: 14, text: "R1" },
+  ])
+  // A curve of one's own: under the rings and up round the right, through six nodes.
+  const nodes: Array<[number, number]> = [
+    [-128, -10],
+    [-95, 72],
+    [10, 88],
+    [125, 52],
+    [135, -50],
+    [42, -66],
+  ]
   return {
     loop: build([{ op: "set_attachment", atom: 11, to: ringSystemPositions(loop.molecule, [1])!, repeat: { min: 0, max: 4, name: "n" } }], loop),
     arc: build([{ op: "set_attachment", atom: 14, to: ringSystemPositions(arc.molecule, [1])! }], arc),
+    custom: build([{ op: "set_attachment", atom: 14, to: ringSystemPositions(custom.molecule, [1])! }, { op: "set_attachment_curve", atom: 14, nodes, closed: false }], custom),
   }
 })

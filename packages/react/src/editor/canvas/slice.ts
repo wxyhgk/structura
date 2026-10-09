@@ -1,7 +1,7 @@
 import type { EditorSlice } from "./types.ts"
 
 /** What a canvas takes from an editor's state and actions, whichever editor drives it. */
-export type CanvasSource = Pick<EditorSlice, "arrows" | "tool" | "bondStyle" | "ringKind" | "scaffold" | "atomEl" | "bracketKind" | "attachShape" | "selection" | "colorHetero" | "run" | "latest" | "setSelection" | "undo">
+export type CanvasSource = Pick<EditorSlice, "arrows" | "tool" | "bondStyle" | "ringKind" | "scaffold" | "atomEl" | "bracketKind" | "attachShape" | "selection" | "curveFocus" | "colorHetero" | "run" | "latest" | "setSelection" | "setCurveFocus" | "undo">
 
 /**
  * A canvas's props: the editor's state and actions, with what this canvas shows on its own
@@ -18,10 +18,12 @@ export function canvasSlice(source: CanvasSource, shown: Pick<EditorSlice, "mol"
     bracketKind: source.bracketKind,
     attachShape: source.attachShape,
     selection: source.selection,
+    curveFocus: source.curveFocus,
     colorHetero: source.colorHetero,
     run: source.run,
     latest: source.latest,
     setSelection: source.setSelection,
+    setCurveFocus: source.setCurveFocus,
     undo: source.undo,
     ...shown,
   }

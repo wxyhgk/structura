@@ -4,7 +4,7 @@ import type { Bracket } from "@structura/core/types"
 import { ContextMenuRadioGroup, ContextMenuRadioItem, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "../../components/ui/context-menu.tsx"
 import { SHAPE_NAMES, shapeChoices } from "./attachmentShapes.ts"
 
-/** "可变连接画法 ▸ 自动 / 直线 / 椭圆 / 弧线 (/ 括号)" in the right-click menu of an atom that has a variable attachment. */
+/** "可变连接画法 ▸ 自动 / 直线 / 椭圆 / 弧线 (/ 括号) / 自定义" in the right-click menu of an atom that has a variable attachment. */
 export function AttachmentShapeMenu({ attachment, brackets, run }: { attachment: Attachment; brackets?: readonly Bracket[]; run: (ops: Op[]) => void }) {
   return (
     <ContextMenuSub>

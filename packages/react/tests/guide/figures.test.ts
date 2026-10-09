@@ -26,6 +26,8 @@ test("every guide figure is built by the real ops, and shows what it says", () =
   assert.match(figures.figureSvg(curved.loop), /<path d="M [^"]+ Z"/)
   assert.match(figures.figureSvg(curved.arc), /<path d="M [^"Z]+"/)
   assert.ok(!/<line [^>]*stroke-linecap="round"/.test(figures.figureSvg(curved.arc)), "no straight line drawn over the curve")
+  assert.equal(curved.custom.attachments?.[0].shape, "custom")
+  assert.match(figures.figureSvg(curved.custom), /<path d="M [^"Z]+( C [^"Z]+){6}"/, "one smooth piece to each of the six nodes")
   const { carbazolyl, naphthylene, nR5 } = figures.pieces()
   for (const [piece, stars] of [[carbazolyl, 1], [naphthylene, 2], [nR5, 2]] as const) assert.equal(piece.molecule.atoms.filter((atom) => atom.alias === "*").length, stars)
   assert.equal(figures.expanded().length, 4)

@@ -1,21 +1,23 @@
 import type { Molecule, Point } from "@structura/core/types"
+import type { Attachment } from "@structura/core/markush"
 import { createEditor, pointerDown, pointerMove, pointerUp, type Editor, type Gesture, type HoverTarget, type PointerHost, type Preview, type ToolId } from "@structura/engine"
 
 // The editor driven the way a person drives it, without a screen: presses, moves and
 // releases go through the engine's gestures, and what they show is kept for the test.
 
-type Pointer = Partial<{ shiftKey: boolean; altKey: boolean }>
+type Pointer = Partial<{ shiftKey: boolean; altKey: boolean; timeStamp: number }>
 
 /**
  * A canvas without a screen: screen and drawing coordinates are the same, zoom is 1, and
- * what gestures show (preview, draft, hover) is kept for the test to look at.
+ * what gestures show (preview, draft, hover, a curve dragged, what is under the pointer on
+ * curves) is kept for the test to look at.
  */
 export function fakeCanvas(editor: Editor) {
-  const shown = { preview: null as Preview, draft: null as Molecule | null, hover: null as HoverTarget }
+  const shown = { preview: null as Preview, draft: null as Molecule | null, hover: null as HoverTarget, attachments: null as Attachment[] | null, curveHover: null as string | null }
   const host: PointerHost = {
     get props() {
       const state = editor.get()
-      return { ...state, mol: editor.latest().molecule, brackets: editor.latest().brackets, attachments: editor.latest().attachments, run: editor.run, setSelection: editor.setSelection }
+      return { ...state, mol: editor.latest().molecule, brackets: editor.latest().brackets, attachments: editor.latest().attachments, run: editor.run, setSelection: editor.setSelection, setCurveFocus: editor.setCurveFocus }
     },
     gesture: { current: { kind: "idle" } as Gesture },
     space: { current: false },
@@ -25,6 +27,8 @@ export function fakeCanvas(editor: Editor) {
     setView: () => {},
     setPreview: (preview) => (shown.preview = preview),
     setDraft: (draft) => (shown.draft = draft),
+    setAttachmentsDraft: (attachments) => (shown.attachments = attachments),
+    setCurveHover: (hover) => (shown.curveHover = hover),
     setPanning: () => {},
     assignHover: (hover) => (shown.hover = hover),
     setFrameHandle: () => {},

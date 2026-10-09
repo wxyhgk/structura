@@ -3,11 +3,12 @@ import { bondFigures, buildScene, structureMarks, type AtomLabel, type Figure, t
 import { atomById } from "@structura/core/molecule"
 import type { Arrow, Bracket, Molecule, Selection } from "@structura/core/types"
 import type { Attachment } from "@structura/markush"
-import { type RingHintShape, selectionFrame, type ToolId } from "@structura/engine"
+import { type CurveFocus, type RingHintShape, selectionFrame, type ToolId } from "@structura/engine"
 import { AttachmentLines } from "../markush/AttachmentLines.tsx"
 import { RingHint } from "../markush/RingHint.tsx"
 import { BracketMarks } from "./BracketMarks.tsx"
 import { BracketPreview } from "./BracketPreview.tsx"
+import { CurveHandles } from "./CurveHandles.tsx"
 import { SweepPreview } from "./SweepPreview.tsx"
 import { atomCircle } from "./rings.ts"
 import { SelectionMarks } from "./SelectionMarks.tsx"
@@ -27,6 +28,7 @@ export function SceneView({
   attachments,
   brackets,
   ringHint,
+  curveFocus,
 }: {
   mol: Molecule
   arrows: Arrow[]
@@ -44,6 +46,8 @@ export function SceneView({
   brackets?: Bracket[]
   /** While drawing a line into a ring (chain tool, dragging an end): where it will attach. */
   ringHint?: RingHintShape | null
+  /** The custom attachment curve being edited: its nodes get handles. */
+  curveFocus?: CurveFocus | null
 }) {
   // Hover, previews and panning re-render often; the scene only changes with the molecule.
   const scene = useMemo(() => buildScene(mol, colorHetero, drawOptions), [mol, colorHetero, drawOptions])
@@ -57,6 +61,7 @@ export function SceneView({
       <SelectionMarks mol={mol} selection={selection} labels={scene.labels} zoom={zoom} />
       <Labels labels={scene.labels} />
       <HoverCue mol={mol} hover={target} labels={scene.labels} zoom={zoom} />
+      {curveFocus && <CurveHandles marks={marks.attachments} focus={curveFocus} zoom={zoom} />}
       {showFrame && (tool === "lasso" || tool === "marquee") && (
         <SelectionChrome mol={mol} selection={selection} zoom={zoom} />
       )}

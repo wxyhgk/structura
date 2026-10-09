@@ -3,6 +3,7 @@ import { emptyHistory, historyReducer, type History, type HistoryAction } from "
 import { emptySelection } from "@structura/core/molecule"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { BondStyle, Bracket, Drawing, Molecule, Point, RingKind, Selection } from "@structura/core/types"
+import type { CurveFocus } from "../markush/curveEdit.ts"
 import type { Run, RunOptions } from "../ops/builders.ts"
 import { defaultPick } from "../tools/scaffoldPick.ts"
 import type { ScaffoldPick, ToolId, ToolSettings } from "../tools/types.ts"
@@ -21,6 +22,8 @@ export type EditorSnapshot = {
   colorHetero: boolean
   /** Variables' numbers raised as patents print them (R¹), instead of lowered (R₁). */
   raisedNumbers: boolean
+  /** The custom attachment curve whose nodes are being edited (and the node picked on it), or null. */
+  curveFocus: CurveFocus | null
 }
 
 type Update<T> = T | ((now: T) => T)
@@ -57,6 +60,7 @@ export function createEditorStore(initial: Molecule[] | Drawing = []) {
     attachShape: null,
     colorHetero: true,
     raisedNumbers: false,
+    curveFocus: null,
   }
   const listeners = new Set<() => void>()
 
@@ -105,8 +109,15 @@ export function createEditorStore(initial: Molecule[] | Drawing = []) {
     run,
     undo: () => step({ type: "undo" }),
     redo: () => step({ type: "redo" }),
-    setSelection: field("selection"),
-    setTool: field("tool"),
+    /** Selecting atoms or bonds leaves the curve being edited: keys then act on the selection. */
+    setSelection(value: Update<Selection>) {
+      const selection = typeof value === "function" ? value(state.selection) : value
+      const picked = selection.atoms.length > 0 || selection.bonds.length > 0
+      set(picked ? { selection, curveFocus: null } : { selection })
+    },
+    /** Another tool leaves the curve being edited. */
+    setTool: (value: Update<ToolId>) => set({ tool: typeof value === "function" ? value(state.tool) : value, curveFocus: null }),
+    setCurveFocus: field("curveFocus"),
     setBondStyle: field("bondStyle"),
     setRingKind: field("ringKind"),
     setAtomEl: field("atomEl"),

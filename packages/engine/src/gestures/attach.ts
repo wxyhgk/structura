@@ -1,7 +1,9 @@
 import { ringAt } from "@structura/markush"
-import { SNAP_ATOM, addAtom, atomById, nearestAtom } from "@structura/core/molecule"
+import { SNAP_ATOM, addAtom, atomById, bondLengthAt, nearestAtom } from "@structura/core/molecule"
 import type { Point } from "@structura/core/types"
 import { attachmentOps } from "../markush/attachmentOps.ts"
+import { curveOp } from "../markush/curveEdit.ts"
+import { freehandCurve, ringsInside } from "../markush/freehand.ts"
 import { bracketDropAt } from "../pointer/brackets.ts"
 import { hitOf } from "../pointer/targeting.ts"
 import { ringHint } from "./hints.ts"
@@ -9,10 +11,17 @@ import type { Gesture, GestureKind, PointerHost } from "./types.ts"
 
 type Attach = Extract<Gesture, { kind: "attach" }>
 
-/** The positions the sweep has gathered: a bracket's atoms once it went into one, else those of every ring passed over. */
-function candidates(gesture: Attach): number[] {
+/** Whether this sweep draws a custom curve: the tool says so, and it hangs from an atom (not made where the drag ends). */
+const drawsCurve = (host: PointerHost, gesture: Attach) => host.props.attachShape === "custom" && gesture.from != null && !gesture.bracket
+
+/**
+ * The positions the sweep has gathered: a bracket's atoms once it went into one, else those
+ * of every ring passed over, and, drawing a custom curve, every ring it went round.
+ */
+function candidates(host: PointerHost, gesture: Attach): number[] {
   if (gesture.bracket) return gesture.bracket.atoms
-  return [...new Set(gesture.rings.flatMap((ring) => ring.positions))]
+  const round = drawsCurve(host, gesture) ? ringsInside(gesture.mol, gesture.path, gesture.from ?? undefined) : []
+  return [...new Set([...gesture.rings, ...round].flatMap((ring) => ring.positions))]
 }
 
 /**
@@ -34,37 +43,45 @@ function gather(host: PointerHost, gesture: Attach, world: Point) {
   if (drop) gesture.bracket = drop.bracket
 }
 
-/** The preview: a line to the pointer, the rings passed over and the positions gathered. */
+/** The preview: a line to the pointer (or the path drawn, for a custom curve), the rings passed over and the positions gathered. */
 function show(host: PointerHost, gesture: Attach, world: Point) {
   const mol = gesture.mol
   const at = (ids: readonly number[]) => ids.flatMap((id) => atomById(mol, id) ?? [])
-  const positions = candidates(gesture)
+  const positions = candidates(host, gesture)
   const a = gesture.from != null ? (atomById(mol, gesture.from) ?? gesture.origin) : gesture.origin
-  host.setPreview({ kind: "sweep", a, b: world, rings: gesture.bracket ? [] : gesture.rings.map((ring) => at(ring.ring)), hint: positions.length > 0 ? ringHint(mol, positions) : null })
+  const rings = gesture.bracket ? [] : gesture.rings.map((ring) => at(ring.ring))
+  const trail = drawsCurve(host, gesture) ? { trail: gesture.path } : {}
+  host.setPreview({ kind: "sweep", a, b: world, rings, hint: positions.length > 0 ? ringHint(mol, positions) : null, ...trail })
 }
 
 /**
  * The attachment tool: dragged from an atom (or a new R group where the press was), every
  * ring whose middle the pointer passes over becomes a place it may hang from; going into a
  * group bracket, any atom of the bracket. Letting go makes the variable attachment, drawn as
- * the tool's shape, in one step; over no ring it makes nothing. Pressed in a ring's middle,
- * the drag goes the other way: the attachment hangs from where it ends.
+ * the tool's shape, in one step; over no ring it makes nothing. Drawing custom curves, the
+ * path the pointer took becomes the curve, and the rings it went round count too. Pressed
+ * in a ring's middle, the drag goes the other way: the attachment hangs from where it ends.
  */
 export const attach: GestureKind<Attach> = {
   move(host, gesture, world) {
+    gesture.path.push(world)
     gather(host, gesture, world)
     show(host, gesture, world)
   },
   up(host, gesture, world) {
     host.setPreview(null)
     gather(host, gesture, world)
-    const to = candidates(gesture)
+    const to = candidates(host, gesture)
     if (to.length < 2) return
     // Into a bracket it is drawn as one; the tool's shape is for rings.
     const shape = gesture.bracket ? undefined : (host.props.attachShape ?? undefined)
     const mol = gesture.mol
     if (gesture.from != null) {
-      host.props.run(attachmentOps(mol, gesture.from, to, { shape, made: gesture.fresh ? gesture.origin : undefined }))
+      const made = gesture.fresh ? gesture.origin : undefined
+      const curve = drawsCurve(host, gesture) ? freehandCurve(gesture.origin, gesture.path, bondLengthAt(mol)) : null
+      // The path drawn is the curve; one too short to be one leaves the curve to the op, from how it looks.
+      if (curve) host.props.run([...attachmentOps(mol, gesture.from, to, { made }), curveOp(gesture.from, curve.nodes, curve.closed)])
+      else host.props.run(attachmentOps(mol, gesture.from, to, { shape, made }))
       return
     }
     // Out of the rings: onto an atom outside them, that atom; into the open, a new R group there.
@@ -87,10 +104,10 @@ export const attach: GestureKind<Attach> = {
 export function startAttach(host: PointerHost, hit: ReturnType<typeof hitOf>, world: Point): Gesture | null {
   const { mol } = host.props
   if (hit?.type === "bond") return null
-  if (hit?.type === "atom") return { kind: "attach", mol, from: hit.id, fresh: false, origin: atomById(mol, hit.id) ?? world, rings: [], bracket: null }
+  if (hit?.type === "atom") return { kind: "attach", mol, from: hit.id, fresh: false, origin: atomById(mol, hit.id) ?? world, rings: [], bracket: null, path: [] }
   const inRing = ringAt(mol, world)
-  if (inRing) return { kind: "attach", mol, from: null, fresh: false, origin: world, rings: [inRing], bracket: null }
+  if (inRing) return { kind: "attach", mol, from: null, fresh: false, origin: world, rings: [inRing], bracket: null, path: [] }
   // The new atom takes the next id, as place_atom will give it when the drag is let go.
   const made = addAtom(mol, "C", world.x, world.y)
-  return { kind: "attach", mol: made.mol, from: made.id, fresh: true, origin: world, rings: [], bracket: null }
+  return { kind: "attach", mol: made.mol, from: made.id, fresh: true, origin: world, rings: [], bracket: null, path: [] }
 }

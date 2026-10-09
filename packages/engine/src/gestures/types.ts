@@ -1,5 +1,6 @@
 import type { Attachment, AttachmentShape } from "@structura/markush"
 import type { BondStyle, Bracket, Molecule, Point, RingKind, Selection } from "@structura/core/types"
+import type { CurveFocus } from "../markush/curveEdit.ts"
 import type { Run } from "../ops/builders.ts"
 import type { FrameHandle } from "../pointer/targeting.ts"
 import type { HoverTarget } from "../pointer/types.ts"
@@ -23,9 +24,16 @@ export type Gesture =
    * when the press was on empty canvas (`fresh`); `from` is the atom the attachment hangs
    * from, or null when it is made where the drag ends (pressed in a ring's middle). `rings`
    * are the rings passed over so far (atoms in order, and free positions); `bracket` the
-   * group bracket gone into.
+   * group bracket gone into; `path` where the pointer has been, which becomes the curve
+   * when the tool draws custom curves.
    */
-  | { kind: "attach"; mol: Molecule; from: number | null; fresh: boolean; origin: Point; rings: SweptRing[]; bracket: Bracket | null }
+  | { kind: "attach"; mol: Molecule; from: number | null; fresh: boolean; origin: Point; rings: SweptRing[]; bracket: Bracket | null; path: Point[] }
+  /**
+   * Dragging node `index` of the custom curve on `atom`'s attachment: `nodes` as pressed
+   * (with the node just put in, if `inserted`), `start` where the node was, `origin` where
+   * the press was; `moved` once it went past a click.
+   */
+  | { kind: "curveNode"; atom: number; index: number; nodes: Point[]; closed: boolean; origin: Point; start: Point; moved: boolean; inserted: boolean }
 
 /** A ring the attachment tool passed over: its atoms in order round it, and the free positions among them. */
 export type SweptRing = { ring: number[]; positions: number[] }
@@ -46,10 +54,14 @@ export type Preview =
   /** The bracket tool's box: the atoms inside it (`atoms`) get a bracket of this kind. */
   | { kind: "bracket"; a: Point; b: Point; atoms: number[]; bracketKind: Bracket["kind"] }
   /**
-   * The attachment tool's sweep: a line from `a` to the pointer `b`, the rings passed over
-   * (outlines) and the positions the attachment will choose from (`hint`, once there are any).
+   * The attachment tool's sweep: a line from `a` to the pointer `b` (or, drawing a custom
+   * curve, the `trail` the pointer took), the rings passed over (outlines) and the positions
+   * the attachment will choose from (`hint`, once there are any).
    */
-  | { kind: "sweep"; a: Point; b: Point; rings: Point[][]; hint: RingHintShape | null }
+  | { kind: "sweep"; a: Point; b: Point; rings: Point[][]; hint: RingHintShape | null; trail?: Point[] }
+
+/** What a select tool's pointer is over on custom curves: a node of the picked one, the picked one between nodes, or one to pick. */
+export type CurveHover = "node" | "insert" | "pick" | null
 
 /** The editor as gestures see it: what is drawn, the tool settings, the selection, and the write path. */
 export type GestureContext = {
@@ -68,12 +80,15 @@ export type GestureContext = {
   brackets?: readonly Bracket[]
   /** The drawing's variable attachments: a bracket widens for the ellipse round its atoms. */
   attachments?: readonly Attachment[]
+  /** The custom attachment curve whose nodes are shown for editing, and the node picked on it. */
+  curveFocus: CurveFocus | null
   run: Run
   setSelection: (selection: Selection) => void
+  setCurveFocus: (focus: CurveFocus | null) => void
 }
 
 /** A pointer event as gestures need it. */
-export type PointerInput = { button: number; clientX: number; clientY: number; shiftKey: boolean; altKey: boolean }
+export type PointerInput = { button: number; clientX: number; clientY: number; shiftKey: boolean; altKey: boolean; timeStamp?: number }
 
 /**
  * Everything a gesture reads and writes outside itself: the editor, the gesture in progress,
@@ -90,10 +105,14 @@ export type PointerHost = {
   setView: (zoom: number, pan: Point) => void
   setPreview: (preview: Preview) => void
   setDraft: (mol: Molecule | null) => void
+  /** The attachments as a drag would leave them, shown instead of the drawing's until it is let go; null for the drawing's. */
+  setAttachmentsDraft: (attachments: Attachment[] | null) => void
   setPanning: (panning: boolean) => void
   assignHover: (hover: HoverTarget) => void
   /** The selection-frame handle under the pointer or being dragged, for the screen to pick a cursor; null for none. */
   setFrameHandle: (handle: FrameHandle | null) => void
+  /** What the pointer is over on custom curves, for the screen to pick a cursor. */
+  setCurveHover: (hover: CurveHover) => void
   setRotating: (rotating: boolean) => void
   /** Where a line being drawn into a ring will attach, or null. */
   setRingHint: (hint: RingHintShape | null) => void

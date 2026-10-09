@@ -25,7 +25,7 @@ export type Proviso =
  * position of this ring". Drawn as patents draw it (see `shape`); the bond is only made
  * when the formula is expanded into concrete compounds.
  */
-export type Attachment = { atom: number; to: number[]; repeat?: Repeat; shape?: AttachmentShape }
+export type Attachment = { atom: number; to: number[]; repeat?: Repeat; shape?: AttachmentShape; curve?: AttachmentCurve }
 
 /**
  * How a variable attachment is drawn: a straight line into the middle of one ring, a closed
@@ -33,10 +33,22 @@ export type Attachment = { atom: number; to: number[]; repeat?: Repeat; shape?: 
  * the bond itself sweeping round the system as an open curve ("L joined at any position
  * of these rings"), or a bond crossing a group bracket's upright and ending inside it ("L
  * joined at any position of the bracketed group"), which only applies when the candidates
- * are exactly that bracket's atoms and the attached atom is outside it. Left out, it is
- * chosen from the attachment (draw/attachmentShape.ts).
+ * are exactly that bracket's atoms and the attached atom is outside it; or "custom", a
+ * smooth curve through nodes the user set (`curve`). Left out, it is chosen from the
+ * attachment (markush/drawnShape.ts).
  */
-export type AttachmentShape = "line" | "loop" | "arc" | "bracket"
+export type AttachmentShape = "line" | "loop" | "arc" | "bracket" | "custom"
+
+/**
+ * A curve drawn the user's way, smooth through its `nodes` in order: `closed`, a loop round
+ * the rings that a straight line from the atom joins (like "loop"); open, the bond itself,
+ * from the atom through the nodes (like "arc"). Each node is kept in the frame of the
+ * ellipse round the candidate atoms, as [u, v]: the point c + u·a·e1 + v·b·e2, where c is
+ * the ellipse's centre, a and b its semi-axes and e1, e2 their directions (markush/curveFrame.ts),
+ * so the curve moves, turns and grows with the rings. 2–24 nodes (3 or more when closed).
+ * Kept when the shape is changed, so going back to "custom" brings it back; only drawn as "custom".
+ */
+export type AttachmentCurve = { nodes: Array<[number, number]>; closed: boolean }
 
 /**
  * "(R1)m, m = 0–4": the attached piece appears `min` to `max` times, each copy on a

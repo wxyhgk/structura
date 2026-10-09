@@ -2,8 +2,12 @@ import { bracketInto } from "../drawing/brackets.ts"
 import { bondLengthAt } from "../molecule/measure.ts"
 import type { Bracket, Molecule, Point } from "../types.ts"
 import type { Attachment, AttachmentShape } from "../markush/types.ts"
-import { arcJoin, arcPath, ellipseBounds, ellipsePoint, fitEllipse, loopPath, nearestOnEllipse } from "./attachmentCurve.ts"
-import { attachmentShape } from "./attachmentShape.ts"
+import { arcCubics, arcJoin, loopJoin } from "../curves/arc.ts"
+import { type Cubic, cubicsBounds, cubicsCommands, cubicsPath, nearestOnCubics, sampleCubics } from "../curves/cubic.ts"
+import { ellipseBounds, ellipseCubics, fitEllipse } from "../curves/ellipse.ts"
+import { catmullRom } from "../curves/spline.ts"
+import { curveNodes } from "../markush/curveFrame.ts"
+import { attachmentShape, bondHeading } from "../markush/drawnShape.ts"
 import { intoBracketEnd, type Uprights } from "./intoBracket.ts"
 import type { AtomLabel } from "./labels.ts"
 
@@ -15,9 +19,11 @@ export type Extent = { left: number; right: number; top: number; bottom: number 
 
 /**
  * One variable point of attachment as drawn: its `shape`, the stroke as an SVG path (`from`
- * where it leaves the atom, `to` where it meets the ring's middle or the ellipse), the box
- * round all of it, the box round just the ellipse (`curve`, for a loop or an arc), the
- * candidate atoms (`targets`), and the repeat marks if any.
+ * where it leaves the atom, `to` where it meets the ring's middle or the ellipse, or where
+ * a custom curve ends or meets its loop), the box round all of it, the box round just the
+ * curve (`curve`, for a loop, an arc or a custom curve), the candidate atoms (`targets`),
+ * and the repeat marks if any. A custom curve also gives its nodes where they are now and
+ * its pieces (`custom`: from the atom through the nodes, or the closed loop), for editing.
  */
 export type AttachmentMark = {
   atom: number
@@ -29,6 +35,7 @@ export type AttachmentMark = {
   bounds: Extent
   curve: Extent | null
   texts: MarkText[]
+  custom?: { nodes: Point[]; closed: boolean; cubics: Cubic[] }
 }
 
 /** How far along the way from `from` to `to` the line leaves a label's box, padded a little. */
@@ -69,21 +76,6 @@ function extentOf(points: Point[], box?: Extent): Extent {
   }
 }
 
-/** Where `atom` is bonded from, as a direction pointing at it (the way its bond carries on), if it is bonded. */
-function heading(mol: Molecule, atom: Point & { id: number }): Point | undefined {
-  const others = mol.bonds.flatMap((bond) => (bond.a === atom.id ? [bond.b] : bond.b === atom.id ? [bond.a] : []))
-  let x = 0
-  let y = 0
-  for (const id of others) {
-    const other = mol.atoms.find((item) => item.id === id)
-    if (!other) continue
-    const length = Math.hypot(atom.x - other.x, atom.y - other.y) || 1
-    x += (atom.x - other.x) / length
-    y += (atom.y - other.y) / length
-  }
-  return others.length > 0 ? { x, y } : undefined
-}
-
 /**
  * What drawing attachments needs to know of the brackets: the drawing's `brackets`, for
  * telling which attachments go into one, and where each bracket's uprights stand, by id,
@@ -94,8 +86,9 @@ export type BracketContext = { brackets?: readonly Bracket[]; uprights?: Readonl
 /**
  * Variable points of attachment as patents draw them, by their shape: a line from the atom
  * (leaving its label) into the middle of one ring; an ellipse round a fused system with a
- * line to it; the bond sweeping round the system as an open curve; or a bond crossing a
- * group bracket's upright into it. "(R1)m" when it repeats. Shared by the canvas and every
+ * line to it; the bond sweeping round the system as an open curve; a bond crossing a
+ * group bracket's upright into it; or a custom curve, smooth through its nodes. "(R1)m"
+ * when it repeats. Shared by the canvas and every
  * export (through structureMarks), so they look the same, and recomputed from the atoms, so
  * a curve follows them as they move.
  */
@@ -126,17 +119,38 @@ export function attachmentMarks(mol: Molecule, attachments: readonly Attachment[
       const start = leaving(to)
       return [{ ...base, shape, from: start, to, path: `M ${fixed(start)} L ${fixed(to)}`, bounds: extentOf([start, to]), curve: null }]
     }
+    if (shape === "custom") {
+      const nodes = curveNodes(mol, attachment)!
+      if (attachment.curve!.closed) {
+        // A loop through the nodes, and the straight line from the atom to its nearest point.
+        const loop = catmullRom(nodes, true)
+        const end = nearestOnCubics(loop, from)!.point
+        const start = leaving(end)
+        const curve = cubicsBounds(loop)
+        const custom = { nodes, closed: true, cubics: loop }
+        return [{ ...base, shape, from: start, to: end, path: `M ${fixed(start)} L ${fixed(end)} ${cubicsPath(loop, true)}`, bounds: extentOf([start, end], curve), curve, custom }]
+      }
+      // The bond itself, from where it leaves the label through the nodes.
+      const start = leaving(nodes[0])
+      const cubics = catmullRom([start, ...nodes])
+      const custom = { nodes, closed: false, cubics }
+      const curve = cubicsBounds(cubics.length > 1 ? cubics.slice(1) : cubics)
+      return [{ ...base, shape, from: start, to: nodes[nodes.length - 1], path: cubicsPath(cubics), bounds: extentOf(sampleCubics(cubics, 24)), curve, custom }]
+    }
     const ellipse = fitEllipse(targets)
     const curve = ellipseBounds(ellipse)
     const bounds = (start: Point, end: Point) => extentOf([start, end], curve)
     if (shape === "arc") {
-      const join = arcJoin(ellipse, from, heading(mol, from))
+      const join = arcJoin(ellipse, from, bondHeading(mol, from.id))
       const start = leaving(join.point)
-      return [{ ...base, shape, from: start, to: join.point, path: arcPath(start, ellipse, join), bounds: bounds(start, join.point), curve }]
+      const line = Math.hypot(join.point.x - start.x, join.point.y - start.y) > 0.5 ? ` L ${fixed(join.point)}` : ""
+      const path = `M ${fixed(start)}${line}${cubicsCommands(arcCubics(ellipse, join))}`
+      return [{ ...base, shape, from: start, to: join.point, path, bounds: bounds(start, join.point), curve }]
     }
     // The line leaves the label towards the ellipse's nearest point.
-    const start = leaving(ellipsePoint(ellipse, nearestOnEllipse(ellipse, from)))
-    const { path, end } = loopPath(start, ellipse)
+    const start = leaving(loopJoin(ellipse, from))
+    const end = loopJoin(ellipse, start)
+    const path = `M ${fixed(start)} L ${fixed(end)} ${cubicsPath(ellipseCubics(ellipse, 0, 2 * Math.PI), true)}`
     return [{ ...base, shape, from: start, to: end, path, bounds: bounds(start, end), curve }]
   })
 }

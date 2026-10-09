@@ -3,10 +3,12 @@ import { provisoNames, provisoProblem } from "../markush/provisos.ts"
 import { withGroupMembers } from "../molecule/collapse.ts"
 import { addReactionArrow } from "../drawing.ts"
 import { attachmentProblem } from "../markush/attachments.ts"
+import { curveFrame, intoFrame } from "../markush/curveFrame.ts"
+import { shapeCurve } from "../markush/shapeCurve.ts"
 import { sharers, variableProblem } from "../markush/variables.ts"
 import { boundsCenter, tumbleAtoms } from "../molecule.ts"
 import type { Drawing, HotTarget } from "../types.ts"
-import type { RingClosure, Variable } from "../markush/types.ts"
+import type { Attachment, RingClosure, Variable } from "../markush/types.ts"
 import { OpError, type Context } from "./context.ts"
 import type { Op } from "./types.ts"
 
@@ -15,6 +17,18 @@ import type { Op } from "./types.ts"
  * turned atom now sits out of the page, which only the next tumble needs.
  */
 export type DocumentStep = { drawing: Drawing; next?: HotTarget | null; depth?: Map<number, number> }
+
+/**
+ * An attachment asked to be drawn "custom" with no curve of its own yet gets one that looks
+ * the way it is drawn now, to edit from; any other is left as it is.
+ */
+function withCurve(drawing: Drawing, attachment: Attachment): Attachment {
+  if (attachment.shape !== "custom" || attachment.curve) return attachment
+  const sampled = shapeCurve(drawing.molecule, attachment, drawing.brackets)
+  const frame = curveFrame(drawing.molecule, attachment.to)
+  if (!sampled || !frame) return attachment
+  return { ...attachment, curve: { nodes: sampled.nodes.map((p) => intoFrame(frame, p)), closed: sampled.closed } }
+}
 
 /**
  * Ops that need more than the molecule: arrows sit beside it on the drawing, a tumble
@@ -50,7 +64,8 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       return { drawing: { ...drawing, variables: { ...drawing.variables, [op.name]: variable } } }
     }
     case "set_attachment": {
-      const attachment = { atom: ctx.atom(op.atom), to: [...new Set(op.to.map(ctx.atom))], ...(op.repeat ? { repeat: op.repeat } : {}), ...(op.shape ? { shape: op.shape } : {}) }
+      const made: Attachment = { atom: ctx.atom(op.atom), to: [...new Set(op.to.map(ctx.atom))], ...(op.repeat ? { repeat: op.repeat } : {}), ...(op.shape ? { shape: op.shape } : {}) }
+      const attachment = withCurve(drawing, made)
       const problem = attachmentProblem(drawing.molecule, attachment)
       if (problem) throw new OpError(problem)
       const others = (drawing.attachments ?? []).filter((item) => item.atom !== attachment.atom)
@@ -71,7 +86,21 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       const attachment = drawing.attachments?.find((item) => item.atom === atom)
       if (!attachment) throw new OpError(`atom #${atom} has no variable attachment`)
       const { shape: _old, ...plain } = attachment
-      const next = op.shape ? { ...plain, shape: op.shape } : plain
+      const next = op.shape ? withCurve(drawing, { ...plain, shape: op.shape }) : plain
+      const problem = attachmentProblem(drawing.molecule, next)
+      if (problem) throw new OpError(problem)
+      return { drawing: { ...drawing, attachments: drawing.attachments!.map((item) => (item === attachment ? next : item)) } }
+    }
+    case "set_attachment_curve": {
+      const atom = ctx.atom(op.atom)
+      const attachment = drawing.attachments?.find((item) => item.atom === atom)
+      if (!attachment) throw new OpError(`atom #${atom} has no variable attachment`)
+      if (!Array.isArray(op.nodes) || !op.nodes.every((node) => Array.isArray(node) && node.length === 2)) throw new OpError("each node of a curve is [x, y], two numbers")
+      const frame = curveFrame(drawing.molecule, attachment.to)
+      if (!frame) throw new OpError(`atom #${atom}'s attachment has no candidate atoms to draw round`)
+      // Checked once in the frame, where how far out a node lies means something.
+      const nodes = op.nodes.map(([x, y]) => intoFrame(frame, { x, y }))
+      const next = { ...attachment, shape: "custom" as const, curve: { nodes, closed: op.closed } }
       const problem = attachmentProblem(drawing.molecule, next)
       if (problem) throw new OpError(problem)
       return { drawing: { ...drawing, attachments: drawing.attachments!.map((item) => (item === attachment ? next : item)) } }

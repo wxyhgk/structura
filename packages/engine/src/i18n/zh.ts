@@ -32,6 +32,7 @@ export const ATTACH_SHAPE_NAMES = {
   loop: "椭圆",
   arc: "弧线",
   bracket: "括号",
+  custom: "自定义",
 }
 
 export const BOND_NAMES = {

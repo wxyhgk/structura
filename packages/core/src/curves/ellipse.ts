@@ -1,8 +1,9 @@
 import { BOND_LENGTH } from "../constants.ts"
 import type { Point } from "../types.ts"
+import type { Cubic } from "./cubic.ts"
 
-// The curves of a variable attachment spread over a fused system: an ellipse fitted round
-// the candidate atoms, drawn closed (a loop) or as the bond sweeping round it (an arc).
+// The ellipse fitted round a variable attachment's candidate atoms: what a loop is drawn
+// as, what an arc follows, and the frame a custom curve's nodes are kept in.
 
 /** An ellipse: centre, semi-axes (`rx` the longer, along `angle`), in drawing coordinates. */
 export type Ellipse = { cx: number; cy: number; rx: number; ry: number; angle: number }
@@ -11,11 +12,6 @@ export type Ellipse = { cx: number; cy: number; rx: number; ry: number; angle: n
 export const ELLIPSE_PAD = 0.45 * BOND_LENGTH
 /** The shortest the minor semi-axis gets, so a row of atoms still gets a round outline. */
 const MIN_MINOR = 0.6 * BOND_LENGTH
-/** How much of the ellipse an arc follows, and over how much of that, at the end, it curls inwards. */
-const ARC_SWEEP = (3 * Math.PI) / 2
-const ARC_CURL = Math.PI / 4
-/** How far inside the ellipse an arc's open end finishes: within the room left round the atoms. */
-const ARC_TUCK = 0.4 * ELLIPSE_PAD
 /** Points on the circle of room kept round each atom, for fitting the ellipse. */
 const DISC = 16
 /** Samples round an ellipse for nearest points and clearances. */
@@ -30,7 +26,7 @@ export function ellipsePoint(e: Ellipse, t: number): Point {
 }
 
 /** The ellipse's direction at `t`, as t grows (not of unit length). */
-function ellipseTangent(e: Ellipse, t: number): Point {
+export function ellipseTangent(e: Ellipse, t: number): Point {
   const cos = Math.cos(e.angle)
   const sin = Math.sin(e.angle)
   const u = -e.rx * Math.sin(t)
@@ -171,101 +167,20 @@ export function fitEllipse(atoms: readonly Point[], pad = ELLIPSE_PAD): Ellipse 
   return e
 }
 
-const f = (value: number) => value.toFixed(2)
-const at = (p: Point) => `${f(p.x)} ${f(p.y)}`
-
-/** Cubic Béziers following the ellipse from parameter `from` to `to`, a quarter turn at most each. */
-function ellipseCurves(e: Ellipse, from: number, to: number): string {
+/** Cubic pieces following the ellipse from parameter `from` to `to`, a quarter turn at most each. */
+export function ellipseCubics(e: Ellipse, from: number, to: number): Cubic[] {
   const pieces = Math.max(1, Math.ceil(Math.abs(to - from) / (Math.PI / 2) - 1e-9))
   const span = (to - from) / pieces
   const k = (4 / 3) * Math.tan(span / 4)
-  let d = ""
-  for (let i = 0; i < pieces; i++) {
+  return Array.from({ length: pieces }, (_, i) => {
     const t0 = from + i * span
     const t1 = t0 + span
     const p0 = ellipsePoint(e, t0)
     const p3 = ellipsePoint(e, t1)
     const d0 = ellipseTangent(e, t0)
     const d1 = ellipseTangent(e, t1)
-    d += ` C ${at({ x: p0.x + k * d0.x, y: p0.y + k * d0.y })} ${at({ x: p3.x - k * d1.x, y: p3.y - k * d1.y })} ${at(p3)}`
-  }
-  return d
-}
-
-/** The closed ellipse as an SVG path. */
-export function ellipsePath(e: Ellipse): string {
-  return `M ${at(ellipsePoint(e, 0))}${ellipseCurves(e, 0, 2 * Math.PI)} Z`
-}
-
-/** A loop: the straight line from `start` to the nearest point of the ellipse, and the ellipse. */
-export function loopPath(start: Point, e: Ellipse): { path: string; end: Point } {
-  const end = ellipsePoint(e, nearestOnEllipse(e, start))
-  return { path: `M ${at(start)} L ${at(end)} ${ellipsePath(e)}`, end }
-}
-
-/** Where an arc meets its ellipse: the parameter, the point, and which way round it goes (+1 as the parameter grows). */
-export type ArcJoin = { t: number; point: Point; turn: 1 | -1 }
-
-/**
- * Where the bond from `from` meets the ellipse to carry on round it: the point where a line
- * from `from` touches the ellipse, so the straight bond runs smoothly into the curve. Of
- * the two such points, the one the bond's `heading` (the way it comes in) leans towards;
- * from inside the ellipse, the nearest point.
- */
-export function arcJoin(e: Ellipse, from: Point, heading?: Point): ArcJoin {
-  // In the frame where the ellipse is the unit circle, tangency is kept.
-  const cos = Math.cos(e.angle)
-  const sin = Math.sin(e.angle)
-  const dx = from.x - e.cx
-  const dy = from.y - e.cy
-  const u = (dx * cos + dy * sin) / e.rx
-  const v = (-dx * sin + dy * cos) / e.ry
-  const r = Math.hypot(u, v)
-  const lean = (t: number, turn: 1 | -1) => {
-    const d = ellipseTangent(e, t)
-    return heading ? turn * (heading.x * d.x + heading.y * d.y) : turn
-  }
-  if (r <= 1.0001) {
-    const t = nearestOnEllipse(e, from)
-    const turn = lean(t, 1) >= lean(t, -1) ? 1 : -1
-    return { t, point: ellipsePoint(e, t), turn }
-  }
-  const towards = Math.atan2(v, u)
-  const spread = Math.acos(1 / r)
-  // Touching at towards + spread, the line from `from` runs on round the way t grows; at towards - spread, the way it falls.
-  const options: ArcJoin[] = [
-    { t: towards + spread, point: ellipsePoint(e, towards + spread), turn: 1 },
-    { t: towards - spread, point: ellipsePoint(e, towards - spread), turn: -1 },
-  ]
-  const score = (join: ArcJoin) => {
-    const line = { x: join.point.x - from.x, y: join.point.y - from.y }
-    const length = Math.hypot(line.x, line.y) || 1
-    return heading ? (heading.x * line.x + heading.y * line.y) / length / (Math.hypot(heading.x, heading.y) || 1) : join.turn
-  }
-  return score(options[0]) > score(options[1]) + 1e-6 ? options[0] : options[1]
-}
-
-/**
- * An arc: the bond runs straight from `start` to where it touches the ellipse (`join`, from
- * arcJoin), follows it three quarters of the way round, and curls a little inwards at its
- * open end, the way patents draw "joined at any position of these rings".
- */
-export function arcPath(start: Point, e: Ellipse, join: ArcJoin): string {
-  const curlFrom = join.t + join.turn * (ARC_SWEEP - ARC_CURL)
-  const endAt = join.t + join.turn * ARC_SWEEP
-  const p0 = ellipsePoint(e, curlFrom)
-  const rim = ellipsePoint(e, endAt)
-  const inward = Math.hypot(e.cx - rim.x, e.cy - rim.y) || 1
-  const end = { x: rim.x + ((e.cx - rim.x) / inward) * ARC_TUCK, y: rim.y + ((e.cy - rim.y) / inward) * ARC_TUCK }
-  // The curl: a quarter-ish of the ellipse whose far end is drawn in towards the centre, its direction kept.
-  const k = (4 / 3) * Math.tan(ARC_CURL / 4) * join.turn
-  const d0 = ellipseTangent(e, curlFrom)
-  const d1 = ellipseTangent(e, endAt)
-  const shrink = 1 - ARC_TUCK / inward
-  const c1 = { x: p0.x + k * d0.x, y: p0.y + k * d0.y }
-  const c2 = { x: end.x - k * d1.x * shrink, y: end.y - k * d1.y * shrink }
-  const line = Math.hypot(join.point.x - start.x, join.point.y - start.y) > 0.5 ? ` L ${at(join.point)}` : ""
-  return `M ${at(start)}${line}${ellipseCurves(e, join.t, curlFrom)} C ${at(c1)} ${at(c2)} ${at(end)}`
+    return { from: p0, c1: { x: p0.x + k * d0.x, y: p0.y + k * d0.y }, c2: { x: p3.x - k * d1.x, y: p3.y - k * d1.y }, to: p3 }
+  })
 }
 
 /** The box round the whole ellipse. */

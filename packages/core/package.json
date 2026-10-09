@@ -26,6 +26,11 @@
       "types": "./dist/constants.d.ts",
       "default": "./dist/constants.js"
     },
+    "./curves": {
+      "structura-source": "./src/curves.ts",
+      "types": "./dist/curves.d.ts",
+      "default": "./dist/curves.js"
+    },
     "./document": {
       "structura-source": "./src/document.ts",
       "types": "./dist/document.d.ts",

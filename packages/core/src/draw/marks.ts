@@ -2,7 +2,7 @@ import { bracketInto } from "../drawing/brackets.ts"
 import { atomById } from "../molecule/graph.ts"
 import type { Bracket, Molecule, Point } from "../types.ts"
 import type { Attachment } from "../markush/types.ts"
-import { attachmentShape } from "./attachmentShape.ts"
+import { attachmentShape } from "../markush/drawnShape.ts"
 import { attachmentMarks, type AttachmentMark } from "./attachments.ts"
 import { bracketMarks, type BracketMark } from "./brackets.ts"
 import { labelFor, type AtomLabel } from "./labels.ts"
@@ -12,7 +12,7 @@ export type StructureMarks = { attachments: AttachmentMark[]; brackets: BracketM
 
 /**
  * Variable attachments and brackets as drawn, worked out together because each shapes the
- * other: a bracket is wide enough for the ellipse round its atoms, and a bond drawn into a
+ * other: a bracket is wide enough for the curve round its atoms, and a bond drawn into a
  * bracket crosses its upright wherever that ends up. So: the other attachments first, then
  * the brackets round them, then the bonds into brackets. `labels` are the scene's; left
  * out, they are worked out here (as hit-testing does). The canvas, every export and

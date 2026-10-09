@@ -56,6 +56,7 @@ const SHAPE_HINTS: Record<AttachmentShape | "auto", string> = {
   loop: "椭圆：椭圆圈住这些环，取代基连到椭圆上（也改选中的可变连接）",
   arc: "弧线：键绕这些环转大约四分之三圈（也改选中的可变连接）",
   bracket: "括号：一根键连进方括号",
+  custom: "自定义：照拖动的轨迹画一条平滑曲线，回到起点附近就画成闭合的圈；选中曲线后可拖动、增删节点（也改选中的可变连接）",
 }
 
 /** Label with the keys that select this tool, taken from the key table. */

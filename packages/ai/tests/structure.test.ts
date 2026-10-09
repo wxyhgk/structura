@@ -133,14 +133,16 @@ test("a variable written onto a ring atom is flagged; one on a new substituent a
 })
 
 test("the prompt documents the generic-formula drawing ops, and they work as it says", () => {
-  for (const op of ["set_attachment", "set_attachment_shape", "add_bracket", "set_bracket", "remove_bracket"]) assert.ok(STRUCTURE_PROMPT.includes(`{"op":"${op}"`), op)
-  for (const shape of ["line", "loop", "arc", "bracket"]) assert.ok(STRUCTURE_PROMPT.includes(`"${shape}"`), shape)
+  for (const op of ["set_attachment", "set_attachment_shape", "set_attachment_curve", "add_bracket", "set_bracket", "remove_bracket"]) assert.ok(STRUCTURE_PROMPT.includes(`{"op":"${op}"`), op)
+  for (const shape of ["line", "loop", "arc", "bracket", "custom"]) assert.ok(STRUCTURE_PROMPT.includes(`"${shape}"`), shape)
   const session = createSession()
   const ring = ["b.C1", "b.C2", "b.C3", "b.C4", "b.C5", "b.C6"]
   const steps = [
     [{ op: "add_scaffold", name: "benzene", as: "b" }, { op: "add_atom", el: "C", as: "r" }, { op: "label", atom: "r", text: "R1" }],
     [{ op: "set_attachment", atom: "r", to: ring, shape: "loop" }],
     [{ op: "set_attachment_shape", atom: "r", shape: null }],
+    [{ op: "set_attachment_shape", atom: "r", shape: "custom" }],
+    [{ op: "set_attachment_curve", atom: "r", nodes: [[0, -40], [40, 0], [0, 40]], closed: true }],
     [{ op: "add_bracket", atoms: ring, kind: "group" }],
     [{ op: "set_attachment_shape", atom: "r", shape: "bracket" }],
     [{ op: "set_bracket", id: 1, kind: "repeat", repeat: { min: 0, max: 3, name: "m" } }],

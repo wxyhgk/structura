@@ -130,10 +130,20 @@ export type Op =
   | { op: "set_attachment"; atom: Ref; to: Ref[]; repeat?: Repeat; shape?: AttachmentShape }
   /**
    * How `atom`'s attachment is drawn: "line" into one ring, "loop" (an ellipse round the
-   * rings and a line to it), "arc" (the bond sweeping round them) or "bracket" (a bond into
-   * the group bracket whose atoms are the candidates); null chooses by itself.
+   * rings and a line to it), "arc" (the bond sweeping round them), "bracket" (a bond into
+   * the group bracket whose atoms are the candidates) or "custom" (its own curve: the one it
+   * had, else nodes taken from how it looks now); null chooses by itself. A custom curve is
+   * kept when the shape changes, so "custom" brings it back.
    */
   | { op: "set_attachment_shape"; atom: Ref; shape: AttachmentShape | null }
+  /**
+   * Draws `atom`'s attachment as a smooth curve through `nodes` ([x, y] in drawing
+   * coordinates, in order; 2–24, 3 or more when `closed`): open, the bond runs from the atom
+   * through them; closed, a loop through them that a straight line from the atom joins.
+   * The nodes are kept relative to the ellipse round the candidate atoms, so the curve moves,
+   * turns and grows with the rings. Sets the shape to "custom".
+   */
+  | { op: "set_attachment_curve"; atom: Ref; nodes: Array<[number, number]>; closed: boolean }
   /** "(R1)m": how many times the piece on `atom`'s attachment appears; null makes it once again. */
   | { op: "set_repeat"; atom: Ref; repeat: Repeat | null }
   | { op: "remove_attachment"; atom: Ref }

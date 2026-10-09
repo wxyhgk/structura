@@ -1,10 +1,7 @@
-import { BOND_LENGTH } from "./constants.ts"
 import { elementOf } from "./elements/index.ts"
 import { bondOrderSum } from "./molecule/graph.ts"
-import type { BondStereo, Molecule } from "./types.ts"
-
-/** MOL files use ångströms with y pointing up; a C–C bond is about 1.5 Å. */
-const ANGSTROM_PER_PX = 1.5 / BOND_LENGTH
+import { ANGSTROM_PER_PX, rGroupNumber, stereoCode } from "./molfile/codes.ts"
+import type { Molecule } from "./types.ts"
 
 function pad3(value: number): string {
   return String(value).padStart(3, " ")
@@ -12,13 +9,6 @@ function pad3(value: number): string {
 
 function fixed10(value: number): string {
   return (Object.is(value, -0) ? 0 : value).toFixed(4).padStart(10, " ")
-}
-
-function stereoCode(stereo: BondStereo): number {
-  if (stereo === "up") return 1
-  if (stereo === "down") return 6
-  if (stereo === "either") return 4
-  return 0
 }
 
 /** Property lines such as `M  CHG` and `M  ISO`, eight atoms to a line. */
@@ -29,12 +19,6 @@ function propertyLines(tag: string, entries: Array<[number, number]>): string[] 
     lines.push(`M  ${tag}${pad3(chunk.length)}${chunk.map(([index, value]) => ` ${pad3(index)} ${pad3(value)}`).join("")}`)
   }
   return lines
-}
-
-/** R, R1, R12…: an R-group, written as R# with its number in an `M  RGP` line. */
-function rGroupNumber(label: string): number | null {
-  const match = /^R(\d{0,2})$/.exec(label)
-  return match ? Number(match[1] || 1) : null
 }
 
 /**

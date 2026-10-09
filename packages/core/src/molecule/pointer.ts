@@ -1,9 +1,8 @@
 import { BOND_LENGTH, SINGLE } from "../constants.ts"
-import { distToSegment, pointFrom, sideOfLine } from "../geometry.ts"
-import type { Bond, BondStyle, Molecule, Point, RingKind } from "../types.ts"
+import { pointFrom } from "../geometry.ts"
+import type { BondStyle, Molecule, Point } from "../types.ts"
 import { sproutAngle } from "./angles.ts"
-import { canPlaceFused, openSide } from "./fusion.ts"
-import { addAtom, addBond, atomById, setElement } from "./graph.ts"
+import { addAtom, addBond, setElement } from "./graph.ts"
 import { bondLengthAt } from "./measure.ts"
 import { sproutAt } from "./place.ts"
 import { nearestAtom } from "./snap.ts"
@@ -82,12 +81,6 @@ export function chainPoints(origin: Point, axis: number, count: number, length =
   return points
 }
 
-export function chainCount(distance: number, length = BOND_LENGTH): number {
-  const step = length * Math.cos(Math.PI / 6)
-  if (distance < length * 0.45) return 1
-  return Math.max(1, Math.round(distance / step))
-}
-
 export function commitChain(mol: Molecule, points: Point[], fromId: number | null): Molecule {
   let next = mol
   let previous = fromId
@@ -110,41 +103,4 @@ export function commitChain(mol: Molecule, points: Point[], fromId: number | nul
     previous = id
   }
   return next
-}
-
-/** Nearest bond that can accept a fused ring. Bridgehead atoms are skipped. */
-export function fusionTarget(mol: Molecule, point: Point, kind: RingKind, radius: number): Bond | null {
-  let best: Bond | null = null
-  let bestDistance = radius
-  for (const bond of mol.bonds) {
-    const a = atomById(mol, bond.a)
-    const b = atomById(mol, bond.b)
-    if (!a || !b) continue
-    const distance = distToSegment(point, a, b)
-    // The bond nearest the pointer, never another one that would fit more cleanly: the ring goes
-    // where the chemist points, overfilling an atom if it must (shown red). Distance is cheap
-    // and rules out almost every bond; only then ask whether a ring fits there at all.
-    if (distance <= bestDistance && canPlaceFused(mol, bond, kind)) {
-      best = bond
-      bestDistance = distance
-    }
-  }
-  return best
-}
-
-/** How far from a bond the pointer still counts as fusing a ring of this size. */
-export function fuseReach(size: number, length = BOND_LENGTH): number {
-  const apothem = length / (2 * Math.tan(Math.PI / size))
-  return apothem + 4
-}
-
-function fuseSide(mol: Molecule, bond: Bond, point: Point): 1 | -1 {
-  const a = atomById(mol, bond.a)
-  const b = atomById(mol, bond.b)
-  if (!a || !b) return 1
-  return sideOfLine(a, b, point)
-}
-
-export function fusionSide(mol: Molecule, bond: Bond, point: Point): 1 | -1 {
-  return openSide(mol, bond, fuseSide(mol, bond, point))
 }

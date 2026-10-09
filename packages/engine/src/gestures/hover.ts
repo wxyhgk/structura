@@ -1,5 +1,6 @@
 import { RING_SIZE } from "@structura/core/constants"
-import { atomById, bondLengthAt, fuseReach, fusionSide, fusionTarget, growRingPreview, ringOnBond, ringPoints } from "@structura/core/molecule"
+import { atomById, bondLengthAt, growRingPreview, ringOnBond, ringPoints } from "@structura/core/molecule"
+import { fuseReach, fusionSide, fusionTarget } from "../pointer/fusion.ts"
 import type { Point } from "@structura/core/types"
 import { frameAt, hitOf, hoverOf, selectionFrame } from "../pointer/targeting.ts"
 import type { PointerHost } from "./types.ts"

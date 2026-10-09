@@ -36,20 +36,16 @@ export {
   ringPoints,
   spiroRing,
 } from "./molecule/rings.ts"
-export { fuseRingAt } from "./molecule/fusion.ts"
+export { canPlaceFused, fuseRingAt, openSide } from "./molecule/fusion.ts"
 export { ringMembership } from "./molecule/cycles.ts"
 export { attachChairAt, fuseChairAt } from "./molecule/chair.ts"
 export {
   ATOM_HIT,
   SNAP_ATOM,
-  chainCount,
   chainPoints,
   commitChain,
   connectPoints,
   createBondAt,
-  fuseReach,
-  fusionSide,
-  fusionTarget,
   placeAtom,
   sprout,
 } from "./molecule/pointer.ts"

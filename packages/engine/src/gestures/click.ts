@@ -1,5 +1,6 @@
 import { RING_SIZE } from "@structura/core/constants"
-import { atomById, bondLengthAt, fuseReach, fusionSide, fusionTarget } from "@structura/core/molecule"
+import { atomById, bondLengthAt } from "@structura/core/molecule"
+import { fuseReach, fusionSide, fusionTarget } from "../pointer/fusion.ts"
 import type { Point } from "@structura/core/types"
 import { paintOps, scaffoldOps } from "../ops/builders.ts"
 import type { hitOf } from "../pointer/targeting.ts"

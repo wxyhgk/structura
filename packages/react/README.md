@@ -49,32 +49,91 @@ colour variables do not override your own theme. Nor do your page's styles chang
 
 ### Handle (`ref`)
 
-`getMolfile()`, `setMolfile(text)`, `getDocument()`, `setDocument(text)`, `getCdxml()` (ChemDraw
-CDXML, generic-formula marks and definitions included), `run(ops)`, `enumerate(options)`, `fit()`.
+| Method | |
+|---|---|
+| `getMolfile()` / `setMolfile(text)` | Molfile or SD text |
+| `getDocument()` / `setDocument(text)` | The whole drawing as a Structura document (variables included) |
+| `getSmiles()` / `setSmiles(text)` | SMILES (promises; RDKit). Variables such as R1 come out as `*` |
+| `getInchi()`, `getInchiKey()` | Promises (RDKit); refused for drawings with variables |
+| `getSvg()` | The picture as SVG text, as 导出 SVG saves it; empty for an empty page |
+| `getPng({ scale })` | A promise of the picture as a PNG `Blob` (`scale` 3 by default), or null for an empty page |
+| `getCdxml()` | ChemDraw CDXML, generic-formula marks and definitions included |
+| `run(ops)` | Edits through the op layer, as one undoable step |
+| `enumerate(options)` | The generic formula expanded into compounds, with their SD file |
+| `fit()` | Zooms and pans so the whole drawing is in view |
+
+The `set…` methods replace the drawing as one undoable step and return the problems worth
+telling the user; they are the host's own changes, so `onChange` is not called for them.
+
+### Server rendering
+
+The component renders on a server (Next.js, Remix…) and comes alive in the browser; it needs no
+`dynamic(…, { ssr: false })`.
 
 ## Without React
 
 `chem-structura/standalone` is the same editor with React bundled in, for pages that do not
-use React or a bundler. Give an element a size and mount the editor in it; the handle is the
-one above, plus `unmount()`.
+use React or a bundler: one stylesheet and one script.
 
 ```html
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.3.0/dist/style.css" />
-<div id="editor" style="height: 600px"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.3.0/dist/chem-structura.iife.js"></script>
-<script>
-  const editor = ChemStructura.mount("#editor", {
-    onChange: (molfile) => console.log(molfile),
-  })
-  editor.run([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }])
-  editor.fit()
-</script>
+<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.3.0"></script>
 ```
 
-As an ES module, `import { mount } from "chem-structura/standalone"` (or
-`…/dist/standalone.js` from the CDN). `mount` takes the component's props as its options, an
-element or a selector, and returns once the editor is on the page.
+The script (`dist/chem-structura.iife.js`, which the short address above serves) sets
+`window.ChemStructura`; as an ES module it is `import … from "chem-structura/standalone"`, or
+`…/dist/standalone.js` from the CDN.
+
+### Molecules on a page: `<chem-molecule>`
+
+Shows a structure; with `editable`, a click (or Enter) opens the editor over the page, and
+保存 updates it.
+
+```html
+<chem-molecule editable label="Aspirin" smiles="CC(=O)Oc1ccccc1C(=O)O"></chem-molecule>
+
+<chem-molecule editable label="Compound 2">
+  <script type="chemical/x-mdl-molfile">
+…molfile text…
+  </script>
+</chem-molecule>
+```
+
+| | |
+|---|---|
+| Content | A child `<script type="chemical/x-mdl-molfile">` (molfile / SD text), or `<script type="application/vnd.structura+json">` (a Structura document: keeps a generic formula's variables), or the `smiles` attribute (read with RDKit) |
+| `editable` | A click or Enter opens the editor; without it, a picture (`role="img"`) |
+| `label` | Its name: the editor's title and the accessible name |
+| `fit` | The drawing grows to fill the element (by default it only shrinks to fit) |
+| `raised-numbers` | Variables' numbers raised (R¹) |
+| `name`, `format` | In a `<form>`, submitted under `name`: the molfile (empty when nothing is drawn), or the Structura document with `format="document"`; a form reset restores what the page gave |
+| `.molfile`, `.document` | Read or replace the structure from script (no `change` event) |
+| `.edit()` | Opens the editor, as a click does; resolves to whether it was saved |
+| `change` event | After 保存; `event.detail` is `{ molfile, document }` |
+| `load` event | Once its content is read (SMILES takes a moment: RDKit loads first) |
+
+Size and frame it as any element (`width`, `height`, `border`…): the page's rules win over
+its defaults. In TypeScript, `document.querySelector("chem-molecule")` is typed.
+
+### The editor over the page: `edit()`
+
+```js
+const saved = await ChemStructura.edit({ title: "Edit", molfile })   // or document
+if (saved) console.log(saved.molfile, saved.document)                  // null when cancelled
+```
+
+### An editor in your own element: `mount()`
+
+Give an element a size and mount the editor in it; the handle is the one above, plus
+`update(options)` (new callbacks, template store…) and `unmount()`.
+
+```js
+const editor = ChemStructura.mount("#editor", { onChange: (molfile) => console.log(molfile) })
+editor.run([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }])
+editor.fit()
+```
+
+### The page's styles
 
 The editor's styles do not reach out, and the page's do not reach in: rules on tag names
 (`button { … }`), classes that share the editor's names (`.grid`, `.flex`), a root font size

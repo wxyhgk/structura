@@ -45,7 +45,7 @@ const resolveDeclarations = {
 const pkg = JSON.parse(readFileSync(join(here, "package.json"), "utf8"))
 const external = [...Object.keys(pkg.peerDependencies), ...Object.keys(pkg.dependencies)]
 const bundle = await rolldown({
-  input: Object.fromEntries(["index.ts", "core.ts", "standalone.tsx"].map((file) => [file.replace(/\.tsx?$/, ""), declarationOf(join(here, "src", file))])),
+  input: Object.fromEntries(["index.ts", "core.ts", "standalone.ts"].map((file) => [file.replace(/\.tsx?$/, ""), declarationOf(join(here, "src", file))])),
   external: (id) => external.some((name) => id === name || id.startsWith(`${name}/`)),
   plugins: [resolveDeclarations, dts({ dtsInput: true, emitDtsOnly: true })],
 })

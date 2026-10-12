@@ -4,6 +4,7 @@
 // weight instead (`:not(#\#)` adds one id and matches everything), in tiers that keep the
 // layers' order:
 //
+//   0       host: rules on <chem-molecule> itself, which sits in the page and is the page's to style
 //   1 id    a page's own rules, as most are (`#app .x`, `.page button`)
 //   2 ids   reset: everything in the editor back to the browser's defaults (style.css)
 //   3 ids   properties, theme, base
@@ -15,7 +16,7 @@
 import { transform } from "lightningcss"
 import postcss from "postcss"
 
-const TIERS = { reset: 2, properties: 3, theme: 3, base: 3, components: 4, utilities: 4 }
+const TIERS = { host: 0, reset: 2, properties: 3, theme: 3, base: 3, components: 4, utilities: 4 }
 const UNLAYERED = 5
 const ROOT_FONT_SIZE = 16
 

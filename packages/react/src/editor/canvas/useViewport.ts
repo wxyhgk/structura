@@ -7,7 +7,7 @@ import { type Viewport, ZOOM_STEP } from "@structura/engine"
  */
 export function useViewport(viewport: Viewport) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const view = useSyncExternalStore(viewport.subscribe, viewport.get)
+  const view = useSyncExternalStore(viewport.subscribe, viewport.get, viewport.get)
 
   useEffect(() => {
     const svg = svgRef.current
@@ -34,5 +34,6 @@ export function useViewport(viewport: Viewport) {
 
 /** The zoom alone, for labels that should not re-render while the drawing pans. */
 export function useZoom(viewport: Viewport): number {
-  return useSyncExternalStore(viewport.subscribe, () => viewport.get().zoom)
+  const zoom = () => viewport.get().zoom
+  return useSyncExternalStore(viewport.subscribe, zoom, zoom)
 }

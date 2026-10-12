@@ -42,11 +42,14 @@ function Host({ saved }: { saved?: string }) {
 | `getMolfile()` / `setMolfile(text)` | 读写 MOL / SDF；写入是一步可撤销的操作，不触发回调 |
 | `getDocument()` / `setDocument(text)` | 读写完整文档（`.structura`）；写入不触发回调，返回读不了的原因 |
 | `getCdxml()` | ChemDraw 文件（CDXML），与“导出 CDXML”相同：变量、可变连接、方括号写成 ChemDraw 自己的对象，定义写成结构下面的文字 |
+| `getSmiles()` / `setSmiles(text)` | 读写 SMILES（返回 Promise，经 RDKit）；R1 这类变量写成 `*`。写入与 `setMolfile` 一样是一步可撤销的操作，不触发回调 |
+| `getInchi()` / `getInchiKey()` | InChI / InChIKey（Promise，经 RDKit）；含变量时拒绝 |
+| `getSvg()` / `getPng({ scale })` | 图片：SVG 文本与“导出 SVG”相同；PNG 是 `Blob` 的 Promise，默认 3 倍大小。空白页时分别是空文本和 null |
 | `run(ops)` | 用操作层修改（与 agent 相同的 JSON 操作，见 `packages/core/src/ops/types.ts`），一步可撤销，触发回调；失败时返回哪一步、为什么 |
 | `enumerate({ limit, representatives })` | 把通式展开成具体化合物，结果附带 SDF 文本 |
 | `fit()` | 缩放平移到整张图可见 |
 
-不用 React 时：`chem-structura/standalone` 把 React 一起打包，`mount(元素, 参数)` 返回上面的 ref 方法和 `unmount()`，有 ES 模块（`dist/standalone.js`）和直接用 `<script>` 加载的版本（`dist/chem-structura.iife.js`，全局 `ChemStructura`）；`chem-structura/core` 是不带编辑器的化学功能（搭建、读写 MOL / 文档、出 SVG / CDXML、展开通式），不依赖 React，浏览器和 Node 都能用。写法见 `packages/react/README.md`，能直接打开的示例页在 `packages/react/examples/`（先 `npm run build -w chem-structura`，再把 `packages/react` 当静态文件目录打开，如 `node e2e/serve-package.ts 25401`）。
+不用 React 时：`chem-structura/standalone` 把 React 一起打包。页面上放分子用 `<chem-molecule editable>` 标签（内容是子元素 `<script>` 里的 MOL / Structura 文档，或 `smiles` 属性；点击用编辑器修改，保存后触发 `change`；放在表单里按 `name` 提交）；`edit({ molfile | document })` 在页面上方打开编辑器，保存后返回结果；`mount(元素, 参数)` 返回上面的 ref 方法和 `update()`、`unmount()`，有 ES 模块（`dist/standalone.js`）和直接用 `<script>` 加载的版本（`dist/chem-structura.iife.js`，全局 `ChemStructura`）；`chem-structura/core` 是不带编辑器的化学功能（搭建、读写 MOL / 文档、出 SVG / CDXML、展开通式），不依赖 React，浏览器和 Node 都能用。写法见 `packages/react/README.md`，能直接打开的示例页在 `packages/react/examples/`（先 `npm run build -w chem-structura`，再把 `packages/react` 当静态文件目录打开，如 `node e2e/serve-package.ts 25401`）。
 
 ## 测试
 
@@ -54,7 +57,8 @@ function Host({ saved }: { saved?: string }) {
 - `npm run test:e2e`：真浏览器里的关键流程（`e2e/`，Playwright），先打包再用预览服务器打开；同时构建 `chem-structura`，把 `packages/react` 当静态文件提供，检查不用 React 的示例页（`standalone.spec.ts`）。第一次运行前 `npx playwright install --only-shell chromium`；本机已有 Chromium 时也可以设 `STRUCTURA_CHROMIUM=浏览器路径`。测试通过 `window.__structura`（只在 `--mode e2e` 的打包里存在）准备数据、读取文档，不靠像素和坐标判断结果。
 - 出图快照：`packages/core/tests/render/` 存了 24 个代表结构的 SVG（数字取一位小数）。渲染有变化时这些测试会失败并给出差异；确认变化是有意的，就运行 `npm test -w @structura/core -- --test-update-snapshots`，把新快照和引起变化的代码一起提交。
 - 测试共用的工具在 `@structura/testkit`（执行操作、按 RDKit 标准 SMILES 比较结构、模拟画布、边界测试的导入解析），只给测试用。
-- 每次推送和 PR 由 GitHub Actions 检查：类型、lint（有警告即失败）、按包的单元测试、打包、端到端测试。本地 `git push` 前会自动跑类型检查、lint 和单元测试（`.githooks/pre-push`，`npm install` 时启用）。
+- `npm run check:dist -w chem-structura`：构建后按别的项目使用的方式检查 `dist/`：组件能在服务器上渲染（Next.js 等），`chem-structura/core` 在 Node 里能用，`core.js`、`standalone.js` 不引用包外的东西。
+- 每次推送和 PR 由 GitHub Actions 检查：类型、lint（有警告即失败）、按包的单元测试、打包（含上一条）、端到端测试。本地 `git push` 前会自动跑类型检查、lint 和单元测试（`.githooks/pre-push`，`npm install` 时启用）。
 
 ## 化学核心 `@structura/core`
 

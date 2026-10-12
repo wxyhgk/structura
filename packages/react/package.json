@@ -16,7 +16,7 @@
       "default": "./dist/core.js"
     },
     "./standalone": {
-      "structura-source": "./src/standalone.tsx",
+      "structura-source": "./src/standalone.ts",
       "types": "./dist/standalone.d.ts",
       "default": "./dist/standalone.js"
     },
@@ -25,6 +25,8 @@
       "default": "./dist/style.css"
     }
   },
+  "jsdelivr": "dist/chem-structura.iife.js",
+  "unpkg": "dist/chem-structura.iife.js",
   "files": [
     "dist",
     "README.md",
@@ -32,6 +34,7 @@
   ],
   "scripts": {
     "test": "node --experimental-strip-types --conditions=structura-source --test \"tests/**/*.test.ts\"",
+    "check:dist": "node scripts/check-dist.mjs",
     "build": "NODE_OPTIONS=--conditions=structura-source vite build --configLoader native && NODE_OPTIONS=--conditions=structura-source vite build --configLoader native -c vite.standalone.config.ts && node scripts/build-types.mjs"
   },
   "peerDependencies": {

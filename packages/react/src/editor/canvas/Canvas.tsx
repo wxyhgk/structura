@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { atomById, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
 import type { Molecule } from "@structura/core/types"
 import type { Attachment } from "@structura/markush"
+import { useHydrated } from "../hooks/useHydrated.ts"
 import { AtomLabelInput } from "./AtomLabelInput.tsx"
 import { SceneView } from "./SceneView.tsx"
 import { bracketAt, curveKey, hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type CurveHover, type RingHintShape } from "@structura/engine"
@@ -21,6 +22,8 @@ const CURVE_CURSORS: Record<NonNullable<CurveHover>, string> = { node: "move", i
 export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(props, ref) {
   const { viewport } = props
   const { svgRef, zoom, pan } = useViewport(viewport)
+  // On a server the drawing is left out: its labels are measured with the browser's fonts.
+  const hydrated = useHydrated()
   const hotspot = useHotspot(`${props.tool}:${props.ringKind}`)
   const gesture = useRef<Gesture>({ kind: "idle" })
   const space = useRef(false)
@@ -199,7 +202,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
         }}
       >
         <g transform={`translate(${pan.x} ${pan.y}) scale(${zoom})`}>
-          <SceneView
+          {hydrated && <SceneView
             mol={shown}
             arrows={props.arrows}
             selection={props.selection}
@@ -214,7 +217,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             attachments={attachmentsDraft ?? props.attachments}
             brackets={props.brackets}
             curveFocus={selecting ? props.curveFocus : null}
-          />
+          />}
         </g>
       </svg>
       {labelEdit && labelAtom && (

@@ -3,6 +3,6 @@ import { toolLabel, type Editor } from "@structura/engine"
 
 /** The status bar's name for the tool of whichever editor the palette drives. */
 export function useToolLabel(editor: Pick<Editor, "subscribe" | "get">): string {
-  const snapshot = useSyncExternalStore(editor.subscribe, editor.get)
+  const snapshot = useSyncExternalStore(editor.subscribe, editor.get, editor.get)
   return toolLabel(snapshot.tool, snapshot)
 }

@@ -9,7 +9,7 @@ type PaletteSource = Pick<Editor, "subscribe" | "get" | "setTool" | "setBondStyl
  * runs first on every pick; a pad has no bracket or attachment tools, `structureTools` false).
  */
 export function BoundPalette({ editor, onPick, structureTools = true }: { editor: PaletteSource; onPick?: () => void; structureTools?: boolean }) {
-  const snapshot = useSyncExternalStore(editor.subscribe, editor.get)
+  const snapshot = useSyncExternalStore(editor.subscribe, editor.get, editor.get)
   const picked =
     <A extends unknown[]>(act: (...args: A) => void) =>
     (...args: A) => {

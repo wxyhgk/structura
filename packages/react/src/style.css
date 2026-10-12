@@ -2,7 +2,7 @@
    and utilities without its global reset; the reset, the colour variables and the base rules
    apply inside the editor's root (.chem-app) and its overlays (.chem-overlay: dialogs, menus and
    tooltips, which portal out to <body>). */
-@layer theme, base, components, utilities;
+@layer reset, theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "./styles/preflight.css";
 @import "tailwindcss/utilities.css" layer(utilities);
@@ -142,6 +142,41 @@
   :where(.chem-app, .chem-overlay) {
     @apply text-foreground font-sans;
     }
+  /* What the editor's roots would otherwise inherit from the page around them. */
+  :where(.chem-app, .chem-overlay) {
+    font-size: 16px;
+    font-weight: 400;
+    font-style: normal;
+    font-variant: normal;
+    letter-spacing: normal;
+    word-spacing: normal;
+    text-align: start;
+    text-indent: 0;
+    text-transform: none;
+    text-shadow: none;
+    white-space: normal;
+    visibility: visible;
+    cursor: auto;
+    }
+}
+
+/* Every element of the editor starts from the browser's defaults, whatever the page's own rules
+   say: in the published stylesheet this outweighs a page's rules (see scripts/harden-css.mjs),
+   and the editor's styles below outweigh it. Not SVG, whose width, height, fill… are attributes
+   that a rule would override. Popper wrappers (around menus and tooltips) are the overlays'
+   parents on <body>; inside :is(), which ignores a :has() the browser does not know. */
+@layer reset {
+  :is(.chem-app, .chem-overlay),
+  :is(.chem-app, .chem-overlay) :not(svg, svg *),
+  :is(.chem-app, .chem-overlay) :not(svg, svg *)::before,
+  :is(.chem-app, .chem-overlay) :not(svg, svg *)::after {
+    all: revert;
+  }
+}
+@layer reset {
+  :is([data-radix-popper-content-wrapper]:has(> .chem-overlay)) {
+    all: revert;
+  }
 }
 
 /* The editor is not a document: its own text is not selectable, except its fields. Page-level

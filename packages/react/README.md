@@ -32,7 +32,8 @@ export function MoleculeField() {
 ```
 
 The styles stay inside the editor: it does not reset or restyle the rest of your page, and its
-colour variables do not override your own theme.
+colour variables do not override your own theme. Nor do your page's styles change the editor
+(see [Without React](#without-react) for the details).
 
 ### Props
 
@@ -50,6 +51,61 @@ colour variables do not override your own theme.
 
 `getMolfile()`, `setMolfile(text)`, `getDocument()`, `setDocument(text)`, `getCdxml()` (ChemDraw
 CDXML, generic-formula marks and definitions included), `run(ops)`, `enumerate(options)`, `fit()`.
+
+## Without React
+
+`chem-structura/standalone` is the same editor with React bundled in, for pages that do not
+use React or a bundler. Give an element a size and mount the editor in it; the handle is the
+one above, plus `unmount()`.
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.3.0/dist/style.css" />
+<div id="editor" style="height: 600px"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.3.0/dist/chem-structura.iife.js"></script>
+<script>
+  const editor = ChemStructura.mount("#editor", {
+    onChange: (molfile) => console.log(molfile),
+  })
+  editor.run([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }])
+  editor.fit()
+</script>
+```
+
+As an ES module, `import { mount } from "chem-structura/standalone"` (or
+`…/dist/standalone.js` from the CDN). `mount` takes the component's props as its options, an
+element or a selector, and returns once the editor is on the page.
+
+The editor's styles do not reach out, and the page's do not reach in: rules on tag names
+(`button { … }`), classes that share the editor's names (`.grid`, `.flex`), a root font size
+or inherited text styles leave it as it is. What still gets through: `!important` rules, and
+selectors with two ids or more. Runnable pages: [`examples/`](https://github.com/wxyhgk/structura/tree/master/packages/react/examples).
+
+## Chemistry without the editor
+
+`chem-structura/core` builds, reads, writes, draws and expands structures with no editor on
+the page, in the browser or in Node, and without React. Its files are the editor's own.
+
+```ts
+import { applyOps, drawingCdxml, drawingFromMolfile, drawingMolfile, drawingSvg, emptyDrawing, enumerate, enumerationSdf } from "chem-structura/core"
+
+const built = applyOps(emptyDrawing(), [
+  { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" },
+  { op: "add_atom", el: "O", to: 1 },
+])
+if (built.ok) {
+  drawingSvg(built.drawing)     // an SVG picture, as 导出 SVG saves it
+  drawingMolfile(built.drawing) // molfile text
+  drawingCdxml(built.drawing)   // ChemDraw CDXML
+}
+const { drawing, notes } = drawingFromMolfile(sdText) // opens it as the editor would
+const compounds = enumerate(drawing)                   // a generic formula, expanded
+enumerationSdf(compounds)
+```
+
+Also: `readDocument` / `toDocument` (the editor's `getDocument()` text), `validateDrawing`,
+`librarySize`, `plainFormula`, `molecularWeight`, `exactMass`, `elementalAnalysis`,
+`readSdf` / `toSdf`. The ops are those of the editor's `run()`.
 
 ### RDKit
 

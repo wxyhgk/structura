@@ -1,0 +1,51 @@
+<!doctype html>
+<!--
+  The editor on a page without React or a build step: one stylesheet and one <script>, which
+  sets window.ChemStructura. Here the files come from this package's dist/ (npm run build -w
+  chem-structura, then serve packages/react); from npm, use the same paths under
+  https://cdn.jsdelivr.net/npm/chem-structura@<version>/
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Structura：用 script 标签嵌入</title>
+    <link rel="stylesheet" href="../dist/style.css" />
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; }
+      #bar { display: flex; gap: 8px; align-items: center; padding: 8px 16px; border-bottom: 1px solid #ddd; }
+      #editor { height: 70vh; }
+      #output { margin: 0; padding: 8px 16px; height: calc(30vh - 50px); overflow: auto; background: #f6f6f6; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div id="bar">
+      <button id="benzene">放一个苯环</button>
+      <button id="molfile">取 MOL</button>
+      <button id="cdxml">取 CDXML</button>
+      <span id="status">改动次数：0</span>
+    </div>
+    <div id="editor"></div>
+    <pre id="output"></pre>
+
+    <script src="../dist/chem-structura.iife.js"></script>
+    <script>
+      let edits = 0
+      const output = document.getElementById("output")
+      const editor = ChemStructura.mount("#editor", {
+        onChange(molfile) {
+          edits += 1
+          document.getElementById("status").textContent = `改动次数：${edits}`
+          output.textContent = molfile
+        },
+      })
+      document.getElementById("benzene").onclick = () => {
+        editor.run([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }])
+        editor.fit()
+      }
+      document.getElementById("molfile").onclick = () => (output.textContent = editor.getMolfile())
+      document.getElementById("cdxml").onclick = () => (output.textContent = editor.getCdxml())
+      window.editor = editor
+    </script>
+  </body>
+</html>

@@ -10,6 +10,16 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./core": {
+      "structura-source": "./src/core.ts",
+      "types": "./dist/core.d.ts",
+      "default": "./dist/core.js"
+    },
+    "./standalone": {
+      "structura-source": "./src/standalone.tsx",
+      "types": "./dist/standalone.d.ts",
+      "default": "./dist/standalone.js"
+    },
     "./style.css": {
       "structura-source": "./src/style.css",
       "default": "./dist/style.css"
@@ -22,7 +32,7 @@
   ],
   "scripts": {
     "test": "node --experimental-strip-types --conditions=structura-source --test \"tests/**/*.test.ts\"",
-    "build": "NODE_OPTIONS=--conditions=structura-source vite build --configLoader native && node scripts/build-types.mjs"
+    "build": "NODE_OPTIONS=--conditions=structura-source vite build --configLoader native && NODE_OPTIONS=--conditions=structura-source vite build --configLoader native -c vite.standalone.config.ts && node scripts/build-types.mjs"
   },
   "peerDependencies": {
     "react": ">=19",

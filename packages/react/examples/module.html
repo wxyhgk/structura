@@ -1,0 +1,43 @@
+<!doctype html>
+<!--
+  The same without a build step, as ES modules: the editor from dist/standalone.js, and
+  chem-structura/core (dist/core.js) drawing the editor's structure as SVG beside it, with no
+  editor involved. From npm, use the same paths under
+  https://cdn.jsdelivr.net/npm/chem-structura@<version>/
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Structura：用 ES 模块嵌入</title>
+    <link rel="stylesheet" href="../dist/style.css" />
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; display: grid; grid-template-columns: 2fr 1fr; height: 100vh; }
+      #editor { min-height: 0; }
+      #side { border-left: 1px solid #ddd; padding: 16px; overflow: auto; }
+      #picture svg { max-width: 100%; height: auto; }
+    </style>
+  </head>
+  <body>
+    <div id="editor"></div>
+    <div id="side">
+      <p id="formula">画点什么，右边会跟着更新。</p>
+      <div id="picture"></div>
+    </div>
+
+    <script type="module">
+      import { mount } from "../dist/standalone.js"
+      import { drawingSvg, plainFormula, readDocument } from "../dist/core.js"
+
+      /** The editor's document, drawn again by chem-structura/core alone. */
+      function show(text) {
+        const read = readDocument(text)
+        if ("error" in read) return
+        document.getElementById("formula").textContent = `分子式：${plainFormula(read.drawing.molecule) || "（空）"}`
+        document.getElementById("picture").innerHTML = drawingSvg(read.drawing)
+      }
+
+      window.editor = mount(document.getElementById("editor"), { onDocumentChange: show })
+    </script>
+  </body>
+</html>

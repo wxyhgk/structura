@@ -60,7 +60,7 @@ export function useEditorHandle(
     onChange,
     onDocumentChange,
   }: {
-    editor: Pick<EditorState, "mol" | "arrows" | "drawing" | "latest" | "run" | "loadDrawing" | "newDocument" | "raisedNumbers">
+    editor: Pick<EditorState, "mol" | "drawing" | "latest" | "run" | "loadDrawing" | "newDocument" | "raisedNumbers">
     viewport: Viewport
     openText: Imports["openText"]
     onChange?: (molfile: string) => void
@@ -72,7 +72,11 @@ export function useEditorHandle(
   const quiet = useRef(false)
   const started = useRef(false)
 
-  const fit = () => viewport.fit(drawingPoints(editor.mol, editor.arrows))
+  /** Fits the latest drawing, so a fit right after the host's run or setMolfile sees the change. */
+  const fit = () => {
+    const now = editor.latest()
+    viewport.fit(drawingPoints(now.molecule, now.arrows))
+  }
 
   useEffect(() => {
     const last = reported.current

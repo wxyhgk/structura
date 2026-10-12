@@ -1,6 +1,6 @@
-// Writes dist/index.d.ts: the package's types in one file, with the types of Structura's own
-// workspace packages (@structura/core, engine, markush…) bundled in, since those are not
-// published. Step 1: tsc emits plain declarations for everything into .types/; step 2: rolldown
+// Writes dist/index.d.ts, core.d.ts and standalone.d.ts: each entry's types, with the types of
+// Structura's own workspace packages (@structura/core, engine, markush…) bundled in, since those
+// are not published. Step 1: tsc emits plain declarations for everything into .types/; step 2: rolldown
 // joins them from the entry, mapping each @structura/… import to its emitted declaration.
 import { execFileSync } from "node:child_process"
 import { existsSync, readFileSync, rmSync } from "node:fs"
@@ -45,9 +45,9 @@ const resolveDeclarations = {
 const pkg = JSON.parse(readFileSync(join(here, "package.json"), "utf8"))
 const external = [...Object.keys(pkg.peerDependencies), ...Object.keys(pkg.dependencies)]
 const bundle = await rolldown({
-  input: { index: declarationOf(join(here, "src/index.ts")) },
+  input: Object.fromEntries(["index.ts", "core.ts", "standalone.tsx"].map((file) => [file.replace(/\.tsx?$/, ""), declarationOf(join(here, "src", file))])),
   external: (id) => external.some((name) => id === name || id.startsWith(`${name}/`)),
   plugins: [resolveDeclarations, dts({ dtsInput: true, emitDtsOnly: true })],
 })
-await bundle.write({ dir: join(here, "dist"), entryFileNames: "[name].d.ts" })
+await bundle.write({ dir: join(here, "dist"), entryFileNames: "[name].d.ts", chunkFileNames: "chunks/[name]-[hash].d.ts" })
 rmSync(out, { recursive: true, force: true })

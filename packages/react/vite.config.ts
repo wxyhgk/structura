@@ -1,11 +1,13 @@
 // Builds the publishable package's code into dist/: index.js (ESM, React and the third-party UI
-// kit left to the host's install, Structura's own workspace packages bundled in) and style.css
-// (the editor's styles, confined to it). The types come after, from scripts/build-types.mjs.
-// Run both with: npm run build -w chem-structura
+// kit left to the host's install, Structura's own workspace packages bundled in), core.js (the
+// chemistry without the editor) and style.css (the editor's styles, confined to it). The
+// standalone builds (React bundled in) come next, from vite.standalone.config.ts, and the types
+// last, from scripts/build-types.mjs. Run them all with: npm run build -w chem-structura
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defaultClientConditions, defineConfig } from "vite"
 import pkg from "./package.json" with { type: "json" }
+import { hardenCss } from "./scripts/harden-css.mjs"
 
 /** The editor's roots: its own element and its overlays (see src/style.css). */
 const SCOPE = ":where(.chem-app,.chem-overlay)"
@@ -13,7 +15,8 @@ const SCOPE = ":where(.chem-app,.chem-overlay)"
 /**
  * Tailwind puts its design tokens on :root and its property defaults on every element; in a
  * page embedding the editor they would override the page's own Tailwind theme. Confined to the
- * editor's roots, the editor's utilities still find them.
+ * editor's roots, the editor's utilities still find them. Then the page's rules are kept out
+ * (scripts/harden-css.mjs).
  */
 const confineTailwindGlobals = {
   name: "confine-tailwind-globals",
@@ -23,7 +26,7 @@ const confineTailwindGlobals = {
     const everything = [SCOPE, `${SCOPE} *`, `${SCOPE} :before`, `${SCOPE} :after`, `${SCOPE} ::backdrop`].join(",")
     const next = css.source.replaceAll(":root,:host{", `${SCOPE}{`).replaceAll("*,:before,:after,::backdrop{", `${everything}{`)
     if (/(^|[}\s]):root[,{]/.test(next)) throw new Error("style.css still has :root rules; confine them")
-    css.source = next
+    css.source = hardenCss(next)
   },
 }
 
@@ -39,13 +42,13 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true,
     lib: {
-      entry: { index: "src/index.ts", style: "src/style.css" },
+      entry: { index: "src/index.ts", core: "src/core.ts", style: "src/style.css" },
       formats: ["es"],
     },
     cssCodeSplit: true,
     rolldownOptions: {
       external: isExternal,
-      output: { assetFileNames: "[name][extname]" },
+      output: { assetFileNames: "[name][extname]", chunkFileNames: "chunks/[name]-[hash].js" },
     },
   },
 })

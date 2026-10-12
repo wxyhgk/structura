@@ -7,7 +7,7 @@ import { createHotspot } from "@structura/engine"
  */
 export function useHotspot(scope: string) {
   const [hotspot] = useState(createHotspot)
-  useSyncExternalStore(hotspot.subscribe, hotspot.view)
+  useSyncExternalStore(hotspot.subscribe, hotspot.view, hotspot.view)
   useLayoutEffect(() => {
     hotspot.clearHover()
   }, [hotspot, scope])

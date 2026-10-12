@@ -9,7 +9,7 @@ import { canTransform, createEditor, statusOf } from "@structura/engine"
  */
 export function useEditor(initial: Molecule[] | Drawing = []) {
   const [editor] = useState(() => createEditor(initial))
-  const snapshot = useSyncExternalStore(editor.subscribe, editor.get)
+  const snapshot = useSyncExternalStore(editor.subscribe, editor.get, editor.get)
   const { history, selection } = snapshot
   const drawing = history.present
   const mol = drawing.molecule

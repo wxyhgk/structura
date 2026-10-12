@@ -50,6 +50,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build -w chem-structura
+      - run: npm run check:dist -w chem-structura
 
       # Provenance comes with trusted publishing; --provenance makes the intent explicit.
       - run: npm publish -w chem-structura --provenance --access public

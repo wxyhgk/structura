@@ -1,10 +1,12 @@
 <!doctype html>
 <!--
-  Molecules shown on a page, each opening in the editor on a click. Each card holds its
-  structure in the HTML (a molfile, or a Structura document for a generic formula), drawn as
-  SVG by the same file that holds the editor (dist/standalone.js). 保存 redraws the card and
-  hands the result to saveMolecule(), the one place a real page would send it to its server;
-  here it is kept in this browser, so edits survive a reload (重置示例 forgets them).
+  Molecules on a page with <chem-molecule>: each shows its structure, and with `editable` a
+  click opens the editor over the page; 保存 updates it and fires `change`. The structure comes
+  from a child <script> (a molfile, or a Structura document for a generic formula) or from
+  `smiles`. The script below only writes the captions and keeps edits in this browser, so they
+  survive a reload (重置示例 forgets them); a real page would send them to its server instead.
+  One <script> and one stylesheet; from npm:
+  https://cdn.jsdelivr.net/npm/chem-structura@<version>/dist/chem-structura.iife.js and …/dist/style.css
 -->
 <html lang="zh-CN">
   <head>
@@ -12,52 +14,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Structura：页面里的分子，点击编辑</title>
     <link rel="stylesheet" href="../dist/style.css" />
+    <script src="../dist/chem-structura.iife.js"></script>
     <style>
-      .page { margin: 0 auto; max-width: 1100px; padding: 24px 16px 48px; font-family: system-ui, sans-serif; color: #222; }
-      .page-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 20px; }
-      .page-head h1 { margin: 0; font-size: 22px; }
-      .page-head p { margin: 0; color: #666; font-size: 14px; flex: 1; }
+      body { margin: 0; font-family: system-ui, sans-serif; color: #222; }
+      main { margin: 0 auto; max-width: 1100px; padding: 24px 16px 48px; }
+      .head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 20px; }
+      .head h1 { margin: 0; font-size: 22px; }
+      .head p { margin: 0; color: #666; font-size: 14px; flex: 1; }
       .link { background: none; border: 0; padding: 0; color: #2563eb; cursor: pointer; font-size: 13px; }
       .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-
-      .molecule, .add-card { margin: 0; position: relative; border: 1px solid #e3e3e3; border-radius: 10px; background: #fff; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
-      .molecule:hover, .add-card:hover, .molecule:focus-visible, .add-card:focus-visible { border-color: #2563eb; box-shadow: 0 2px 12px rgb(37 99 235 / 0.12); outline: none; }
-      .molecule .picture { height: 180px; display: flex; align-items: center; justify-content: center; padding: 12px; }
-      .molecule .picture svg { max-width: 100%; max-height: 100%; width: auto; height: auto; }
-      .molecule .empty { color: #999; font-size: 13px; }
-      .molecule .caption { border-top: 1px solid #f0f0f0; padding: 10px 14px; font-size: 13px; }
-      .molecule .name { font-weight: 600; font-size: 14px; }
-      .molecule .facts { color: #666; margin-top: 2px; }
-      .molecule .hint { position: absolute; top: 8px; right: 10px; font-size: 12px; color: #2563eb; opacity: 0; transition: opacity 0.15s; }
-      .molecule:hover .hint, .molecule:focus-visible .hint { opacity: 1; }
-      .molecule.saved { animation: saved 1.2s ease-out; }
-      @keyframes saved { from { box-shadow: 0 0 0 4px rgb(34 197 94 / 0.45); } to { box-shadow: 0 0 0 4px rgb(34 197 94 / 0); } }
-      .add-card { min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #2563eb; font-size: 14px; border-style: dashed; }
-      .add-card .plus { font-size: 32px; line-height: 1; }
-
-      /* The editing sheet sits under the editor's own menus and dialogs (z-index 50), which open over it. */
-      #sheet { position: fixed; inset: 0; z-index: 40; background: rgb(0 0 0 / 0.4); display: flex; padding: 3vh 3vw; }
-      #sheet[hidden] { display: none; }
-      .sheet-panel { flex: 1; display: flex; flex-direction: column; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 40px rgb(0 0 0 / 0.3); }
-      .sheet-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #ddd; font-family: system-ui, sans-serif; font-size: 14px; }
-      .sheet-bar .title { font-weight: 600; flex: 1; }
-      .sheet-bar .changed { color: #b45309; font-size: 12px; }
-      .btn { border: 1px solid #ccc; background: #fff; border-radius: 6px; padding: 6px 14px; font-size: 14px; cursor: pointer; }
-      .btn.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
-      #sheet-editor { flex: 1; min-height: 0; }
+      figure { margin: 0; border: 1px solid #e3e3e3; border-radius: 10px; overflow: hidden; background: #fff; }
+      figure chem-molecule { display: block; height: 180px; padding: 12px; box-sizing: border-box; outline-offset: -4px; }
+      figcaption { border-top: 1px solid #f0f0f0; padding: 10px 14px; font-size: 13px; }
+      figcaption b { display: block; font-size: 14px; }
+      .facts { color: #666; }
+      h2 { font-size: 17px; margin: 40px 0 12px; }
+      form { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+      form chem-molecule { width: 220px; height: 140px; border: 1px dashed #bbb; border-radius: 8px; }
+      #submitted { width: 100%; max-height: 160px; overflow: auto; background: #f6f6f6; padding: 8px; font-size: 12px; }
     </style>
   </head>
   <body>
-    <main class="page">
-      <div class="page-head">
+    <main>
+      <div class="head">
         <h1>化合物</h1>
-        <p>点击任意一个分子进入编辑器修改，保存后这里的图跟着更新。</p>
+        <p>点击任意一个分子进入编辑器修改，保存后这里跟着更新。</p>
         <button class="link" id="reset" type="button">重置示例</button>
       </div>
 
-      <div class="cards" id="cards">
-      <figure class="molecule" data-name="阿司匹林">
-        <script type="chemical/x-mdl-molfile">
+      <div class="cards">
+        <figure>
+          <chem-molecule editable label="阿司匹林">
+            <script type="chemical/x-mdl-molfile">
 
      RDKit          2D
 
@@ -90,47 +78,18 @@
  10  5  1  0
 M  END
 </script>
-      </figure>
-      <figure class="molecule" data-name="咖啡因">
-        <script type="chemical/x-mdl-molfile">
+          </chem-molecule>
+          <figcaption><b>阿司匹林</b><span class="facts"></span></figcaption>
+        </figure>
 
-     RDKit          2D
+        <figure>
+          <chem-molecule editable label="咖啡因" smiles="Cn1cnc2c1c(=O)n(C)c(=O)n2C"></chem-molecule>
+          <figcaption><b>咖啡因</b><span class="facts"></span></figcaption>
+        </figure>
 
- 14 15  0  0  0  0  0  0  0  0999 V2000
-   -1.6167   -1.8062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.4049   -0.8288    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.0711   -0.0832    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.5677    0.7808    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.5905    0.5692    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.4899   -0.4258    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.4221   -0.8360    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.5227   -1.8310    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.2333   -0.2514    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
-    2.1453   -0.6618    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.1327    0.7434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.9439    1.3280    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
-    0.2207    1.1538    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
-    0.1201    2.1486    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-  1  2  1  0
-  2  3  1  0
-  3  4  2  0
-  4  5  1  0
-  5  6  2  0
-  6  7  1  0
-  7  8  2  0
-  7  9  1  0
-  9 10  1  0
-  9 11  1  0
- 11 12  2  0
- 11 13  1  0
- 13 14  1  0
-  6  2  1  0
- 13  5  1  0
-M  END
-</script>
-      </figure>
-      <figure class="molecule" data-name="布洛芬">
-        <script type="chemical/x-mdl-molfile">
+        <figure>
+          <chem-molecule editable label="布洛芬">
+            <script type="chemical/x-mdl-molfile">
 
      RDKit          2D
 
@@ -167,54 +126,39 @@ M  END
  10  5  2  0
 M  END
 </script>
-      </figure>
-      <figure class="molecule" data-name="通式 I">
-        <script type="application/vnd.structura+json">
+          </chem-molecule>
+          <figcaption><b>布洛芬</b><span class="facts"></span></figcaption>
+        </figure>
+
+        <figure>
+          <chem-molecule editable label="通式 I">
+            <script type="application/vnd.structura+json">
 {"format":"structura","version":1,"drawing":{"molecule":{"atoms":[{"id":1,"el":"C","x":40.00000000000001,"y":0,"charge":0},{"id":2,"el":"C","x":20.000000000000007,"y":-34.64101615137755,"charge":0},{"id":3,"el":"C","x":-19.999999999999993,"y":-34.641016151377556,"charge":0},{"id":4,"el":"C","x":-40.00000000000001,"y":-4.898587196589414e-15,"charge":0},{"id":5,"el":"C","x":-20.00000000000002,"y":34.64101615137754,"charge":0},{"id":6,"el":"C","x":20.000000000000007,"y":34.64101615137755,"charge":0},{"id":7,"el":"C","x":80,"y":-55,"charge":0,"alias":"R1"},{"id":8,"el":"C","x":-80,"y":-2.756074278718133e-14,"charge":0},{"id":9,"el":"O","x":-100.00000000000001,"y":34.641016151377514,"charge":0},{"id":10,"el":"N","x":-100,"y":-34.64101615137758,"charge":0},{"id":11,"el":"C","x":-140,"y":-34.6410161513776,"charge":0,"alias":"R2"}],"bonds":[{"id":1,"a":1,"b":2,"order":2,"stereo":"none","aromatic":true},{"id":2,"a":2,"b":3,"order":1,"stereo":"none","aromatic":true},{"id":3,"a":3,"b":4,"order":2,"stereo":"none","aromatic":true},{"id":4,"a":4,"b":5,"order":1,"stereo":"none","aromatic":true},{"id":5,"a":5,"b":6,"order":2,"stereo":"none","aromatic":true},{"id":6,"a":6,"b":1,"order":1,"stereo":"none","aromatic":true},{"id":7,"a":4,"b":8,"order":1,"stereo":"none"},{"id":8,"a":8,"b":9,"order":2,"stereo":"none"},{"id":9,"a":8,"b":10,"order":1,"stereo":"none"},{"id":10,"a":10,"b":11,"order":1,"stereo":"none"}],"groups":[],"nextAtomId":12,"nextBondId":11,"nextGroupId":1},"arrows":[],"nextArrowId":1,"attachments":[{"atom":7,"to":[1,2,3,4,5,6],"repeat":{"min":0,"max":2,"name":"m"}}],"variables":{"R1":{"alternatives":[{"kind":"label","text":"H"},{"kind":"label","text":"F"},{"kind":"label","text":"Cl"},{"kind":"label","text":"OMe"}]},"R2":{"alternatives":[{"kind":"label","text":"Me"},{"kind":"label","text":"Et"},{"kind":"class","class":"alkyl","min":3,"max":6}]}}}}
 </script>
-      </figure>
+          </chem-molecule>
+          <figcaption><b>通式 I</b><span class="facts"></span></figcaption>
+        </figure>
 
-      <div class="add-card" id="add" role="button" tabindex="0"><span class="plus">+</span>添加分子</div>
+        <figure>
+          <chem-molecule label="苯（只读）" smiles="c1ccccc1"></chem-molecule>
+          <figcaption><b>苯</b><span class="facts">只读：没有 editable</span></figcaption>
+        </figure>
       </div>
+
+      <h2>在表单里</h2>
+      <form id="form">
+        <chem-molecule name="structure" editable label="要提交的结构"></chem-molecule>
+        <button type="submit">提交</button>
+        <button type="reset">重置</button>
+        <pre id="submitted">提交后，这里显示表单带上的 structure 字段（MOL 文本）。</pre>
+      </form>
     </main>
 
-    <div id="sheet" hidden>
-      <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
-        <div class="sheet-bar">
-          <span class="title" id="sheet-title"></span>
-          <span class="changed" id="sheet-changed" hidden>有未保存的修改</span>
-          <button class="btn" id="cancel" type="button">取消</button>
-          <button class="btn primary" id="save" type="button">保存</button>
-        </div>
-        <div id="sheet-editor"></div>
-      </div>
-    </div>
+    <script>
+      const { molecularWeight, plainFormula, readDocument } = ChemStructura
+      const STORE = "structura-example-molecules"
 
-    <script type="module">
-      import { drawingFromMolfile, drawingSvg, mount, plainFormula, molecularWeight, readDocument, toDocument } from "../dist/standalone.js"
-
-      const STORE = "structura-example-gallery"
-      const cards = document.getElementById("cards")
-      const sheet = document.getElementById("sheet")
-      const changedNote = document.getElementById("sheet-changed")
-
-      /**
-       * Where a real page sends a saved molecule: its server, a form field… The molfile is
-       * what other software reads; the Structura document also keeps a generic formula's
-       * variables. Here: kept in this browser.
-       */
-      function saveMolecule(name, { molfile, document }) {
-        console.log(`保存「${name}」`, { molfile, document })
-        const saved = loadSaved()
-        saved[name] = document
-        try {
-          localStorage.setItem(STORE, JSON.stringify(saved))
-        } catch {
-          // Storage refused (a private window): the page still shows the edit until it is reloaded.
-        }
-      }
-
-      function loadSaved() {
+      function saved() {
         try {
           return JSON.parse(localStorage.getItem(STORE) ?? "{}")
         } catch {
@@ -222,117 +166,33 @@ M  END
         }
       }
 
-      /** Each card's structure as a Structura document, read from what the HTML holds. */
-      const documents = new Map()
-
-      function documentFromCard(card) {
-        const saved = loadSaved()[card.dataset.name]
-        if (saved) return saved
-        const data = card.querySelector("script")
-        if (!data) return toDocument(drawingFromMolfile("").drawing)
-        if (data.type === "application/vnd.structura+json") return data.textContent.trim()
-        return toDocument(drawingFromMolfile(data.textContent.replace(/^\n/, "")).drawing)
+      /** The caption under a card: formula and weight, or the variables of a generic formula. */
+      function caption(molecule) {
+        const facts = molecule.closest("figure")?.querySelector(".facts")
+        if (!facts || !molecule.hasAttribute("editable")) return
+        const read = readDocument(molecule.document)
+        if (!("drawing" in read)) return
+        const { molecule: mol, variables } = read.drawing
+        const names = Object.keys(variables ?? {})
+        facts.textContent = mol.atoms.length === 0 ? "空" : names.length > 0 ? `通式 · ${names.join("、")}` : `${plainFormula(mol)} · ${molecularWeight(mol).toFixed(2)}`
       }
 
-      /** Draws a card from its document: the picture, the name, the formula and the weight. */
-      function render(card) {
-        const read = readDocument(documents.get(card))
-        const drawing = "drawing" in read ? read.drawing : null
-        const svg = drawing ? drawingSvg(drawing) : ""
-        const formula = drawing && drawing.molecule.atoms.length > 0 ? plainFormula(drawing.molecule) : ""
-        const isGeneric = drawing?.variables && Object.keys(drawing.variables).length > 0
-        const facts = !formula ? "空" : isGeneric ? `通式 · ${Object.keys(drawing.variables).join("、")}` : `${formula} · ${molecularWeight(drawing.molecule).toFixed(2)}`
-        for (const old of card.querySelectorAll(":scope > :not(script)")) old.remove()
-        card.insertAdjacentHTML(
-          "beforeend",
-          `<div class="picture">${svg || '<span class="empty">（空）</span>'}</div>
-           <figcaption class="caption"><div class="name"></div><div class="facts"></div></figcaption>
-           <span class="hint">点击编辑</span>`,
-        )
-        card.querySelector(".name").textContent = card.dataset.name
-        card.querySelector(".facts").textContent = facts
-        card.tabIndex = 0
-        card.setAttribute("role", "button")
-        card.setAttribute("aria-label", `编辑 ${card.dataset.name}`)
-      }
-
-      function setUp(card, text = documentFromCard(card)) {
-        documents.set(card, text)
-        render(card)
-        card.addEventListener("click", () => openEditor(card))
-        card.addEventListener("keydown", (event) => (event.key === "Enter" || event.key === " ") && (event.preventDefault(), openEditor(card)))
-      }
-
-      // ---- The editing sheet: one editor at a time, mounted on open and removed on close.
-
-      let editing = null // { card, editor, changed }
-
-      function openEditor(card) {
-        if (editing) return
-        sheet.hidden = false
-        document.body.style.overflow = "hidden"
-        document.getElementById("sheet-title").textContent = card ? `编辑：${card.dataset.name}` : "添加分子"
-        changedNote.hidden = true
-        const editor = mount("#sheet-editor", {
-          initialDocument: card ? documents.get(card) : undefined,
-          onDocumentChange() {
-            editing.changed = true
-            changedNote.hidden = false
-          },
+      for (const molecule of document.querySelectorAll(".cards chem-molecule")) {
+        molecule.addEventListener("load", () => {
+          // An edit from an earlier visit replaces what the page holds.
+          const kept = saved()[molecule.getAttribute("label")]
+          if (kept) molecule.document = kept
+          caption(molecule)
         })
-        editing = { card, editor, changed: false }
-        window.editor = editor
+        molecule.addEventListener("change", (event) => {
+          caption(molecule)
+          // event.detail: { molfile, document }. A real page would send it to its server here.
+          try {
+            localStorage.setItem(STORE, JSON.stringify({ ...saved(), [molecule.getAttribute("label")]: event.detail.document }))
+          } catch {}
+        })
       }
 
-      function closeEditor() {
-        editing.editor.unmount()
-        editing = null
-        delete window.editor
-        sheet.hidden = true
-        document.body.style.overflow = ""
-      }
-
-      /** A card for a molecule the page did not start with, before the 添加分子 card. */
-      function addCard(name, text) {
-        const card = document.createElement("figure")
-        card.className = "molecule"
-        card.dataset.name = name
-        cards.insertBefore(card, document.getElementById("add"))
-        setUp(card, text)
-        return card
-      }
-
-      function save() {
-        const { card, editor } = editing
-        const text = editor.getDocument()
-        const read = readDocument(text)
-        const empty = "drawing" in read && read.drawing.molecule.atoms.length === 0
-        if (!card && empty) return closeEditor()
-        let target = card
-        if (!target) {
-          const name = prompt("给这个分子起个名字", `化合物 ${cards.querySelectorAll(".molecule").length + 1}`)
-          if (name === null) return
-          target = addCard(name.trim() || "未命名", text)
-        } else {
-          documents.set(target, text)
-          render(target)
-        }
-        saveMolecule(target.dataset.name, { molfile: editor.getMolfile(), document: text })
-        closeEditor()
-        target.classList.remove("saved")
-        void target.offsetWidth
-        target.classList.add("saved")
-      }
-
-      function cancel() {
-        if (editing.changed && !confirm("修改还没保存，确定放弃吗？")) return
-        closeEditor()
-      }
-
-      document.getElementById("save").addEventListener("click", save)
-      document.getElementById("cancel").addEventListener("click", cancel)
-      document.getElementById("add").addEventListener("click", () => openEditor(null))
-      document.getElementById("add").addEventListener("keydown", (event) => event.key === "Enter" && openEditor(null))
       document.getElementById("reset").addEventListener("click", () => {
         try {
           localStorage.removeItem(STORE)
@@ -340,10 +200,10 @@ M  END
         location.reload()
       })
 
-      for (const card of cards.querySelectorAll(".molecule")) setUp(card)
-      // Molecules added on an earlier visit.
-      const onPage = new Set([...cards.querySelectorAll(".molecule")].map((card) => card.dataset.name))
-      for (const [name, text] of Object.entries(loadSaved())) if (!onPage.has(name)) addCard(name, text)
+      document.getElementById("form").addEventListener("submit", (event) => {
+        event.preventDefault()
+        document.getElementById("submitted").textContent = new FormData(event.target).get("structure") || "（空）"
+      })
     </script>
   </body>
 </html>

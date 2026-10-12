@@ -1,0 +1,36 @@
+// Checks the built package (dist/) the way another project meets it, in plain Node: the React
+// entry renders on a server (Next.js, Remix… render components there first), and
+// chem-structura/core works with no React and no browser. Run after the build:
+// npm run check:dist -w chem-structura
+import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { createElement } from "react"
+import { renderToString } from "react-dom/server"
+
+const dist = new URL("../dist/", import.meta.url)
+
+const { StructuraEditor } = await import(new URL("index.js", dist).href)
+const html = renderToString(createElement(StructuraEditor, { initialMolfile: "" }))
+assert.match(html, /chem-app/, "the editor renders on a server")
+console.log("✔ the editor renders on a server")
+
+const core = await import(new URL("core.js", dist).href)
+const built = core.applyOps(core.emptyDrawing(), [{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }])
+assert.ok(built.ok)
+assert.equal(core.plainFormula(built.drawing.molecule), "C6H6")
+assert.match(core.drawingSvg(built.drawing), /<svg/)
+console.log("✔ chem-structura/core builds and draws in Node")
+
+/** What a built file imports from outside the package, chunks followed. */
+function outsideImports(file, seen = new Set()) {
+  if (seen.has(file)) return []
+  seen.add(file)
+  const code = readFileSync(new URL(file, dist), "utf8")
+  const statements = /(?:^|;)\s*(?:import|export)\s*(?:[\w*{}\s,$]*?from\s*)?"([^"]+)"|\bimport\(\s*"([^"]+)"\s*\)/gm
+  return [...code.matchAll(statements)].map((match) => match[1] ?? match[2]).flatMap((spec) =>
+    spec.startsWith(".") ? outsideImports(new URL(spec, new URL(file, dist)).href.slice(dist.href.length), seen) : [spec],
+  )
+}
+assert.deepEqual(outsideImports("core.js"), [], "core.js imports nothing")
+assert.deepEqual(outsideImports("standalone.js"), [], "standalone.js brings everything with it")
+console.log("✔ core.js and standalone.js import nothing from outside")

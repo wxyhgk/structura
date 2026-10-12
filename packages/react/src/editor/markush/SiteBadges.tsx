@@ -8,7 +8,7 @@ import type { Viewport } from "@structura/engine"
  * (1, 2, 3…). The default site, used while none is set, is dashed and says so.
  */
 export function SiteBadges({ mol, sites, assumed, viewport }: { mol: Molecule; sites: number[]; assumed: boolean; viewport: Viewport }) {
-  const view = useSyncExternalStore(viewport.subscribe, viewport.get)
+  const view = useSyncExternalStore(viewport.subscribe, viewport.get, viewport.get)
   const atoms = [...new Set(sites)]
   return (
     <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>

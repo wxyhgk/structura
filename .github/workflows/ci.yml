@@ -58,6 +58,8 @@ jobs:
       - run: npm run build
       # The publishable React package: code, styles and bundled types, packed as npm would.
       - run: npm run build -w chem-structura
+      # As another project meets it: rendered on a server, core in plain Node, nothing missing.
+      - run: npm run check:dist -w chem-structura
       - run: npm pack -w chem-structura --dry-run
 
   e2e:

@@ -57,7 +57,7 @@ export function SketchPad({
     return made
   })
   const [viewport] = useState(createViewport)
-  const snapshot = useSyncExternalStore(editor.subscribe, editor.get)
+  const snapshot = useSyncExternalStore(editor.subscribe, editor.get, editor.get)
   const canvasRef = useRef<CanvasHandle>(null)
   const boxRef = useRef<HTMLDivElement>(null)
   /** Site mode: clicking an atom sets or takes away a site instead of drawing. */

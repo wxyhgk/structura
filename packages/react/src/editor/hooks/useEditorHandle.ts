@@ -1,10 +1,16 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react"
 import { readDocument, toDocument } from "@structura/core/document"
 import { enumerate, enumerationSdf, type EnumerateOptions, type Enumeration } from "@structura/markush"
+import { emptySelection } from "@structura/core/molecule"
 import { toMolfile } from "@structura/core/molfile"
 import type { Op, OpsResult } from "@structura/core/ops"
 import { failure } from "../browser.ts"
 import { drawingCdxml } from "../cdxml.ts"
+import { svgToPng } from "../clipboardImage.ts"
+import { drawOptions } from "../drawOptions.ts"
+import { identifierOf, type IdentifierKind } from "../identifiers.ts"
+import { readSmiles } from "../imports/smiles.ts"
+import { pictureSvg } from "../pictureSvg.ts"
 import { drawingPoints, type Viewport } from "@structura/engine"
 import type { Imports } from "./useImports.ts"
 import type { EditorState } from "../useEditor.ts"
@@ -35,6 +41,31 @@ export type EditorHandle = {
    */
   getCdxml(): string
   /**
+   * The drawing as an SVG picture, as 导出 SVG saves it (with the 显示 menu's settings);
+   * empty text when there is nothing drawn.
+   */
+  getSvg(): string
+  /**
+   * The same picture as PNG, `scale` times its size (3 by default, sharp in a slide); null
+   * when there is nothing drawn. Browser only.
+   */
+  getPng(options?: { scale?: number }): Promise<Blob | null>
+  /**
+   * The drawing's SMILES, from RDKit (fetched on first use); variables such as R1 come out
+   * as "*". Empty text when there is nothing drawn.
+   */
+  getSmiles(): Promise<string>
+  /** The drawing's InChI, from RDKit; refused (the promise fails) when it has variables, which InChI cannot say. */
+  getInchi(): Promise<string>
+  /** The drawing's InChIKey, from RDKit; refused, as getInchi, for variables. */
+  getInchiKey(): Promise<string>
+  /**
+   * Replaces the drawing with the molecules of SMILES text (one per line) as one undoable step;
+   * blank text clears it. Resolves to the problems worth telling the user, if any. Not echoed
+   * to onChange / onDocumentChange, as setMolfile.
+   */
+  setSmiles(text: string): Promise<string[]>
+  /**
    * Applies edits through the same op layer agents use (add_atom, replace, set_variable…),
    * all or nothing, as one undoable step. Reported to onChange / onDocumentChange like any edit.
    */
@@ -60,7 +91,7 @@ export function useEditorHandle(
     onChange,
     onDocumentChange,
   }: {
-    editor: Pick<EditorState, "mol" | "drawing" | "latest" | "run" | "loadDrawing" | "newDocument" | "raisedNumbers">
+    editor: Pick<EditorState, "mol" | "drawing" | "latest" | "run" | "loadDrawing" | "newDocument" | "raisedNumbers" | "colorHetero" | "openMolecules">
     viewport: Viewport
     openText: Imports["openText"]
     onChange?: (molfile: string) => void
@@ -97,13 +128,27 @@ export function useEditorHandle(
     if (editor.mol.atoms.length > 0) fit()
   })
 
+  /** Clears the drawing for the host (blank text given to setMolfile or setSmiles). */
+  const clear = () => {
+    const now = editor.latest()
+    if (now.molecule.atoms.length > 0 || now.arrows.length > 0) quiet.current = true
+    editor.newDocument()
+  }
+
+  /** What 导出 SVG saves; empty text for an empty page. */
+  const svg = () => pictureSvg(editor.latest(), emptySelection(), editor.colorHetero, drawOptions(editor.raisedNumbers))
+
+  /** An identifier of the whole drawing from RDKit; empty text for an empty page. */
+  const identifier = async (kind: IdentifierKind) => {
+    const molecule = editor.latest().molecule
+    return molecule.atoms.length === 0 ? "" : identifierOf(molecule, [], kind)
+  }
+
   useImperativeHandle(ref, () => ({
     getMolfile: () => toMolfile(editor.latest().molecule, "Structura", editor.latest().brackets),
     setMolfile(text: string) {
       if (!text.trim()) {
-        const now = editor.latest()
-        if (now.molecule.atoms.length > 0 || now.arrows.length > 0) quiet.current = true
-        editor.newDocument()
+        clear()
         return []
       }
       try {
@@ -123,6 +168,31 @@ export function useEditorHandle(
       return []
     },
     getCdxml: () => drawingCdxml(editor.latest(), editor.raisedNumbers),
+    getSvg: svg,
+    async getPng({ scale }: { scale?: number } = {}) {
+      const picture = svg()
+      return picture ? svgToPng(picture, scale) : null
+    },
+    getSmiles: () => identifier("smiles"),
+    getInchi: () => identifier("inchi"),
+    getInchiKey: () => identifier("inchikey"),
+    async setSmiles(text: string) {
+      if (!text.trim()) {
+        clear()
+        return []
+      }
+      try {
+        const { molecules, lines } = await readSmiles(text)
+        // Marked before the change, which React may render before this function goes on.
+        if (molecules.length > 0) {
+          quiet.current = true
+          editor.openMolecules(molecules, viewport.centre())
+        }
+        return lines
+      } catch (error) {
+        return [failure(error)]
+      }
+    },
     run(ops: Op[]) {
       let rejected: { index: number; error: string } | null = null
       const result = editor.run(ops, { keepSelection: true, onReject: (why) => (rejected = why) })

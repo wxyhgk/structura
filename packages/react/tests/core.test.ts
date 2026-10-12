@@ -100,7 +100,7 @@ test("a document saved by the editor reads back as the same drawing", () => {
 })
 
 test("the standalone build offers everything chem-structura/core does, for pages that load only it", async () => {
-  const source = (await import("node:fs")).readFileSync(join(SRC, "standalone.tsx"), "utf8")
+  const source = (await import("node:fs")).readFileSync(join(SRC, "standalone.ts"), "utf8")
   const offered = new Set([...source.matchAll(/export (?:type )?\{([^}]*)\} from "\.\/core\.ts"/g)].flatMap((match) => match[1].split(",").map((name) => name.trim())))
   const missing = Object.keys(core).filter((name) => !offered.has(name))
   assert.deepEqual(missing, [])

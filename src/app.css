@@ -1,3 +1,5 @@
 /* The standalone app's own page reset (the editor's styles, from chem-structura/style.css,
-   stay inside the editor). */
+   stay inside the editor). The layer order comes first: the first file to name a layer fixes
+   its place, and the editor's reset must stay below base (see chem-structura's style.css). */
+@layer host, reset, theme, base, components, utilities;
 @import "tailwindcss/preflight.css" layer(base);

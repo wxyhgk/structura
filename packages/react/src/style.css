@@ -2,6 +2,9 @@
    and utilities without its global reset; the reset, the colour variables and the base rules
    apply inside the editor's root (.chem-app) and its overlays (.chem-overlay: dialogs, menus and
    tooltips, which portal out to <body>). */
+/* The layers' order. A page that compiles this source with CSS of its own must name the same
+   order before its own layers (the published style.css has no layers, see harden-css.mjs): the
+   first file to name a layer fixes its place, and reset must stay below base. */
 @layer host, reset, theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "./styles/preflight.css";

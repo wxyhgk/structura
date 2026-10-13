@@ -1,6 +1,6 @@
 /** Small browser helpers shared by the editor shell. */
 
-export function download(filename: string, contents: string, type: string) {
+export function download(filename: string, contents: string | Uint8Array<ArrayBuffer> | Blob, type: string) {
   const blob = new Blob([contents], { type })
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")

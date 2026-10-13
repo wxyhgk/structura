@@ -18,6 +18,8 @@ export type CdxmlOptions = {
   notes?: readonly string[]
   /** The labels whose numbers are raised (R¹) rather than lowered (R₁), as on the canvas. */
   raiseNumbers?: (label: string) => boolean
+  /** Text centred on points of the drawing (in its units), in bold: a compound's number under it. */
+  captions?: ReadonlyArray<{ text: string; at: Point }>
 }
 
 /** ChemDraw's "ACS Document 1996" style: a bond is 14.4 pt, so the drawing opens at the size journals and patents print. */
@@ -29,6 +31,8 @@ const PAGE = { width: 540, height: 720 }
 /** The notes' font size and line spacing, in points. */
 const NOTE_SIZE = 10
 const NOTE_LEADING = 14
+/** Captions: as notes, in bold (ChemDraw's face 1). */
+const CAPTION_FACE = 1
 /** A font for notes in Chinese (SimSun, charset GB2312), as Arial has no Chinese. */
 const CJK_FONT = 4
 const CJK = /[⺀-鿿＀-￯]/
@@ -134,7 +138,15 @@ export function toCdxml(drawing: Drawing, options: CdxmlOptions = {}): string {
   let right = Math.max(MARGIN, ...placed.map((p) => p.x))
   let bottom = Math.max(MARGIN, ...placed.map((p) => p.y))
   const notes = (options.notes ?? []).filter((line) => line.trim() !== "")
-  const cjk = notes.some((line) => CJK.test(line))
+  const captions = (options.captions ?? []).filter((caption) => caption.text.trim() !== "")
+  const cjk = [...notes, ...captions.map((caption) => caption.text)].some((line) => CJK.test(line))
+  const captionTexts = captions.map(({ text, at: point }) => {
+    const p = at(point)
+    const width = textWidth(text, NOTE_SIZE)
+    right = Math.max(right, p.x + width / 2)
+    bottom = Math.max(bottom, p.y)
+    return el("t", { id: nextId(), p: `${num(p.x)} ${num(p.y)}`, Justification: "Center", InterpretChemically: "no" }, [el("s", { font: cjk ? CJK_FONT : LABEL_FONT, size: NOTE_SIZE, face: CAPTION_FACE }, [text])])
+  })
   let y = placed.length > 0 ? bottom + 2 * BOND_POINTS : MARGIN
   const texts = notes.map((line) => {
     const text = el("t", { id: nextId(), p: `${num(MARGIN)} ${num(y)}` }, [el("s", { font: cjk ? CJK_FONT : LABEL_FONT, size: NOTE_SIZE }, [line])])
@@ -149,7 +161,7 @@ export function toCdxml(drawing: Drawing, options: CdxmlOptions = {}): string {
   const page = el(
     "page",
     { id: pageId, BoundingBox: `0 0 ${across * PAGE.width} ${down * PAGE.height}`, HeaderPosition: 36, FooterPosition: 36, PrintTrimMarks: "yes", WidthPages: across, HeightPages: down },
-    [...structure.fragments, ...arrows, ...texts, ...groups],
+    [...structure.fragments, ...arrows, ...captionTexts, ...texts, ...groups],
   )
   const fonts = [el("font", { id: LABEL_FONT, charset: "iso-8859-1", name: "Arial" }), ...(cjk ? [el("font", { id: CJK_FONT, charset: "gb2312", name: "SimSun" })] : [])]
   const document = el(

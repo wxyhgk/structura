@@ -7,9 +7,13 @@ import type { Molecule } from "@structura/core/types"
 
 /**
  * One generated compound: its place in the list (1-based), the molecule, what each variable
- * became, and which formula it came from when the drawing holds several (式 1, 式 2…).
+ * became, and which formula it came from when the drawing holds several (式 1, 式 2…). `id`
+ * is its compound number once the list is numbered (C-1…, see numbering.ts).
  */
-export type Row = { number: number; mol: Molecule; picks: readonly Pick[]; formula?: number }
+export type Row = { number: number; mol: Molecule; picks: readonly Pick[]; formula?: number; id?: string }
+
+/** What a row is called: its compound number, else its place in the list. */
+export const rowName = (row: Row): string => row.id ?? String(row.number)
 
 /** An enumeration's compounds as rows, numbered from 1, tagged with their formula when there are several. */
 export function rowsOf(result: Enumeration): Row[] {
@@ -63,7 +67,7 @@ export function rowsToCsv(rows: readonly Row[], smiles: (mol: Molecule) => strin
   const head = ["No", "SMILES", "Formula", "MW", ...columns]
   const lines = rows.map((row) => {
     const fields = rowFields(row)
-    return [String(row.number), smiles(row.mol), displayFormula(plainFormula(row.mol)).normalize("NFKC"), molecularWeight(row.mol).toFixed(2), ...columns.map((name) => fields[name] ?? "")]
+    return [rowName(row), smiles(row.mol), displayFormula(plainFormula(row.mol)).normalize("NFKC"), molecularWeight(row.mol).toFixed(2), ...columns.map((name) => fields[name] ?? "")]
       .map(cell)
       .join(",")
   })
@@ -73,5 +77,5 @@ export function rowsToCsv(rows: readonly Row[], smiles: (mol: Molecule) => strin
 
 /** The rows as a SMILES file: one compound a line, its number as the name. */
 export function rowsToSmiles(rows: readonly Row[], smiles: (mol: Molecule) => string): string {
-  return rows.map((row) => `${smiles(row.mol)}\t${row.number}`).join("\n") + "\n"
+  return rows.map((row) => `${smiles(row.mol)}\t${rowName(row)}`).join("\n") + "\n"
 }

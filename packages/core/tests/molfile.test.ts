@@ -170,3 +170,8 @@ test("an SD file holds each molecule as a numbered record, and reads back", () =
   assert.deepEqual(readSdf(sdf).map((record) => [record.title, plainFormula(record.mol)]), [["Structura 1", "C2H3O2"], ["Structura 2", "C2H3O2"]])
   assert.equal(toSdf([]), "")
 })
+
+test("an SD file's records can carry their own titles, such as compound numbers", () => {
+  const sdf = toSdf([acetate(), acetate()], ["C-1", "C-2\nsecond line"])
+  assert.deepEqual(readSdf(sdf).map((record) => record.title), ["C-1", "C-2 second line"])
+})

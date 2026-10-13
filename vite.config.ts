@@ -3,11 +3,18 @@ import { structuraAi } from '@structura/ai/server'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
+import { structuraWord } from './backend/src/word.ts'
 
 export default defineConfig(({ mode }) => ({
   // "AI 填写" runs on this server, with its settings and keys from .env.local or the environment
-  // (AI_PROVIDER, ANTHROPIC_*, OPENAI_*); the browser never sees them.
-  plugins: [react(), tailwindcss(), structuraAi(loadEnv(mode, import.meta.dirname, ['AI_', 'ANTHROPIC_', 'OPENAI_']))],
+  // (AI_PROVIDER, ANTHROPIC_*, OPENAI_*); the browser never sees them. So does 导出 Word with
+  // editable ChemDraw objects, through chem2office on this machine (CHEM2OFFICE_DIR, CHEM2OFFICE_PYTHON).
+  plugins: [
+    react(),
+    tailwindcss(),
+    structuraAi(loadEnv(mode, import.meta.dirname, ['AI_', 'ANTHROPIC_', 'OPENAI_'])),
+    structuraWord({ ...process.env, ...loadEnv(mode, import.meta.dirname, ['CHEM2OFFICE_']) }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),

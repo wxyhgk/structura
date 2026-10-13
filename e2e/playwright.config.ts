@@ -38,6 +38,9 @@ export default defineConfig({
     {
       command: `npm run build -- --mode e2e && npm run preview -- --mode e2e --port ${PORT} --strictPort`,
       cwd: "..",
+      // No chem2office, whatever this machine has: 导出 Word makes pictures, the same everywhere.
+      // (The editable path is backend/tests/word.test.ts's, with a stand-in chem2office.)
+      env: { CHEM2OFFICE_DIR: "/nonexistent/chem2office" },
       url: `http://localhost:${PORT}/`,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,

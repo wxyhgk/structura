@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { basename, dirname, join } from "node:path"
 import test, { snapshot } from "node:test"
-import { toCdxml } from "@structura/core/cdxml"
+import { toCdxml, toCdxmlTable } from "@structura/core/cdxml"
 import type { Op } from "@structura/core/ops"
 import { build } from "@structura/testkit"
 
@@ -297,4 +297,32 @@ test("a generic formula as ChemDraw gets it", (t) => {
     { op: "add_bracket", atoms: ["c1"], kind: "repeat", repeat: { min: 1, max: 4, name: "n" } },
   ])
   t.assert.snapshot(toCdxml(drawing, { notes: ["R1 = H、Cl、取代或未取代的(C1–C6)烷基", "X = O、S", "m = 0–3", "n = 1–4"] }))
+})
+
+test("a table of compounds: so many to a row, each number in bold under its structure, all at one bond length", () => {
+  const ring = build([RING]).molecule
+  const chain = build([{ op: "add_atom", el: "C", as: "a" }, { op: "add_atom", el: "O", to: "a" }]).molecule
+  // Drawn at another scale: the table puts it at the same bond length as the rest.
+  const big = { ...ring, atoms: ring.atoms.map((atom) => ({ ...atom, x: atom.x * 2, y: atom.y * 2 })) }
+  const root = parse(toCdxmlTable([{ molecule: ring, caption: "C-1" }, { molecule: chain, caption: "C-2" }, { molecule: big, caption: "C-3" }], { columns: 2 }))
+  const captions = all(root, "t").filter((text) => text.attrs.Justification === "Center")
+  assert.deepEqual(captions.map((text) => text.children.map((run) => run.text).join("")), ["C-1", "C-2", "C-3"])
+  assert.ok(captions.every((text) => text.children[0].attrs.face === "1"), "in bold")
+  const [first, second, third] = captions.map(point)
+  assert.equal(first[1], second[1], "a row's numbers on one line")
+  assert.ok(second[0] > first[0] && third[0] === first[0] && third[1] > first[1], "two to a row, the third starting the next")
+  // Every bond the same length on the page: 14.4 pt.
+  const nodes = new Map(all(root, "n").map((node) => [node.attrs.id, point(node)]))
+  const lengths = all(root, "b").map((bond) => Math.hypot(...nodes.get(bond.attrs.B)!.map((value, axis) => value - nodes.get(bond.attrs.E)![axis])))
+  assert.ok(lengths.length === 6 + 1 + 6 && lengths.every((length) => Math.abs(length - 14.4) < 0.05), `bond lengths ${lengths}`)
+  // Each structure sits above its number, within its column.
+  const ringXs = all(root, "n").slice(0, 6).map((node) => point(node)[0])
+  assert.ok(Math.min(...ringXs) < first[0] && first[0] < Math.max(...ringXs))
+})
+
+test("a table's numbers in Chinese get a Chinese font", () => {
+  const root = parse(toCdxmlTable([{ molecule: build([RING]).molecule, caption: "化合物 1" }]))
+  const caption = all(root, "t").find((text) => text.attrs.Justification === "Center")!
+  const font = all(root, "font").find((item) => item.attrs.id === caption.children[0].attrs.font)!
+  assert.equal(font.attrs.name, "SimSun")
 })

@@ -2,3 +2,5 @@
 // generic nicknames, variable attachments, brackets, and the definitions as text under it.
 export { toCdxml } from "./cdxml/write.ts"
 export type { CdxmlOptions } from "./cdxml/write.ts"
+export { toCdxmlTable } from "./cdxml/table.ts"
+export type { TableEntry, TableOptions } from "./cdxml/table.ts"

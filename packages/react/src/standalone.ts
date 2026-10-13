@@ -7,6 +7,7 @@
 // and for a plain <script> (dist/chem-structura.iife.js, which sets window.ChemStructura).
 export type { EditorHandle, EditorProps, EnumerateOptions, Enumeration, FillVariables, Op, RecognizeStructure, RunResult } from "./editor/Editor.tsx"
 export type { TemplateStore } from "./editor/templates/store.ts"
+export type { WordExport } from "./editor/markush/wordExport.ts"
 export { httpTemplateStore } from "./editor/templates/httpStore.ts"
 export { memoryTemplateStore } from "./editor/templates/memoryStore.ts"
 export { configureRDKit, type RDKitOptions } from "./editor/rdkit.ts"

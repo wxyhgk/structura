@@ -286,3 +286,119 @@ test("update() swaps a mounted editor's options, keeping its drawing", async ({ 
   await expect(page.locator("#status")).toHaveText("改动次数：1")
   expect(await page.evaluate(() => JSON.parse((window as unknown as { editor: Handle }).editor.getDocument()).drawing.molecule.atoms.length)).toBe(7)
 })
+
+test("edit(): Escape is 取消 once the editor has no use for it, asking first when there are changes", async ({ page }) => {
+  const errors = await openGallery(page)
+  const card = page.locator("chem-molecule[label=布洛芬]")
+  await card.click()
+  const sheet = page.locator(".chem-sheet")
+  await expect(sheet).toBeVisible()
+  // The bond tool is in hand: the first Escape takes the lasso, the second closes.
+  await page.keyboard.press("Escape")
+  await expect(sheet).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(sheet).toHaveCount(0)
+  // Focus is back on the element it came from.
+  await expect(card).toBeFocused()
+  // With a change: Escape asks; "no" keeps the sheet, "yes" closes it and keeps nothing.
+  await card.press("Enter")
+  const canvas = (await page.locator(".chem-sheet [data-testid=canvas]").boundingBox())!
+  await page.mouse.click(canvas.x + 60, canvas.y + 60)
+  await expect(page.getByText("有未保存的修改")).toBeVisible()
+  await page.keyboard.press("Escape") // the lasso
+  const asked: string[] = []
+  page.once("dialog", (dialog) => (asked.push(dialog.message()), dialog.dismiss()))
+  await page.keyboard.press("Escape")
+  await expect.poll(() => asked).toEqual(["修改还没保存，确定放弃吗？"])
+  await expect(sheet).toBeVisible()
+  page.once("dialog", (dialog) => dialog.accept())
+  // Escape on the bar's buttons, which are not the editor's, cancels too.
+  await sheet.getByRole("button", { name: "保存" }).focus()
+  await page.keyboard.press("Escape")
+  await expect(sheet).toHaveCount(0)
+  await expect(facts(page, "布洛芬")).toHaveText("C13H18O2 · 206.28")
+  expect(errors).toEqual([])
+})
+
+test("edit(): the page behind is inert while it is open, focus starts in the editor, and Tab stays in", async ({ page }) => {
+  await openGallery(page)
+  const card = page.locator("chem-molecule[label=布洛芬]")
+  await card.click()
+  await expect(page.locator(".chem-sheet")).toBeVisible()
+  expect(await page.evaluate(() => document.activeElement?.classList.contains("chem-app"))).toBe(true)
+  expect(await page.evaluate(() => document.querySelector("main")!.inert)).toBe(true)
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press("Tab")
+    expect(await page.evaluate(() => document.activeElement === document.body || !!document.activeElement?.closest(".chem-sheet, .chem-overlay"))).toBe(true)
+  }
+  await page.locator(".chem-sheet").getByRole("button", { name: "取消" }).click()
+  expect(await page.evaluate(() => document.querySelector("main")!.inert)).toBe(false)
+  await expect(card).toBeFocused()
+})
+
+test("<chem-molecule>: a double click or held Enter opens one editor, and nothing is left unhandled", async ({ page }) => {
+  const errors = await openGallery(page)
+  const card = page.locator("chem-molecule[label=布洛芬]")
+  await card.dblclick()
+  await expect(page.locator(".chem-sheet")).toHaveCount(1)
+  await page.locator(".chem-sheet").getByRole("button", { name: "取消" }).click()
+  // Enter thrice on it, before the first has opened anything.
+  await card.evaluate((element) => {
+    for (let i = 0; i < 3; i++) element.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+  })
+  await expect(page.locator(".chem-sheet")).toHaveCount(1)
+  // Another element clicked while an editor is open (from script, say) is just dropped.
+  await page.locator("chem-molecule[label=阿司匹林]").evaluate((element) => (element as HTMLElement).click())
+  await expect(page.locator(".chem-sheet")).toHaveCount(1)
+  await page.locator(".chem-sheet").getByRole("button", { name: "取消" }).click()
+  await page.waitForTimeout(100)
+  expect(errors).toEqual([])
+})
+
+/** A page of the test's own beside the package's files: an ES module importing the standalone build. */
+async function modulePage(page: Page, body: string) {
+  await page.route(`${PACKAGE}/test/page.html`, (route) =>
+    route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../dist/style.css"></head><body>${body}</body></html>` }),
+  )
+  await page.route(`${PACKAGE}/test/RDKit_minimal.*`, (route) => {
+    const file = new URL(route.request().url()).pathname.split("/").pop()!
+    return route.fulfill({ path: fileURLToPath(new URL(`../node_modules/@rdkit/rdkit/dist/${file}`, import.meta.url)), contentType: file.endsWith(".js") ? "text/javascript" : "application/wasm" })
+  })
+  const fetched: string[] = []
+  page.on("request", (request) => request.url().endsWith(".wasm") && fetched.push(request.url()))
+  const warnings: string[] = []
+  page.on("console", (message) => message.type() === "warning" && warnings.push(message.text()))
+  await page.goto(`${PACKAGE}/test/page.html`)
+  return { fetched, warnings }
+}
+
+test("configureRDKit({ wasmUrl }) right after the import is in time for <chem-molecule smiles>", async ({ page }) => {
+  const { fetched, warnings } = await modulePage(
+    page,
+    `<chem-molecule smiles="c1ccccc1O"></chem-molecule>
+     <script type="module">
+       import { configureRDKit } from "../dist/standalone.js"
+       configureRDKit({ wasmUrl: "${PACKAGE}/test/RDKit_minimal.wasm" })
+     </script>`,
+  )
+  await expect(page.locator("chem-molecule svg")).toBeVisible()
+  expect(fetched).toEqual([`${PACKAGE}/test/RDKit_minimal.wasm`])
+  expect(warnings).toEqual([])
+})
+
+test("configureRDKit({ module }) lends the page's own RDKit: its wasm is fetched once, and a late call says it is late", async ({ page }) => {
+  const { fetched, warnings } = await modulePage(
+    page,
+    `<script src="RDKit_minimal.js"></script>
+     <chem-molecule smiles="CCO"></chem-molecule>
+     <script type="module">
+       import { configureRDKit } from "../dist/standalone.js"
+       configureRDKit({ module: initRDKitModule({ locateFile: () => "${PACKAGE}/test/RDKit_minimal.wasm" }) })
+     </script>`,
+  )
+  await expect(page.locator("chem-molecule svg")).toBeVisible()
+  expect(fetched).toEqual([`${PACKAGE}/test/RDKit_minimal.wasm`])
+  await page.evaluate(() => import("../dist/standalone.js" as string).then((module) => module.configureRDKit({ wasmUrl: "x.wasm" })))
+  await expect.poll(() => warnings.length).toBe(1)
+  expect(warnings[0]).toContain("configureRDKit came after RDKit had started loading")
+})

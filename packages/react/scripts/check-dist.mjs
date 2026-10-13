@@ -21,10 +21,14 @@ assert.equal(core.plainFormula(built.drawing.molecule), "C6H6")
 assert.match(core.drawingSvg(built.drawing), /<svg/)
 console.log("✔ chem-structura/core builds and draws in Node")
 
+/** Every built file read while following imports, for the checks after. */
+const read = new Set()
+
 /** What a built file imports from outside the package, chunks followed. */
 function outsideImports(file, seen = new Set()) {
   if (seen.has(file)) return []
   seen.add(file)
+  read.add(file)
   const code = readFileSync(new URL(file, dist), "utf8")
   const statements = /(?:^|;)\s*(?:import|export)\s*(?:[\w*{}\s,$]*?from\s*)?"([^"]+)"|\bimport\(\s*"([^"]+)"\s*\)/gm
   return [...code.matchAll(statements)].map((match) => match[1] ?? match[2]).flatMap((spec) =>
@@ -34,3 +38,11 @@ function outsideImports(file, seen = new Set()) {
 assert.deepEqual(outsideImports("core.js"), [], "core.js imports nothing")
 assert.deepEqual(outsideImports("standalone.js"), [], "standalone.js brings everything with it")
 console.log("✔ core.js and standalone.js import nothing from outside")
+
+// Minified: no build comments, and (past a few lines' worth) long lines, not indented ones.
+for (const file of read) {
+  const code = readFileSync(new URL(file, dist), "utf8")
+  const spread = code.length > 10_000 && code.split("\n").length > code.length / 1000
+  assert.ok(!code.includes("//#region") && !spread, `${file} is minified`)
+}
+console.log(`✔ ${[...read].join(", ")} are minified`)

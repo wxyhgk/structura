@@ -343,6 +343,10 @@ chem-molecule[fit] .chem-molecule-picture svg {
   flex: 1;
   min-height: 0;
 }
+/* Focused when the sheet opens, so keys reach the editor: no ring around all of it. */
+.chem-sheet .chem-app:focus {
+  outline: none;
+}
 @media (max-width: 640px) {
   .chem-sheet {
     padding: 0;

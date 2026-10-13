@@ -21,7 +21,11 @@ export interface MoleculeElement extends HTMLElement {
   document: string
   /** What a form submits: the molfile (empty when nothing is drawn), or the document with format="document". */
   readonly value: string
-  /** Opens the editor on it, as a click does when it is editable; resolves to whether it was saved. */
+  /**
+   * Opens the editor on it, as a click does when it is editable; resolves to whether it was
+   * saved (false at once if its editor is open already). Rejects while another editor is open
+   * over the page, as edit() does.
+   */
   edit(): Promise<boolean>
 }
 
@@ -59,15 +63,17 @@ function moleculeElementClass(): CustomElementConstructor {
     #loaded = false
     /** Whether the tabindex is the one it set itself for being editable. */
     #ownTabIndex = false
+    /** While its editor is open: a second click or Enter (a double click, a held key) does nothing. */
+    #editing = false
 
     constructor() {
       super()
       this.#internals = this.attachInternals?.() ?? null
-      this.addEventListener("click", () => this.#editable() && void this.edit())
+      this.addEventListener("click", () => this.#editFromPage())
       this.addEventListener("keydown", (event) => {
         if (!this.#editable() || (event.key !== "Enter" && event.key !== " ")) return
         event.preventDefault()
-        void this.edit()
+        this.#editFromPage()
       })
     }
 
@@ -115,12 +121,27 @@ function moleculeElementClass(): CustomElementConstructor {
     }
 
     async edit(): Promise<boolean> {
-      const label = this.getAttribute("label")
-      const saved = await edit({ title: label ? `编辑：${label}` : undefined, document: this.#text })
-      if (!saved) return false
-      this.#show(saved.document)
-      this.dispatchEvent(new CustomEvent<MoleculeChange>("change", { bubbles: true, detail: saved }))
-      return true
+      if (this.#editing) return false
+      this.#editing = true
+      try {
+        const label = this.getAttribute("label")
+        const saved = await edit({ title: label ? `编辑：${label}` : undefined, document: this.#text })
+        if (!saved) return false
+        this.#show(saved.document)
+        this.dispatchEvent(new CustomEvent<MoleculeChange>("change", { bubbles: true, detail: saved }))
+        return true
+      } finally {
+        this.#editing = false
+      }
+    }
+
+    /**
+     * A click or Enter on it: opens its editor, unless that is open already. Another editor
+     * open over the page (edit() from elsewhere) refuses it; the click is then simply dropped.
+     */
+    #editFromPage() {
+      if (!this.#editable() || this.#editing) return
+      this.edit().catch(() => {})
     }
 
     formResetCallback() {
@@ -137,7 +158,9 @@ function moleculeElementClass(): CustomElementConstructor {
       this.#loaded = true
       const data = this.#data()
       if (!data) {
-        if (this.hasAttribute("smiles")) void this.#loadSmiles()
+        // A moment later: a page that calls configureRDKit right after loading this file (the
+        // next line of its module) has done so by then.
+        if (this.hasAttribute("smiles")) queueMicrotask(() => void this.#loadSmiles())
         else this.#start(empty())
         return
       }

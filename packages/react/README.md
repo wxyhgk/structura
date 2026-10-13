@@ -45,6 +45,7 @@ colour variables do not override your own theme. Nor do your page's styles chang
 | `onDocumentChange(document)` | After every edit, as a Structura document (with the generic formula's variables) |
 | `onDirtyChange(dirty)` | When the drawing gains or loses unsaved changes |
 | `templateStore` | Where the user's own group templates are kept (`httpTemplateStore()`, `memoryTemplateStore()`, or your own) |
+| `onDismiss()` | An Escape the editor has no use for (nothing to stop or deselect, the lasso in hand): for a host showing it in a dialog of its own, to close that |
 | `fillVariables`, `recognizeStructure` | Optional AI features; hidden unless given |
 
 ### Handle (`ref`)
@@ -122,6 +123,13 @@ const saved = await ChemStructura.edit({ title: "Edit", molfile })   // or docum
 if (saved) console.log(saved.molfile, saved.document)                  // null when cancelled
 ```
 
+取消 and Escape cancel, asking first if there are changes. The editor uses Escape too, one
+press at a time (stop a drag, clear the selection, take the lasso); the press after that
+closes the sheet. While it is open the rest of the page is `inert`, so Tab and clicks stay in
+it; focus starts in the editor and returns where it was. One at a time: a call while one is
+open rejects (a `<chem-molecule>` clicked meanwhile just ignores the click). An editor of your
+own (`mount()`, or the React component) gets the same Escape through the `onDismiss` prop.
+
 ### An editor in your own element: `mount()`
 
 Give an element a size and mount the editor in it; the handle is the one above, plus
@@ -168,16 +176,29 @@ Also: `readDocument` / `toDocument` (the editor's `getDocument()` text), `valida
 
 ### RDKit
 
-Some features (SMILES import, identifiers, removing duplicate compounds) use
-[RDKit](https://www.rdkit.org/) compiled to WebAssembly, loaded on first use from the jsDelivr
-CDN. To serve it yourself (offline use, a strict content security policy), copy
-`node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm` to your site and call, before the editor
-first needs it:
+Some features (SMILES in and out, `<chem-molecule smiles>`, InChI, removing duplicate
+compounds) use [RDKit](https://www.rdkit.org/) compiled to WebAssembly, loaded on first use
+from the jsDelivr CDN. `chem-structura/core` does not use it. To serve it yourself (offline use,
+a strict content security policy), copy `node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm`
+(the release this package pins) to your site; if your page loads RDKit already, lend it that
+module instead of a second copy:
 
 ```ts
-import { configureRDKit } from "chem-structura"
+import { configureRDKit } from "chem-structura"            // or "chem-structura/standalone"
 configureRDKit({ wasmUrl: "/assets/RDKit_minimal.wasm" })
+configureRDKit({ module: initRDKitModule() })             // or: lend your own (a module or its promise)
 ```
+
+- **Call it before RDKit is first needed.** A `<chem-molecule smiles>` on the page needs it as
+  soon as the script is loaded: call `configureRDKit` right after loading chem-structura (the
+  next statement of the module that imports it, or a `<script>` right after the library's, in
+  `<head>`, before the elements). A call after RDKit has started loading changes nothing and
+  says so in the console.
+- **Each entry has its own setting.** `chem-structura` and `chem-structura/standalone` (the
+  `ChemStructura` global) are separate copies: call the `configureRDKit` of the one in use.
+- **A lent module is switched to Coordgen layouts** (`prefer_coordgen(true)`), for the page's
+  own uses of it too. Structura is built and tested with the @rdkit/rdkit release in its
+  `package.json`.
 
 ## License
 

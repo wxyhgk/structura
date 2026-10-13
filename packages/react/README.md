@@ -46,7 +46,7 @@ colour variables do not override your own theme. Nor do your page's styles chang
 | `onDirtyChange(dirty)` | When the drawing gains or loses unsaved changes |
 | `templateStore` | Where the user's own group templates are kept (`httpTemplateStore()`, `memoryTemplateStore()`, or your own) |
 | `wordExport` | How to make Word tables of generated compounds with editable ChemDraw objects (`{ check(), make(pack, { columns }) }`, e.g. through chem2office on your server). Without it, the Word export holds pictures |
-| `onDismiss()` | An Escape the editor has no use for (nothing to stop or deselect, the lasso in hand): for a host showing it in a dialog of its own, to close that |
+| `onDismiss()` | An Escape the editor has no use for (no drag to stop, nothing to deselect): for a host showing it in a dialog of its own, to close that. Without it, that Escape takes the lasso |
 | `fillVariables`, `recognizeStructure` | Optional AI features; hidden unless given |
 
 ### Handle (`ref`)
@@ -78,8 +78,8 @@ The component renders on a server (Next.js, Remix…) and comes alive in the bro
 use React or a bundler: one stylesheet and one script.
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.3.0/dist/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.3.0"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.4.0/dist/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.4.0"></script>
 ```
 
 The script (`dist/chem-structura.iife.js`, which the short address above serves) sets
@@ -120,13 +120,29 @@ its defaults. In TypeScript, `document.querySelector("chem-molecule")` is typed.
 ### The editor over the page: `edit()`
 
 ```js
-const saved = await ChemStructura.edit({ title: "Edit", molfile })   // or document
+const saved = await ChemStructura.edit({ title: "Edit", molfile })   // or document, or smiles
 if (saved) console.log(saved.molfile, saved.document)                  // null when cancelled
 ```
 
+| Option | |
+|---|---|
+| `title` | Above the editor; "编辑结构" by default |
+| `document` / `molfile` / `smiles` | The structure to open, in that order of preference. SMILES is laid out by RDKit; edit() rejects SMILES it cannot read |
+| `on3D` | A molfile with 3D coordinates: `"project"` (default) flattens it and says so in `notes`; `"reject"` makes edit() reject. The editor is 2D: z is not kept |
+| `confirmProblems` | `false` by default. When true and the structure has problems, 保存 asks "结构有问题……仍然保存吗？" |
+| `withSmiles` | `false` by default. Hand back `smiles` too (always so when the input was `smiles`); loads RDKit |
+| `editor` | Further options for the editor inside (template store, AI hooks…) |
+
+| `Edited` field | |
+|---|---|
+| `document`, `molfile` | The saved structure |
+| `problems` | What the editor marks in red: `{ code, severity, atoms, text, message }[]`, `atoms` numbered as in `molfile` (1 = its first atom), `text` in Chinese ("第 2 个原子（H）超出化合价"); `[]` when all is well |
+| `notes` | What reading the input said, in Chinese ("三维坐标已投影到平面"…); `[]` when nothing |
+| `changed` | Whether anything was edited |
+| `smiles` | With `withSmiles` or `smiles` input: the SMILES, `""` for nothing drawn, `null` with variables (R1…) or when RDKit gives none |
+
 取消 and Escape cancel, asking first if there are changes. The editor uses Escape too, one
-press at a time (stop a drag, clear the selection, take the lasso); the press after that
-closes the sheet. While it is open the rest of the page is `inert`, so Tab and clicks stay in
+press at a time (stop a drag, clear the selection); the press after that closes the sheet. While it is open the rest of the page is `inert`, so Tab and clicks stay in
 it; focus starts in the editor and returns where it was. One at a time: a call while one is
 open rejects (a `<chem-molecule>` clicked meanwhile just ignores the click). An editor of your
 own (`mount()`, or the React component) gets the same Escape through the `onDismiss` prop.
@@ -163,6 +179,7 @@ const built = applyOps(emptyDrawing(), [
 ])
 if (built.ok) {
   drawingSvg(built.drawing)     // an SVG picture, as 导出 SVG saves it
+  drawingSvg(built.drawing, { background: false, color: "currentColor" })  // transparent, ink of the page's text
   drawingMolfile(built.drawing) // molfile text
   drawingCdxml(built.drawing)   // ChemDraw CDXML
 }

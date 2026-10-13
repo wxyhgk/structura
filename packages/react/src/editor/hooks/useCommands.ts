@@ -171,7 +171,7 @@ export function useCommands({
       () => {
         if (canvas.current?.hasGesture()) canvas.current.cancelGesture()
         else if (selected) editor.setSelection(emptySelection())
-        else if (onDismiss && editor.tool === "lasso") onDismiss()
+        else if (onDismiss) onDismiss()
         else editor.setTool("lasso")
       },
       { keys: [{ key: "Escape" }] },

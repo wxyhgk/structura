@@ -1,6 +1,13 @@
+import { readDocument, toDocument } from "@structura/core/document"
+import { usableRecords } from "@structura/core/import"
+import { readSdf } from "@structura/core/sdf"
+import { createEditorStore } from "@structura/engine"
+import { importNotes } from "../editor/imports/notes.ts"
+import { readSmiles } from "../editor/imports/smiles.ts"
 import { mount, type MountOptions } from "./mount.tsx"
+import { drawingSmiles, structureProblems, type StructureProblem } from "./report.ts"
 
-/** What edit() opens with: a title, and the structure (a Structura document wins over a molfile). */
+/** What edit() opens with: a title, and the structure (a Structura document wins over a molfile, a molfile over SMILES). */
 export type EditOptions = {
   /** Shown above the editor; "编辑结构" by default. */
   title?: string
@@ -8,25 +15,95 @@ export type EditOptions = {
   document?: string
   /** Or as molfile / SD text. */
   molfile?: string
+  /** Or as SMILES (one per line for several), laid out by RDKit; edit() rejects SMILES it cannot read. */
+  smiles?: string
+  /**
+   * A molfile with 3D coordinates: "project" (the default) flattens it onto the page, as
+   * opening the file does, and says so in Edited.notes; "reject" refuses it, edit() rejecting
+   * before anything opens. (The editor is 2D: z coordinates are not kept either way.)
+   */
+  on3D?: "project" | "reject"
+  /** With problems in the structure (an atom over its valence…), ask before saving: "结构有问题，仍然保存吗？". Off by default. */
+  confirmProblems?: boolean
+  /** Hand back the saved structure's SMILES too (Edited.smiles); always so when it came in as `smiles`. Loads RDKit. */
+  withSmiles?: boolean
   /** Other options for the editor inside (template store, AI hooks…). */
   editor?: Omit<MountOptions, "initialDocument" | "initialMolfile">
 }
 
-/** What 保存 hands back: the structure as a Structura document and as molfile text. */
-export type Edited = { document: string; molfile: string }
+/** What 保存 hands back. */
+export type Edited = {
+  /** The structure as a Structura document. */
+  document: string
+  /** And as molfile text. */
+  molfile: string
+  /** What is wrong with it, as the editor marks it in red (empty when nothing is). */
+  problems: StructureProblem[]
+  /** What reading the given structure said, in Chinese (3D coordinates flattened, a feature not supported…). */
+  notes: string[]
+  /** Whether anything was edited since it opened. */
+  changed: boolean
+  /**
+   * Its SMILES, when it came in as SMILES or `withSmiles` asked: "" for nothing drawn, null
+   * when it has variables (R1…) or RDKit could not give one. Absent otherwise.
+   */
+  smiles?: string | null
+}
+
+export type { StructureProblem }
 
 let open = false
+
+/** The structure to open with, and what reading it said. */
+async function readInput(options: EditOptions): Promise<{ document?: string; molfile?: string; notes: string[] }> {
+  if (options.document !== undefined) return { document: options.document, notes: [] }
+  if (options.molfile !== undefined) {
+    let notes: string[] = []
+    try {
+      const records = readSdf(options.molfile)
+      const imported = usableRecords(records)
+      // How it was read; what is wrong with the structure itself comes back as Edited.problems.
+      notes = importNotes(records, imported.problems.filter((problem) => problem.code !== "valence"))
+      if (options.on3D === "reject" && imported.problems.some((problem) => problem.code === "flattened-3d")) {
+        throw new Error("chem-structura: 结构带三维坐标（on3D: \"reject\"），编辑器只能画平面结构")
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("on3D")) throw error
+      // Unreadable text opens an empty editor, as the editor's own initialMolfile does.
+    }
+    return { molfile: options.molfile, notes }
+  }
+  if (options.smiles !== undefined && options.smiles.trim() !== "") {
+    const { molecules, lines } = await readSmiles(options.smiles)
+    if (molecules.length === 0) throw new Error(`chem-structura: SMILES 读不了：${lines.join("；")}`)
+    const store = createEditorStore()
+    store.openMolecules(molecules)
+    return { document: toDocument(store.latest()), notes: lines }
+  }
+  return { notes: [] }
+}
 
 /**
  * Opens the editor over the page, with 保存 and 取消 above it, and resolves once it is closed:
  * to the saved structure, or null when it was cancelled (after asking, if there were changes).
- * Escape cancels too, once the editor has no use for it (see EditorProps.onDismiss). While it
- * is open the rest of the page is inert, so Tab and clicks stay in it; focus starts in the
- * editor and goes back where it was. One at a time: a second call while one is open is refused.
+ * Escape cancels too, once the editor has nothing to stop or deselect (see EditorProps.onDismiss).
+ * While it is open the rest of the page is inert, so Tab and clicks stay in it; focus starts in
+ * the editor and goes back where it was. One at a time: a second call while one is open is
+ * refused; so is a structure it cannot open (unreadable SMILES; 3D with on3D: "reject").
  */
 export function edit(options: EditOptions = {}): Promise<Edited | null> {
   if (open) return Promise.reject(new Error("chem-structura: an editor is already open"))
   open = true
+  return readInput(options).then(
+    (input) => openSheet(options, input),
+    (error: unknown) => {
+      open = false
+      throw error
+    },
+  )
+}
+
+function openSheet(options: EditOptions, input: { document?: string; molfile?: string; notes: string[] }): Promise<Edited | null> {
   const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
   const title = options.title ?? "编辑结构"
 
@@ -61,8 +138,8 @@ export function edit(options: EditOptions = {}): Promise<Edited | null> {
   let cancel = () => {}
   const editor = mount(sheet.querySelector(".chem-sheet-editor")!, {
     ...options.editor,
-    initialDocument: options.document,
-    initialMolfile: options.molfile,
+    initialDocument: input.document,
+    initialMolfile: input.molfile,
     onDocumentChange(text) {
       changed = true
       changedNote.hidden = false
@@ -79,7 +156,8 @@ export function edit(options: EditOptions = {}): Promise<Edited | null> {
   }
 
   return new Promise((resolve) => {
-    const close = (result: Edited | null) => {
+    /** Takes the sheet away at once; the result may still be on its way (SMILES from RDKit). */
+    const close = (result: Edited | null | Promise<Edited>) => {
       editor.unmount()
       sheet.remove()
       for (const element of inert) element.inert = false
@@ -92,7 +170,16 @@ export function edit(options: EditOptions = {}): Promise<Edited | null> {
       if (changed && !confirm("修改还没保存，确定放弃吗？")) return
       close(null)
     }
-    sheet.querySelector('[data-action="save"]')!.addEventListener("click", () => close({ document: editor.getDocument(), molfile: editor.getMolfile() }))
+    const save = () => {
+      const text = editor.getDocument()
+      const read = readDocument(text)
+      const problems = "drawing" in read ? structureProblems(read.drawing) : []
+      if (options.confirmProblems && problems.length > 0 && !confirm(`结构有问题：\n${problems.map((problem) => `· ${problem.text}`).join("\n")}\n\n仍然保存吗？`)) return
+      const saved: Edited = { document: text, molfile: editor.getMolfile(), problems, notes: input.notes, changed }
+      const wantSmiles = options.withSmiles || options.smiles !== undefined
+      close(wantSmiles && "drawing" in read ? drawingSmiles(read.drawing).then((smiles) => ({ ...saved, smiles })) : saved)
+    }
+    sheet.querySelector('[data-action="save"]')!.addEventListener("click", save)
     sheet.querySelector('[data-action="cancel"]')!.addEventListener("click", () => cancel())
     // Escape on the bar's buttons, which are not the editor's: the editor sends its own through onDismiss.
     sheet.querySelector(".chem-sheet-bar")!.addEventListener("keydown", (event) => {

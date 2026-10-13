@@ -22,7 +22,9 @@
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 
-@custom-variant dark (&:is(.dark *));
+/* Dark styles answer to .chem-dark, the editor's own class, not a page's .dark: the editor has
+   no dark theme of its own yet, and a page's .dark would darken only its menus and dialogs. */
+@custom-variant dark (&:is(.chem-dark *));
 
 @theme inline {
     --font-heading: var(--font-sans);
@@ -102,8 +104,8 @@
     --sidebar-ring: oklch(0.708 0 0);
 }
 
-:where(.dark) :where(.chem-app, .chem-overlay),
-:where(.chem-app, .chem-overlay):where(.dark) {
+:where(.chem-dark) :where(.chem-app, .chem-overlay),
+:where(.chem-app, .chem-overlay):where(.chem-dark) {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);

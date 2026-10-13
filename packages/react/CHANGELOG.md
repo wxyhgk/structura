@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.0
+
+Additions only: nothing 0.3.0 offered has changed signature or gone away.
+
+- **Tables of compounds** (the 通式 workspace): generated compounds are numbered by a pattern
+  (`C-{n}` → C-1, C-2…; every download uses the numbers), and 化合物表… exports them as a
+  patent prints them: a Word document, a ChemDraw table (.cdxml), or a package for chem2office.
+  Structures drawn in full, one bond length, a salt's ions side by side. The Word document holds
+  editable ChemDraw objects when the host passes `wordExport` (chem2office on its server), else
+  pictures. A salt's counter-ion drawn beside a formula now stays with every compound.
+- **`edit()`**: `smiles` as input; `on3D: "project" | "reject"`; `confirmProblems`;
+  `withSmiles`. The result also carries `problems` (with Chinese `text`), `notes`, `changed`
+  and, when asked, `smiles`.
+- **Escape** with nothing to stop or deselect closes a host's dialog (`onDismiss`) at once, no
+  longer taking the lasso first.
+- **`drawingSvg`**: `background` (`false` for none) and `color` (`"currentColor"` follows the
+  page); core's SVG writer has `background` and `ink`.
+- **Fixed**: a page's own `.dark` class no longer darkens the editor's menus and dialogs while
+  the rest stays light (the editor has no dark theme yet).
+
 ## 0.3.0
 
 Everything below is new; nothing that 0.2.0 offered has changed or gone away.

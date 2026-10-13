@@ -137,3 +137,19 @@ test("numbers right after a letter or bracket in a label are subscripts; others 
   assert.equal(shown("(CH2)3"), "(CH_2)_3")
   assert.equal(shown("2-Py"), "2-Py")
 })
+
+test("an SVG for a page of its own colours: no ground, ink that follows the page, coloured elements kept", async () => {
+  const { sceneToSvg } = await import("../src/draw.ts")
+  const { build } = await import("@structura/testkit")
+  const phenol = build([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }, { op: "add_atom", el: "O", to: 1 }]).molecule
+  const plain = sceneToSvg(phenol, true)
+  assert.match(plain, /<rect [^>]*fill="#ffffff"/)
+  assert.match(plain, /stroke="#222222"/)
+  const own = sceneToSvg(phenol, true, [], undefined, {}, { background: false, ink: "currentColor" })
+  assert.doesNotMatch(own, /<rect /)
+  assert.doesNotMatch(own, /#222/)
+  assert.match(own, /stroke="currentColor"/)
+  assert.match(own, /fill="#d42020"/, "oxygen keeps its red")
+  assert.doesNotMatch(sceneToSvg(phenol, false, [], undefined, {}, { ink: "currentColor" }), /#d42020/, "without element colours, all in the ink")
+  assert.match(sceneToSvg(phenol, true, [], undefined, {}, { background: "#101010" }), /<rect [^>]*fill="#101010"/)
+})

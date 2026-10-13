@@ -11,31 +11,35 @@ function escapeXml(value: string): string {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
 }
 
-function figureSvg(figure: Figure): string {
+/** The drawing's ink (bonds, carbon, uncoloured labels, arrows, marks); element colours are kept as they are. */
+const DEFAULT_INK = ["#222222", "#222"]
+type Paint = (color: string) => string
+
+function figureSvg(figure: Figure, paint: Paint): string {
   if (figure.kind === "line") {
     const dash = figure.dash ? ` stroke-dasharray="${figure.dash}"` : ""
-    return `<line x1="${figure.x1.toFixed(2)}" y1="${figure.y1.toFixed(2)}" x2="${figure.x2.toFixed(2)}" y2="${figure.y2.toFixed(2)}" stroke="${figure.stroke}" stroke-width="${figure.width}" stroke-linecap="${figure.cap ?? "butt"}"${dash}/>`
+    return `<line x1="${figure.x1.toFixed(2)}" y1="${figure.y1.toFixed(2)}" x2="${figure.x2.toFixed(2)}" y2="${figure.y2.toFixed(2)}" stroke="${paint(figure.stroke)}" stroke-width="${figure.width}" stroke-linecap="${figure.cap ?? "butt"}"${dash}/>`
   }
   if (figure.kind === "polygon") {
     const points = figure.points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ")
-    return `<polygon points="${points}" fill="${figure.fill}"/>`
+    return `<polygon points="${points}" fill="${paint(figure.fill)}"/>`
   }
   const points = figure.points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ")
-  return `<polyline points="${points}" fill="none" stroke="${figure.stroke}" stroke-width="${figure.width}" stroke-linejoin="round" stroke-linecap="round"/>`
+  return `<polyline points="${points}" fill="none" stroke="${paint(figure.stroke)}" stroke-width="${figure.width}" stroke-linejoin="round" stroke-linecap="round"/>`
 }
 
-function labelSvg(label: AtomLabel): string {
+function labelSvg(label: AtomLabel, paint: Paint): string {
   return label.runs
     .map(
       (run) =>
-        `<text x="${run.x.toFixed(2)}" y="${run.y.toFixed(2)}" fill="${label.color}" font-family="Arial, Helvetica, sans-serif" font-size="${run.size}" text-anchor="${run.anchor}" dominant-baseline="central">${escapeXml(run.text)}</text>`,
+        `<text x="${run.x.toFixed(2)}" y="${run.y.toFixed(2)}" fill="${paint(label.color)}" font-family="Arial, Helvetica, sans-serif" font-size="${run.size}" text-anchor="${run.anchor}" dominant-baseline="central">${escapeXml(run.text)}</text>`,
     )
     .join("")
 }
 
-function markTextSvg(text: MarkText): string {
+function markTextSvg(text: MarkText, paint: Paint): string {
   const italic = text.italic ? ` font-style="italic"` : ""
-  return `<text x="${text.x.toFixed(2)}" y="${text.y.toFixed(2)}" fill="${text.color}" font-family="Arial, Helvetica, sans-serif" font-size="${text.size.toFixed(2)}"${italic} text-anchor="${text.anchor}" dominant-baseline="central">${escapeXml(text.text)}</text>`
+  return `<text x="${text.x.toFixed(2)}" y="${text.y.toFixed(2)}" fill="${paint(text.color)}" font-family="Arial, Helvetica, sans-serif" font-size="${text.size.toFixed(2)}"${italic} text-anchor="${text.anchor}" dominant-baseline="central">${escapeXml(text.text)}</text>`
 }
 
 /** Extras for a standalone SVG: the drawing's brackets, and room and markup beyond what is drawn on the canvas. */
@@ -46,6 +50,14 @@ export type SvgOptions = {
   extraMargin?: { left?: number; top?: number; right?: number; bottom?: number }
   /** Markup drawn over the molecule, in its coordinates (atom ids for a model to read, say). */
   overlay?: string
+  /** The ground under the drawing: a colour ("#ffffff" by default), or false for none (transparent). */
+  background?: string | false
+  /**
+   * The ink for bonds, carbon and other uncoloured labels, arrows and marks: "#222222" by
+   * default; "currentColor" follows the page's text colour. Coloured elements (O, N…) keep
+   * their colours; with colorHetero off, everything is in this ink.
+   */
+  ink?: string
 }
 
 /**
@@ -57,6 +69,8 @@ export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: 
   // Fitted around what is shown: atoms behind a collapsed label take no room.
   const mol = displayMolecule(molecule)
   const scene = buildScene(mol, colorHetero, options)
+  const ink = svg.ink
+  const paint: Paint = (color) => (ink && DEFAULT_INK.includes(color) ? ink : color)
   const { attachments: marks, brackets } = structureMarks(mol, attachments, svg.brackets, scene.labels)
   let minX = Infinity
   let minY = Infinity
@@ -112,19 +126,21 @@ export function sceneToSvg(molecule: Molecule, colorHetero: boolean, arrowList: 
       const head = 9
       const wingA = `${(arrow.x2 - ux * head - uy * 4).toFixed(2)},${(arrow.y2 - uy * head + ux * 4).toFixed(2)}`
       const wingB = `${(arrow.x2 - ux * head + uy * 4).toFixed(2)},${(arrow.y2 - uy * head - ux * 4).toFixed(2)}`
-      return `<line x1="${arrow.x1.toFixed(2)}" y1="${arrow.y1.toFixed(2)}" x2="${arrow.x2.toFixed(2)}" y2="${arrow.y2.toFixed(2)}" stroke="#222" stroke-width="1.6"/><polygon points="${arrow.x2.toFixed(2)},${arrow.y2.toFixed(2)} ${wingA} ${wingB}" fill="#222"/>`
+      return `<line x1="${arrow.x1.toFixed(2)}" y1="${arrow.y1.toFixed(2)}" x2="${arrow.x2.toFixed(2)}" y2="${arrow.y2.toFixed(2)}" stroke="${paint("#222")}" stroke-width="1.6"/><polygon points="${arrow.x2.toFixed(2)},${arrow.y2.toFixed(2)} ${wingA} ${wingB}" fill="${paint("#222")}"/>`
     })
     .join("")
   const attached = marks
     .map(
       (mark) =>
         (mark.shape === "line" || mark.shape === "bracket"
-          ? `<line x1="${mark.from.x.toFixed(2)}" y1="${mark.from.y.toFixed(2)}" x2="${mark.to.x.toFixed(2)}" y2="${mark.to.y.toFixed(2)}" stroke="#222" stroke-width="1.55" stroke-linecap="round"/>`
-          : `<path d="${mark.path}" fill="none" stroke="#222" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>`) +
-        mark.texts.map(markTextSvg).join(""),
+          ? `<line x1="${mark.from.x.toFixed(2)}" y1="${mark.from.y.toFixed(2)}" x2="${mark.to.x.toFixed(2)}" y2="${mark.to.y.toFixed(2)}" stroke="${paint("#222")}" stroke-width="1.55" stroke-linecap="round"/>`
+          : `<path d="${mark.path}" fill="none" stroke="${paint("#222")}" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>`) +
+        mark.texts.map((text) => markTextSvg(text, paint)).join(""),
     )
     .join("")
-  const bracketed = brackets.map((mark) => mark.figures.map(figureSvg).join("") + (mark.text ? markTextSvg(mark.text) : "")).join("")
-  const body = scene.figures.map(figureSvg).join("") + scene.labels.map(labelSvg).join("") + attached + bracketed + arrows + (svg.overlay ?? "")
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width.toFixed(1)}" height="${height.toFixed(1)}" viewBox="${x.toFixed(1)} ${y.toFixed(1)} ${width.toFixed(1)} ${height.toFixed(1)}">\n<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${width.toFixed(1)}" height="${height.toFixed(1)}" fill="#ffffff"/>\n${body}\n</svg>\n`
+  const bracketed = brackets.map((mark) => mark.figures.map((figure) => figureSvg(figure, paint)).join("") + (mark.text ? markTextSvg(mark.text, paint) : "")).join("")
+  const body = scene.figures.map((figure) => figureSvg(figure, paint)).join("") + scene.labels.map((label) => labelSvg(label, paint)).join("") + attached + bracketed + arrows + (svg.overlay ?? "")
+  const background = svg.background ?? "#ffffff"
+  const ground = background === false ? "" : `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${width.toFixed(1)}" height="${height.toFixed(1)}" fill="${background}"/>\n`
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width.toFixed(1)}" height="${height.toFixed(1)}" viewBox="${x.toFixed(1)} ${y.toFixed(1)} ${width.toFixed(1)} ${height.toFixed(1)}">\n${ground}${body}\n</svg>\n`
 }

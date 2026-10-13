@@ -13,10 +13,10 @@ export { memoryTemplateStore } from "./editor/templates/memoryStore.ts"
 export { configureRDKit, type RDKitOptions } from "./editor/rdkit.ts"
 export { applyOps, displayFormula, drawingCdxml, drawingFromMolfile, drawingMolfile, drawingSvg, elementalAnalysis, emptyDrawing, enumerate, enumerationSdf } from "./core.ts"
 export { exactMass, isDocument, librarySize, molecularWeight, netCharge, plainFormula, readDocument, readMolfile, readSdf, toDocument, toMolfile, toSdf, validateDrawing } from "./core.ts"
-export type { Arrow, Atom, Bond, Bracket, Drawing, ExportOptions, LibrarySize, Molecule, MolRecord, OpsResult, Problem } from "./core.ts"
+export type { Arrow, Atom, Bond, Bracket, Drawing, ExportOptions, SvgLook, LibrarySize, Molecule, MolRecord, OpsResult, Problem } from "./core.ts"
 
 export { mount, type MountedEditor, type MountOptions } from "./standalone/mount.tsx"
-export { edit, type Edited, type EditOptions } from "./standalone/sheet.ts"
+export { edit, type Edited, type EditOptions, type StructureProblem } from "./standalone/sheet.ts"
 export { defineMoleculeElement, type MoleculeChange, type MoleculeElement } from "./standalone/moleculeElement.ts"
 import { defineMoleculeElement } from "./standalone/moleculeElement.ts"
 

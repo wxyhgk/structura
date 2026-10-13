@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 
 // The publishable package on pages without React or a bundler (packages/react/examples),
@@ -287,15 +288,13 @@ test("update() swaps a mounted editor's options, keeping its drawing", async ({ 
   expect(await page.evaluate(() => JSON.parse((window as unknown as { editor: Handle }).editor.getDocument()).drawing.molecule.atoms.length)).toBe(7)
 })
 
-test("edit(): Escape is 取消 once the editor has no use for it, asking first when there are changes", async ({ page }) => {
+test("edit(): Escape is 取消 once the editor has nothing to stop or deselect, asking first when there are changes", async ({ page }) => {
   const errors = await openGallery(page)
   const card = page.locator("chem-molecule[label=布洛芬]")
   await card.click()
   const sheet = page.locator(".chem-sheet")
   await expect(sheet).toBeVisible()
-  // The bond tool is in hand: the first Escape takes the lasso, the second closes.
-  await page.keyboard.press("Escape")
-  await expect(sheet).toBeVisible()
+  // Nothing selected: one Escape closes (no tool switch to press through first).
   await page.keyboard.press("Escape")
   await expect(sheet).toHaveCount(0)
   // Focus is back on the element it came from.
@@ -305,7 +304,10 @@ test("edit(): Escape is 取消 once the editor has no use for it, asking first w
   const canvas = (await page.locator(".chem-sheet [data-testid=canvas]").boundingBox())!
   await page.mouse.click(canvas.x + 60, canvas.y + 60)
   await expect(page.getByText("有未保存的修改")).toBeVisible()
-  await page.keyboard.press("Escape") // the lasso
+  // A selection is the editor's to clear first.
+  await page.keyboard.press("ControlOrMeta+a")
+  await page.keyboard.press("Escape")
+  await expect(sheet).toBeVisible()
   const asked: string[] = []
   page.once("dialog", (dialog) => (asked.push(dialog.message()), dialog.dismiss()))
   await page.keyboard.press("Escape")
@@ -401,4 +403,74 @@ test("configureRDKit({ module }) lends the page's own RDKit: its wasm is fetched
   await page.evaluate(() => import("../dist/standalone.js" as string).then((module) => module.configureRDKit({ wasmUrl: "x.wasm" })))
   await expect.poll(() => warnings.length).toBe(1)
   expect(warnings[0]).toContain("configureRDKit came after RDKit had started loading")
+})
+
+/** A molfile from atom lines (element, x, y, z) and bonds (from, to), one-based. */
+const molfile = (atoms: Array<[string, number, number, number]>, bonds: Array<[number, number]>) =>
+  [
+    "",
+    "  test",
+    "",
+    `${String(atoms.length).padStart(3)}${String(bonds.length).padStart(3)}  0  0  0  0  0  0  0  0999 V2000`,
+    ...atoms.map(([el, x, y, z]) => `${x.toFixed(4).padStart(10)}${y.toFixed(4).padStart(10)}${z.toFixed(4).padStart(10)} ${el.padEnd(3)} 0  0  0  0  0  0  0  0  0  0  0  0`),
+    ...bonds.map(([a, b]) => `${String(a).padStart(3)}${String(b).padStart(3)}  1  0`),
+    "M  END",
+    "",
+  ].join("\n")
+
+type EditApi = { edit(options: object): Promise<Record<string, unknown> | null> }
+const startEdit = (page: Page, options: object) => page.evaluate((given) => (window as unknown as { ChemStructura: EditApi }).ChemStructura.edit(given), options)
+const failedEdit = (page: Page, options: object) => page.evaluate((given) => (window as unknown as { ChemStructura: EditApi }).ChemStructura.edit(given).then(() => "opened", (error: Error) => error.message), options)
+
+test("edit(): the saved structure's problems come back, and confirmProblems asks before saving", async ({ page }) => {
+  await openExample(page, "script.html")
+  const sheet = page.locator(".chem-sheet")
+  // O–H–C: the H has two bonds.
+  const saving = startEdit(page, { molfile: molfile([["O", 0, 0, 0], ["H", 1.5, 0, 0], ["C", 3, 0, 0]], [[1, 2], [2, 3]]), confirmProblems: true })
+  await expect(sheet).toBeVisible()
+  const asked: string[] = []
+  page.once("dialog", (dialog) => (asked.push(dialog.message()), dialog.dismiss()))
+  await sheet.getByRole("button", { name: "保存" }).click()
+  await expect.poll(() => asked.join("")).toContain("第 2 个原子（H）超出化合价")
+  expect(asked[0]).toContain("仍然保存吗？")
+  await expect(sheet).toBeVisible()
+  page.once("dialog", (dialog) => dialog.accept())
+  await sheet.getByRole("button", { name: "保存" }).click()
+  const saved = (await saving)!
+  expect(saved.problems).toEqual([{ code: "valence", severity: "warning", atoms: [2], text: "第 2 个原子（H）超出化合价", message: expect.stringContaining("valence") }])
+  expect(saved).toMatchObject({ notes: [], changed: false })
+  expect(saved).not.toHaveProperty("smiles")
+})
+
+test("edit(): a 3D molfile is flattened and says so, or refused with on3D: \"reject\"", async ({ page }) => {
+  await openExample(page, "script.html")
+  const threeD = molfile([["C", 0, 0, 0], ["O", 1.2, 0, 0.9]], [[1, 2]])
+  expect(await failedEdit(page, { molfile: threeD, on3D: "reject" })).toContain("三维")
+  await expect(page.locator(".chem-sheet")).toHaveCount(0)
+  const saving = startEdit(page, { molfile: threeD })
+  await page.locator(".chem-sheet").getByRole("button", { name: "保存" }).click()
+  expect(((await saving)!.notes as string[]).join("")).toContain("三维坐标已投影到平面")
+})
+
+test("edit(): SMILES in and out; SMILES it cannot read is refused; a formula with variables has no SMILES", async ({ page }) => {
+  await localRDKit(page)
+  await openExample(page, "script.html")
+  const sheet = page.locator(".chem-sheet")
+  const saving = startEdit(page, { smiles: "Oc1ccccc1" })
+  await expect(sheet).toBeVisible()
+  await sheet.getByRole("button", { name: "保存" }).click()
+  expect(await saving).toMatchObject({ smiles: "Oc1ccccc1", changed: false, problems: [] })
+  expect(await failedEdit(page, { smiles: "C1CC(((" })).toContain("SMILES 读不了")
+  const formula = await readFile(fileURLToPath(new URL("fixtures/benzene-R1-R2.structura", import.meta.url)), "utf8")
+  const generic = startEdit(page, { document: formula, withSmiles: true })
+  await sheet.getByRole("button", { name: "保存" }).click()
+  expect((await generic)!.smiles).toBeNull()
+})
+
+test("a page's own .dark leaves the editor in one piece: light, menus and all, as it has no dark theme yet", async ({ page }) => {
+  await openExample(page, "script.html")
+  await page.evaluate(() => document.documentElement.classList.add("dark"))
+  await page.getByRole("button", { name: "文件", exact: true }).click()
+  const menu = await page.getByRole("menu").evaluate((element) => getComputedStyle(element).backgroundColor)
+  expect(menu).toMatch(/^(rgb\(255, 255, 255\)|oklch\(1 0 0\))$/)
 })

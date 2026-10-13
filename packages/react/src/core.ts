@@ -41,9 +41,22 @@ export function drawingMolfile(drawing: Drawing): string {
   return toMolfile(drawing.molecule, "Structura", drawing.brackets)
 }
 
+/** How drawingSvg colours the picture. */
+export type SvgLook = {
+  /** O, N, Cl… in their own colours (true, the default), or all in `color`. */
+  colorHetero?: boolean
+  /** The ground: a colour ("#ffffff" by default), or false for none, so the page shows through. */
+  background?: string | false
+  /**
+   * Bonds, carbon and uncoloured labels, arrows: "#222222" by default; "currentColor" takes the
+   * page's text colour (dark mode with no filters). Coloured elements keep their colours.
+   */
+  color?: string
+}
+
 /** The drawing as an SVG picture, as 导出 SVG saves it: arrows, variable attachments and brackets included. */
-export function drawingSvg(drawing: Drawing, options: ExportOptions & { colorHetero?: boolean } = {}): string {
-  return pictureSvg(drawing, emptySelection(), options.colorHetero ?? true, drawOptions(options.raisedNumbers ?? false))
+export function drawingSvg(drawing: Drawing, options: ExportOptions & SvgLook = {}): string {
+  return pictureSvg(drawing, emptySelection(), options.colorHetero ?? true, drawOptions(options.raisedNumbers ?? false), { background: options.background, ink: options.color })
 }
 
 /** The drawing as a ChemDraw file (CDXML), as 导出 CDXML saves it, with a generic formula's definitions as text under it. */

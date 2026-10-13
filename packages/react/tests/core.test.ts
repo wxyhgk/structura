@@ -105,3 +105,12 @@ test("the standalone build offers everything chem-structura/core does, for pages
   const missing = Object.keys(core).filter((name) => !offered.has(name))
   assert.deepEqual(missing, [])
 })
+
+test("drawingSvg for a page of its own colours: no ground, ink that follows the page", () => {
+  const drawing = formula()
+  const own = core.drawingSvg(drawing, { background: false, color: "currentColor" })
+  assert.doesNotMatch(own, /<rect /)
+  assert.doesNotMatch(own, /#222222/)
+  assert.match(own, /stroke="currentColor"/)
+  assert.match(core.drawingSvg(drawing), /<rect [^>]*fill="#ffffff"/, "white by default, as before")
+})

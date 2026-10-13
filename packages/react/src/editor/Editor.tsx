@@ -86,10 +86,10 @@ export type EditorProps = {
    */
   templateStore?: TemplateStore
   /**
-   * Called for an Escape the editor has no other use for: no gesture to stop, nothing selected,
-   * the lasso already in hand (Escape does each of those first, one press at a time; menus,
-   * dialogs and fields keep their own). A host showing the editor in a dialog of its own closes
-   * it here. Without it, that Escape just keeps the lasso, as in ChemDraw.
+   * Called for an Escape the editor has no other use for: no gesture to stop, nothing selected
+   * (Escape does each of those first, one press at a time; menus, dialogs and fields keep their
+   * own). A host showing the editor in a dialog of its own closes it here. Without it, that
+   * Escape takes the lasso, as in ChemDraw.
    */
   onDismiss?: () => void
   /**

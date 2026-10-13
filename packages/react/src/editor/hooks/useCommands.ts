@@ -33,6 +33,7 @@ export function useCommands({
   openMarkush,
   models,
   file,
+  onDismiss,
 }: {
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
@@ -47,6 +48,8 @@ export function useCommands({
   models: { recognize: boolean; fill: boolean }
   /** Which file this is: the names things are saved under, and what counts as saved. */
   file: DocumentFile
+  /** The host's, for an Escape with nothing left to cancel (see EditorProps.onDismiss). */
+  onDismiss?: () => void
 }) {
   const selected = editor.selection.atoms.length > 0 || editor.selection.bonds.length > 0
   // Worked out once a render, for the several commands that ask.
@@ -168,6 +171,7 @@ export function useCommands({
       () => {
         if (canvas.current?.hasGesture()) canvas.current.cancelGesture()
         else if (selected) editor.setSelection(emptySelection())
+        else if (onDismiss && editor.tool === "lasso") onDismiss()
         else editor.setTool("lasso")
       },
       { keys: [{ key: "Escape" }] },

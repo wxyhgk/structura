@@ -48,7 +48,10 @@ export default defineConfig({
     cssCodeSplit: true,
     rolldownOptions: {
       external: isExternal,
-      output: { assetFileNames: "[name][extname]", chunkFileNames: "chunks/[name]-[hash].js" },
+      // Minified, as a library build is not by default: chem-structura/core runs as it is in Node
+      // and from CDNs, without a bundler of the host's to do it. Export names stay as they are,
+      // so a host's bundler can still leave out what it does not use; the source maps map back.
+      output: { assetFileNames: "[name][extname]", chunkFileNames: "chunks/[name]-[hash].js", minify: true },
     },
   },
 })

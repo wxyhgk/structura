@@ -80,3 +80,12 @@ test("undo and redo: every step back, then forward again, to exactly the same dr
   for (let step = 0; step < 3; step++) await page.keyboard.press("ControlOrMeta+Shift+z")
   await expect.poll(() => drawnText(page)).toBe(after)
 })
+
+test("the editor's chrome keeps its own look: buttons flat, not the browser's", async ({ page }) => {
+  await openEditor(page)
+  const look = await page.getByRole("button", { name: "文件", exact: true }).evaluate((button) => {
+    const style = getComputedStyle(button)
+    return { border: style.borderTopWidth, background: style.backgroundColor }
+  })
+  expect(look).toEqual({ border: "0px", background: "rgba(0, 0, 0, 0)" })
+})

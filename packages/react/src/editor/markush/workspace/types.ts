@@ -2,6 +2,7 @@ import type { Drawing, Molecule } from "@structura/core/types"
 import type { Run } from "@structura/engine"
 import type { GuideTopic } from "../../../guide/index.ts"
 import type { Templates } from "../../templates/useTemplates.ts"
+import type { WordExport } from "../wordExport.ts"
 
 /** Which of the editor's two workspaces is showing: drawing, or the generic formula and what it generates. */
 export type Workspace = "draw" | "markush"
@@ -25,4 +26,6 @@ export type WorkspaceProps = {
   templates: Templates
   /** Opens 从专利文字填写; absent when the host has no way to reach a model. */
   onFill?: () => void
+  /** The host's way to editable Word (chem2office); absent, 导出 Word makes pictures. */
+  wordExport?: WordExport
 }

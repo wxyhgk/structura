@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { forgetUnsaved, keepUnsaved, readUnsaved } from "@/autosave"
 import { Editor, httpTemplateStore, memoryTemplateStore, type EditorHandle } from "chem-structura"
 import { fillOverHttp } from "@/fillOverHttp"
+import { wordOverHttp } from "@/wordOverHttp"
 import { recognizeOverHttp } from "@/recognizeOverHttp"
 import { RestoreBar } from "@/RestoreBar"
 import { exposeForTests } from "@/testHook"
@@ -50,6 +51,7 @@ export default function App() {
         <Editor
           ref={editor}
           fillVariables={fillOverHttp}
+          wordExport={wordOverHttp}
           recognizeStructure={recognizeOverHttp}
           templateStore={templateStore}
           onDirtyChange={(now) => {

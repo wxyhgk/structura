@@ -36,6 +36,7 @@ import type { FillVariables } from "./markush/useFill.ts"
 import { StructureDialog } from "./vision/StructureDialog.tsx"
 import type { RecognizeStructure } from "./vision/useRecognition.ts"
 import { MarkushWorkspace } from "./markush/workspace/MarkushWorkspace.tsx"
+import type { WordExport } from "./markush/wordExport.ts"
 import type { Workspace } from "./markush/workspace/types.ts"
 import { WorkspaceTabs } from "./markush/workspace/WorkspaceTabs.tsx"
 import { SmilesDialog } from "./shell/dialogs/SmilesDialog.tsx"
@@ -52,6 +53,7 @@ export type { Op } from "@structura/core/ops"
 export type { FillVariables } from "./markush/useFill.ts"
 export type { RecognizeStructure } from "./vision/useRecognition.ts"
 export type { TemplateStore } from "./templates/store.ts"
+export type { WordExport } from "./markush/wordExport.ts"
 
 export type EditorProps = {
   /** Molfile or SD text to start with; read once, when the editor mounts. */
@@ -90,13 +92,18 @@ export type EditorProps = {
    * it here. Without it, that Escape just keeps the lasso, as in ChemDraw.
    */
   onDismiss?: () => void
+  /**
+   * How to make Word tables of compounds with editable ChemDraw objects (chem2office, on the
+   * host's server). Without it, 化合物表 → Word still works, with the structures as pictures.
+   */
+  wordExport?: WordExport
 }
 
 /**
  * Lays out the editor and wires state, commands and input together. It fills its
  * container, so the host decides its size.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onDirtyChange, fillVariables, recognizeStructure, templateStore, onDismiss }, ref) {
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onDirtyChange, fillVariables, recognizeStructure, templateStore, onDismiss, wordExport }, ref) {
   const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
   const editor = useEditor(initial)
   const templates = useTemplates(templateStore)
@@ -217,6 +224,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
                   }}
                   onHelp={dialogs.showGuide}
                   onFill={fillVariables ? () => dialogs.open("fill") : undefined}
+                  wordExport={wordExport}
                   templates={templates}
                 />
               )}

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { Numbering } from "../numbering.ts"
 import { LIMITS } from "../progressText.ts"
 
 export type ResultOptions = { representatives: boolean; dedupe: boolean; limit: number }
@@ -26,7 +27,10 @@ export function ResultsToolbar({
   notes,
   notesOpen,
   onNotesOpen,
+  numbering,
+  onNumbering,
   onExport,
+  onTable,
 }: {
   summary: string
   running: boolean
@@ -46,7 +50,12 @@ export function ResultsToolbar({
   notes: number
   notesOpen: boolean
   onNotesOpen: (open: boolean) => void
+  /** How the compounds are numbered (C-1…): on the cards and in every download. */
+  numbering: Numbering
+  onNumbering: (numbering: Numbering) => void
   onExport: (kind: "csv" | "sdf" | "smi") => void
+  /** Opens 导出化合物表 (a patent's table of compounds). */
+  onTable: () => void
 }) {
   return (
     <div className="border-b border-[#e3e3e3] bg-white px-3 pb-1.5 text-[12px] text-[#333]">
@@ -119,6 +128,24 @@ export function ResultsToolbar({
             ))}
           </select>
         </Option>
+        <Option title="编号的写法：{n} 是编号所在的位置，如 C-{n} → C-1、C-2…；化合物{n}；1-{n}">
+          编号
+          <input
+            className="h-6 w-20 rounded-sm border border-[#d0d0d0] bg-white px-1.5 text-[12px] outline-none focus:border-[#1a73e8]"
+            value={numbering.pattern}
+            placeholder="C-{n}"
+            onChange={(event) => onNumbering({ ...numbering, pattern: event.target.value })}
+            aria-label="编号的写法"
+          />
+          从
+          <input
+            type="number"
+            className="h-6 w-14 rounded-sm border border-[#d0d0d0] bg-white px-1 text-[12px] outline-none focus:border-[#1a73e8]"
+            value={numbering.start}
+            onChange={(event) => onNumbering({ ...numbering, start: Math.trunc(Number(event.target.value)) || 0 })}
+            aria-label="起始编号"
+          />
+        </Option>
         <span className="ml-auto flex items-center gap-1.5">
           <span className="text-[#888]">{filter.trim() && kept > 0 ? `下载筛选出的 ${kept} 个` : "下载"}</span>
           <button type="button" className={button} disabled={kept === 0} onClick={() => onExport("csv")}>
@@ -129,6 +156,9 @@ export function ResultsToolbar({
           </button>
           <button type="button" className={button} disabled={kept === 0} onClick={() => onExport("smi")}>
             SMILES
+          </button>
+          <button type="button" className={`${button} border-[#1a73e8] text-[#1a73e8]`} disabled={kept === 0} onClick={onTable} title="像专利那样：结构一行、编号一行（ChemDraw 整表，或 Word 表格用的包）">
+            化合物表…
           </button>
         </span>
       </div>

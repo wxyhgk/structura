@@ -45,6 +45,7 @@ colour variables do not override your own theme. Nor do your page's styles chang
 | `onDocumentChange(document)` | After every edit, as a Structura document (with the generic formula's variables) |
 | `onDirtyChange(dirty)` | When the drawing gains or loses unsaved changes |
 | `templateStore` | Where the user's own group templates are kept (`httpTemplateStore()`, `memoryTemplateStore()`, or your own) |
+| `wordExport` | How to make Word tables of generated compounds with editable ChemDraw objects (`{ check(), make(pack, { columns }) }`, e.g. through chem2office on your server). Without it, the Word export holds pictures |
 | `onDismiss()` | An Escape the editor has no use for (nothing to stop or deselect, the lasso in hand): for a host showing it in a dialog of its own, to close that |
 | `fillVariables`, `recognizeStructure` | Optional AI features; hidden unless given |
 

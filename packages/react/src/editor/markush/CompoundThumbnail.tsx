@@ -1,7 +1,7 @@
 import { memo } from "react"
 import { displayFormula, molecularWeight, plainFormula } from "@structura/core/formula"
 import { MoleculeThumb } from "../common/MoleculeThumb.tsx"
-import { picksText, type Row } from "./results.ts"
+import { picksText, rowName, type Row } from "./results.ts"
 
 /**
  * One generated compound: numbered, its formula (and weight, when asked), what its variables
@@ -13,7 +13,7 @@ export const CompoundThumbnail = memo(function CompoundThumbnail({ row, colorHet
     <figure className="group relative rounded-sm border border-[#e0e0e0] bg-white p-1 text-center" data-testid="enumerated-compound">
       <MoleculeThumb mol={row.mol} colorHetero={colorHetero} className="mx-auto h-24 w-full object-contain" />
       <figcaption className="text-[11px] text-[#666]">
-        {row.number}. {row.formula != null && <span className="mr-1 rounded-sm bg-[#eef3fd] px-1 text-[#1a73e8]">式 {row.formula}</span>}
+        <span className="font-semibold text-[#333]" data-testid="compound-id">{rowName(row)}</span>{row.id ? " " : ". "}{row.formula != null && <span className="mr-1 rounded-sm bg-[#eef3fd] px-1 text-[#1a73e8]">式 {row.formula}</span>}
         {displayFormula(plainFormula(row.mol))}
         {weight && <span className="text-[#999]"> · {molecularWeight(row.mol).toFixed(1)}</span>}
         {picks && (

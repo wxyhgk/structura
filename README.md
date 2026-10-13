@@ -104,6 +104,22 @@ const { molecules, skipped } = usableRecords(smilesRecords(rdkit, "CC(=O)Oc1cccc
 
 `npm run build` 会先构建 core，再生成自己的 `dist/`。
 
+## 化合物表导出 Word（chem2office）
+
+通式工作区“生成结果”里，化合物按“编号”框里的格式编号（如 `C-{n}` → C-1、C-2…），“化合物表…”按专利的样子导出：每行几个结构，下面是编号，同一键长，缩写全部画出。Word 文档有两种：
+
+- 本机有 [chem2office](../chem2office) 时，每个结构是可编辑的 ChemDraw 对象。开发和预览服务器上的 `POST /api/word`（`backend/src/word.ts`，Vite 插件 `structuraWord()`）把化合物表的包（zip，格式见 `packages/react/src/editor/markush/compoundTable.ts`）交给 chem2office 的命令行 `scripts.cli.structura_table_to_docx`，返回 .docx；`GET /api/word` 说明现在能不能做、不能的原因。
+- 没有时，浏览器里生成图片版（`wordDocx.ts`），对话框里写明原因。
+
+chem2office 默认在本仓库旁边找（`../chem2office`），也可以写在 `.env.local` 里：
+
+```sh
+# CHEM2OFFICE_DIR=/path/to/chem2office
+# CHEM2OFFICE_PYTHON=/path/to/python   # 默认 python3，要能 import retain_cdx 和 pycdxml
+```
+
+嵌入时由宿主通过 `<Editor wordExport={…} />` 提供（本应用的实现是 `src/wordOverHttp.ts`）；不传时只有图片版。
+
 ## AI 填写通式 `@structura/ai`
 
 变量面板里的“从专利文字填写…”（或菜单 AI → 从专利文字填写变量…）：粘贴权利要求中定义变量的文字，由大模型读出每个变量的候选项。回答先经 core 校验：认不出的标签、放不上的候选项、表达不了的部分（取代基范围、“相邻基团可成环”等）都会列出来。逐个勾选后应用，整个填写算一步，可以撤销。

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
-import { doc, menu, openEditor, openFile } from "./support.ts"
+import { doc, menu, openEditor, openFile, unzipText } from "./support.ts"
 
 // Generating compounds in the 通式 workspace: the results follow the formula as it changes.
 
@@ -41,6 +41,62 @@ test("generated compounds show what each variable became, filter, and export as 
   expect(lines[0]).toBe("No,SMILES,Formula,MW,R1 position,R1")
   expect(lines).toHaveLength(1 + 7)
   expect(lines.slice(1).every((line) => line.includes("Cl"))).toBe(true)
+})
+
+test("compounds are numbered as a patent numbers them, and come out as a table of compounds", async ({ page }) => {
+  await openFormula(page, "benzene-R1-anywhere.structura")
+  const compounds = page.getByTestId("enumerated-compound")
+  await expect(compounds.first().getByTestId("compound-id")).toHaveText("C-1")
+  await page.getByLabel("编号的写法").fill("化合物{n}")
+  await page.getByLabel("起始编号").fill("5")
+  await page.getByLabel("筛选生成的化合物").fill("Cl")
+  // Numbered as listed, after the filter: what is shown is what is downloaded.
+  await expect(compounds.first().getByTestId("compound-id")).toHaveText("化合物5")
+
+  await page.getByTestId("resultsPane").getByRole("button", { name: "化合物表…" }).click()
+  const dialog = page.getByTestId("compound-table-dialog")
+  await expect(dialog).toContainText("化合物5")
+  await dialog.getByLabel("每行几个").selectOption("2")
+  // Word: no chem2office on this server, so pictures, and it says why.
+  await expect(dialog.getByTestId("word-note")).toContainText("结构是图片")
+  await expect(dialog.getByTestId("word-note")).toContainText("chem2office")
+  const wordDownload = page.waitForEvent("download")
+  await dialog.getByTestId("word-option").getByRole("button", { name: "下载" }).click()
+  const word = await wordDownload
+  expect(word.suggestedFilename()).toBe("benzene-R1-anywhere 化合物表.docx")
+  const docx = unzipText(new Uint8Array(await readFile((await word.path())!)))
+  const documentXml = docx.get("word/document.xml")!
+  expect(documentXml).toContain(">化合物5<")
+  // A picture for each number.
+  const pictures = [...docx.keys()].filter((name) => name.startsWith("word/media/") && name.endsWith(".png")).length
+  expect(pictures).toBeGreaterThan(0)
+  expect(documentXml.match(/<w:t xml:space="preserve">化合物\d+</g)).toHaveLength(pictures)
+  expect(documentXml.match(/<w:gridCol /g)).toHaveLength(2)
+  await expect(dialog.getByTestId("word-made")).toContainText("已导出图片版")
+
+  const tableDownload = page.waitForEvent("download")
+  await dialog.getByRole("button", { name: "下载" }).nth(1).click()
+  const table = await tableDownload
+  expect(table.suggestedFilename()).toBe("benzene-R1-anywhere 化合物表.cdxml")
+  const cdxml = await readFile((await table.path())!, "utf8")
+  expect(cdxml).toContain(">化合物5<")
+  expect(cdxml).toContain('name="SimSun"')
+
+  const packDownload = page.waitForEvent("download")
+  await dialog.getByRole("button", { name: "下载" }).last().click()
+  const pack = await packDownload
+  expect(pack.suggestedFilename()).toBe("benzene-R1-anywhere 化合物表.zip")
+  const files = unzipText(new Uint8Array(await readFile((await pack.path())!)))
+  const manifest = JSON.parse(files.get("manifest.json")!)
+  expect(manifest).toMatchObject({ format: "structura-compound-table", version: 1, columns: 2, source: "benzene-R1-anywhere" })
+  expect(manifest.compounds[0]).toMatchObject({ id: "化合物5", file: "cdxml/化合物5.cdxml", formula: "C6H5Cl", smiles: "Clc1ccccc1" })
+  for (const compound of manifest.compounds) expect(files.get(compound.file)).toContain("<CDXML")
+  expect(files.get("compounds.csv")!.replace(/^\ufeff/, "").split("\n")[0]).toBe("编号,文件,SMILES,分子式,分子量,R1 position,R1")
+  expect(files.has("table.cdxml")).toBe(true)
+  // Remembered in this browser: the next visit numbers the same way.
+  await page.reload()
+  await openFormula(page, "benzene-R1-anywhere.structura")
+  await expect(compounds.first().getByTestId("compound-id")).toHaveText("化合物5")
 })
 
 test("the structure menu's command opens the 通式 workspace", async ({ page }) => {

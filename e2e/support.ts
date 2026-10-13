@@ -50,3 +50,22 @@ export async function canvasCentre(page: Page) {
   const box = (await page.getByTestId("canvas").boundingBox())!
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
 }
+
+/** The files of a stored (uncompressed) zip, as Structura writes them, by name: read through its central directory. */
+export function unzipText(bytes: Uint8Array): Map<string, string> {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+  const end = bytes.length - 22
+  const count = view.getUint16(end + 10, true)
+  let at = view.getUint32(end + 16, true)
+  const decoder = new TextDecoder()
+  const files = new Map<string, string>()
+  for (let i = 0; i < count; i++) {
+    const size = view.getUint32(at + 24, true)
+    const nameLength = view.getUint16(at + 28, true)
+    const local = view.getUint32(at + 42, true)
+    const start = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true)
+    files.set(decoder.decode(bytes.subarray(at + 46, at + 46 + nameLength)), decoder.decode(bytes.subarray(start, start + size)))
+    at += 46 + nameLength
+  }
+  return files
+}

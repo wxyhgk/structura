@@ -53,3 +53,40 @@ test("a drawing without variables is one formula, itself", () => {
   assert.equal(formulasOf(plain).length, 1)
   assert.equal(enumerate(plain).molecules.length, 1)
 })
+
+/** R1 on a benzoate, with Na⁺ drawn beside it as its own piece; a second formula far to the right, with Cl⁻ beside it. */
+const salts = () =>
+  build([
+    { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene", as: "a" },
+    { op: "add_atom", el: "C", to: "a", as: "c" },
+    { op: "add_atom", el: "O", to: "c", order: 2 },
+    { op: "add_atom", el: "O", to: "c", as: "o" },
+    { op: "set_charge", atom: "o", charge: -1 },
+    { op: "add_atom", el: "Na", as: "na" },
+    { op: "move", atoms: ["na"], dx: 140, dy: 0 },
+    { op: "set_charge", atom: "na", charge: 1 },
+    { op: "add_atom", el: "C", to: 4, as: "r" },
+    { op: "label", atom: "r", text: "R1" },
+    { op: "add_atom", el: "N", as: "n" },
+    { op: "move", atoms: ["n"], dx: 900, dy: 0 },
+    { op: "set_charge", atom: "n", charge: 1 },
+    { op: "add_atom", el: "C", to: "n", as: "s" },
+    { op: "label", atom: "s", text: "R1" },
+    { op: "add_atom", el: "Cl", as: "cl" },
+    { op: "move", atoms: ["cl"], dx: 1000, dy: 60 },
+    { op: "set_charge", atom: "cl", charge: -1 },
+    { op: "set_variable", name: "R1", alternatives: [label("H"), label("Me")] },
+  ])
+
+test("a counter-ion drawn beside a formula stays with it: every salt keeps its ion, each ion with the nearer formula", () => {
+  const drawing = salts()
+  assert.equal(formulasOf(drawing).length, 2)
+  const result = enumerate(drawing)
+  assert.deepEqual(result.formulaOf, [1, 1, 2, 2])
+  assert.deepEqual(canonicalAll(result.molecules), canonicalAll(["O=C([O-])c1ccccc1.[Na+]", "Cc1ccc(C(=O)[O-])cc1.[Na+]", "[NH4+].[Cl-]", "C[NH3+].[Cl-]"]))
+})
+
+test("an uncharged molecule beside a formula is still no part of it, though an ion is", () => {
+  const drawing = twoFormulas()
+  assert.ok(!canonicalAll(enumerate(drawing).molecules).some((smiles) => smiles.includes("O")))
+})

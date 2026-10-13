@@ -5,9 +5,11 @@ import { isVariableName } from "@structura/core/markush"
 
 /**
  * The separate generic formulas on a drawing: pieces held together by bonds or by a variable
- * attachment's line, that carry a variable, an attachment or a repeat unit [ … ]n. Plain
- * molecules beside them are no part of any formula. A drawing with none of these at all is
- * one "formula", itself. Each formula keeps the brackets wholly on its atoms.
+ * attachment's line, that carry a variable, an attachment or a repeat unit [ … ]n. A plain
+ * piece with a charge of its own (a counter-ion: Na⁺ beside a carboxylate, Cl⁻ beside an
+ * ammonium) goes with the nearest formula, so its salts keep it; other plain molecules beside
+ * them are no part of any formula. A drawing with none of these at all is one "formula",
+ * itself. Each formula keeps the brackets wholly on its atoms.
  */
 export function formulasOf(drawing: Drawing): Drawing[] {
   const mol = drawing.molecule
@@ -29,7 +31,22 @@ export function formulasOf(drawing: Drawing): Drawing[] {
   ])
   if (marked.size === 0) return [drawing]
   const pieces = new Map<number, number[]>()
-  for (const atom of mol.atoms) if (marked.has(root(atom.id))) pieces.set(root(atom.id), [...(pieces.get(root(atom.id)) ?? []), atom.id])
+  for (const atom of mol.atoms) pieces.set(root(atom.id), [...(pieces.get(root(atom.id)) ?? []), atom.id])
+  const atomOf = new Map(mol.atoms.map((atom) => [atom.id, atom]))
+  for (const [piece, ids] of [...pieces]) {
+    if (marked.has(piece)) continue
+    pieces.delete(piece)
+    if (ids.reduce((sum, id) => sum + atomOf.get(id)!.charge, 0) === 0) continue
+    // An ion: to the formula with the atom closest to any of its atoms.
+    let nearest: { piece: number; distance: number } | null = null
+    for (const formula of marked)
+      for (const id of pieces.get(formula) ?? [])
+        for (const own of ids) {
+          const distance = Math.hypot(atomOf.get(id)!.x - atomOf.get(own)!.x, atomOf.get(id)!.y - atomOf.get(own)!.y)
+          if (!nearest || distance < nearest.distance) nearest = { piece: formula, distance }
+        }
+    if (nearest) pieces.set(nearest.piece, [...pieces.get(nearest.piece)!, ...ids])
+  }
   return [...pieces.values()].map((ids) => {
     const { brackets: _all, ...rest } = drawing
     const brackets = bracketsWithin(drawing.brackets, ids)

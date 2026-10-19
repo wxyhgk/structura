@@ -104,6 +104,12 @@ const { molecules, skipped } = usableRecords(smilesRecords(rdkit, "CC(=O)Oc1cccc
 
 `npm run build` 会先构建 core，再生成自己的 `dist/`。
 
+## 深色主题
+
+编辑器有浅色（默认）和深色两套配色，嵌入时用 `theme` 参数选（`"light"` / `"dark"` / `"auto"`；`"auto"` 跟随页面 `<html>` 上的 `data-theme` 或 `dark` 类，没有时跟随系统），给了 `onThemeChange` 就在“查看”菜单里让用户自己选。本应用把选择记在浏览器里，默认跟随系统。
+
+界面的颜色仍按浅色写在组件里（Tailwind 类 `bg-(--c-f2f2f2)` 这样的写法），每个颜色是一个 CSS 变量：浅色就是它自己，深色由 `packages/react/src/components/theme.ts` 的 `darkColor` 算出，写在生成的 `styles/tokens.css` 里（加了新颜色后运行 `npm run tokens -w chem-structura`，没更新时有测试会失败）。画布、缩略图和使用说明里的图用同一套规则（化学结构的墨色用 `darkInk`，保证在深色底上看得清）。导出的文件始终是浅色。
+
 ## 化合物表导出 Word（chem2office）
 
 通式工作区“生成结果”里，化合物按“编号”框里的格式编号（如 `C-{n}` → C-1、C-2…），“化合物表…”按专利的样子导出：每行几个结构，下面是编号，同一键长，缩写全部画出。Word 文档有两种：

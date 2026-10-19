@@ -27,10 +27,10 @@ export function QuickScaffold({
   const how = target === "atom" ? "接到这个原子上" : target === "bond" ? "并到这根键上" : "放在这里"
 
   return (
-    <div className="absolute z-20 w-56 rounded-lg border border-[#d0d0d0] bg-white p-1.5 text-[12px] shadow-lg" style={{ left: left + 14, top: top + 10 }} data-testid="quick-scaffold">
+    <div className="absolute z-20 w-56 rounded-lg border border-(--c-d0d0d0) bg-(--c-ffffff) p-1.5 text-[12px] shadow-lg" style={{ left: left + 14, top: top + 10 }} data-testid="quick-scaffold">
       <input
         autoFocus
-        className="h-7 w-full rounded-md border border-[#d0d0d0] px-2 outline-none focus:border-[#1a73e8]"
+        className="h-7 w-full rounded-md border border-(--c-d0d0d0) px-2 outline-none focus:border-(--c-1a73e8)"
         placeholder={`模板名，回车${how}`}
         value={text}
         aria-label="模板名"
@@ -53,18 +53,18 @@ export function QuickScaffold({
         {found.map((item) => (
           <li key={item.name}>
             <button
-              className={`flex w-full items-baseline gap-2 rounded px-2 py-1 text-left ${item === chosen ? "bg-[#e8f1fb] text-[#1a73e8]" : "hover:bg-black/5"}`}
+              className={`flex w-full items-baseline gap-2 rounded px-2 py-1 text-left ${item === chosen ? "bg-(--c-e8f1fb) text-(--c-1a73e8)" : "hover:bg-black/5 dark:hover:bg-white/10"}`}
               // Keeps the field focused (and the menu open) until the click lands.
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => onPick(item)}
             >
               <span>{item.zh}</span>
-              <span className="text-[11px] text-[#888]">{item.name}</span>
-              {target != null && <span className="ml-auto text-[11px] text-[#888]">{target === "atom" ? defaultSite(item) : `${defaultEdge(item)} 边`}</span>}
+              <span className="text-[11px] text-(--c-888888)">{item.name}</span>
+              {target != null && <span className="ml-auto text-[11px] text-(--c-888888)">{target === "atom" ? defaultSite(item) : `${defaultEdge(item)} 边`}</span>}
             </button>
           </li>
         ))}
-        {found.length === 0 && <li className="px-2 py-1 text-[#888]">没有这个模板</li>}
+        {found.length === 0 && <li className="px-2 py-1 text-(--c-888888)">没有这个模板</li>}
       </ul>
     </div>
   )

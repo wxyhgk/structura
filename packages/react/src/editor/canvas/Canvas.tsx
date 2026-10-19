@@ -161,7 +161,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const cursor = panning ? "grab" : (handleCursor ?? (curveHover ? CURVE_CURSORS[curveHover] : selecting ? "default" : "crosshair"))
 
   return (
-    <div className="relative h-full min-w-0 flex-1 bg-white">
+    <div className="relative h-full min-w-0 flex-1 bg-(--c-ffffff)">
       <svg
         ref={svgRef}
         data-testid="canvas"
@@ -232,7 +232,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
       )}
       {quick.quick && <QuickScaffold left={quick.quick.screen.x} top={quick.quick.screen.y} target={quick.quick.target?.type ?? null} onCancel={quick.cancel} onPick={quick.pick} />}
       {shown.atoms.length === 0 && preview == null && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-[14px] leading-6 text-[#9a9a9a]">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-[14px] leading-6 text-(--c-9a9a9a)">
           在空白处点击，画一条键
           <br />
           悬停在原子上按键，可直接接苯环、羰基和碳链

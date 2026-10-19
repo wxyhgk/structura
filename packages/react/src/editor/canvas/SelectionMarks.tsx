@@ -2,6 +2,7 @@ import { memo, useMemo } from "react"
 import type { AtomLabel } from "@structura/core/draw"
 import type { Molecule, Selection } from "@structura/core/types"
 import { atomCircle } from "./rings.ts"
+import { usePaint } from "../../components/theme.ts"
 
 /** A circle on every selected atom and a soft band along every selected bond. */
 export const SelectionMarks = memo(function SelectionMarks({
@@ -15,6 +16,7 @@ export const SelectionMarks = memo(function SelectionMarks({
   labels: AtomLabel[]
   zoom: number
 }) {
+  const paint = usePaint()
   const marks = useMemo(() => {
     const atoms = new Map(mol.atoms.map((atom) => [atom.id, atom]))
     const labelOf = new Map(labels.map((label) => [label.atomId, label]))
@@ -36,7 +38,7 @@ export const SelectionMarks = memo(function SelectionMarks({
   return (
     <g data-testid="selection-marks" pointerEvents="none">
       {marks.bands.map((band) => (
-        <line key={`b${band.id}`} x1={band.x1} y1={band.y1} x2={band.x2} y2={band.y2} stroke="#1a73e8" strokeOpacity={0.18} strokeWidth={7 / zoom} strokeLinecap="round" />
+        <line key={`b${band.id}`} x1={band.x1} y1={band.y1} x2={band.x2} y2={band.y2} stroke={paint("#1a73e8")} strokeOpacity={0.18} strokeWidth={7 / zoom} strokeLinecap="round" />
       ))}
       {marks.circles.map((circle) => (
         <circle
@@ -45,8 +47,8 @@ export const SelectionMarks = memo(function SelectionMarks({
           cx={circle.cx}
           cy={circle.cy}
           r={circle.r}
-          fill="rgba(26, 115, 232, 0.14)"
-          stroke="#1a73e8"
+          fill={paint("rgba(26, 115, 232, 0.14)")}
+          stroke={paint("#1a73e8")}
           strokeOpacity={0.75}
           strokeWidth={1.2 / zoom}
         />

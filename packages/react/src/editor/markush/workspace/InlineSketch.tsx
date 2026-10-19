@@ -89,7 +89,7 @@ export function InlineSketch({
   return (
     <div className="flex h-full min-h-0 flex-col text-[12px]" onKeyDown={keepKeys} onKeyUp={(event) => event.stopPropagation()} data-testid="inline-sketch">
       <PaneHeader title={title ?? (initial ? `修改 ${name} 的候选项` : `给 ${name} 画一个候选项`)}>
-        <button className="order-first -ml-1 rounded-sm px-1.5 py-0.5 text-[#1a73e8] hover:bg-[#eef3fb]" onClick={onCancel} title="返回（Esc）">
+        <button className="order-first -ml-1 rounded-sm px-1.5 py-0.5 text-(--c-1a73e8) hover:bg-(--c-eef3fb)" onClick={onCancel} title="返回（Esc）">
           ← 返回
         </button>
         <span className="ml-auto flex gap-2">
@@ -107,9 +107,9 @@ export function InlineSketch({
         </span>
       </PaneHeader>
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
-        {problem && <p className="rounded-sm bg-[#fff4d6] px-2 py-1 text-[#8a5a00]">{problem}</p>}
+        {problem && <p className="rounded-sm bg-(--c-fff4d6) px-2 py-1 text-(--c-8a5a00)">{problem}</p>}
         {kept && (
-          <p className="rounded-sm bg-[#e9f6ec] px-2 py-1 text-[#1e7d34]" data-testid="template-kept">
+          <p className="rounded-sm bg-(--c-e9f6ec) px-2 py-1 text-(--c-1e7d34)" data-testid="template-kept">
             {kept}
           </p>
         )}

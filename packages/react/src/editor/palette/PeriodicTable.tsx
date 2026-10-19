@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog.tsx"
 import { useOverlayMark } from "../input/overlays.ts"
+import { useInk, usePaint } from "../../components/theme.ts"
 
 const CATEGORY_BG: Record<ElementCategory, string> = {
   alkali: "#f8d0d4",
@@ -96,6 +97,8 @@ function ElementCell({
   current: string
   onPick: (symbol: string) => void
 }) {
+  const paint = usePaint()
+  const ink = useInk()
   const selected = element.symbol === current
   return (
     <button
@@ -106,9 +109,9 @@ function ElementCell({
       aria-pressed={selected}
       className="flex h-8 flex-col items-center justify-center rounded-sm leading-none hover:ring-1 hover:ring-neutral-500"
       style={{
-        background: CATEGORY_BG[element.category],
-        color: element.color ?? "#222222",
-        boxShadow: selected ? "inset 0 0 0 1.5px #1a73e8" : undefined,
+        background: paint(CATEGORY_BG[element.category]),
+        color: ink(element.color ?? "#222222"),
+        boxShadow: selected ? `inset 0 0 0 1.5px ${paint("#1a73e8")}` : undefined,
       }}
       onClick={() => onPick(element.symbol)}
     >

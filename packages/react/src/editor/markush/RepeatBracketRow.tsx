@@ -5,7 +5,7 @@ import type { Run } from "@structura/engine"
 import { bracketCountOf, type CountDraft } from "./bracketCount.ts"
 import { repeatSkipText, repeatStraddleText } from "./describe.ts"
 
-const FIELD = "h-6 rounded border border-[#d0d0d0] bg-white px-1 text-center text-[12px] outline-none focus:border-[#1a73e8]"
+const FIELD = "h-6 rounded border border-(--c-d0d0d0) bg-(--c-ffffff) px-1 text-center text-[12px] outline-none focus:border-(--c-1a73e8)"
 
 /**
  * One repeat unit [ … ]n in the 位置 tab: how many atoms it holds, and its count "n = 1 到 4
@@ -32,12 +32,12 @@ export function RepeatBracketRow({ bracket, skip, straddles = [], run }: { brack
   }
 
   return (
-    <div className="border-b border-[#e8e8e8] px-3 py-2" data-testid="repeat-bracket-row">
-      <div className="flex items-center gap-1.5 text-[#333]">
+    <div className="border-b border-(--c-e8e8e8) px-3 py-2" data-testid="repeat-bracket-row">
+      <div className="flex items-center gap-1.5 text-(--c-333333)">
         <span className="font-medium">[ … ]{repeat.name}</span>
-        <span className="text-[#888]">重复单元，{bracket.atoms.length} 个原子，生成时按次数首尾相接写出</span>
+        <span className="text-(--c-888888)">重复单元，{bracket.atoms.length} 个原子，生成时按次数首尾相接写出</span>
       </div>
-      <div className="mt-1.5 flex items-center gap-1 text-[#555]">
+      <div className="mt-1.5 flex items-center gap-1 text-(--c-555555)">
         <input className={`${FIELD} w-7 italic`} value={shown.name} onChange={(event) => edit("name", event.target.value)} aria-label="重复单元次数的名字" />
         <span>=</span>
         <input className={`${FIELD} w-8`} inputMode="numeric" value={shown.min} onChange={(event) => edit("min", event.target.value)} aria-label="重复单元最少次数" />
@@ -45,10 +45,10 @@ export function RepeatBracketRow({ bracket, skip, straddles = [], run }: { brack
         <input className={`${FIELD} w-8`} inputMode="numeric" value={shown.max} onChange={(event) => edit("max", event.target.value)} aria-label="重复单元最多次数" />
         <span>次</span>
       </div>
-      {problem && <p className="mt-1 text-[11px] text-[#d1242f]">{problem}</p>}
-      {skip && <p className="mt-1 text-[11px] text-[#8a5300]">{repeatSkipText(skip)}</p>}
+      {problem && <p className="mt-1 text-[11px] text-(--c-d1242f)">{problem}</p>}
+      {skip && <p className="mt-1 text-[11px] text-(--c-8a5300)">{repeatSkipText(skip)}</p>}
       {straddles.map((straddle) => (
-        <p key={straddle.atom} className="mt-1 text-[11px] text-[#8a5300]">
+        <p key={straddle.atom} className="mt-1 text-[11px] text-(--c-8a5300)">
           {repeatStraddleText(straddle)}
         </p>
       ))}

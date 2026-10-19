@@ -3,6 +3,7 @@ import { elementColor, paletteElements } from "@structura/core/elements"
 import type { ToolId } from "@structura/engine"
 import { PeriodicTable } from "./PeriodicTable.tsx"
 import { ToolButton } from "./ToolButton.tsx"
+import { useInk } from "../../components/theme.ts"
 
 /** The common elements as buttons, plus the full periodic table in a dialog. */
 export function ElementPalette({
@@ -14,6 +15,7 @@ export function ElementPalette({
   atomEl: string
   onElement: (el: string) => void
 }) {
+  const ink = useInk()
   const [tableOpen, setTableOpen] = useState(false)
   return (
     <>
@@ -21,7 +23,7 @@ export function ElementPalette({
         <button
           type="button"
           data-testid="open-periodic-table"
-          className="col-span-2 mx-0.5 my-1 h-7 rounded-sm border border-[#d0d0d0] bg-white text-[12px] hover:bg-[#e8f1fb]"
+          className="col-span-2 mx-0.5 my-1 h-7 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) text-[12px] hover:bg-(--c-e8f1fb)"
           onClick={() => setTableOpen(true)}
         >
           周期表
@@ -36,7 +38,7 @@ export function ElementPalette({
           >
             <span
               className="font-[Arial,Helvetica,sans-serif] text-[13px] font-semibold"
-              style={{ color: elementColor(element.symbol, true) }}
+              style={{ color: ink(elementColor(element.symbol, true)) }}
             >
               {element.symbol}
             </span>

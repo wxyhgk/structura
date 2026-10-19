@@ -82,7 +82,7 @@ export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, on
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col text-[12px] text-[#333]" data-testid="variablesBoard">
+    <div className="flex h-full min-h-0 flex-col text-[12px] text-(--c-333333)" data-testid="variablesBoard">
       <PaneHeader title="变量" count={names.length}>
         <div className="ml-auto flex items-center gap-2">
           {onFill && (
@@ -126,8 +126,8 @@ export function VariablesBoard({ drawing, run, selected, colorHetero, onHelp, on
 /** What to do first, while the formula has no variables yet. */
 function EmptyState() {
   return (
-    <div className="rounded-md border border-dashed border-[#c8c8c8] bg-white px-5 py-6 text-[13px] leading-relaxed text-[#555]" data-testid="variables-empty">
-      <p className="mb-2 font-medium text-[#333]">还没有变量</p>
+    <div className="rounded-md border border-dashed border-(--c-c8c8c8) bg-(--c-ffffff) px-5 py-6 text-[13px] leading-relaxed text-(--c-555555)" data-testid="variables-empty">
+      <p className="mb-2 font-medium text-(--c-333333)">还没有变量</p>
       <ol className="list-decimal space-y-1 pl-5">
         <li>在左边的画布上画出通式的骨架（母核）。</li>
         <li>双击要变化的原子，输入 R1、X、Ar 这样的名字，它就成了变量。</li>

@@ -29,19 +29,19 @@ export function AlternativeChips({
   /** Opens 存为模板 for the class or drawn piece at this index. */
   onSaveTemplate: (index: number) => void
 }) {
-  if (alternatives.length === 0) return <p className="text-[#999]">还没有候选项。</p>
+  if (alternatives.length === 0) return <p className="text-(--c-999999)">还没有候选项。</p>
   const remove = (index: number) =>
     !readOnly && (
-      <button className="px-0.5 text-[14px] leading-none text-[#999] hover:text-[#d1242f]" onClick={() => onRemove(index)} aria-label="去掉" title="去掉">
+      <button className="px-0.5 text-[14px] leading-none text-(--c-999999) hover:text-(--c-d1242f)" onClick={() => onRemove(index)} aria-label="去掉" title="去掉">
         ×
       </button>
     )
   const keep = (index: number) => (
-    <button className="px-0.5 text-[#999] hover:text-[#1a73e8]" onClick={() => onSaveTemplate(index)} aria-label="存为模板" title="存为模板：以后在模板库里一键添加">
+    <button className="px-0.5 text-(--c-999999) hover:text-(--c-1a73e8)" onClick={() => onSaveTemplate(index)} aria-label="存为模板" title="存为模板：以后在模板库里一键添加">
       <BookmarkPlus size={13} />
     </button>
   )
-  const frame = (index: number) => (editing === index ? "border-[#1a73e8] bg-[#f1f6fd]" : "border-[#d0d0d0] bg-white")
+  const frame = (index: number) => (editing === index ? "border-(--c-1a73e8) bg-(--c-f1f6fd)" : "border-(--c-d0d0d0) bg-(--c-ffffff)")
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -49,7 +49,7 @@ export function AlternativeChips({
         item.kind === "fragment" ? (
           <div key={index} className={`flex w-32 flex-col rounded-md border ${frame(index)}`} data-testid="alternative">
             <button
-              className="flex h-20 items-center justify-center rounded-t-md p-1 enabled:hover:bg-[#f5f8fd]"
+              className="flex h-20 items-center justify-center rounded-t-md p-1 enabled:hover:bg-(--c-f5f8fd)"
               disabled={readOnly}
               onClick={() => onEditFragment(index)}
               title={readOnly ? undefined : "点击在画板里修改"}
@@ -57,8 +57,8 @@ export function AlternativeChips({
             >
               <MoleculeThumb mol={item.molecule} colorHetero={colorHetero} className="max-h-full max-w-full object-contain" />
             </button>
-            <div className="flex items-center gap-1 border-t border-[#eeeeee] px-1.5 py-0.5">
-              <span className="min-w-0 flex-1 truncate text-[11px] text-[#555]" title={describeAlternative(item)}>
+            <div className="flex items-center gap-1 border-t border-(--c-eeeeee) px-1.5 py-0.5">
+              <span className="min-w-0 flex-1 truncate text-[11px] text-(--c-555555)" title={describeAlternative(item)}>
                 {describeAlternative(item)}
               </span>
               {keep(index)}
@@ -68,7 +68,7 @@ export function AlternativeChips({
         ) : (
           <span key={index} className={`inline-flex h-7 items-center gap-1 rounded-full border pr-1.5 pl-2.5 ${frame(index)}`} data-testid="alternative">
             {item.kind === "class" && !readOnly ? (
-              <button className="hover:text-[#1a73e8]" onClick={() => onEditClass(index)} title="点击修改范围">
+              <button className="hover:text-(--c-1a73e8)" onClick={() => onEditClass(index)} title="点击修改范围">
                 {describeAlternative(item)}
               </button>
             ) : (

@@ -17,9 +17,9 @@ export function AttachmentShapePicker({ attachment, mol, brackets, run }: { atta
     if (shape !== chosen) run([{ op: "set_attachment_shape", atom: attachment.atom, shape }], { keepSelection: true })
   }
   return (
-    <div className="mt-1.5 flex items-center gap-1.5 text-[#555]">
+    <div className="mt-1.5 flex items-center gap-1.5 text-(--c-555555)">
       <span>画法</span>
-      <div role="radiogroup" aria-label="画法" className="flex overflow-hidden rounded border border-[#d0d0d0]">
+      <div role="radiogroup" aria-label="画法" className="flex overflow-hidden rounded border border-(--c-d0d0d0)">
         {shapeChoices(attachment, brackets).map((shape) => (
           <button
             key={shape ?? "auto"}
@@ -27,14 +27,14 @@ export function AttachmentShapePicker({ attachment, mol, brackets, run }: { atta
             role="radio"
             aria-checked={shape === chosen}
             title={shape === "custom" ? CUSTOM_HINT : shape ? undefined : `现在画成${SHAPE_NAMES[auto]}`}
-            className={`h-6 border-l border-[#d0d0d0] px-1.5 text-[12px] first:border-l-0 ${shape === chosen ? "bg-[#e8f0fe] text-[#1a73e8]" : "bg-white hover:bg-[#f3f3f3]"}`}
+            className={`h-6 border-l border-(--c-d0d0d0) px-1.5 text-[12px] first:border-l-0 ${shape === chosen ? "bg-(--c-e8f0fe) text-(--c-1a73e8)" : "bg-(--c-ffffff) hover:bg-(--c-f3f3f3)"}`}
             onClick={() => pick(shape)}
           >
             {shape ? SHAPE_NAMES[shape] : "自动"}
           </button>
         ))}
       </div>
-      {chosen == null && <span className="text-[11px] text-[#888]">（{SHAPE_NAMES[auto]}）</span>}
+      {chosen == null && <span className="text-[11px] text-(--c-888888)">（{SHAPE_NAMES[auto]}）</span>}
     </div>
   )
 }

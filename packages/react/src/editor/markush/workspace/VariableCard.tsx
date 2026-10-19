@@ -74,22 +74,22 @@ export function VariableCard({
   const siteLabel = SITE_LABELS[site]
 
   return (
-    <section className={`rounded-md border bg-white ${sketch != null ? "border-[#9fc3ee] shadow-sm" : "border-[#d0d0d0]"}`} data-testid={`variable-${name}`}>
-      <div className="flex items-center gap-2 border-b border-[#eeeeee] px-4 py-2.5">
-        <span className="font-[Arial,Helvetica,sans-serif] text-[20px] leading-none font-semibold text-[#222]">{name}</span>
-        <span className="rounded-sm border border-[#d6e4f7] bg-[#f1f6fd] px-1.5 py-px text-[11px] text-[#1a73e8]" title={siteLabel.title}>
+    <section className={`rounded-md border bg-(--c-ffffff) ${sketch != null ? "border-(--c-9fc3ee) shadow-sm" : "border-(--c-d0d0d0)"}`} data-testid={`variable-${name}`}>
+      <div className="flex items-center gap-2 border-b border-(--c-eeeeee) px-4 py-2.5">
+        <span className="font-[Arial,Helvetica,sans-serif] text-[20px] leading-none font-semibold text-(--c-222222)">{name}</span>
+        <span className="rounded-sm border border-(--c-d6e4f7) bg-(--c-f1f6fd) px-1.5 py-px text-[11px] text-(--c-1a73e8)" title={siteLabel.title}>
           {siteLabel.label}
         </span>
-        {!variable && <span className="rounded-sm bg-[#fff4e0] px-1.5 py-px text-[11px] text-[#b26a00]">未定义</span>}
-        {!onDrawing && <span className="rounded-sm bg-[#f0f0f0] px-1.5 py-px text-[11px] text-[#777]">{nested ? "在片段里" : "图上没有"}</span>}
-        {variable && !shared && <span className="text-[11px] text-[#888]">{alternatives.length} 个候选项</span>}
+        {!variable && <span className="rounded-sm bg-(--c-fff4e0) px-1.5 py-px text-[11px] text-(--c-b26a00)">未定义</span>}
+        {!onDrawing && <span className="rounded-sm bg-(--c-f0f0f0) px-1.5 py-px text-[11px] text-(--c-777777)">{nested ? "在片段里" : "图上没有"}</span>}
+        {variable && !shared && <span className="text-[11px] text-(--c-888888)">{alternatives.length} 个候选项</span>}
         <div className="ml-auto flex items-center gap-3">
           {sharedBy.length > 0 ? (
-            <span className="text-[#666]">{sharedBy.join("、")} 与它相同</span>
+            <span className="text-(--c-666666)">{sharedBy.join("、")} 与它相同</span>
           ) : (
             (shared || sources.length > 0) && (
               <select
-                className="h-7 rounded-sm border border-[#d0d0d0] bg-white px-1 outline-none focus:border-[#1a73e8]"
+                className="h-7 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1 outline-none focus:border-(--c-1a73e8)"
                 value={shared ?? ""}
                 onChange={(event) => edits.share(event.target.value)}
                 aria-label={`${name} 的候选项来源`}
@@ -104,7 +104,7 @@ export function VariableCard({
             )
           )}
           {variable && !shared && sharedBy.length === 0 && (
-            <button className="text-[12px] text-[#888] hover:text-[#d1242f]" onClick={() => edits.save([])} aria-label={`删除 ${name}`}>
+            <button className="text-[12px] text-(--c-888888) hover:text-(--c-d1242f)" onClick={() => edits.save([])} aria-label={`删除 ${name}`}>
               清空
             </button>
           )}
@@ -147,7 +147,7 @@ export function VariableCard({
             onCancel={() => setTemplateForm(null)}
           />
         ) : shared ? (
-          <p className="text-[#888]">要修改，请到 {shared} 里改。</p>
+          <p className="text-(--c-888888)">要修改，请到 {shared} 里改。</p>
         ) : classForm != null ? (
           <ClassForm
             key={String(classForm)}

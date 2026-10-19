@@ -38,7 +38,7 @@ export function AtomLabelInput({
       value={value}
       placeholder={placeholder}
       aria-label={placeholder ?? "原子标签"}
-      className="absolute z-10 h-7 w-20 -translate-x-1/2 -translate-y-1/2 rounded-sm border border-[#1a73e8] bg-white text-center font-[Arial,Helvetica,sans-serif] text-[15px] outline-none"
+      className="absolute z-10 h-7 w-20 -translate-x-1/2 -translate-y-1/2 rounded-sm border border-(--c-1a73e8) bg-(--c-ffffff) text-center font-[Arial,Helvetica,sans-serif] text-[15px] outline-none"
       style={{ left, top }}
       onChange={(event) => setValue(event.target.value)}
       onKeyDown={(event) => {

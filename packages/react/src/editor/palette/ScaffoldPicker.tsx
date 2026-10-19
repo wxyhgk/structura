@@ -56,7 +56,7 @@ export function ScaffoldPicker({
         <div className="flex min-h-0 flex-1 gap-4">
           <div className="flex min-h-0 w-[56%] flex-col gap-2">
             <input
-              className="h-8 rounded-md border border-[#d0d0d0] px-2 text-[13px] outline-none focus:border-[#1a73e8]"
+              className="h-8 rounded-md border border-(--c-d0d0d0) px-2 text-[13px] outline-none focus:border-(--c-1a73e8)"
               placeholder="搜索，如 咔唑、carbazole"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -65,14 +65,14 @@ export function ScaffoldPicker({
             <div className="min-h-0 flex-1 overflow-y-auto pr-1">
               {groups.map((group) => (
                 <section key={group} className="mb-3">
-                  <h3 className="mb-1 text-[11px] font-medium text-[#888]">{group}</h3>
+                  <h3 className="mb-1 text-[11px] font-medium text-(--c-888888)">{group}</h3>
                   <div className="grid grid-cols-4 gap-1.5">
                     {shown
                       .filter((item) => item.group === group)
                       .map((item) => (
                         <button
                           key={item.name}
-                          className={`flex flex-col items-center gap-0.5 rounded-md border p-1 text-[11px] ${item.name === scaffold.name ? "border-[#1a73e8] bg-[#e8f1fb]" : "border-transparent hover:bg-black/5"}`}
+                          className={`flex flex-col items-center gap-0.5 rounded-md border p-1 text-[11px] ${item.name === scaffold.name ? "border-(--c-1a73e8) bg-(--c-e8f1fb)" : "border-transparent hover:bg-black/5 dark:hover:bg-white/10"}`}
                           onClick={() => choose(item.name)}
                           onDoubleClick={() => use(defaultPick(item.name))}
                           data-testid={`scaffold-${item.name}`}
@@ -84,20 +84,20 @@ export function ScaffoldPicker({
                   </div>
                 </section>
               ))}
-              {shown.length === 0 && <p className="text-[12px] text-[#888]">没有找到。</p>}
+              {shown.length === 0 && <p className="text-[12px] text-(--c-888888)">没有找到。</p>}
             </div>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-2 border-l border-[#eee] pl-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 border-l border-(--c-eeeeee) pl-4">
             <div className="text-[15px] font-semibold">
-              {scaffold.zh} <span className="text-[12px] font-normal text-[#888]">{scaffold.name}</span>
+              {scaffold.zh} <span className="text-[12px] font-normal text-(--c-888888)">{scaffold.name}</span>
             </div>
-            <div className="flex gap-3 text-[11px] text-[#666]">
+            <div className="flex gap-3 text-[11px] text-(--c-666666)">
               <span className="flex items-center gap-1">
-                <span className="inline-block size-3 rounded-full border border-[#1a73e8]" />
+                <span className="inline-block size-3 rounded-full border border-(--c-1a73e8)" />
                 接到原子的位点
               </span>
               <span className="flex items-center gap-1">
-                <span className="inline-block size-3 rounded-[2px] border border-[#e8710a]" />
+                <span className="inline-block size-3 rounded-[2px] border border-(--c-e8710a)" />
                 并到键的边
               </span>
             </div>
@@ -108,7 +108,7 @@ export function ScaffoldPicker({
               onSite={(site) => setPick({ ...pick, site })}
               onEdge={(edge) => setPick({ ...pick, edge })}
             />
-            <ul className="space-y-0.5 text-[12px] leading-5 text-[#555]">
+            <ul className="space-y-0.5 text-[12px] leading-5 text-(--c-555555)">
               <li>点画布空白处：放一个{scaffold.zh}</li>
               <li>
                 点原子：用 <b>{pick.site}</b> 接上去

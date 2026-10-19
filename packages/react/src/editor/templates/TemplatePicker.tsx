@@ -28,13 +28,13 @@ export function TemplatePicker({
   const picks = quickPicks(templates.templates, site)
   return (
     <div className="flex flex-wrap items-center gap-1.5" data-testid="template-picker">
-      <span className="text-[#888]">模板：</span>
+      <span className="text-(--c-888888)">模板：</span>
       {picks.map((template) => {
         const added = inList(alternatives, template)
         return (
           <button
             key={template.id}
-            className={`${CHIP} ${added ? "border-[#d0d0d0] text-[#999]" : "border-[#9fc3ee] text-[#1a73e8] hover:bg-[#e8f1fb]"}`}
+            className={`${CHIP} ${added ? "border-(--c-d0d0d0) text-(--c-999999)" : "border-(--c-9fc3ee) text-(--c-1a73e8) hover:bg-(--c-e8f1fb)"}`}
             onClick={() => onAdd(template.alternative)}
             disabled={added}
             title={added ? `已在候选项里：${templateTitle(template)}` : `添加：${templateTitle(template)}`}
@@ -45,7 +45,7 @@ export function TemplatePicker({
           </button>
         )
       })}
-      <button className="rounded-full px-2 py-0.5 font-medium text-[#1a73e8] hover:bg-[#e8f1fb]" onClick={onLibrary} title="查看全部模板：搜索、分组浏览、存自己的模板">
+      <button className="rounded-full px-2 py-0.5 font-medium text-(--c-1a73e8) hover:bg-(--c-e8f1fb)" onClick={onLibrary} title="查看全部模板：搜索、分组浏览、存自己的模板">
         模板库…
       </button>
     </div>

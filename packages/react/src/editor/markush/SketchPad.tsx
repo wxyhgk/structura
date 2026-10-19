@@ -116,12 +116,12 @@ export function SketchPad({
   }
 
   const button = (active: boolean) =>
-    `h-6 rounded-sm border px-2 ${active ? "border-[#1a73e8] bg-[#1a73e8] font-semibold text-white" : "border-[#d0d0d0] bg-white text-[#333] hover:bg-[#f2f2f2] disabled:text-[#bbb]"}`
+    `h-6 rounded-sm border px-2 ${active ? "border-(--c-1a73e8) bg-(--c-1a73e8) font-semibold text-white" : "border-(--c-d0d0d0) bg-(--c-ffffff) text-(--c-333333) hover:bg-(--c-f2f2f2) disabled:text-(--c-bbbbbb)"}`
   const pad = (
     <div
       ref={boxRef}
       tabIndex={0}
-      className={`relative ${fill ? "min-h-[240px] flex-1" : "h-[340px] flex-1"} overflow-hidden rounded-sm border border-[#d0d0d0] bg-white outline-none focus:border-[#9fc3ee] ${marking ? "[&_svg]:cursor-crosshair" : ""}`}
+      className={`relative ${fill ? "min-h-[240px] flex-1" : "h-[340px] flex-1"} overflow-hidden rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) outline-none focus:border-(--c-9fc3ee) ${marking ? "[&_svg]:cursor-crosshair" : ""}`}
       onPointerDownCapture={markEnd}
       onKeyDown={handleKey}
       onKeyUp={(event) => event.code === "Space" && canvasRef.current?.releaseSpace()}
@@ -129,14 +129,14 @@ export function SketchPad({
     >
       <Canvas ref={canvasRef} {...canvasSlice({ ...editor, ...snapshot, arrows: snapshot.history.present.arrows }, { mol, drawOptions: slot?.drawOptions ?? PLAIN, viewport })} />
       <SiteBadges mol={mol} sites={shown.sites} assumed={shown.assumed} viewport={viewport} />
-      {marking && <p className="pointer-events-none absolute top-1.5 left-2 rounded-sm bg-[#1a73e8] px-1.5 py-0.5 text-white">设位点：点原子（再点一次去掉）</p>}
+      {marking && <p className="pointer-events-none absolute top-1.5 left-2 rounded-sm bg-(--c-1a73e8) px-1.5 py-0.5 text-white">设位点：点原子（再点一次去掉）</p>}
     </div>
   )
   return (
     <div className={`flex flex-col gap-2 text-xs ${fill ? "min-h-0 flex-1" : ""}`}>
       <div className="flex flex-wrap items-center gap-2" role="toolbar" aria-label="画板">
         <button
-          className={`h-6 rounded-sm border px-2 font-semibold ${marking ? "border-[#1a73e8] bg-[#1a73e8] text-white" : "border-[#1a73e8] bg-white text-[#1a73e8] hover:bg-[#e8f1fb]"}`}
+          className={`h-6 rounded-sm border px-2 font-semibold ${marking ? "border-(--c-1a73e8) bg-(--c-1a73e8) text-white" : "border-(--c-1a73e8) bg-(--c-ffffff) text-(--c-1a73e8) hover:bg-(--c-e8f1fb)"}`}
           onClick={() => setMarking(!marking)}
           title="点原子设为位点（接到通式上的位置），再点一次去掉"
         >
@@ -148,7 +148,7 @@ export function SketchPad({
         <button className={button(false)} onClick={() => editor.redo()} disabled={snapshot.history.future.length === 0} title="重做（⇧⌘Z）">
           重做
         </button>
-        {claim && <span className="text-[#888]">用左侧工具栏画，快捷键和主画布一样</span>}
+        {claim && <span className="text-(--c-888888)">用左侧工具栏画，快捷键和主画布一样</span>}
       </div>
       {claim ? (
         pad
@@ -158,8 +158,8 @@ export function SketchPad({
           {pad}
         </div>
       )}
-      <p className="text-[#555]" data-testid="sites-line">
-        <span className="text-[#888]">{SITE_HINT[kind]}。</span>
+      <p className="text-(--c-555555)" data-testid="sites-line">
+        <span className="text-(--c-888888)">{SITE_HINT[kind]}。</span>
         {shown.sites.length > 0 && (
           <span>
             位点：{shown.sites.map((id, index) => `${index + 1}. ${siteName(mol, id)}`).join("、")}
@@ -167,7 +167,7 @@ export function SketchPad({
             {kind !== "link" && shown.sites.length > 1 && `，生成时每个位点一种，共 ${shown.sites.length} 种`}
           </span>
         )}
-        {problem && mol.atoms.length > 0 && <span className="text-[#b26a00]"> {problem}</span>}
+        {problem && mol.atoms.length > 0 && <span className="text-(--c-b26a00)"> {problem}</span>}
       </p>
     </div>
   )

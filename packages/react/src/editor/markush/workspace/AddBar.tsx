@@ -3,7 +3,7 @@ import { HelpLink, type GuideTopic } from "../../../guide/index.ts"
 import type { variableEdits } from "../variableEdits.ts"
 
 const ACTION =
-  "rounded-sm border border-[#9fc3ee] bg-white px-2.5 py-1 text-[#1a73e8] hover:bg-[#e8f1fb] disabled:border-[#ddd] disabled:text-[#aaa] disabled:hover:bg-transparent"
+  "rounded-sm border border-(--c-9fc3ee) bg-(--c-ffffff) px-2.5 py-1 text-(--c-1a73e8) hover:bg-(--c-e8f1fb) disabled:border-(--c-dddddd) disabled:text-(--c-aaaaaa) disabled:hover:bg-transparent"
 
 /**
  * The ways to add to a variable's list: typing elements and abbreviations, one-click templates,
@@ -51,7 +51,7 @@ export function AddBar({
   return (
     <div className="space-y-2">
       <input
-        className="h-8 w-full rounded-sm border border-[#d0d0d0] bg-white px-2.5 text-[13px] outline-none focus:border-[#1a73e8]"
+        className="h-8 w-full rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-2.5 text-[13px] outline-none focus:border-(--c-1a73e8)"
         placeholder={linker ? "输入候选项：单键, O, (CH2)1-3…，回车添加" : empty ? "输入候选项：H, Cl, CN, Me, Ph；环里 N, CR3…，回车添加" : "继续输入，回车添加"}
         value={text}
         onChange={(event) => {
@@ -64,7 +64,7 @@ export function AddBar({
         aria-label={`${name} 的候选项`}
       />
       {unknown.length > 0 && (
-        <p className="text-[#b26a00]">看不懂：{unknown.join("、")}。只能填元素或缩写（如 H、Cl、CN、Me、Ph）；烷基、芳基这类范围请用类别。</p>
+        <p className="text-(--c-b26a00)">看不懂：{unknown.join("、")}。只能填元素或缩写（如 H、Cl、CN、Me、Ph）；烷基、芳基这类范围请用类别。</p>
       )}
       {picker}
       <div className="flex flex-wrap items-center gap-1.5">
@@ -86,7 +86,7 @@ export function AddBar({
           <HelpLink onClick={() => onHelp("fragments")} label="片段怎么画" />
         </span>
       </div>
-      {captureProblem && <p className="text-[#b26a00]">{captureProblem}</p>}
+      {captureProblem && <p className="text-(--c-b26a00)">{captureProblem}</p>}
     </div>
   )
 }

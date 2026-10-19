@@ -7,10 +7,10 @@ import type { Report } from "./report.ts"
 /** One value with a copy button: what it is, how it shows, and the plain text copied. */
 function Row({ name, children, text, onCopy }: { name: string; children: ReactNode; text: string; onCopy: (text: string, what: string) => void }) {
   return (
-    <div className="flex items-center gap-2 border-b border-[#f0f0f0] py-1 text-[13px]">
-      <span className="w-24 shrink-0 text-[#777]">{name}</span>
+    <div className="flex items-center gap-2 border-b border-(--c-f0f0f0) py-1 text-[13px]">
+      <span className="w-24 shrink-0 text-(--c-777777)">{name}</span>
       <span className="flex-1 font-[Arial,Helvetica,sans-serif]">{children}</span>
-      <button type="button" className="text-[11px] text-[#1a73e8] hover:underline" onClick={() => onCopy(text, name)}>
+      <button type="button" className="text-[11px] text-(--c-1a73e8) hover:underline" onClick={() => onCopy(text, name)}>
         复制
       </button>
     </div>
@@ -46,7 +46,7 @@ export function AnalysisDialog({ report, onOpenChange, onCopy }: { report: Repor
             )}
             {report.ions.map((ion) => (
               <Row key={ion.name} name={`m/z ${ion.name}`} text={ion.mz.toFixed(4)} onCopy={onCopy}>
-                {ion.mz.toFixed(4)} <span className="text-[#888]">（{displayFormula(ion.formula)}）</span>
+                {ion.mz.toFixed(4)} <span className="text-(--c-888888)">（{displayFormula(ion.formula)}）</span>
               </Row>
             ))}
             {report.analysis.length > 0 && (

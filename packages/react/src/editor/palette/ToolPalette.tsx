@@ -73,7 +73,7 @@ export function ToolPalette(props: PaletteProps) {
   )
 
   return (
-    <aside className="flex w-[78px] shrink-0 flex-col border-r border-[#d0d0d0] bg-[#f3f3f3]">
+    <aside className="flex w-[78px] shrink-0 flex-col border-r border-(--c-d0d0d0) bg-(--c-f3f3f3)">
       <ScrollArea className="min-h-0 flex-1">
         <div className="grid grid-cols-2 gap-px p-1">
           {simple("lasso", "套索", <LassoIcon />)}
@@ -164,7 +164,7 @@ export function ToolPalette(props: PaletteProps) {
           <button
             type="button"
             data-testid="open-scaffolds"
-            className={`mx-0.5 my-1 h-7 w-[calc(100%-4px)] truncate rounded-sm border px-1 text-[12px] ${props.tool === "scaffold" ? "border-[#1a73e8] bg-[#e8f1fb] text-[#1a73e8]" : "border-[#d0d0d0] bg-white hover:bg-[#e8f1fb]"}`}
+            className={`mx-0.5 my-1 h-7 w-[calc(100%-4px)] truncate rounded-sm border px-1 text-[12px] ${props.tool === "scaffold" ? "border-(--c-1a73e8) bg-(--c-e8f1fb) text-(--c-1a73e8)" : "border-(--c-d0d0d0) bg-(--c-ffffff) hover:bg-(--c-e8f1fb)"}`}
             title="模板分子：常用环系，带编号的连接位点"
             onClick={() => setPickerOpen(true)}
           >

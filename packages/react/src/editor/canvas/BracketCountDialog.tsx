@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useOverlayMark } from "../input/overlays.ts"
 import { bracketCountOf } from "../markush/bracketCount.ts"
 
-const FIELD = "h-7 rounded border border-[#d0d0d0] bg-white px-1 text-center text-[13px] outline-none focus:border-[#1a73e8]"
+const FIELD = "h-7 rounded border border-(--c-d0d0d0) bg-(--c-ffffff) px-1 text-center text-[13px] outline-none focus:border-(--c-1a73e8)"
 
 /**
  * 重复次数: the name written at the lower right of "]" and the range it stands for
@@ -48,7 +48,7 @@ function CountForm({ bracket, onSave, onClose }: { bracket: Bracket; onSave: (id
         <DialogDescription>括号右下角写的名字，以及它代表的次数范围。</DialogDescription>
       </DialogHeader>
       <form
-        className="flex items-center gap-1.5 text-[13px] text-[#555]"
+        className="flex items-center gap-1.5 text-[13px] text-(--c-555555)"
         onSubmit={(event) => {
           event.preventDefault()
           save()
@@ -64,7 +64,7 @@ function CountForm({ bracket, onSave, onClose }: { bracket: Bracket; onSave: (id
           确定
         </Button>
       </form>
-      {problem && <p className="text-[12px] text-[#d1242f]">{problem}</p>}
+      {problem && <p className="text-[12px] text-(--c-d1242f)">{problem}</p>}
     </DialogContent>
   )
 }

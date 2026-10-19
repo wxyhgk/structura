@@ -6,7 +6,7 @@ import type { Run } from "@structura/engine"
 import { AttachmentShapePicker } from "./AttachmentShapePicker.tsx"
 import { widerSystem } from "./workspace/widerSystem.ts"
 
-const FIELD = "h-6 rounded border border-[#d0d0d0] bg-white px-1 text-center text-[12px] outline-none focus:border-[#1a73e8]"
+const FIELD = "h-6 rounded border border-(--c-d0d0d0) bg-(--c-ffffff) px-1 text-center text-[12px] outline-none focus:border-(--c-1a73e8)"
 
 /**
  * One variable point of attachment in the 位置 tab: which piece, how many positions it can
@@ -49,22 +49,22 @@ export function AttachmentRow({ attachment, drawing, run }: { attachment: Attach
   }
 
   return (
-    <div className="border-b border-[#e8e8e8] px-3 py-2" data-testid="attachment-row">
-      <div className="flex items-center gap-1.5 text-[#333]">
+    <div className="border-b border-(--c-e8e8e8) px-3 py-2" data-testid="attachment-row">
+      <div className="flex items-center gap-1.5 text-(--c-333333)">
         <span className="font-medium">{repeat ? `(${name})${repeat.name}` : name}</span>
-        <span className="text-[#888]">{intoBracket ? `连在方括号里的基团上，${open} 个可接位置之一` : `连在环上 ${open} 个可接位置之一`}</span>
+        <span className="text-(--c-888888)">{intoBracket ? `连在方括号里的基团上，${open} 个可接位置之一` : `连在环上 ${open} 个可接位置之一`}</span>
       </div>
       {system && (
         <button
           type="button"
-          className="mt-1 text-[11px] text-[#1a73e8] hover:underline"
+          className="mt-1 text-[11px] text-(--c-1a73e8) hover:underline"
           onClick={() => run([{ op: "set_attachment", atom: attachment.atom, to: system, ...(repeat ? { repeat } : {}), ...(attachment.shape ? { shape: attachment.shape } : {}) }], { keepSelection: true })}
         >
           扩大到整个稠环体系（{openPositions(drawing, system).length} 个位置）
         </button>
       )}
       <AttachmentShapePicker attachment={attachment} mol={mol} brackets={brackets} run={run} />
-      <label className="mt-1.5 flex items-center gap-1.5 text-[#555]">
+      <label className="mt-1.5 flex items-center gap-1.5 text-(--c-555555)">
         <input
           type="checkbox"
           checked={repeat != null}
@@ -74,7 +74,7 @@ export function AttachmentRow({ attachment, drawing, run }: { attachment: Attach
         重复出现（每个各选各的，位置互不相同）
       </label>
       {shown && (
-        <div className="mt-1.5 flex items-center gap-1 text-[#555]">
+        <div className="mt-1.5 flex items-center gap-1 text-(--c-555555)">
           <input className={`${FIELD} w-7 italic`} value={shown.name} onChange={(event) => edit("name", event.target.value)} aria-label="次数的名字" />
           <span>=</span>
           <input className={`${FIELD} w-8`} inputMode="numeric" value={shown.min} onChange={(event) => edit("min", event.target.value)} aria-label="最少次数" />
@@ -83,7 +83,7 @@ export function AttachmentRow({ attachment, drawing, run }: { attachment: Attach
           <span>次</span>
         </div>
       )}
-      {problem && <p className="mt-1 text-[11px] text-[#d1242f]">{problem}</p>}
+      {problem && <p className="mt-1 text-[11px] text-(--c-d1242f)">{problem}</p>}
     </div>
   )
 }

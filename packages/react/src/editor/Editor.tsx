@@ -37,6 +37,7 @@ import { StructureDialog } from "./vision/StructureDialog.tsx"
 import type { RecognizeStructure } from "./vision/useRecognition.ts"
 import { MarkushWorkspace } from "./markush/workspace/MarkushWorkspace.tsx"
 import type { WordExport } from "./markush/wordExport.ts"
+import { DarkContext, darkClass, useDark, type Theme } from "../components/theme.ts"
 import type { Workspace } from "./markush/workspace/types.ts"
 import { WorkspaceTabs } from "./markush/workspace/WorkspaceTabs.tsx"
 import { SmilesDialog } from "./shell/dialogs/SmilesDialog.tsx"
@@ -54,6 +55,7 @@ export type { FillVariables } from "./markush/useFill.ts"
 export type { RecognizeStructure } from "./vision/useRecognition.ts"
 export type { TemplateStore } from "./templates/store.ts"
 export type { WordExport } from "./markush/wordExport.ts"
+export type { Theme } from "../components/theme.ts"
 
 export type EditorProps = {
   /** Molfile or SD text to start with; read once, when the editor mounts. */
@@ -97,13 +99,22 @@ export type EditorProps = {
    * host's server). Without it, 化合物表 → Word still works, with the structures as pictures.
    */
   wordExport?: WordExport
+  /**
+   * "light" (the default), "dark", or "auto": dark when the page says so (data-theme="dark", or
+   * class "dark", on <html>) or, when it says nothing, when the system is dark; followed live.
+   * Files the editor writes (SVG, CDXML, Word…) stay light either way.
+   */
+  theme?: Theme
+  /** Offers 浅色 / 深色 / 跟随系统 in 查看; the host keeps the choice and passes it back as `theme`. Without it, no choice is shown. */
+  onThemeChange?: (theme: Theme) => void
 }
 
 /**
  * Lays out the editor and wires state, commands and input together. It fills its
  * container, so the host decides its size.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onDirtyChange, fillVariables, recognizeStructure, templateStore, onDismiss, wordExport }, ref) {
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onDirtyChange, fillVariables, recognizeStructure, templateStore, onDismiss, wordExport, theme = "light", onThemeChange }, ref) {
+  const dark = useDark(theme)
   const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
   const editor = useEditor(initial)
   const templates = useTemplates(templateStore)
@@ -179,11 +190,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
   )
 
   return (
+    <DarkContext value={dark}>
     <TooltipProvider delayDuration={350}>
       <OverlayScope value={input.overlayScope}>
         <PadSlotContext value={padSlot}>
           <div
-            className="chem-app relative flex h-full w-full min-h-0 flex-col overflow-hidden"
+            className={`chem-app relative flex h-full w-full min-h-0 flex-col overflow-hidden ${darkClass(dark)}`}
             {...input.rootProps}
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
@@ -204,7 +216,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
                 if (picked) void openFile(picked)
               }}
             />
-            <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} raisedNumbers={editor.raisedNumbers} onRaisedNumbers={setRaisedNumbers} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} tabs={<WorkspaceTabs value={workspace} onChange={setWorkspace} />} />
+            <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} raisedNumbers={editor.raisedNumbers} onRaisedNumbers={setRaisedNumbers} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} tabs={<WorkspaceTabs value={workspace} onChange={setWorkspace} />} theme={theme} onTheme={onThemeChange} />
             <Toolbar commands={commands} zoom={zoom} />
 
             <div className="flex min-h-0 flex-1">
@@ -276,5 +288,6 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
         </PadSlotContext>
       </OverlayScope>
     </TooltipProvider>
+    </DarkContext>
   )
 })

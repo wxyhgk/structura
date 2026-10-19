@@ -99,7 +99,7 @@ export function CompoundTableDialog({
         </DialogHeader>
         <label className="flex items-center gap-2 text-[13px]">
           每行
-          <select className="h-7 rounded-sm border border-[#d0d0d0] bg-white px-1" value={columns} onChange={(event) => onColumns(Number(event.target.value))} aria-label="每行几个">
+          <select className="h-7 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1" value={columns} onChange={(event) => onColumns(Number(event.target.value))} aria-label="每行几个">
             {COLUMNS.map((value) => (
               <option key={value} value={value}>
                 {value} 个
@@ -109,12 +109,12 @@ export function CompoundTableDialog({
         </label>
         <div className="space-y-3 text-[13px]">
           <div className="flex items-start justify-between gap-3" data-testid="word-option">
-            <p className="text-[#555]">
-              <span className="font-medium text-[#222]">Word 文档（.docx）</span>
+            <p className="text-(--c-555555)">
+              <span className="font-medium text-(--c-222222)">Word 文档（.docx）</span>
               <br />
               <span data-testid="word-note">{wordNote}</span>
               {made && (
-                <span className="mt-1 block text-[#1a7f37]" data-testid="word-made">
+                <span className="mt-1 block text-(--c-1a7f37)" data-testid="word-made">
                   {made}
                 </span>
               )}
@@ -124,8 +124,8 @@ export function CompoundTableDialog({
             </Button>
           </div>
           <div className="flex items-start justify-between gap-3">
-            <p className="text-[#555]">
-              <span className="font-medium text-[#222]">ChemDraw 整表（.cdxml）</span>
+            <p className="text-(--c-555555)">
+              <span className="font-medium text-(--c-222222)">ChemDraw 整表（.cdxml）</span>
               <br />
               整张表画在一个 ChemDraw 文档里，打开后可以直接复制到 Word。
             </p>
@@ -134,8 +134,8 @@ export function CompoundTableDialog({
             </Button>
           </div>
           <div className="flex items-start justify-between gap-3">
-            <p className="text-[#555]">
-              <span className="font-medium text-[#222]">Word 表格用的包（.zip）</span>
+            <p className="text-(--c-555555)">
+              <span className="font-medium text-(--c-222222)">Word 表格用的包（.zip）</span>
               <br />
               每个化合物一个 CDXML，加上编号清单（manifest.json、compounds.csv）；交给 chem2office 生成“一行结构、一行编号”的 Word 表格，每个结构都是可编辑的 ChemDraw 对象。
             </p>

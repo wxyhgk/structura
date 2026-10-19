@@ -35,7 +35,7 @@ export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }:
   const exporters = { csv: downloadCsv, sdf: downloadSdf, smi: downloadSmiles }
 
   return (
-    <section className="flex h-full min-h-0 flex-col bg-white" data-testid="resultsPane" aria-label="生成结果">
+    <section className="flex h-full min-h-0 flex-col bg-(--c-ffffff)" data-testid="resultsPane" aria-label="生成结果">
       <ResultsToolbar
         summary={empty ? "" : progressText(live.run, options.limit)}
         running={running}
@@ -75,7 +75,7 @@ export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }:
       />
       {running && result && <Progress made={result.molecules.length} of={Math.min(result.total, options.limit)} />}
       {notesOpen && notes.length > 0 && (
-        <ul className="max-h-24 list-disc space-y-0.5 overflow-y-auto border-b border-[#f0e2bf] bg-[#fffaf0] py-1.5 pr-3 pl-8 text-[12px] text-[#8a5a00]" data-testid="enumeration-notes">
+        <ul className="max-h-24 list-disc space-y-0.5 overflow-y-auto border-b border-(--c-f0e2bf) bg-(--c-fffaf0) py-1.5 pr-3 pl-8 text-[12px] text-(--c-8a5a00)" data-testid="enumeration-notes">
           {notes.map((note) => (
             <li key={note}>{note}</li>
           ))}
@@ -97,8 +97,8 @@ export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }:
 /** A thin bar under the toolbar while generating. */
 function Progress({ made, of }: { made: number; of: number }) {
   return (
-    <div className="h-0.5 bg-[#e8eefa]">
-      <div className="h-full bg-[#1a73e8] transition-[width]" style={{ width: `${of > 0 ? Math.min(100, (made / of) * 100) : 0}%` }} />
+    <div className="h-0.5 bg-(--c-e8eefa)">
+      <div className="h-full bg-(--c-1a73e8) transition-[width]" style={{ width: `${of > 0 ? Math.min(100, (made / of) * 100) : 0}%` }} />
     </div>
   )
 }
@@ -106,8 +106,8 @@ function Progress({ made, of }: { made: number; of: number }) {
 function Empty({ title, hint }: { title: string; hint: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 p-4 text-center" data-testid="results-empty">
-      <div className="text-[13px] font-medium text-[#555]">{title}</div>
-      <div className="max-w-md text-[12px] leading-relaxed text-[#888]">{hint}</div>
+      <div className="text-[13px] font-medium text-(--c-555555)">{title}</div>
+      <div className="max-w-md text-[12px] leading-relaxed text-(--c-888888)">{hint}</div>
     </div>
   )
 }

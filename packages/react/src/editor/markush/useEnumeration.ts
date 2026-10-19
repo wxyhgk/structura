@@ -6,6 +6,14 @@ import { canonicalIdentity, canonicalSmiles } from "./identity.ts"
 
 /** Work done per slice before the page gets to paint and handle input again. */
 const SLICE_MS = 12
+/**
+ * How often a running enumeration shows its progress. Every update re-renders the results;
+ * showing each 12 ms slice kept the page busy rendering, so the pointer's hover lagged.
+ */
+const SHOW_MS = 200
+
+/** Whether the user is waiting on the page (Chromium can tell); a slice then gives way at once. */
+const inputPending = (): boolean => (navigator as Navigator & { scheduling?: { isInputPending?: () => boolean } }).scheduling?.isInputPending?.() ?? false
 
 export type EnumerationRun = {
   /** What was made so far; null until the first slice has run. */
@@ -57,12 +65,18 @@ export function useEnumeration(
     let cancelled = false
     let steps: ReturnType<typeof enumerateSteps> | null = null
     let dedupe: EnumerationRun["dedupe"] = "off"
+    let shown = 0
     const slice = () => {
       if (!steps) return
       const end = performance.now() + SLICE_MS
       let step = steps.next()
-      while (!step.done && performance.now() < end) step = steps.next()
-      setState({ inputs, result: snapshot(step.value), status: step.done ? "done" : "running", dedupe })
+      while (!step.done && performance.now() < end && !inputPending()) step = steps.next()
+      const now = performance.now()
+      // The first result at once, then progress every SHOW_MS, and the end as soon as it comes.
+      if (step.done || shown === 0 || now - shown >= SHOW_MS) {
+        shown = now
+        setState({ inputs, result: snapshot(step.value), status: step.done ? "done" : "running", dedupe })
+      }
       if (!step.done) timer = setTimeout(slice, 0)
     }
     const start = (identities?: Pick<EnumerateOptions, "identity" | "identifySmiles">) => {

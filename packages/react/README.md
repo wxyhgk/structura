@@ -48,6 +48,8 @@ colour variables do not override your own theme. Nor do your page's styles chang
 | `wordExport` | How to make Word tables of generated compounds with editable ChemDraw objects (`{ check(), make(pack, { columns }) }`, e.g. through chem2office on your server). Without it, the Word export holds pictures |
 | `onDismiss()` | An Escape the editor has no use for (no drag to stop, nothing to deselect): for a host showing it in a dialog of its own, to close that. Without it, that Escape takes the lasso |
 | `fillVariables`, `recognizeStructure` | Optional AI features; hidden unless given |
+| `theme` | `"light"` (the default), `"dark"`, or `"auto"`: dark when the page says so (`data-theme="dark"` or class `dark` on `<html>`) or, when it says nothing, when the system is dark; followed live. Files the editor writes (SVG, CDXML, Word…) stay light |
+| `onThemeChange(theme)` | Offers 浅色 / 深色 / 跟随系统 in the 查看 menu; keep the choice and pass it back as `theme`. Without it, no choice is shown |
 
 ### Handle (`ref`)
 
@@ -78,8 +80,8 @@ The component renders on a server (Next.js, Remix…) and comes alive in the bro
 use React or a bundler: one stylesheet and one script.
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.4.0/dist/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.4.0"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.5.0/dist/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.5.0"></script>
 ```
 
 The script (`dist/chem-structura.iife.js`, which the short address above serves) sets
@@ -105,6 +107,7 @@ Shows a structure; with `editable`, a click (or Enter) opens the editor over the
 |---|---|
 | Content | A child `<script type="chemical/x-mdl-molfile">` (molfile / SD text), or `<script type="application/vnd.structura+json">` (a Structura document: keeps a generic formula's variables), or the `smiles` attribute (read with RDKit) |
 | `editable` | A click or Enter opens the editor; without it, a picture (`role="img"`) |
+| `theme` | `"dark"` draws it for a dark page (no ground of its own, light ink) and opens a dark editor; `"auto"` follows the page and the system, live; `"light"` by default |
 | `label` | Its name: the editor's title and the accessible name |
 | `fit` | The drawing grows to fill the element (by default it only shrinks to fit) |
 | `raised-numbers` | Variables' numbers raised (R¹) |
@@ -127,6 +130,7 @@ if (saved) console.log(saved.molfile, saved.document)                  // null w
 | Option | |
 |---|---|
 | `title` | Above the editor; "编辑结构" by default |
+| `theme` | `"light"` (default), `"dark"`, or `"auto"` (as the Editor's prop) |
 | `document` / `molfile` / `smiles` | The structure to open, in that order of preference. SMILES is laid out by RDKit; edit() rejects SMILES it cannot read |
 | `on3D` | A molfile with 3D coordinates: `"project"` (default) flattens it and says so in `notes`; `"reject"` makes edit() reject. The editor is 2D: z is not kept |
 | `confirmProblems` | `false` by default. When true and the structure has problems, 保存 asks "结构有问题……仍然保存吗？" |

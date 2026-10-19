@@ -31,10 +31,10 @@ export function ConstraintsPane({ drawing, run }: WorkspaceProps) {
   const folded = facts.names.length > 0 && `变量 ${facts.defined.length}/${facts.names.length} 已定义`
 
   return (
-    <section className="flex shrink-0 flex-col border-t border-[#d0d0d0] bg-white text-[12px]" data-testid="constraintsPane">
+    <section className="flex shrink-0 flex-col border-t border-(--c-d0d0d0) bg-(--c-ffffff) text-[12px]" data-testid="constraintsPane">
       <ConstraintTabs tabs={tabs} active={tab} open={open} onTab={setTab} onToggle={() => setOpen(!open)} folded={folded} />
       {open && (
-        <div className="max-h-[240px] overflow-y-auto border-t border-[#e0e0e0]" role="tabpanel">
+        <div className="max-h-[240px] overflow-y-auto border-t border-(--c-e0e0e0)" role="tabpanel">
           {tab === "overview" && <OverviewTab drawing={drawing} facts={facts} run={run} />}
           {tab === "provisos" &&
             (listed === 0 ? (

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import type { AttachmentShape } from "@structura/markush"
 import type { BondStyle, Bracket, RingKind } from "@structura/core/types"
+import { usePaint } from "../../components/theme.ts"
 
 function Frame({ children }: { children: ReactNode }) {
   return (
@@ -220,12 +221,13 @@ export function AttachIcon({ shape }: { shape: AttachmentShape | "auto" }) {
 }
 
 export function LogoMark() {
+  const paint = usePaint()
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
       <polygon
         points={polygonPoints(6, 8)}
         fill="none"
-        stroke="#1a1a1a"
+        stroke={paint("#1a1a1a")}
         strokeWidth="1.6"
         strokeLinejoin="round"
       />

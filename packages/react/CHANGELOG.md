@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0
+
+Additions only: nothing 0.4.0 offered has changed signature or gone away.
+
+- **Dark theme**: `theme: "light" | "dark" | "auto"` on the Editor (and `mount()`), `edit()`
+  and `<chem-molecule theme>`; `"auto"` follows the page (`data-theme` or class `dark` on
+  `<html>`) and the system, live. Light, the default, is unchanged. The interface, menus,
+  dialogs, canvas, thumbnails and the guide all turn; files written stay light.
+  `onThemeChange` puts 浅色 / 深色 / 跟随系统 in the 查看 menu.
+- **Fixed**: hovering an atom or bond lagged while the 通式 workspace was generating (it
+  restarts after every edit with 自动更新 on): every 12 ms slice re-rendered all the result
+  cards. Progress now shows at most every 0.2 s, unchanged cards are not redrawn, and a slice
+  ends early when input is waiting. Generating is also about three times faster.
+
 ## 0.4.0
 
 Additions only: nothing 0.3.0 offered has changed signature or gone away.

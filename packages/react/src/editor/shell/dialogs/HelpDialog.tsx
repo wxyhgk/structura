@@ -7,7 +7,7 @@ import { useOverlayMark } from "../../input/overlays.ts"
 function Shortcut({ keys, action }: { keys: string; action: string }) {
   return (
     <>
-      <dt className="text-[#666]">{keys}</dt>
+      <dt className="text-(--c-666666)">{keys}</dt>
       <dd>{action}</dd>
     </>
   )
@@ -23,7 +23,7 @@ function byAction(entries: { key: string; action: string }[]): [string, string][
 function Section({ title, rows }: { title: string; rows: [string, string][] }) {
   return (
     <>
-      <dt className="col-span-2 mt-2 font-medium text-[#333]">{title}</dt>
+      <dt className="col-span-2 mt-2 font-medium text-(--c-333333)">{title}</dt>
       {rows.map(([keys, action]) => (
         <Shortcut key={action} keys={keys} action={action} />
       ))}

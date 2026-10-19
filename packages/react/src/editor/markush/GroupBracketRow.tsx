@@ -13,12 +13,12 @@ export function GroupBracketRow({ bracket, drawing }: { bracket: Bracket; drawin
     return atom?.alias ?? `${atom?.el ?? ""}#${id}`
   }
   return (
-    <div className="border-b border-[#e8e8e8] px-3 py-2" data-testid="group-bracket-row">
-      <div className="flex items-center gap-1.5 text-[#333]">
+    <div className="border-b border-(--c-e8e8e8) px-3 py-2" data-testid="group-bracket-row">
+      <div className="flex items-center gap-1.5 text-(--c-333333)">
         <span className="font-medium">[ … ]</span>
-        <span className="text-[#888]">基团括号，{bracket.atoms.length} 个原子</span>
+        <span className="text-(--c-888888)">基团括号，{bracket.atoms.length} 个原子</span>
       </div>
-      <p className="mt-1 text-[#555]">
+      <p className="mt-1 text-(--c-555555)">
         {into.length > 0
           ? `${into.map((attachment) => name(attachment.atom)).join("、")} 连在括号里任一位置（${openPositions(drawing, bracket.atoms).length} 个可接位置之一）`
           : "还没有东西连进来：用键工具从括号外的原子拖进括号里松开即可。"}

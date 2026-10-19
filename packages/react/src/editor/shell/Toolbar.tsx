@@ -23,7 +23,7 @@ import { Hint } from "../palette/ToolButton.tsx"
 function IconButton({ command, label = command.label, children }: { command: Command; label?: string; children: ReactNode }) {
   return (
     <Hint label={command.shortcut ? `${label}  ${command.shortcut}` : label} side="bottom">
-      <Button type="button" variant="ghost" size="icon-sm" aria-label={label} disabled={!command.enabled} className="size-7 rounded-sm text-[#222]" onClick={command.run}>
+      <Button type="button" variant="ghost" size="icon-sm" aria-label={label} disabled={!command.enabled} className="size-7 rounded-sm text-(--c-222222)" onClick={command.run}>
         {children}
       </Button>
     </Hint>
@@ -37,7 +37,7 @@ function Gap() {
 export function Toolbar({ commands, zoom }: { commands: Commands; zoom: number }) {
   const c = commands
   return (
-    <div className="flex h-9 shrink-0 items-center gap-0.5 border-b border-[#d5d5d5] bg-[#f7f7f7] px-1.5">
+    <div className="flex h-9 shrink-0 items-center gap-0.5 border-b border-(--c-d5d5d5) bg-(--c-f7f7f7) px-1.5">
       <IconButton command={c.newDocument}>
         <FilePlus />
       </IconButton>
@@ -57,7 +57,7 @@ export function Toolbar({ commands, zoom }: { commands: Commands; zoom: number }
       </IconButton>
       <button
         type="button"
-        className="h-7 min-w-12 rounded-sm px-1 text-[12px] text-[#333] hover:bg-black/5"
+        className="h-7 min-w-12 rounded-sm px-1 text-[12px] text-(--c-333333) hover:bg-black/5 dark:hover:bg-white/10"
         onClick={c.actualSize.run}
       >
         {Math.round(zoom * 100)}%

@@ -3,6 +3,7 @@ import { usableRecords } from "@structura/core/import"
 import { readSdf } from "@structura/core/sdf"
 import { createEditorStore } from "@structura/engine"
 import { importNotes } from "../editor/imports/notes.ts"
+import { autoIsDark, type Theme } from "../components/theme.ts"
 import { readSmiles } from "../editor/imports/smiles.ts"
 import { mount, type MountOptions } from "./mount.tsx"
 import { drawingSmiles, structureProblems, type StructureProblem } from "./report.ts"
@@ -27,6 +28,8 @@ export type EditOptions = {
   confirmProblems?: boolean
   /** Hand back the saved structure's SMILES too (Edited.smiles); always so when it came in as `smiles`. Loads RDKit. */
   withSmiles?: boolean
+  /** "light" (the default), "dark", or "auto": dark when the page (data-theme / class "dark" on <html>) or the system is. */
+  theme?: Theme
   /** Other options for the editor inside (template store, AI hooks…). */
   editor?: Omit<MountOptions, "initialDocument" | "initialMolfile">
 }
@@ -109,7 +112,9 @@ function openSheet(options: EditOptions, input: { document?: string; molfile?: s
 
   // chem-overlay: the page's own styles stay out, as they do out of the editor (style.css).
   const sheet = document.createElement("div")
-  sheet.className = "chem-overlay chem-sheet"
+  const theme = options.theme ?? options.editor?.theme ?? "light"
+  const dark = theme === "dark" || (theme === "auto" && autoIsDark())
+  sheet.className = `chem-overlay chem-sheet${dark ? " chem-dark" : ""}`
   sheet.setAttribute("role", "dialog")
   sheet.setAttribute("aria-modal", "true")
   sheet.setAttribute("aria-label", title)
@@ -138,6 +143,7 @@ function openSheet(options: EditOptions, input: { document?: string; molfile?: s
   let cancel = () => {}
   const editor = mount(sheet.querySelector(".chem-sheet-editor")!, {
     ...options.editor,
+    theme,
     initialDocument: input.document,
     initialMolfile: input.molfile,
     onDocumentChange(text) {

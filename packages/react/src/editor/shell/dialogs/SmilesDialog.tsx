@@ -53,7 +53,7 @@ export function SmilesDialog({
           <DialogDescription>每行一个 SMILES，后面可以跟名称。第一次使用会下载 RDKit（约 2.4 MB）。也可以直接在画布上粘贴。</DialogDescription>
         </DialogHeader>
         <textarea
-          className="h-32 w-full resize-y rounded border border-[#c8c8c8] p-2 font-mono text-[13px] outline-none focus:border-[#1a73e8]"
+          className="h-32 w-full resize-y rounded border border-(--c-c8c8c8) p-2 font-mono text-[13px] outline-none focus:border-(--c-1a73e8)"
           placeholder={"CC(=O)Oc1ccccc1C(=O)O aspirin\nc1ccc2ccccc2c1"}
           value={text}
           data-testid="smiles-input"
@@ -63,7 +63,7 @@ export function SmilesDialog({
           }}
         />
         {errors.length > 0 && (
-          <ul className="list-disc pl-5 text-[13px] text-[#d1242f]" data-testid="smiles-errors">
+          <ul className="list-disc pl-5 text-[13px] text-(--c-d1242f)" data-testid="smiles-errors">
             {errors.map((error, index) => <li key={index}>{error}</li>)}
           </ul>
         )}

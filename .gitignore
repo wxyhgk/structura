@@ -35,3 +35,6 @@ dist-ssr
 # The backend's SQLite database (STRUCTURA_DB)
 backend/data/
 packages/react/.types
+
+# Third-party projects cloned for study (not part of Structura)
+/third-party/

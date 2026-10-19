@@ -17,14 +17,14 @@ export function MarkushWorkspace({ canvas, ...props }: WorkspaceProps & { canvas
   const top = useRef<HTMLDivElement>(null)
   const { splits, set, reset } = useSplits()
   return (
-    <div ref={whole} className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#f7f7f7]" data-testid="markush-workspace">
+    <div ref={whole} className="flex min-h-0 min-w-0 flex-1 flex-col bg-(--c-f7f7f7)" data-testid="markush-workspace">
       <div ref={top} className="flex min-h-0 min-w-0" style={{ height: `${splits.top * 100}%` }}>
         <div className="flex min-h-0 min-w-0 flex-col" style={{ width: `${splits.left * 100}%` }}>
-          <div className="flex min-h-0 flex-1 bg-white">{canvas}</div>
+          <div className="flex min-h-0 flex-1 bg-(--c-ffffff)">{canvas}</div>
           <ConstraintsPane {...props} />
         </div>
         <SplitHandle axis="x" container={() => top.current} onMove={(fraction) => set("left", fraction)} onReset={() => reset("left")} label="调整画布和变量区的宽度" />
-        <div className="min-h-0 min-w-0 flex-1 bg-[#f7f7f7]">
+        <div className="min-h-0 min-w-0 flex-1 bg-(--c-f7f7f7)">
           <VariablesBoard {...props} />
         </div>
       </div>

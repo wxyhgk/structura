@@ -6,7 +6,7 @@ import { filterTemplates, groupTemplates, inList, SITE_NAMES } from "./templateS
 import { TemplateRow } from "./TemplateRow.tsx"
 import { OFFLINE_NOTE, type Templates } from "./useTemplates.ts"
 
-const ACTION = "rounded-sm border border-[#d0d0d0] bg-white px-2 py-0.5 text-[#333] hover:bg-[#f3f3f3] disabled:text-[#aaa] disabled:hover:bg-white"
+const ACTION = "rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-2 py-0.5 text-(--c-333333) hover:bg-(--c-f3f3f3) disabled:text-(--c-aaaaaa) disabled:hover:bg-(--c-ffffff)"
 
 /** "导入了 3 个，跳过 1 个（已有）", and what was wrong with the rest. */
 function reportText(report: ImportReport): string {
@@ -69,13 +69,13 @@ export function TemplateLibraryPanel({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col text-[12px] text-[#333]" onKeyDown={keepKeys} onKeyUp={(event) => event.stopPropagation()} data-testid="template-library">
+    <div className="flex h-full min-h-0 flex-col text-[12px] text-(--c-333333)" onKeyDown={keepKeys} onKeyUp={(event) => event.stopPropagation()} data-testid="template-library">
       <PaneHeader title="模板库">
-        <button className="order-first -ml-1 rounded-sm px-1.5 py-0.5 text-[#1a73e8] hover:bg-[#eef3fb]" onClick={onClose} title="返回变量（Esc）">
+        <button className="order-first -ml-1 rounded-sm px-1.5 py-0.5 text-(--c-1a73e8) hover:bg-(--c-eef3fb)" onClick={onClose} title="返回变量（Esc）">
           ← 返回
         </button>
-        <span className="text-[#888]">
-          添加到 <b className="font-[Arial,Helvetica,sans-serif] text-[#333]">{name}</b>（{SITE_NAMES[site]}）
+        <span className="text-(--c-888888)">
+          添加到 <b className="font-[Arial,Helvetica,sans-serif] text-(--c-333333)">{name}</b>（{SITE_NAMES[site]}）
         </span>
         <span className="ml-auto flex items-center gap-1.5">
           <button className={ACTION} disabled={!ready} onClick={() => file.current?.click()} title="从 JSON 文件导入模板，加到我的模板里">
@@ -98,41 +98,41 @@ export function TemplateLibraryPanel({
           />
         </span>
       </PaneHeader>
-      <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-[#eeeeee] bg-white px-3 py-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-(--c-eeeeee) bg-(--c-ffffff) px-3 py-2">
         <input
-          className="h-8 min-w-40 flex-1 rounded-sm border border-[#d0d0d0] bg-white px-2.5 text-[13px] outline-none focus:border-[#1a73e8]"
+          className="h-8 min-w-40 flex-1 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-2.5 text-[13px] outline-none focus:border-(--c-1a73e8)"
           placeholder="搜索模板：名称或其他名称，如 芳基、pyridyl"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           aria-label="搜索模板"
           autoFocus
         />
-        <label className="flex items-center gap-1.5 text-[#555]">
+        <label className="flex items-center gap-1.5 text-(--c-555555)">
           <input type="checkbox" checked={allSites} onChange={(event) => setAllSites(event.target.checked)} />
           显示全部位置
         </label>
       </div>
       {templates.status !== "ready" && (
-        <p className="shrink-0 bg-[#fff8e6] px-3 py-1.5 text-[#8a5a00]" data-testid="templates-offline">
+        <p className="shrink-0 bg-(--c-fff8e6) px-3 py-1.5 text-(--c-8a5a00)" data-testid="templates-offline">
           {templates.status === "loading" ? "正在读取我的模板…" : `${OFFLINE_NOTE}。现在只能用内置模板。`}
         </p>
       )}
       {note && (
-        <p className="flex shrink-0 items-start gap-2 bg-[#eef5ff] px-3 py-1.5 text-[#1a4f99]" data-testid="template-note">
+        <p className="flex shrink-0 items-start gap-2 bg-(--c-eef5ff) px-3 py-1.5 text-(--c-1a4f99)" data-testid="template-note">
           <span className="flex-1">{note}</span>
-          <button className="text-[#888] hover:text-[#333]" onClick={() => setNote(null)} aria-label="关闭提示">
+          <button className="text-(--c-888888) hover:text-(--c-333333)" onClick={() => setNote(null)} aria-label="关闭提示">
             ×
           </button>
         </p>
       )}
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         {shelves.length === 0 && (
-          <p className="text-[#999]">{query ? `没有找到“${query}”。` : `还没有能放在${SITE_NAMES[site]}的模板。`}可以在画板里画好后点“存为模板…”。</p>
+          <p className="text-(--c-999999)">{query ? `没有找到“${query}”。` : `还没有能放在${SITE_NAMES[site]}的模板。`}可以在画板里画好后点“存为模板…”。</p>
         )}
         {shelves.map((shelf) => (
           <section key={shelf.group} className="mb-4" data-testid="template-group">
-            <h3 className="mb-1.5 text-[12px] font-semibold text-[#555]">
-              {shelf.group} <span className="font-normal text-[#999]">{shelf.templates.length}</span>
+            <h3 className="mb-1.5 text-[12px] font-semibold text-(--c-555555)">
+              {shelf.group} <span className="font-normal text-(--c-999999)">{shelf.templates.length}</span>
             </h3>
             <div className="space-y-1.5">
               {shelf.templates.map(item)}

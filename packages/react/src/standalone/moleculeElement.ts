@@ -3,6 +3,7 @@ import type { Drawing } from "@structura/core/types"
 import { createEditorStore } from "@structura/engine"
 import { drawingFromMolfile, drawingMolfile, drawingSvg } from "../core.ts"
 import { readSmiles } from "../editor/imports/smiles.ts"
+import { autoIsDark, recolorSvg, watchAuto, type Theme } from "../components/theme.ts"
 import { edit } from "./sheet.ts"
 
 /**
@@ -10,7 +11,8 @@ import { edit } from "./sheet.ts"
  * child <script type="application/vnd.structura+json"> (a Structura document), a child
  * <script type="chemical/x-mdl-molfile"> (molfile or SD text), the `smiles` attribute (read
  * with RDKit). With `editable`, a click (or Enter) opens the editor over the page, and 保存
- * changes it and fires `change`. `load` fires once its content is read (`smiles` takes a moment:
+ * changes it and fires `change`. theme="dark" (or "auto", following the page and the system)
+ * draws it for a dark page, on no ground of its own, and opens a dark editor. `load` fires once its content is read (`smiles` takes a moment:
  * RDKit loads first). In a <form>, its `name` submits it (molfile, or the Structura document
  * with format="document").
  */
@@ -53,7 +55,7 @@ export function defineMoleculeElement(tag = "chem-molecule"): void {
 function moleculeElementClass(): CustomElementConstructor {
   return class extends HTMLElement implements MoleculeElement {
     static formAssociated = true
-    static observedAttributes = ["smiles", "editable", "label", "format", "raised-numbers"]
+    static observedAttributes = ["smiles", "editable", "label", "format", "raised-numbers", "theme"]
 
     #internals: ElementInternals | null = null
     #picture: HTMLElement | null = null
@@ -65,6 +67,8 @@ function moleculeElementClass(): CustomElementConstructor {
     #ownTabIndex = false
     /** While its editor is open: a second click or Enter (a double click, a held key) does nothing. */
     #editing = false
+    /** Stops following the page's theme (theme="auto"), while connected. */
+    #unwatch: (() => void) | null = null
 
     constructor() {
       super()
@@ -90,13 +94,22 @@ function moleculeElementClass(): CustomElementConstructor {
         if (waiting) document.addEventListener("DOMContentLoaded", () => this.#load(), { once: true })
         else this.#load()
       }
+      this.#watchTheme()
       this.#render()
+    }
+
+    disconnectedCallback() {
+      this.#unwatch?.()
+      this.#unwatch = null
     }
 
     attributeChangedCallback(name: string, before: string | null, after: string | null) {
       if (before === after) return
       if (name === "smiles" && this.#loaded && !this.#data()) void this.#loadSmiles()
-      else this.#render()
+      else {
+        if (name === "theme") this.#watchTheme()
+        this.#render()
+      }
     }
 
     get document() {
@@ -125,7 +138,7 @@ function moleculeElementClass(): CustomElementConstructor {
       this.#editing = true
       try {
         const label = this.getAttribute("label")
-        const saved = await edit({ title: label ? `编辑：${label}` : undefined, document: this.#text })
+        const saved = await edit({ title: label ? `编辑：${label}` : undefined, document: this.#text, theme: this.#theme() })
         if (!saved) return false
         this.#show(saved.document)
         this.dispatchEvent(new CustomEvent<MoleculeChange>("change", { bubbles: true, detail: saved }))
@@ -220,11 +233,30 @@ function moleculeElementClass(): CustomElementConstructor {
       return this.hasAttribute("editable")
     }
 
+    #theme(): Theme {
+      const theme = this.getAttribute("theme")
+      return theme === "dark" || theme === "auto" ? theme : "light"
+    }
+
+    #dark() {
+      const theme = this.#theme()
+      return theme === "dark" || (theme === "auto" && autoIsDark())
+    }
+
+    /** With theme="auto", redrawn when the page or the system turns dark or light. */
+    #watchTheme() {
+      this.#unwatch?.()
+      this.#unwatch = this.isConnected && this.#theme() === "auto" ? watchAuto(() => this.#render()) : null
+    }
+
     #render() {
       if (!this.#picture) return
       const editable = this.#editable()
       const drawing = this.#drawing()
-      const svg = drawing ? drawingSvg(drawing, { raisedNumbers: this.hasAttribute("raised-numbers") }) : ""
+      // Dark: on the page's own ground (no white square), in ink that reads on it.
+      const dark = this.#dark()
+      const drawn = drawing ? drawingSvg(drawing, { raisedNumbers: this.hasAttribute("raised-numbers"), ...(dark ? { background: false } : {}) }) : ""
+      const svg = dark ? recolorSvg(drawn) : drawn
       // The SVG goes in as markup: its XML declaration has no place inside HTML.
       this.#picture.innerHTML = svg.replace(/^<\?xml[^>]*>\s*/, "")
       if (!svg) {

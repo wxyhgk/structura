@@ -9,7 +9,7 @@ export const startPage = definePage({
   id: "start",
   group: "入门",
   title: "快速上手",
-  keywords: "开始 入门 画布 平移 缩放 显示全部 找回 热点 蓝圈 撤销",
+  keywords: "开始 入门 画布 平移 缩放 显示全部 找回 热点 蓝圈 撤销 深色 暗色 夜间 浅色 主题 跟随系统",
   body: (context) => (
     <>
       <Tutorial title="从空白画布到一个分子" steps={firstMolecule(context)} />
@@ -35,6 +35,7 @@ export const startPage = definePage({
         panels={hoverSteps(context.pressKey).map((drawing, index) => ({ drawing, caption: ["单击空白：一根键", "悬停末端按 1", "再悬停新的末端按 A"][index] }))}
         steps={["按 1", "按 A"]}
       />
+      <Tip>深色界面：查看菜单里选“深色”或“跟随系统”（嵌入在别的页面里时，由那个页面决定）。界面和画布一起变深；导出的 SVG、CDXML、Word 和复制的图片仍是白底，便于放进文档。</Tip>
       <Tip>屏幕上始终只有一个蓝圈，它就是下一次按键作用的位置：先看鼠标悬停的原子，没有就看热点，再没有就看选中的原子。</Tip>
       <H>出错了</H>
       <Table

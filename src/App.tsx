@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { forgetUnsaved, keepUnsaved, readUnsaved } from "@/autosave"
-import { Editor, httpTemplateStore, memoryTemplateStore, type EditorHandle } from "chem-structura"
+import { Editor, httpTemplateStore, memoryTemplateStore, type EditorHandle, type Theme } from "chem-structura"
 import { fillOverHttp } from "@/fillOverHttp"
 import { wordOverHttp } from "@/wordOverHttp"
 import { recognizeOverHttp } from "@/recognizeOverHttp"
@@ -9,6 +9,18 @@ import { exposeForTests } from "@/testHook"
 
 /** The user's templates: the backend's; in the browser tests' build, kept in memory so they need no backend. */
 const templateStore = import.meta.env.MODE === "e2e" ? memoryTemplateStore() : httpTemplateStore()
+
+const THEME = "structura:theme"
+
+/** The theme chosen in 查看 on an earlier visit; following the system until one is. */
+function readTheme(): Theme {
+  try {
+    const kept = localStorage.getItem(THEME)
+    return kept === "light" || kept === "dark" || kept === "auto" ? kept : "auto"
+  } catch {
+    return "auto"
+  }
+}
 
 /**
  * The standalone app: the editor filling the whole page, reaching the model through its own
@@ -19,6 +31,7 @@ export default function App() {
   const editor = useRef<EditorHandle>(null)
   const dirty = useRef(false)
   const [unsaved, setUnsaved] = useState(readUnsaved)
+  const [theme, setTheme] = useState(readTheme)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   useEffect(() => exposeForTests(editor.current), [])
 
@@ -52,6 +65,15 @@ export default function App() {
           ref={editor}
           fillVariables={fillOverHttp}
           wordExport={wordOverHttp}
+          theme={theme}
+          onThemeChange={(next) => {
+            setTheme(next)
+            try {
+              localStorage.setItem(THEME, next)
+            } catch {
+              // No storage: the choice lasts this visit.
+            }
+          }}
           recognizeStructure={recognizeOverHttp}
           templateStore={templateStore}
           onDirtyChange={(now) => {

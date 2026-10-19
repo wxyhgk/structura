@@ -78,7 +78,7 @@ export function StructureDialog({
         <div className="grid min-h-0 flex-1 grid-cols-2 gap-4 overflow-hidden">
           <div className="flex min-h-0 flex-col gap-2">
             <label
-              className="flex min-h-48 flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-[#c8c8c8] bg-[#fafafa] text-[13px] text-[#888]"
+              className="flex min-h-48 flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-(--c-c8c8c8) bg-(--c-fafafa) text-[13px] text-(--c-888888)"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault()
@@ -89,13 +89,13 @@ export function StructureDialog({
               <input type="file" accept="image/*" className="hidden" onChange={(event) => void take(firstPicture(event.target.files))} aria-label="选择图片" />
             </label>
             <input
-              className="h-8 rounded-md border border-[#d0d0d0] px-2 text-[13px] outline-none focus:border-[#1a73e8]"
+              className="h-8 rounded-md border border-(--c-d0d0d0) px-2 text-[13px] outline-none focus:border-(--c-1a73e8)"
               placeholder="补充说明（可选），如：这是专利里的通式，R 基照原样保留"
               value={hint}
               onChange={(event) => setHint(event.target.value)}
               aria-label="补充说明"
             />
-            {problem && <p className="text-[12px] text-[#d1242f]">{problem}</p>}
+            {problem && <p className="text-[12px] text-(--c-d1242f)">{problem}</p>}
             <div className="flex items-center gap-2">
               {running ? (
                 <Button variant="outline" onClick={run.stop}>
@@ -106,26 +106,26 @@ export function StructureDialog({
                   {run.status === "idle" ? "识别" : "重新识别"}
                 </Button>
               )}
-              {running && <span className="text-[12px] text-[#666]">AI 正在识别，已 {Math.round((now - (run.started ?? now)) / 1000)} 秒（通常要一到几分钟）</span>}
+              {running && <span className="text-[12px] text-(--c-666666)">AI 正在识别，已 {Math.round((now - (run.started ?? now)) / 1000)} 秒（通常要一到几分钟）</span>}
             </div>
           </div>
           <div className="flex min-h-0 flex-col gap-2">
-            <div className="flex h-48 shrink-0 items-center justify-center rounded-lg bg-[#f5f5f7]" data-testid="structure-preview">
-              {shown && shown.molecule.atoms.length > 0 ? <MoleculeThumb mol={shown.molecule} className="max-h-44 max-w-full object-contain" /> : <span className="text-[12px] text-[#999]">识别结果会显示在这里</span>}
+            <div className="flex h-48 shrink-0 items-center justify-center rounded-lg bg-(--c-f5f5f7)" data-testid="structure-preview">
+              {shown && shown.molecule.atoms.length > 0 ? <MoleculeThumb mol={shown.molecule} className="max-h-44 max-w-full object-contain" /> : <span className="text-[12px] text-(--c-999999)">识别结果会显示在这里</span>}
             </div>
-            {shown && shown.molecule.atoms.length > 0 && <div className="text-[12px] text-[#555]">{displayFormula(plainFormula(shown.molecule))}，{shown.molecule.atoms.length} 个原子</div>}
+            {shown && shown.molecule.atoms.length > 0 && <div className="text-[12px] text-(--c-555555)">{displayFormula(plainFormula(shown.molecule))}，{shown.molecule.atoms.length} 个原子</div>}
             <ol className="min-h-0 flex-1 space-y-1 overflow-y-auto text-[12px]" data-testid="structure-steps">
               {run.steps.map((step, index) => (
                 <li key={index} className="flex gap-2">
-                  <span className={`shrink-0 rounded px-1.5 ${step.ok ? "bg-[#eef3fd] text-[#1a73e8]" : "bg-[#fdecea] text-[#d1242f]"}`}>{ACTION_NAMES[step.action]}</span>
+                  <span className={`shrink-0 rounded px-1.5 ${step.ok ? "bg-(--c-eef3fd) text-(--c-1a73e8)" : "bg-(--c-fdecea) text-(--c-d1242f)"}`}>{ACTION_NAMES[step.action]}</span>
                   <span>
                     {step.note}
-                    {step.action === "read" && step.message && <span className="mt-0.5 block whitespace-pre-line text-[#666]">{step.message}</span>}
+                    {step.action === "read" && step.message && <span className="mt-0.5 block whitespace-pre-line text-(--c-666666)">{step.message}</span>}
                   </span>
                 </li>
               ))}
-              {run.result && !run.result.ok && <li className="text-[#d1242f]">{run.result.error}</li>}
-              {run.status === "stopped" && <li className="text-[#888]">已停止。</li>}
+              {run.result && !run.result.ok && <li className="text-(--c-d1242f)">{run.result.error}</li>}
+              {run.status === "stopped" && <li className="text-(--c-888888)">已停止。</li>}
             </ol>
           </div>
         </div>

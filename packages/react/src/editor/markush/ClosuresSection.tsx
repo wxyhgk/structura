@@ -4,7 +4,7 @@ import type { Run } from "@structura/engine"
 import { Button } from "../../components/ui/button.tsx"
 import { closureText } from "./describe.ts"
 
-const FIELD = "h-6 rounded-sm border border-[#d0d0d0] bg-white px-1 text-[12px] outline-none focus:border-[#1a73e8]"
+const FIELD = "h-6 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1 text-[12px] outline-none focus:border-(--c-1a73e8)"
 
 /**
  * "R1 and R2, together with the atoms they are attached to, form a ring": which pairs may
@@ -33,11 +33,11 @@ export function ClosuresSection({ closures, variables, run }: { closures: RingCl
     <div data-testid="closures">
       <div className="space-y-1 px-3 py-2">
         {(closures ?? []).map((closure) => (
-          <div key={`${closure.a}+${closure.b}`} className="flex items-start gap-1 text-[12px] text-[#333]" data-testid="closure">
+          <div key={`${closure.a}+${closure.b}`} className="flex items-start gap-1 text-[12px] text-(--c-333333)" data-testid="closure">
             <span className="flex-1">{closureText(closure)}</span>
             <button
               type="button"
-              className="text-[#999] hover:text-[#d1242f]"
+              className="text-(--c-999999) hover:text-(--c-d1242f)"
               aria-label="删除这条成环"
               onClick={() => run([{ op: "remove_ring_closure", a: closure.a, b: closure.b }], { keepSelection: true })}
             >
@@ -46,24 +46,24 @@ export function ClosuresSection({ closures, variables, run }: { closures: RingCl
           </div>
         ))}
         {!open ? (
-          <button type="button" className="text-[11px] text-[#1a73e8] hover:underline" onClick={() => setOpen(true)}>
+          <button type="button" className="text-[11px] text-(--c-1a73e8) hover:underline" onClick={() => setOpen(true)}>
             + 两个变量可以一起成环
           </button>
         ) : (
-          <div className="space-y-1.5 rounded-sm border border-[#e0e0e0] bg-white p-2 text-[12px]">
+          <div className="space-y-1.5 rounded-sm border border-(--c-e0e0e0) bg-(--c-ffffff) p-2 text-[12px]">
             <div className="flex items-center gap-1">
               <select className={FIELD} value={a} onChange={(event) => setA(event.target.value)} aria-label="成环的第一个变量">
                 {names.map((name) => (
                   <option key={name}>{name}</option>
                 ))}
               </select>
-              <span className="text-[#888]">与</span>
+              <span className="text-(--c-888888)">与</span>
               <select className={FIELD} value={b} onChange={(event) => setB(event.target.value)} aria-label="成环的第二个变量">
                 {names.map((name) => (
                   <option key={name}>{name}</option>
                 ))}
               </select>
-              <span className="text-[#888]">一起成</span>
+              <span className="text-(--c-888888)">一起成</span>
             </div>
             <input
               className={`${FIELD} w-full`}
@@ -83,7 +83,7 @@ export function ClosuresSection({ closures, variables, run }: { closures: RingCl
             </div>
           </div>
         )}
-        {problem && <p className="text-[11px] text-[#d1242f]">{problem}</p>}
+        {problem && <p className="text-[11px] text-(--c-d1242f)">{problem}</p>}
       </div>
     </div>
   )

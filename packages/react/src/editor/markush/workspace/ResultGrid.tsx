@@ -17,12 +17,12 @@ export function ResultGrid({ rows, colorHetero, onPlace }: { rows: readonly Row[
     <div className="min-h-0 flex-1 overflow-y-auto p-2">
       <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2" data-testid="results-grid">
         {rows.slice(0, shown).map((row) => (
-          <CompoundThumbnail key={row.number} row={row} colorHetero={colorHetero} weight onPlace={() => onPlace(row.mol)} />
+          <CompoundThumbnail key={row.number} row={row} colorHetero={colorHetero} weight onPlace={onPlace} />
         ))}
       </div>
       {more > 0 && (
         <div className="flex justify-center pt-2">
-          <button type="button" className="rounded-sm border border-[#d0d0d0] bg-white px-3 py-1 text-[12px] text-[#1a73e8] hover:bg-[#eef3fb]" onClick={() => setShown(shown + PAGE)}>
+          <button type="button" className="rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-3 py-1 text-[12px] text-(--c-1a73e8) hover:bg-(--c-eef3fb)" onClick={() => setShown(shown + PAGE)}>
             显示更多（还有 {more} 个）
           </button>
         </div>

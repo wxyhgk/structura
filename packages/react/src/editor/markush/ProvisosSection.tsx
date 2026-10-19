@@ -4,7 +4,7 @@ import type { Run } from "@structura/engine"
 import { Button } from "../../components/ui/button.tsx"
 import { describeAlternative, provisoText } from "./describe.ts"
 
-const FIELD = "h-6 rounded-sm border border-[#d0d0d0] bg-white px-1 text-[12px] outline-none focus:border-[#1a73e8]"
+const FIELD = "h-6 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1 text-[12px] outline-none focus:border-(--c-1a73e8)"
 
 /**
  * The claim's provisos, in the 附加条件 tab: what is listed, removing one, and adding an
@@ -33,9 +33,9 @@ export function ProvisosSection({ provisos, variables, run }: { provisos: Provis
     <div data-testid="provisos">
       <div className="space-y-1 px-3 py-2">
         {(provisos ?? []).map((proviso, index) => (
-          <div key={index} className="flex items-start gap-1 text-[12px] text-[#333]" data-testid="proviso">
+          <div key={index} className="flex items-start gap-1 text-[12px] text-(--c-333333)" data-testid="proviso">
             <span className="flex-1">{provisoText(proviso)}</span>
-            <button type="button" className="text-[#999] hover:text-[#d1242f]" aria-label="删除这条条件" onClick={() => run([{ op: "remove_proviso", index }], { keepSelection: true })}>
+            <button type="button" className="text-(--c-999999) hover:text-(--c-d1242f)" aria-label="删除这条条件" onClick={() => run([{ op: "remove_proviso", index }], { keepSelection: true })}>
               ×
             </button>
           </div>
@@ -44,7 +44,7 @@ export function ProvisosSection({ provisos, variables, run }: { provisos: Provis
           <div className="flex gap-3 text-[11px]">
             <button
               type="button"
-              className="text-[#1a73e8] hover:underline"
+              className="text-(--c-1a73e8) hover:underline"
               onClick={() => {
                 setAdding("combination")
                 setConditions([{ name: names[0], picked: [] }])
@@ -52,17 +52,17 @@ export function ProvisosSection({ provisos, variables, run }: { provisos: Provis
             >
               + 排除一种组合
             </button>
-            <button type="button" className="text-[#1a73e8] hover:underline" onClick={() => setAdding("compound")}>
+            <button type="button" className="text-(--c-1a73e8) hover:underline" onClick={() => setAdding("compound")}>
               + 排除一个化合物
             </button>
           </div>
         )}
         {adding === "combination" && (
-          <div className="space-y-1.5 rounded-sm border border-[#e0e0e0] bg-white p-2 text-[12px]">
+          <div className="space-y-1.5 rounded-sm border border-(--c-e0e0e0) bg-(--c-ffffff) p-2 text-[12px]">
             {conditions.map((condition, at) => (
               <div key={at} className="space-y-1">
                 <div className="flex items-center gap-1">
-                  {at > 0 && <span className="text-[#888]">且</span>}
+                  {at > 0 && <span className="text-(--c-888888)">且</span>}
                   <select
                     className={FIELD}
                     value={condition.name}
@@ -75,7 +75,7 @@ export function ProvisosSection({ provisos, variables, run }: { provisos: Provis
                       </option>
                     ))}
                   </select>
-                  <span className="text-[#888]">取</span>
+                  <span className="text-(--c-888888)">取</span>
                 </div>
                 <div className="flex flex-wrap gap-x-2 gap-y-0.5 pl-1">
                   {valuesOf(condition.name).map((value, index) => (
@@ -101,7 +101,7 @@ export function ProvisosSection({ provisos, variables, run }: { provisos: Provis
               {conditions.length < names.length && (
                 <button
                   type="button"
-                  className="text-[11px] text-[#1a73e8] hover:underline"
+                  className="text-[11px] text-(--c-1a73e8) hover:underline"
                   onClick={() => setConditions([...conditions, { name: names.find((name) => !conditions.some((item) => item.name === name)) ?? names[0], picked: [] }])}
                 >
                   + 再加一个变量
@@ -133,7 +133,7 @@ export function ProvisosSection({ provisos, variables, run }: { provisos: Provis
             </Button>
           </div>
         )}
-        {problem && <p className="text-[11px] text-[#d1242f]">{problem}</p>}
+        {problem && <p className="text-[11px] text-(--c-d1242f)">{problem}</p>}
       </div>
     </div>
   )

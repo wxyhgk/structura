@@ -474,3 +474,37 @@ test("a page's own .dark leaves the editor in one piece: light, menus and all, a
   const menu = await page.getByRole("menu").evaluate((element) => getComputedStyle(element).backgroundColor)
   expect(menu).toMatch(/^(rgb\(255, 255, 255\)|oklch\(1 0 0\))$/)
 })
+
+test("theme: edit({ theme: \"dark\" }) opens dark; <chem-molecule theme> draws for a dark page, and \"auto\" follows it", async ({ page }) => {
+  await localRDKit(page)
+  await openExample(page, "script.html")
+  const saving = startEdit(page, { smiles: "c1ccccc1O", theme: "dark" })
+  const sheet = page.locator(".chem-sheet")
+  await expect(sheet).toHaveClass(/chem-dark/)
+  await expect(sheet.locator(".chem-app")).toHaveClass(/chem-dark/)
+  await sheet.getByRole("button", { name: "取消" }).click()
+  expect(await saving).toBeNull()
+
+  const picture = (theme: string) =>
+    page.evaluate(async (theme) => {
+      const element = document.createElement("chem-molecule")
+      element.setAttribute("theme", theme)
+      element.setAttribute("smiles", "c1ccccc1O")
+      document.body.append(element)
+      await new Promise((done) => element.addEventListener("load", done, { once: true }))
+      const svg = () => element.querySelector("svg")!.outerHTML
+      return { svg: svg(), element: theme }
+    }, theme)
+  const light = await picture("light")
+  expect(light.svg).toContain("<rect")
+  expect(light.svg).toContain("#222222")
+  const dark = await picture("dark")
+  expect(dark.svg).not.toContain("<rect")
+  expect(dark.svg).not.toContain("#222222")
+  // "auto" follows the page as it turns.
+  const auto = page.locator('chem-molecule[theme="auto"]')
+  await picture("auto")
+  await expect.poll(() => auto.evaluate((element) => element.querySelector("svg")!.outerHTML.includes("#222222"))).toBe(true)
+  await page.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"))
+  await expect.poll(() => auto.evaluate((element) => element.querySelector("svg")!.outerHTML.includes("#222222"))).toBe(false)
+})

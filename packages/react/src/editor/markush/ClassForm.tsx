@@ -37,9 +37,9 @@ export function ClassForm({ initial, onSave, onCancel }: { initial?: Alternative
     ...(substituted !== "no" && named.length > 0 ? { substituents: { from: named, min: Number(fewest), max: Number(most) } } : {}),
   }
   const valid = alternativeProblem(candidate) == null
-  const field = "h-7 rounded-sm border border-[#d0d0d0] bg-white px-1 outline-none focus:border-[#1a73e8]"
+  const field = "h-7 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1 outline-none focus:border-(--c-1a73e8)"
   return (
-    <div className="mt-1.5 grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1 rounded-sm border border-[#e0e0e0] bg-white p-2">
+    <div className="mt-1.5 grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1 rounded-sm border border-(--c-e0e0e0) bg-(--c-ffffff) p-2">
       <span>类别</span>
       <select className={field} value={group} onChange={(event) => setGroup(event.target.value as GroupClass)} aria-label="基团类别">
         {(Object.keys(GROUP_CLASSES) as GroupClass[]).map((key) => (

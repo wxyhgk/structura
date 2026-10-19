@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 import { sceneToSvg } from "@structura/core/draw"
 import { freeSites, type Scaffold } from "@structura/core/scaffolds"
+import { svgSource, useDarkPicture, usePaint } from "../../components/theme.ts"
 
 /** Where a badge sits: a little outside its atom or bond, away from the middle of the drawing. */
 function outward(x: number, y: number, by: number) {
@@ -29,13 +30,15 @@ export function ScaffoldSites({
   onSite: (site: string) => void
   onEdge: (edge: string) => void
 }) {
+  const paint = usePaint()
+  const dark = useDarkPicture()
   const svg = useMemo(() => sceneToSvg(scaffold.molecule, true), [scaffold])
   const box = /viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/.exec(svg)!.slice(1).map(Number)
   const pad = 30
   const viewBox = `${box[0] - pad} ${box[1] - pad} ${box[2] + 2 * pad} ${box[3] + 2 * pad}`
   const atom = (id: number) => scaffold.molecule.atoms.find((item) => item.id === id)!
   const free = new Set(freeSites(scaffold))
-  const src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace(/viewBox="[^"]*"/, `viewBox="${viewBox}"`).replace(/width="[^"]*" height="[^"]*"/, 'width="100%" height="100%"'))}`
+  const src = svgSource(svg.replace(/viewBox="[^"]*"/, `viewBox="${viewBox}"`).replace(/width="[^"]*" height="[^"]*"/, 'width="100%" height="100%"'), dark)
   return (
     <div className="relative aspect-[4/3] w-full">
       <img src={src} alt="" className="absolute inset-0 h-full w-full object-contain" />
@@ -45,8 +48,8 @@ export function ScaffoldSites({
           const chosen = letter === edge
           return (
             <g key={letter} onClick={() => onEdge(letter)} className="cursor-pointer" data-testid={`edge-${letter}`}>
-              <rect x={at.x - 6} y={at.y - 6} width={12} height={12} rx={2.5} fill={chosen ? EDGE : "#fff"} stroke={EDGE} strokeWidth={1.1} />
-              <text x={at.x} y={at.y + 3} fontSize={8} textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fill={chosen ? "#fff" : EDGE}>
+              <rect x={at.x - 6} y={at.y - 6} width={12} height={12} rx={2.5} fill={paint(chosen ? EDGE : "#fff")} stroke={paint(EDGE)} strokeWidth={1.1} />
+              <text x={at.x} y={at.y + 3} fontSize={8} textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fill={paint(chosen ? "#fff" : EDGE)}>
                 {letter}
               </text>
             </g>
@@ -60,8 +63,8 @@ export function ScaffoldSites({
             const chosen = locant === site
             return (
               <g key={locant} onClick={() => onSite(locant)} className="cursor-pointer" data-testid={`site-${locant}`}>
-                <circle cx={at.x} cy={at.y} r={8} fill={chosen ? SITE : "#fff"} stroke={SITE} strokeWidth={1.2} />
-                <text x={at.x} y={at.y + 3} fontSize={label.length > 2 ? 6.5 : 8} textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fill={chosen ? "#fff" : SITE}>
+                <circle cx={at.x} cy={at.y} r={8} fill={paint(chosen ? SITE : "#fff")} stroke={paint(SITE)} strokeWidth={1.2} />
+                <text x={at.x} y={at.y + 3} fontSize={label.length > 2 ? 6.5 : 8} textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fill={paint(chosen ? "#fff" : SITE)}>
                   {label}
                 </text>
               </g>

@@ -32,27 +32,27 @@ export function OverviewTab({ drawing, facts, run }: { drawing: Drawing; facts: 
   const detail = warnings.find((warning) => warning.id === shown)?.detail
 
   return (
-    <div className="space-y-2 px-3 py-2.5 text-[12px] text-[#333]" data-testid="constraints-overview">
+    <div className="space-y-2 px-3 py-2.5 text-[12px] text-(--c-333333)" data-testid="constraints-overview">
       <div>
         <LibrarySizeLine drawing={drawing} />
-        {facts.defined.length === 0 && facts.repeats.length === 0 && <span className="text-[#888]">还没有定义任何变量的候选项</span>}
+        {facts.defined.length === 0 && facts.repeats.length === 0 && <span className="text-(--c-888888)">还没有定义任何变量的候选项</span>}
       </div>
-      <div className="flex items-center gap-3 text-[#555]" data-testid="variable-counts">
+      <div className="flex items-center gap-3 text-(--c-555555)" data-testid="variable-counts">
         <span>
-          变量 <b className="font-medium text-[#222]">{facts.names.length}</b> 个
+          变量 <b className="font-medium text-(--c-222222)">{facts.names.length}</b> 个
         </span>
-        <span className="text-[#ccc]">|</span>
+        <span className="text-(--c-cccccc)">|</span>
         <span>
-          已定义 <b className="font-medium text-[#1e7e34]">{facts.defined.length}</b>
+          已定义 <b className="font-medium text-(--c-1e7e34)">{facts.defined.length}</b>
         </span>
         <span>
-          未定义 <b className={`font-medium ${facts.undefinedNames.length > 0 ? "text-[#c5221f]" : "text-[#222]"}`}>{facts.undefinedNames.length}</b>
+          未定义 <b className={`font-medium ${facts.undefinedNames.length > 0 ? "text-(--c-c5221f)" : "text-(--c-222222)"}`}>{facts.undefinedNames.length}</b>
         </span>
         {facts.repeats.length > 0 && (
           <>
-            <span className="text-[#ccc]">|</span>
+            <span className="text-(--c-cccccc)">|</span>
             <span data-testid="repeat-counts">
-              重复单元 <b className="font-medium text-[#222]">{facts.repeats.length}</b> 个（<i>{facts.repeats.join("，")}</i>）
+              重复单元 <b className="font-medium text-(--c-222222)">{facts.repeats.length}</b> 个（<i>{facts.repeats.join("，")}</i>）
             </span>
           </>
         )}
@@ -64,7 +64,7 @@ export function OverviewTab({ drawing, facts, run }: { drawing: Drawing; facts: 
               key={warning.id}
               type="button"
               aria-pressed={shown === warning.id}
-              className={`rounded-full border px-2 py-0.5 text-[11px] ${shown === warning.id ? "border-[#e8a33d] bg-[#fdf1dc] text-[#8a5300]" : "border-[#f0d6a8] bg-[#fff8ec] text-[#8a5300] hover:bg-[#fdf1dc]"}`}
+              className={`rounded-full border px-2 py-0.5 text-[11px] ${shown === warning.id ? "border-(--c-e8a33d) bg-(--c-fdf1dc) text-(--c-8a5300)" : "border-(--c-f0d6a8) bg-(--c-fff8ec) text-(--c-8a5300) hover:bg-(--c-fdf1dc)"}`}
               onClick={() => setShown(shown === warning.id ? null : warning.id)}
             >
               ⚠ {warning.text}
@@ -72,14 +72,14 @@ export function OverviewTab({ drawing, facts, run }: { drawing: Drawing; facts: 
           ))}
         </div>
       ) : (
-        facts.names.length > 0 && <div className="text-[11px] text-[#1e7e34]">✓ 每个变量都有候选项</div>
+        facts.names.length > 0 && <div className="text-[11px] text-(--c-1e7e34)">✓ 每个变量都有候选项</div>
       )}
-      {detail && <p className="text-[11px] text-[#8a5300]">{detail}</p>}
+      {detail && <p className="text-[11px] text-(--c-8a5300)">{detail}</p>}
       {widenable.map(({ attachment, system, name }) => (
         <button
           key={attachment.atom}
           type="button"
-          className="block text-[11px] text-[#1a73e8] hover:underline"
+          className="block text-[11px] text-(--c-1a73e8) hover:underline"
           onClick={() =>
             run([{ op: "set_attachment", atom: attachment.atom, to: system, ...(attachment.repeat ? { repeat: attachment.repeat } : {}), ...(attachment.shape ? { shape: attachment.shape } : {}) }], {
               keepSelection: true,

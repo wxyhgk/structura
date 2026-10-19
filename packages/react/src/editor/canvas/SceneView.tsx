@@ -13,6 +13,7 @@ import { SweepPreview } from "./SweepPreview.tsx"
 import { atomCircle } from "./rings.ts"
 import { SelectionMarks } from "./SelectionMarks.tsx"
 import type { HoverTarget, Preview } from "./types.ts"
+import { useInk, usePaint } from "../../components/theme.ts"
 
 export function SceneView({
   mol,
@@ -74,6 +75,7 @@ export function SceneView({
 }
 
 const Arrows = memo(function Arrows({ arrows }: { arrows: Arrow[] }) {
+  const paint = usePaint()
   return (
     <>
       {arrows.map((arrow) => {
@@ -85,9 +87,9 @@ const Arrows = memo(function Arrows({ arrows }: { arrows: Arrow[] }) {
         const head = 9
         return (
           <g key={arrow.id}>
-            <line x1={arrow.x1} y1={arrow.y1} x2={arrow.x2} y2={arrow.y2} stroke="#222" strokeWidth={1.6} />
+            <line x1={arrow.x1} y1={arrow.y1} x2={arrow.x2} y2={arrow.y2} stroke={paint("#222")} strokeWidth={1.6} />
             <polygon
-              fill="#222"
+              fill={paint("#222")}
               points={`${arrow.x2},${arrow.y2} ${arrow.x2 - ux * head - uy * 4},${arrow.y2 - uy * head + ux * 4} ${arrow.x2 - ux * head + uy * 4},${arrow.y2 - uy * head - ux * 4}`}
             />
           </g>
@@ -98,6 +100,7 @@ const Arrows = memo(function Arrows({ arrows }: { arrows: Arrow[] }) {
 })
 
 const Figures = memo(function Figures({ figures }: { figures: Figure[] }) {
+  const ink = useInk()
   return (
     <>
       {figures.map((figure, index) => {
@@ -109,7 +112,7 @@ const Figures = memo(function Figures({ figures }: { figures: Figure[] }) {
               y1={figure.y1}
               x2={figure.x2}
               y2={figure.y2}
-              stroke={figure.stroke}
+              stroke={ink(figure.stroke)}
               strokeWidth={figure.width}
               strokeLinecap={figure.cap ?? "butt"}
               strokeDasharray={figure.dash}
@@ -117,14 +120,14 @@ const Figures = memo(function Figures({ figures }: { figures: Figure[] }) {
           )
         }
         if (figure.kind === "polygon") {
-          return <polygon key={index} points={figure.points.map((point) => `${point.x},${point.y}`).join(" ")} fill={figure.fill} />
+          return <polygon key={index} points={figure.points.map((point) => `${point.x},${point.y}`).join(" ")} fill={ink(figure.fill)} />
         }
         return (
           <polyline
             key={index}
             points={figure.points.map((point) => `${point.x},${point.y}`).join(" ")}
             fill="none"
-            stroke={figure.stroke}
+            stroke={ink(figure.stroke)}
             strokeWidth={figure.width}
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -136,6 +139,7 @@ const Figures = memo(function Figures({ figures }: { figures: Figure[] }) {
 })
 
 const Labels = memo(function Labels({ labels }: { labels: AtomLabel[] }) {
+  const ink = useInk()
   return (
     <>
       {labels.map((label) =>
@@ -144,7 +148,7 @@ const Labels = memo(function Labels({ labels }: { labels: AtomLabel[] }) {
             key={`${label.atomId}-${index}`}
             x={run.x}
             y={run.y}
-            fill={label.color}
+            fill={ink(label.color)}
             fontFamily="Arial, Helvetica, sans-serif"
             fontSize={run.size}
             textAnchor={run.anchor}
@@ -169,6 +173,7 @@ function HoverCue({
   labels: AtomLabel[]
   zoom: number
 }) {
+  const paint = usePaint()
   if (!hover || zoom <= 0) return null
   const stroke = 1.6 / zoom
   if (hover.type === "bond") {
@@ -184,7 +189,7 @@ function HoverCue({
         y1={a.y}
         x2={b.x}
         y2={b.y}
-        stroke="#1a73e8"
+        stroke={paint("#1a73e8")}
         strokeOpacity={0.45}
         strokeWidth={8 / zoom}
         strokeLinecap="round"
@@ -198,8 +203,8 @@ function HoverCue({
     <circle
       data-testid="hover-atom"
       {...circle}
-      fill="rgba(26, 115, 232, 0.08)"
-      stroke="#1a73e8"
+      fill={paint("rgba(26, 115, 232, 0.08)")}
+      stroke={paint("#1a73e8")}
       strokeWidth={stroke}
     />
   )
@@ -207,6 +212,7 @@ function HoverCue({
 
 /** The frame with rotate and scale handles around a selection of two or more atoms. */
 function SelectionChrome({ mol, selection, zoom }: { mol: Molecule; selection: Selection; zoom: number }) {
+  const paint = usePaint()
   const frame = selectionFrame(mol, selection)
   if (!frame) return null
   const knob = frame.handles.find((handle) => handle.kind === "rotate")
@@ -219,7 +225,7 @@ function SelectionChrome({ mol, selection, zoom }: { mol: Molecule; selection: S
         width={frame.maxX - frame.minX}
         height={frame.maxY - frame.minY}
         fill="none"
-        stroke="#9ec9f5"
+        stroke={paint("#9ec9f5")}
         strokeWidth={1 / zoom}
       />
       {knob && (
@@ -228,7 +234,7 @@ function SelectionChrome({ mol, selection, zoom }: { mol: Molecule; selection: S
           y1={frame.minY}
           x2={knob.x}
           y2={knob.y}
-          stroke="#9ec9f5"
+          stroke={paint("#9ec9f5")}
           strokeWidth={1 / zoom}
         />
       )}
@@ -240,8 +246,8 @@ function SelectionChrome({ mol, selection, zoom }: { mol: Molecule; selection: S
           y={handle.y - size / 2}
           width={size}
           height={size}
-          fill="#ffffff"
-          stroke="#7eb6ea"
+          fill={paint("#ffffff")}
+          stroke={paint("#7eb6ea")}
           strokeWidth={1 / zoom}
         />
       ))}
@@ -250,10 +256,11 @@ function SelectionChrome({ mol, selection, zoom }: { mol: Molecule; selection: S
 }
 
 function PreviewLayer({ preview }: { preview: Exclude<Preview, null | { kind: "bracket" | "sweep" }> }) {
+  const paint = usePaint()
   if (preview.kind === "attachment") {
     return (
       <g data-testid="attachment-preview">
-        <line x1={preview.a.x} y1={preview.a.y} x2={(preview.end ?? preview.hint.centre).x} y2={(preview.end ?? preview.hint.centre).y} stroke="#1a73e8" strokeWidth={1.8} strokeLinecap="round" />
+        <line x1={preview.a.x} y1={preview.a.y} x2={(preview.end ?? preview.hint.centre).x} y2={(preview.end ?? preview.hint.centre).y} stroke={paint("#1a73e8")} strokeWidth={1.8} strokeLinecap="round" />
         <RingHint hint={preview.hint} />
       </g>
     )
@@ -267,8 +274,8 @@ function PreviewLayer({ preview }: { preview: Exclude<Preview, null | { kind: "b
         y={y}
         width={Math.abs(preview.b.x - preview.a.x)}
         height={Math.abs(preview.b.y - preview.a.y)}
-        fill="rgba(26, 115, 232, 0.08)"
-        stroke="#1a73e8"
+        fill={paint("rgba(26, 115, 232, 0.08)")}
+        stroke={paint("#1a73e8")}
         strokeDasharray="4 3"
       />
     )
@@ -277,8 +284,8 @@ function PreviewLayer({ preview }: { preview: Exclude<Preview, null | { kind: "b
     return (
       <polyline
         points={preview.points.map((point) => `${point.x},${point.y}`).join(" ")}
-        fill="rgba(26, 115, 232, 0.08)"
-        stroke="#1a73e8"
+        fill={paint("rgba(26, 115, 232, 0.08)")}
+        stroke={paint("#1a73e8")}
         strokeDasharray="4 3"
       />
     )
@@ -286,13 +293,13 @@ function PreviewLayer({ preview }: { preview: Exclude<Preview, null | { kind: "b
   if (preview.kind === "bond") {
     return (
       <g opacity={0.45}>
-        <Figures figures={bondFigures(preview.a, preview.b, preview.style, "#222", "#222", null, null, null)} />
+        <Figures figures={bondFigures(preview.a, preview.b, preview.style, paint("#222"), paint("#222"), null, null, null)} />
       </g>
     )
   }
   const doubles = preview.kind === "ring" && preview.doubles
   return (
-    <g opacity={0.45} stroke="#222" strokeWidth={1.55} fill="none">
+    <g opacity={0.45} stroke={paint("#222")} strokeWidth={1.55} fill="none">
       {preview.kind === "ring" && preview.anchor && preview.points[0] && (
         <line x1={preview.anchor.x} y1={preview.anchor.y} x2={preview.points[0].x} y2={preview.points[0].y} strokeWidth={1.55} />
       )}

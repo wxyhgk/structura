@@ -1,6 +1,6 @@
 {
   "name": "chem-structura",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "MIT",
   "description": "Structura：ChemDraw 风格的 2D 化学结构编辑器 React 组件，支持专利通式（Markush）的绘制和批量生成。",
   "type": "module",
@@ -36,6 +36,7 @@
   "scripts": {
     "test": "node --experimental-strip-types --conditions=structura-source --test \"tests/**/*.test.ts\"",
     "check:dist": "node scripts/check-dist.mjs",
+    "tokens": "node --experimental-strip-types --conditions=structura-source scripts/theme-tokens.ts",
     "build": "NODE_OPTIONS=--conditions=structura-source vite build --configLoader native && NODE_OPTIONS=--conditions=structura-source vite build --configLoader native -c vite.standalone.config.ts && node scripts/build-types.mjs"
   },
   "peerDependencies": {

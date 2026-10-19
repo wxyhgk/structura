@@ -4,7 +4,7 @@ import { MoleculeThumb } from "../common/MoleculeThumb.tsx"
 import { describeAlternative } from "../markush/describe.ts"
 import { SITE_NAMES } from "./templateSearch.ts"
 
-const LINK = "text-[#1a73e8] hover:underline disabled:text-[#aaa] disabled:no-underline"
+const LINK = "text-(--c-1a73e8) hover:underline disabled:text-(--c-aaaaaa) disabled:no-underline"
 
 /**
  * One template in the library: its picture or what it stands for, its names, and what can
@@ -46,31 +46,31 @@ export function TemplateRow({
   const describe = describeAlternative(alternative)
 
   return (
-    <div className="flex items-center gap-3 rounded-md border border-[#e3e3e3] bg-white px-2.5 py-1.5" data-testid="template-row">
-      <div className={`flex w-16 shrink-0 items-center justify-center rounded-sm ${alternative.kind === "fragment" ? "h-12 bg-[#fafafa]" : "self-stretch border border-dashed border-[#e3e3e3]"}`}>
+    <div className="flex items-center gap-3 rounded-md border border-(--c-e3e3e3) bg-(--c-ffffff) px-2.5 py-1.5" data-testid="template-row">
+      <div className={`flex w-16 shrink-0 items-center justify-center rounded-sm ${alternative.kind === "fragment" ? "h-12 bg-(--c-fafafa)" : "self-stretch border border-dashed border-(--c-e3e3e3)"}`}>
         {alternative.kind === "fragment" ? (
           <MoleculeThumb mol={alternative.molecule} colorHetero={colorHetero} className="max-h-full max-w-full object-contain" />
         ) : (
-          <span className="px-1 text-center text-[11px] leading-tight text-[#666]">{alternative.kind === "class" ? "类别" : alternative.kind === "bond" ? "—" : describe}</span>
+          <span className="px-1 text-center text-[11px] leading-tight text-(--c-666666)">{alternative.kind === "class" ? "类别" : alternative.kind === "bond" ? "—" : describe}</span>
         )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate font-medium text-[#222]" data-testid="template-name">
+          <span className="truncate font-medium text-(--c-222222)" data-testid="template-name">
             {template.name}
           </span>
-          <span data-testid="template-source" className={`shrink-0 rounded-sm px-1 py-px text-[10px] ${mine ? "bg-[#e9f6ec] text-[#1e7d34]" : "bg-[#f0f0f0] text-[#777]"}`}>{mine ? "我的" : "内置"}</span>
-          {showSite && <span className="shrink-0 rounded-sm border border-[#d6e4f7] px-1 py-px text-[10px] text-[#1a73e8]">{SITE_NAMES[template.site]}</span>}
+          <span data-testid="template-source" className={`shrink-0 rounded-sm px-1 py-px text-[10px] ${mine ? "bg-(--c-e9f6ec) text-(--c-1e7d34)" : "bg-(--c-f0f0f0) text-(--c-777777)"}`}>{mine ? "我的" : "内置"}</span>
+          {showSite && <span className="shrink-0 rounded-sm border border-(--c-d6e4f7) px-1 py-px text-[10px] text-(--c-1a73e8)">{SITE_NAMES[template.site]}</span>}
         </div>
-        <div className="truncate text-[11px] text-[#888]" title={describe}>
+        <div className="truncate text-[11px] text-(--c-888888)" title={describe}>
           {template.aliases?.length ? `${template.aliases.join("、")} · ` : ""}
           {describe}
         </div>
         {asking ? (
           <div className="mt-0.5 flex items-center gap-2 text-[11px]">
-            <span className="text-[#d1242f]">删除“{template.name}”？不能撤销。</span>
+            <span className="text-(--c-d1242f)">删除“{template.name}”？不能撤销。</span>
             <button
-              className="text-[#d1242f] hover:underline"
+              className="text-(--c-d1242f) hover:underline"
               onClick={() =>
                 onDelete().catch((error: unknown) => {
                   setProblem(error instanceof Error ? error.message : String(error))
@@ -96,7 +96,7 @@ export function TemplateRow({
                     修改结构和位点
                   </button>
                 )}
-                <button className={`${LINK} hover:text-[#d1242f]`} disabled={!canChange} onClick={() => setAsking(true)}>
+                <button className={`${LINK} hover:text-(--c-d1242f)`} disabled={!canChange} onClick={() => setAsking(true)}>
                   删除
                 </button>
               </>
@@ -105,12 +105,12 @@ export function TemplateRow({
                 复制为我的模板
               </button>
             )}
-            {problem && <span className="text-[#b26a00]">{problem}</span>}
+            {problem && <span className="text-(--c-b26a00)">{problem}</span>}
           </div>
         )}
       </div>
       <button
-        className="shrink-0 rounded-sm border border-[#9fc3ee] bg-white px-2.5 py-1 text-[#1a73e8] hover:bg-[#e8f1fb] disabled:border-[#ddd] disabled:text-[#aaa] disabled:hover:bg-transparent"
+        className="shrink-0 rounded-sm border border-(--c-9fc3ee) bg-(--c-ffffff) px-2.5 py-1 text-(--c-1a73e8) hover:bg-(--c-e8f1fb) disabled:border-(--c-dddddd) disabled:text-(--c-aaaaaa) disabled:hover:bg-transparent"
         disabled={added || addable != null}
         onClick={onAdd}
         title={addable ?? (added ? "已在候选项里" : `添加：${describe}`)}

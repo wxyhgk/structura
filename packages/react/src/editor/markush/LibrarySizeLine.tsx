@@ -22,10 +22,10 @@ export function LibrarySizeLine({ drawing }: { drawing: Drawing }) {
   }, [molecule, variables, attachments, ringClosures, brackets])
   if (!text) return null
   return (
-    <div className="px-0.5 text-[11px] leading-snug text-[#555]" data-testid="library-size">
-      <div className="font-medium text-[#333]">{text.headline}</div>
+    <div className="px-0.5 text-[11px] leading-snug text-(--c-555555)" data-testid="library-size">
+      <div className="font-medium text-(--c-333333)">{text.headline}</div>
       {text.notes.map((note) => (
-        <div key={note} className="text-[#888]">
+        <div key={note} className="text-(--c-888888)">
           {note}
         </div>
       ))}

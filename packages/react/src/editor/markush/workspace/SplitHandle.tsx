@@ -47,7 +47,7 @@ export function SplitHandle({
       onPointerDown={start}
       onDoubleClick={onReset}
     >
-      <div className={`${axis === "x" ? "h-full w-px" : "h-px w-full"} bg-[#d0d0d0] transition-colors group-hover:bg-[#1a73e8] group-active:bg-[#1a73e8]`} />
+      <div className={`${axis === "x" ? "h-full w-px" : "h-px w-full"} bg-(--c-d0d0d0) transition-colors group-hover:bg-(--c-1a73e8) group-active:bg-(--c-1a73e8)`} />
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { OFFLINE_NOTE, type Templates } from "./useTemplates.ts"
 /** The shelf a new template goes on when the user names none. */
 export const DEFAULT_GROUP = "我的模板"
 
-const FIELD = "h-7 rounded-sm border border-[#d0d0d0] bg-white px-1.5 outline-none focus:border-[#1a73e8]"
+const FIELD = "h-7 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1.5 outline-none focus:border-(--c-1a73e8)"
 
 /**
  * Saving an alternative as one of the user's templates: its name, shelf (suggesting the
@@ -59,7 +59,7 @@ export function SaveTemplateForm({
 
   return (
     <form
-      className="grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1.5 rounded-sm border border-[#d6e4f7] bg-[#f8fbff] p-2.5 text-[12px]"
+      className="grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1.5 rounded-sm border border-(--c-d6e4f7) bg-(--c-f8fbff) p-2.5 text-[12px]"
       onSubmit={(event) => {
         event.preventDefault()
         void save()
@@ -70,9 +70,9 @@ export function SaveTemplateForm({
       }}
       data-testid="save-template-form"
     >
-      <span className="col-span-2 font-medium text-[#333]">
+      <span className="col-span-2 font-medium text-(--c-333333)">
         {title}
-        <span className="ml-2 font-normal text-[#888]">位置：{SITE_NAMES[site]}</span>
+        <span className="ml-2 font-normal text-(--c-888888)">位置：{SITE_NAMES[site]}</span>
       </span>
       <label htmlFor={`${listId}-name`}>名称</label>
       <input id={`${listId}-name`} className={FIELD} value={name} onChange={(event) => setName(event.target.value)} placeholder="如 吡啶基" maxLength={60} autoFocus aria-label="模板名称" />
@@ -92,8 +92,8 @@ export function SaveTemplateForm({
         placeholder="可不填；用逗号分开，如 pyridyl, Py"
         aria-label="模板的其他名称"
       />
-      {offline && <p className="col-span-2 text-[#b26a00]">{templates.status === "loading" ? "正在连接后端…" : OFFLINE_NOTE}</p>}
-      {problem && <p className="col-span-2 text-[#b26a00]">{problem}</p>}
+      {offline && <p className="col-span-2 text-(--c-b26a00)">{templates.status === "loading" ? "正在连接后端…" : OFFLINE_NOTE}</p>}
+      {problem && <p className="col-span-2 text-(--c-b26a00)">{problem}</p>}
       <span className="col-span-2 flex justify-end gap-2">
         <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
           取消

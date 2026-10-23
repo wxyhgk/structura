@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0
+
+Additions only: nothing 0.5.0 offered has changed signature or gone away.
+
+- **Selection for the host**: `getSelection()` and `setSelection({ atoms, bonds? })` on the
+  handle (`mount()` too), and `onSelectionChange(selection)`, with atom and bond ids as in
+  `getDocument()`: for a page that shows the same molecule elsewhere (a 3D view, a table) and
+  keeps the two selections together. The host's own `setSelection` is not an edit (no undo
+  step, the view stays) and is not reported back; the user's changes are, once each (a box or
+  lasso when released). The `Selection` type is exported.
+
 ## 0.5.0
 
 Additions only: nothing 0.4.0 offered has changed signature or gone away.

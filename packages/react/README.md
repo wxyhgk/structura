@@ -43,6 +43,7 @@ colour variables do not override your own theme. Nor do your page's styles chang
 | `initialDocument` | A Structura document (from `getDocument()`) to start with |
 | `onChange(molfile)` | After every edit that changes the molecule |
 | `onDocumentChange(document)` | After every edit, as a Structura document (with the generic formula's variables) |
+| `onSelectionChange(selection)` | `{ atoms, bonds }` (ids as in `getDocument()`) each time the user selects something else: a click, a box or lasso (once, when released), select all, Escape, an edit that clears it. Not for the host's own `setSelection` |
 | `onDirtyChange(dirty)` | When the drawing gains or loses unsaved changes |
 | `templateStore` | Where the user's own group templates are kept (`httpTemplateStore()`, `memoryTemplateStore()`, or your own) |
 | `wordExport` | How to make Word tables of generated compounds with editable ChemDraw objects (`{ check(), make(pack, { columns }) }`, e.g. through chem2office on your server). Without it, the Word export holds pictures |
@@ -65,6 +66,8 @@ colour variables do not override your own theme. Nor do your page's styles chang
 | `run(ops)` | Edits through the op layer, as one undoable step |
 | `enumerate(options)` | The generic formula expanded into compounds, with their SD file |
 | `fit()` | Zooms and pans so the whole drawing is in view |
+| `getSelection()` | What is selected, `{ atoms, bonds }`, as ids in `getDocument()` (a copy) |
+| `setSelection({ atoms, bonds? })` | Selects these (unknown ids ignored); without `bonds`, the bonds between the atoms come with them; empty clears. Not an edit: no undo step, the view stays, `onSelectionChange` not called |
 
 The `set…` methods replace the drawing as one undoable step and return the problems worth
 telling the user; they are the host's own changes, so `onChange` is not called for them.
@@ -80,8 +83,8 @@ The component renders on a server (Next.js, Remix…) and comes alive in the bro
 use React or a bundler: one stylesheet and one script.
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.5.0/dist/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.5.0"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.6.0/dist/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.6.0"></script>
 ```
 
 The script (`dist/chem-structura.iife.js`, which the short address above serves) sets

@@ -508,3 +508,53 @@ test("theme: edit({ theme: \"dark\" }) opens dark; <chem-molecule theme> draws f
   await page.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"))
   await expect.poll(() => auto.evaluate((element) => element.querySelector("svg")!.outerHTML.includes("#222222"))).toBe(false)
 })
+
+test("selection: the host reads it, sets it without hearing it back, and hears the user's own changes once each", async ({ page }) => {
+  await page.setContent(`<!doctype html><html><head><meta charset="utf-8">
+    <link rel="stylesheet" href="${PACKAGE}/dist/style.css"></head>
+    <body style="margin:0"><div id="host" style="width:1100px;height:700px"></div>
+    <script src="${PACKAGE}/dist/chem-structura.iife.js"></script>
+    <script>
+      window.seen = []
+      window.editor = ChemStructura.mount("#host", { onSelectionChange: (selection) => window.seen.push(selection) })
+      window.editor.run([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }])
+    </script>
+    </body></html>`)
+  await expect(page.locator(".chem-app")).toBeVisible()
+  type Selected = { atoms: number[]; bonds: number[] }
+  type Host = { editor: { getSelection(): Selected; setSelection(selection: { atoms: number[]; bonds?: number[] }): void; getDocument(): string }; seen: Selected[] }
+  const seen = () => page.evaluate(() => (window as unknown as Host).seen.map((s) => [s.atoms.length, s.bonds.length]))
+  const selection = () => page.evaluate(() => (window as unknown as Host).editor.getSelection())
+  const ids = await page.evaluate(() => JSON.parse((window as unknown as Host).editor.getDocument()).drawing.molecule.atoms.map((atom: { id: number }) => atom.id) as number[])
+  expect(await selection()).toEqual({ atoms: [], bonds: [] })
+
+  // The user selects everything: told once, and 全选 again (nothing new) is not told again.
+  const selectAll = async () => {
+    await page.getByRole("button", { name: "编辑", exact: true }).click()
+    await page.getByRole("menuitem", { name: /全选/ }).click()
+  }
+  await selectAll()
+  await expect.poll(seen).toEqual([[6, 6]])
+  await selectAll()
+  expect((await selection()).atoms).toHaveLength(6)
+
+  // The host's own selection: two neighbours and the bond between them, an unknown id ignored, not echoed.
+  await page.evaluate((atoms) => (window as unknown as Host).editor.setSelection({ atoms: [...atoms, 9999] }), ids.slice(0, 2))
+  expect(await selection()).toMatchObject({ atoms: ids.slice(0, 2) })
+  expect((await selection()).bonds).toHaveLength(1)
+  // Bonds given (none): only the atoms.
+  await page.evaluate((atoms) => (window as unknown as Host).editor.setSelection({ atoms, bonds: [] }), ids.slice(0, 2))
+  expect((await selection()).bonds).toEqual([])
+  // The copy handed out is the host's to change.
+  await page.evaluate(() => (window as unknown as Host).editor.getSelection().atoms.push(42))
+  expect((await selection()).atoms).toEqual(ids.slice(0, 2))
+  expect(await seen()).toEqual([[6, 6]])
+
+  // The user clears it with Escape: told.
+  await page.getByTestId("canvas").hover()
+  await page.keyboard.press("Escape")
+  await expect.poll(seen).toEqual([[6, 6], [0, 0]])
+  // Clearing what the host set empty is not a change to tell.
+  await page.evaluate(() => (window as unknown as Host).editor.setSelection({ atoms: [] }))
+  expect(await seen()).toEqual([[6, 6], [0, 0]])
+})

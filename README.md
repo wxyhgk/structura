@@ -34,6 +34,7 @@ function Host({ saved }: { saved?: string }) {
 | `initialDocument` | 启动时读入的 Structura 文档（含通式的变量和可变连接），优先于 `initialMolfile` |
 | `onChange(molfile)` | 分子改变后回调，给出 MOL 文本 |
 | `onDocumentChange(document)` | 任何改动后回调，给出完整的 Structura 文档（JSON） |
+| `onSelectionChange(selection)` | 用户改变选择时回调，给出 `{ atoms, bonds }`（id 与 `getDocument()` 里的一致）；框选、套索在松开时报一次；宿主自己 `setSelection` 不回报 |
 
 **ref 方法**（`EditorHandle`）
 
@@ -48,6 +49,8 @@ function Host({ saved }: { saved?: string }) {
 | `run(ops)` | 用操作层修改（与 agent 相同的 JSON 操作，见 `packages/core/src/ops/types.ts`），一步可撤销，触发回调；失败时返回哪一步、为什么 |
 | `enumerate({ limit, representatives })` | 把通式展开成具体化合物，结果附带 SDF 文本 |
 | `fit()` | 缩放平移到整张图可见 |
+| `getSelection()` | 当前选择 `{ atoms, bonds }`（副本） |
+| `setSelection({ atoms, bonds? })` | 设置选择，不存在的 id 忽略；不给 `bonds` 时两端都选中的键一起选上；空数组清空。不进撤销、不移动视图、不触发 `onSelectionChange` |
 
 不用 React 时：`chem-structura/standalone` 把 React 一起打包。页面上放分子用 `<chem-molecule editable>` 标签（内容是子元素 `<script>` 里的 MOL / Structura 文档，或 `smiles` 属性；点击用编辑器修改，保存后触发 `change`；放在表单里按 `name` 提交）；`edit({ molfile | document })` 在页面上方打开编辑器，保存后返回结果；`mount(元素, 参数)` 返回上面的 ref 方法和 `update()`、`unmount()`，有 ES 模块（`dist/standalone.js`）和直接用 `<script>` 加载的版本（`dist/chem-structura.iife.js`，全局 `ChemStructura`）；`chem-structura/core` 是不带编辑器的化学功能（搭建、读写 MOL / 文档、出 SVG / CDXML、展开通式），不依赖 React，浏览器和 Node 都能用。写法见 `packages/react/README.md`，能直接打开的示例页在 `packages/react/examples/`（先 `npm run build -w chem-structura`，再把 `packages/react` 当静态文件目录打开，如 `node e2e/serve-package.ts 25401`）。
 

@@ -1,7 +1,8 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react"
 import { readDocument, toDocument } from "@structura/core/document"
 import { enumerate, enumerationSdf, type EnumerateOptions, type Enumeration } from "@structura/markush"
-import { emptySelection } from "@structura/core/molecule"
+import { emptySelection, selectionFromAtoms } from "@structura/core/molecule"
+import type { Selection } from "@structura/core/types"
 import { toMolfile } from "@structura/core/molfile"
 import type { Op, OpsResult } from "@structura/core/ops"
 import { failure } from "../browser.ts"
@@ -74,13 +75,35 @@ export type EditorHandle = {
   enumerate(options?: EnumerateOptions): Enumeration & { sdf: string }
   /** Zooms and pans so the whole drawing is in view. */
   fit(): void
+  /** What is selected: atom and bond ids as getDocument numbers them (a copy). */
+  getSelection(): Selection
+  /**
+   * Selects these atoms and bonds (ids as getDocument numbers them), replacing the selection;
+   * ids the drawing does not have are ignored. Without `bonds`, the bonds whose two ends are
+   * both among the atoms are selected with them; empty lists clear it. Not an edit: it is not
+   * undone, the view stays where it is, and onSelectionChange is not called for it.
+   */
+  setSelection(selection: { atoms: number[]; bonds?: number[] }): void
 }
+
+/** Whether two selections hold the same atoms and bonds, in whatever order. */
+function sameSelection(a: Selection, b: Selection): boolean {
+  const same = (x: number[], y: number[]) => {
+    if (x.length !== y.length) return false
+    const set = new Set(x)
+    return y.every((id) => set.has(id))
+  }
+  return a === b || (same(a.atoms, b.atoms) && same(a.bonds, b.bonds))
+}
+
+const copySelection = (selection: Selection): Selection => ({ atoms: [...selection.atoms], bonds: [...selection.bonds] })
 
 /**
  * The editor as a component other code talks to: the ref handle; `onChange` with the new
  * molfile after every edit that changes the molecule, and `onDocumentChange` with the whole
  * document after every edit that changes anything in it (not on hover, selection or a
- * gesture still in progress); and fitting a starting document into view.
+ * gesture still in progress); `onSelectionChange` when the user selects something else; and
+ * fitting a starting document into view.
  */
 export function useEditorHandle(
   ref: Ref<EditorHandle>,
@@ -90,18 +113,22 @@ export function useEditorHandle(
     openText,
     onChange,
     onDocumentChange,
+    onSelectionChange,
   }: {
-    editor: Pick<EditorState, "mol" | "drawing" | "latest" | "run" | "loadDrawing" | "newDocument" | "raisedNumbers" | "colorHetero" | "openMolecules">
+    editor: Pick<EditorState, "mol" | "drawing" | "latest" | "run" | "loadDrawing" | "newDocument" | "raisedNumbers" | "colorHetero" | "openMolecules" | "selection" | "setSelection" | "get">
     viewport: Viewport
     openText: Imports["openText"]
     onChange?: (molfile: string) => void
     onDocumentChange?: (document: string) => void
+    onSelectionChange?: (selection: Selection) => void
   },
 ) {
   const reported = useRef({ mol: editor.mol, drawing: editor.drawing })
   /** Set when the host's own setMolfile / setDocument is about to change the drawing. */
   const quiet = useRef(false)
   const started = useRef(false)
+  /** The selection last told to the host, or set by it: a change back to it is not reported. */
+  const reportedSelection = useRef(editor.selection)
 
   /** Fits the latest drawing, so a fit right after the host's run or setMolfile sees the change. */
   const fit = () => {
@@ -120,6 +147,13 @@ export function useEditorHandle(
     if (last.mol !== editor.mol || last.drawing.brackets !== editor.drawing.brackets) onChange?.(toMolfile(editor.mol, "Structura", editor.drawing.brackets))
     onDocumentChange?.(toDocument(editor.drawing))
   }, [editor.drawing, editor.mol, onChange, onDocumentChange])
+
+  // Box and lasso set the selection once, when the button is released, so a drag reports once.
+  useEffect(() => {
+    if (sameSelection(reportedSelection.current, editor.selection)) return
+    reportedSelection.current = editor.selection
+    onSelectionChange?.(copySelection(editor.selection))
+  }, [editor.selection, onSelectionChange])
 
   // A document the editor starts with is fitted once the canvas has its size.
   useEffect(() => {
@@ -204,5 +238,16 @@ export function useEditorHandle(
       return { ...result, sdf: enumerationSdf(result) }
     },
     fit,
+    getSelection: () => copySelection(editor.get().selection),
+    setSelection({ atoms, bonds }: { atoms: number[]; bonds?: number[] }) {
+      const mol = editor.latest().molecule
+      const atomIds = new Set(mol.atoms.map((atom) => atom.id))
+      const bondIds = new Set(mol.bonds.map((bond) => bond.id))
+      const kept = [...new Set(atoms)].filter((id) => atomIds.has(id))
+      const next = bonds ? { atoms: kept, bonds: [...new Set(bonds)].filter((id) => bondIds.has(id)) } : selectionFromAtoms(mol, kept)
+      // Marked as told before the change, so the effect above does not echo it.
+      reportedSelection.current = next
+      editor.setSelection(next)
+    },
   }))
 }

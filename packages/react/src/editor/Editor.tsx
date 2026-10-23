@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useMemo, useRef, useState } from "react"
 import { displayMolecule } from "@structura/core/molecule"
+import type { Selection } from "@structura/core/types"
 import { TooltipProvider } from "../components/ui/tooltip.tsx"
 import { ContextMenu, ContextMenuTrigger } from "../components/ui/context-menu.tsx"
 import { AnalysisDialog } from "./analysis/AnalysisDialog.tsx"
@@ -49,6 +50,7 @@ import type { TemplateStore } from "./templates/store.ts"
 import { useTemplates } from "./templates/useTemplates.ts"
 
 export type { EditorHandle, RunResult } from "./hooks/useEditorHandle.ts"
+export type { Selection } from "@structura/core/types"
 export type { EnumerateOptions, Enumeration } from "@structura/markush"
 export type { Op } from "@structura/core/ops"
 export type { FillVariables } from "./markush/useFill.ts"
@@ -66,6 +68,12 @@ export type EditorProps = {
   onChange?: (molfile: string) => void
   /** The whole drawing as a Structura document, after every edit, including a generic formula's variables. */
   onDocumentChange?: (document: string) => void
+  /**
+   * What is selected (atom and bond ids as getDocument numbers them), each time the user
+   * changes it: a click, a box or lasso (once, when released), select all, Escape, or an edit
+   * that clears it. Not called for the host's own setSelection, nor when nothing changed.
+   */
+  onSelectionChange?: (selection: Selection) => void
   /**
    * Whether the drawing has changes not yet saved to a file, each time that flips: the host
    * can warn before the page is closed, or keep a copy (the standalone app does both).
@@ -113,7 +121,7 @@ export type EditorProps = {
  * Lays out the editor and wires state, commands and input together. It fills its
  * container, so the host decides its size.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onDirtyChange, fillVariables, recognizeStructure, templateStore, onDismiss, wordExport, theme = "light", onThemeChange }, ref) {
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onSelectionChange, onDirtyChange, fillVariables, recognizeStructure, templateStore, onDismiss, wordExport, theme = "light", onThemeChange }, ref) {
   const dark = useDark(theme)
   const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
   const editor = useEditor(initial)
@@ -163,7 +171,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     models: { recognize: recognizeStructure != null, fill: fillVariables != null },
   })
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
-  useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange })
+  useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange, onSelectionChange })
 
   /** The canvas with its right-click menu: the drawing workspace's centre, and the formula's canvas in the other. */
   const canvasArea = (

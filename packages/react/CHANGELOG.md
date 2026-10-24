@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.1
+
+- **Changed**: what the pointer is on is now simply what it is nearest, instead of each kind
+  having its own radius (atom 12 px, bond 7, curve and bracket 6, tried in turn). Bonds were
+  much harder to point at than atoms: at 50% and below a bond could not be hovered or clicked
+  at all, and at 100% it had 246 px² to an atom's 450; hover reached further than a click, so
+  what lit up was not always what was taken. Now:
+  - One reach for atoms, bonds, custom curves and brackets: 30% of a bond's length on screen,
+    kept between 8 and 16 px (16 to 28 px for a finger). Within it the nearest wins; an atom
+    keeps 30% of each bond at its end, so a bond keeps its middle at any zoom.
+  - An atom with a label is hit anywhere on the label (NH₂, R1), not only round its centre.
+  - On a boundary the pointer stays on what is lit until the other is 2 px nearer, so the
+    mark does not flicker; a click takes what is lit.
+  - Per bond at 100%: 503 px² (was 246); at 50%: 124 (was 0). A custom curve or bracket
+    beside a bond is taken where it is the nearer, no longer always lost to the bond.
+
 ## 0.6.0
 
 Additions only: nothing 0.5.0 offered has changed signature or gone away.

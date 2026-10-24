@@ -2,7 +2,7 @@ import { emptySelection } from "@structura/core/molecule"
 import type { Point } from "@structura/core/types"
 import { curveOp, withNodes, withoutNode } from "../markush/curveEdit.ts"
 import { curveAt, customMarks, nodeAt, pathAt, type CustomMark } from "../pointer/curves.ts"
-import type { hitOf } from "../pointer/targeting.ts"
+import { reachOf } from "../pointer/targeting.ts"
 import type { CurveHover, Gesture, GestureKind, PointerHost, PointerInput } from "./types.ts"
 
 // Editing a custom attachment curve with the select tools: a click on the curve picks it and
@@ -57,10 +57,15 @@ export const curveNode: GestureKind<CurveNode> = {
   },
 }
 
-/** What a press with a select tool does to custom curves: a gesture, "done" when it only picked one, or null when it is not on any. */
-export function pressCurve(host: PointerHost, world: Point, hit: ReturnType<typeof hitOf>, event: PointerInput): Gesture | "done" | null {
+/**
+ * What a press with a select tool does to custom curves: a gesture, "done" when it only picked
+ * one, or null when it is not on any. `onCurve`: a curve is what the pointer aims at (aimOf);
+ * a picked curve's node handles come first all the same.
+ */
+export function pressCurve(host: PointerHost, world: Point, onCurve: boolean, event: PointerInput): Gesture | "done" | null {
   const { curveFocus, setCurveFocus } = host.props
   const zoom = host.zoom()
+  const reach = reachOf(host.props.mol, zoom, event.pointerType === "touch")
   const marks = marksOf(host)
   const focused = curveFocus ? marks.find((mark) => mark.atom === curveFocus.atom) : undefined
   if (focused && !event.shiftKey) {
@@ -69,7 +74,7 @@ export function pressCurve(host: PointerHost, world: Point, hit: ReturnType<type
       setCurveFocus({ atom: focused.atom, node })
       return start(focused, node, focused.custom.nodes, world, false)
     }
-    const on = hit ? null : pathAt(focused, world, zoom)
+    const on = onCurve ? pathAt(focused, world, reach) : null
     if (on && on.insertAt != null) {
       lastClick = null
       const nodes = [...focused.custom.nodes]
@@ -78,7 +83,7 @@ export function pressCurve(host: PointerHost, world: Point, hit: ReturnType<type
       return start(focused, on.insertAt, nodes, world, true)
     }
   }
-  const picked = hit ? null : curveAt(marks, world, zoom)
+  const picked = onCurve ? curveAt(marks, world, reach) : null
   if (picked) {
     host.props.setSelection(emptySelection())
     setCurveFocus({ atom: picked.atom, node: null })
@@ -92,15 +97,16 @@ function start(mark: CustomMark, index: number, nodes: Point[], world: Point, in
   return { kind: "curveNode", atom: mark.atom, index, nodes, closed: mark.custom.closed, origin: world, start: nodes[index], moved: false, inserted }
 }
 
-/** What the pointer is over, for the cursor: a node of the picked curve, the picked curve (a click puts a node in), or a curve to pick. */
-export function curveHover(host: PointerHost, world: Point, hit: ReturnType<typeof hitOf>): CurveHover {
+/** What the pointer is over, for the cursor: a node of the picked curve, the picked curve (a click puts a node in), or a curve to pick. `onCurve` as for pressCurve. */
+export function curveHover(host: PointerHost, world: Point, onCurve: boolean): CurveHover {
   const { curveFocus } = host.props
   const marks = marksOf(host)
   if (marks.length === 0) return null
   const zoom = host.zoom()
+  const reach = reachOf(host.props.mol, zoom)
   const focused = curveFocus ? marks.find((mark) => mark.atom === curveFocus.atom) : undefined
   if (focused && nodeAt(focused, world, zoom) != null) return "node"
-  if (hit) return null
-  if (focused && pathAt(focused, world, zoom)?.insertAt != null) return "insert"
-  return curveAt(marks, world, zoom) ? "pick" : null
+  if (!onCurve) return null
+  if (focused && pathAt(focused, world, reach)?.insertAt != null) return "insert"
+  return curveAt(marks, world, reach) ? "pick" : null
 }

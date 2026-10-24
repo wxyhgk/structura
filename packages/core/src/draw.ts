@@ -1,4 +1,6 @@
 export type { AtomLabel, DrawOptions, LabelRun } from "./draw/labels.ts"
+export { labelFor } from "./draw/labels.ts"
+export type { LabelBox } from "./draw/clip.ts"
 export type { DrawLine, DrawPolygon, DrawPolyline, Figure } from "./draw/primitives.ts"
 export type { Scene } from "./draw/scene.ts"
 export { bondFigures, bondKind } from "./draw/bonds/index.ts"

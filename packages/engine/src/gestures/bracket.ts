@@ -1,7 +1,5 @@
 import { selectionFromAtoms } from "@structura/core/molecule"
-import type { Point } from "@structura/core/types"
-import { bracketAt } from "../pointer/brackets.ts"
-import type { hitOf } from "../pointer/targeting.ts"
+import type { Bracket, Point } from "@structura/core/types"
 import { atomsInBox } from "./select.ts"
 import type { Gesture, GestureKind, PointerHost } from "./types.ts"
 
@@ -19,10 +17,9 @@ export const bracketBox: GestureKind<BracketBox> = {
   },
 }
 
-/** Pressing with the bracket tool: on a bracket's stroke, its atoms become the selection; anywhere else starts a box. */
-export function startBracket(host: PointerHost, hit: ReturnType<typeof hitOf>, world: Point): Gesture | null {
-  const { mol, brackets, attachments, setSelection } = host.props
-  const bracket = hit ? null : bracketAt(mol, brackets, world, host.zoom(), attachments)
+/** Pressing with the bracket tool: on a bracket's stroke (`bracket`, what the pointer aims at), its atoms become the selection; anywhere else starts a box. */
+export function startBracket(host: PointerHost, bracket: Bracket | null, world: Point): Gesture | null {
+  const { mol, setSelection } = host.props
   if (bracket) {
     setSelection(selectionFromAtoms(mol, bracket.atoms.filter((id) => mol.atoms.some((atom) => atom.id === id))))
     return null

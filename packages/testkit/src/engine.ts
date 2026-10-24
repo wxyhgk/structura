@@ -31,6 +31,7 @@ export function fakeCanvas(editor: Editor) {
     setCurveHover: (hover) => (shown.curveHover = hover),
     setPanning: () => {},
     assignHover: (hover) => (shown.hover = hover),
+    hovered: () => shown.hover,
     setFrameHandle: () => {},
     setRotating: () => {},
     setRingHint: () => {},

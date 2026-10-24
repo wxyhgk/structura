@@ -1,23 +1,27 @@
 import { bracketDistance, structureMarks } from "@structura/core/draw"
 import type { Attachment } from "@structura/markush"
 import type { Bracket, Molecule, Point } from "@structura/core/types"
-
-/** Clicking a bracket's stroke, in screen pixels. */
-const BRACKET_HIT = 6
+import { marksOf } from "./marks.ts"
+import { reachOf } from "./targeting.ts"
 
 /**
- * The bracket whose "[" or "]" is under `point` (the nearest, if several), or null. The
- * drawing's `attachments` count: a bracket widens for the ellipse round its atoms.
+ * The bracket whose "[" or "]" is under `point` (the nearest, if several, within the pointer's
+ * reach), or null. The drawing's `attachments` count: a bracket widens for the ellipse round its atoms.
  */
 export function bracketAt(mol: Molecule, brackets: readonly Bracket[] | undefined, point: Point, zoom: number, attachments?: readonly Attachment[]): Bracket | null {
+  return bracketNear(mol, brackets, point, reachOf(mol, zoom), attachments)?.bracket ?? null
+}
+
+/** The bracket whose strokes are nearest `point`, within `reach` (drawing units), and how near. */
+export function bracketNear(mol: Molecule, brackets: readonly Bracket[] | undefined, point: Point, reach: number, attachments?: readonly Attachment[]): { bracket: Bracket; distance: number } | null {
   if (!brackets || brackets.length === 0) return null
   let best: { bracket: Bracket; distance: number } | null = null
-  for (const mark of structureMarks(mol, attachments, brackets).brackets) {
+  for (const mark of marksOf(mol, attachments, brackets).brackets) {
     const distance = bracketDistance(mark, point)
-    if (distance > BRACKET_HIT / zoom || (best && best.distance <= distance)) continue
+    if (distance > reach || (best && best.distance <= distance)) continue
     best = { bracket: brackets.find((item) => item.id === mark.id)!, distance }
   }
-  return best?.bracket ?? null
+  return best
 }
 
 /**

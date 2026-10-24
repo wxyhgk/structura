@@ -88,7 +88,7 @@ export type GestureContext = {
 }
 
 /** A pointer event as gestures need it. */
-export type PointerInput = { button: number; clientX: number; clientY: number; shiftKey: boolean; altKey: boolean; timeStamp?: number }
+export type PointerInput = { button: number; clientX: number; clientY: number; shiftKey: boolean; altKey: boolean; timeStamp?: number; pointerType?: string }
 
 /**
  * Everything a gesture reads and writes outside itself: the editor, the gesture in progress,
@@ -109,6 +109,8 @@ export type PointerHost = {
   setAttachmentsDraft: (attachments: Attachment[] | null) => void
   setPanning: (panning: boolean) => void
   assignHover: (hover: HoverTarget) => void
+  /** What the hover last marked, which the pointer keeps on a boundary; none, without. */
+  hovered?: () => HoverTarget
   /** The selection-frame handle under the pointer or being dragged, for the screen to pick a cursor; null for none. */
   setFrameHandle: (handle: FrameHandle | null) => void
   /** What the pointer is over on custom curves, for the screen to pick a cursor. */

@@ -21,13 +21,13 @@ function onOpen(start: Drawing) {
   return { x: top.x, y: top.y + 3 }
 }
 
-test("a bracket is hit on its strokes, within a few pixels at any zoom, and not elsewhere", () => {
+test("a bracket is hit on its strokes, within the pointer's reach at any zoom, and not elsewhere", () => {
   const start = drawing()
   const point = onOpen(start)
   assert.equal(bracketAt(start.molecule, start.brackets, point, 1)?.id, 1)
   assert.equal(bracketAt(start.molecule, start.brackets, { x: point.x - 5, y: point.y }, 1)?.id, 1)
   assert.equal(bracketAt(start.molecule, start.brackets, { x: point.x - 5, y: point.y }, 4), null, "zoomed in, the reach shrinks")
-  assert.equal(bracketAt(start.molecule, start.brackets, { x: point.x + 20, y: point.y }, 1), null)
+  assert.equal(bracketAt(start.molecule, start.brackets, { x: point.x + 30, y: point.y }, 1), null)
   assert.equal(bracketAt(start.molecule, undefined, point, 1), null)
 })
 

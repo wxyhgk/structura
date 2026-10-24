@@ -1,6 +1,6 @@
 import { useRef, type PointerEvent } from "react"
 import type { Drawing, Molecule, Selection } from "@structura/core/types"
-import { doubleClickAction, hitOf, sameHover, type HoverTarget } from "@structura/engine"
+import { doubleClickAction, sameHover, type HoverTarget } from "@structura/engine"
 import type { EditorSlice } from "./types.ts"
 
 /** Two presses this close in time (ms) and space (px) make a double click. */
@@ -15,13 +15,15 @@ const DOUBLE_CLICK_SLOP = 6
 export function useDoubleClick({
   props,
   current,
+  hitAt,
   openLabel,
 }: {
-  props: Pick<EditorSlice, "tool" | "latest" | "undo" | "selection" | "setSelection" | "viewport">
+  props: Pick<EditorSlice, "tool" | "latest" | "undo" | "selection" | "setSelection">
   current: () => Molecule
+  /** The atom or bond a press at the event's point takes. */
+  hitAt: (event: PointerEvent<SVGSVGElement>) => HoverTarget
   openLabel: (atom: number) => void
 }) {
-  const { viewport } = props
   /** What the last press hit and the drawing before it, to spot a double click. */
   const firstClick = useRef<{ hit: HoverTarget; before: Drawing; selection: Selection; tool: string; time: number; x: number; y: number } | null>(null)
 
@@ -38,7 +40,7 @@ export function useDoubleClick({
     if (event.timeStamp - first.time > DOUBLE_CLICK_MS || Math.hypot(event.clientX - first.x, event.clientY - first.y) > DOUBLE_CLICK_SLOP) return false
     // Two presses with different tools are two separate clicks, however quick.
     if (first.tool !== props.tool) return false
-    const hit = hitOf(current(), viewport.toWorld(event.clientX, event.clientY), viewport.get().zoom)
+    const hit = hitAt(event)
     if (!hit || !sameHover(first.hit, hit)) return false
     const action = doubleClickAction(current(), hit)
     // Selecting the molecule is for the selection tools, as in ChemDraw: with the bond tool,
@@ -57,9 +59,8 @@ export function useDoubleClick({
   /** Notes a press that was not a double click's second, so the next one can be. */
   function press(event: PointerEvent<SVGSVGElement>) {
     if (event.button !== 0) return
-    const world = viewport.toWorld(event.clientX, event.clientY)
     firstClick.current = {
-      hit: hitOf(current(), world, viewport.get().zoom),
+      hit: hitAt(event),
       before: props.latest(),
       selection: props.selection,
       tool: props.tool,

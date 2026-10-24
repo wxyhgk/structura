@@ -5,7 +5,7 @@ import type { Attachment } from "@structura/markush"
 import { useHydrated } from "../hooks/useHydrated.ts"
 import { AtomLabelInput } from "./AtomLabelInput.tsx"
 import { SceneView } from "./SceneView.tsx"
-import { bracketAt, curveKey, hitOf, hotkeyOps, hoverOf, keyOf, pointerDown, pointerMove, pointerUp, type CurveHover, type RingHintShape } from "@structura/engine"
+import { aimAt, curveKey, hotkeyOps, keyOf, pointerDown, pointerMove, pointerUp, type CurveHover, type RingHintShape } from "@structura/engine"
 import { frameHandleCursor } from "./frameHandleCursor.ts"
 import { QuickScaffold } from "./QuickScaffold.tsx"
 import type { CanvasHandle, EditorSlice, Gesture, PointerHost, Preview } from "./types.ts"
@@ -45,7 +45,14 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const current = () => displayMolecule(props.latest().molecule)
   const label = useLabelEditor({ current, hotspot, run: props.run })
   const quick = useQuickScaffold({ current, hotspot, viewport, lastPointer, run: props.run })
-  const { doubleClick, press } = useDoubleClick({ props, current, openLabel: label.openLabel })
+  /** What the pointer at a screen point is on, as a press there takes it: kept on what the hover marks, on a boundary. */
+  const aimed = (clientX: number, clientY: number, pointerType?: string) =>
+    aimAt({ mol: current(), attachments: props.latest().attachments, brackets: props.brackets && props.latest().brackets }, viewport.toWorld(clientX, clientY), viewport.get().zoom, {
+      coarse: pointerType === "touch",
+      keep: hotspot.under(),
+      with: { brackets: true },
+    })
+  const { doubleClick, press } = useDoubleClick({ props, current, hitAt: (event) => aimed(event.clientX, event.clientY, event.pointerType).hit, openLabel: label.openLabel })
 
   function cancelGesture() {
     gesture.current = { kind: "idle" }
@@ -77,6 +84,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     setRingHint,
     setPanning,
     assignHover: hotspot.assignHover,
+    hovered: hotspot.under,
     setFrameHandle: (handle) => setHandleCursor(handle && frameHandleCursor(handle)),
     setRotating,
   }
@@ -138,8 +146,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     pointed: () => hotspot.under(),
     focusAtom: hotspot.pin,
     editLabel: (id) => void label.openLabel(id),
-    targetAt: (clientX, clientY) => hitOf(current(), viewport.toWorld(clientX, clientY), viewport.get().zoom),
-    bracketAt: (clientX, clientY) => bracketAt(current(), props.latest().brackets, viewport.toWorld(clientX, clientY), viewport.get().zoom, props.latest().attachments)?.id ?? null,
+    targetAt: (clientX, clientY) => aimed(clientX, clientY).hit,
+    bracketAt: (clientX, clientY) => aimed(clientX, clientY).bracket?.id ?? null,
     quickScaffold: quick.open,
     replaceFragment: label.replaceFragment,
   }))
@@ -181,7 +189,7 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
         }}
         onPointerMove={(event) => {
           lastPointer.current = { x: event.clientX, y: event.clientY }
-          hotspot.track(event.clientX, event.clientY, () => hoverOf(current(), viewport.toWorld(event.clientX, event.clientY), viewport.get().zoom))
+          hotspot.track(event.clientX, event.clientY, () => aimed(event.clientX, event.clientY, event.pointerType).hit)
           pointerMove(host, event)
         }}
         onPointerUp={(event) => pointerUp(host, event)}

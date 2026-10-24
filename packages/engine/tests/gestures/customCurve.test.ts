@@ -126,6 +126,37 @@ test("a press anywhere else, selecting atoms or another tool stops editing the c
   assert.equal(editor.get().curveFocus, null)
 })
 
+test("a curve run close beside a bond is the curve's where it is nearer, the bond's nearer the bond", () => {
+  // An outer bond of the rings, and a curve through a point 7 px off its middle: inside the bond's reach.
+  const base = anthracene(true)
+  const mol = base.molecule
+  const centre = { x: mol.atoms.reduce((sum, atom) => sum + atom.x, 0) / 14, y: mol.atoms.reduce((sum, atom) => sum + atom.y, 0) / 14 }
+  const middle = (bond: (typeof mol.bonds)[number]) => {
+    const [a, b] = [mol.atoms.find((atom) => atom.id === bond.a)!, mol.atoms.find((atom) => atom.id === bond.b)!]
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+  }
+  const away = (point: Point) => Math.hypot(point.x - centre.x, point.y - centre.y)
+  const bond = mol.bonds.filter((bond) => bond.a <= 14 && bond.b <= 14).reduce((best, bond) => (away(middle(bond)) > away(middle(best)) ? bond : best))
+  const mid = middle(bond)
+  const out = { x: (mid.x - centre.x) / away(mid), y: (mid.y - centre.y) / away(mid) }
+  const beside = (off: number) => ({ x: mid.x + out.x * off, y: mid.y + out.y * off })
+  const node = beside(7)
+  const { editor, click, move, shown } = editing(run(base, [{ op: "set_attachment_curve", atom: 15, nodes: [[node.x - out.y * 60, node.y + out.x * 60], [node.x, node.y], [node.x + out.y * 60, node.y - out.x * 60]], closed: false }]))
+
+  move(node)
+  assert.equal(shown.curveHover, "pick")
+  assert.equal(shown.hover, null, "the bond is not lit where the press takes the curve")
+  click(node)
+  assert.deepEqual(editor.get().curveFocus, { atom: 15, node: null })
+
+  click({ x: 400, y: 400 })
+  move(beside(2))
+  assert.deepEqual(shown.hover, { type: "bond", id: bond.id })
+  click(beside(2))
+  assert.equal(editor.get().curveFocus, null)
+  assert.deepEqual(editor.get().selection.bonds, [bond.id])
+})
+
 test("curves drawn the other ways are not picked, and an atom on the curve is still the atom's", () => {
   const { editor, click } = editing(anthracene(true))
   const drawing = editor.latest()

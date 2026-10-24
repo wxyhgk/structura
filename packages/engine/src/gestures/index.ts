@@ -1,6 +1,5 @@
 import type { Point } from "@structura/core/types"
-import { bracketAt } from "../pointer/brackets.ts"
-import { hitOf } from "../pointer/targeting.ts"
+import { aimOf } from "./aim.ts"
 import { attach, startAttach } from "./attach.ts"
 import { bond, startBond } from "./bond.ts"
 import { bracketBox, startBracket } from "./bracket.ts"
@@ -45,20 +44,19 @@ export function pointerDown(host: PointerHost, event: PointerInput) {
 
 /** What a left press starts, in order of who gets it first; null when it was a click and is done. */
 function startPress(host: PointerHost, world: Point, event: PointerInput): Gesture | null {
-  const { mol, tool } = host.props
-  const hit = hitOf(mol, world, host.zoom())
+  const { tool } = host.props
+  const { hit, curve, bracket } = aimOf(host, world, event)
   if (tool === "lasso" || tool === "marquee") {
     const onFrame = startFrameGesture(host, world)
     if (onFrame) return onFrame
-    const onCurve = pressCurve(host, world, hit, event)
+    const onCurve = pressCurve(host, world, curve, event)
     if (onCurve) return onCurve === "done" ? null : onCurve
-    const bracket = hit ? null : bracketAt(mol, host.props.brackets, world, host.zoom(), host.props.attachments)
     if (bracket) return pressBracket(host, bracket.atoms, world, event.shiftKey)
   }
   if (clickTool(host, hit, world)) return null
   if (tool === "bond") return startBond(host, hit, world, event)
   if (tool === "chain") return startChain(host, hit, world)
-  if (tool === "bracket") return startBracket(host, hit, world)
+  if (tool === "bracket") return startBracket(host, bracket, world)
   if (tool === "attach") return startAttach(host, hit, world)
   return hit ? pressOn(host, hit, world, event.shiftKey) : pressEmpty(host, world, event.shiftKey)
 }
@@ -67,7 +65,7 @@ function startPress(host: PointerHost, world: Point, event: PointerInput): Gestu
 export function pointerMove(host: PointerHost, event: PointerInput) {
   const world = host.toWorld(event.clientX, event.clientY)
   const current = host.gesture.current
-  if (current.kind === "idle") return hover(host, world)
+  if (current.kind === "idle") return hover(host, world, event)
   ;(KINDS[current.kind] as GestureKind<Gesture>).move(host, current, world, event)
 }
 

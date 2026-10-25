@@ -147,7 +147,7 @@ if (saved) console.log(saved.molfile, saved.document)                  // null w
 | `Edited` field | |
 |---|---|
 | `document`, `molfile` | The saved structure |
-| `problems` | What the editor marks in red: `{ code, severity, atoms, text, message }[]`, `atoms` numbered as in `molfile` (1 = its first atom), `text` in Chinese ("第 2 个原子（H）超出化合价"); `[]` when all is well |
+| `problems` | What the editor marks in red, and slips in the drawing: `{ code, severity, atoms, text, message }[]`, `atoms` numbered as in `molfile` (1 = its first atom), `text` in Chinese ("第 2 个原子（H）超出化合价"); `[]` when all is well. The slips are warnings that only plain mistakes trip: `atoms-overlap` (atoms not bonded to each other drawn on top of each other), `atom-on-bond` (an atom lying on a bond it is not part of; `atoms` is that atom, then the bond's two), `long-bond` / `short-bond` (far from the molecule's usual bond length) |
 | `notes` | What reading the input said, in Chinese ("三维坐标已投影到平面"…); `[]` when nothing |
 | `changed` | Whether anything was edited |
 | `smiles` | With `withSmiles` or `smiles` input: the SMILES, `""` for nothing drawn, `null` with variables (R1…) or when RDKit gives none |

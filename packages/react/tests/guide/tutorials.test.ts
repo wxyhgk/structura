@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
+import { geometryProblems } from "@structura/core/validate"
 import { hotkeyOps } from "@structura/engine"
 import { stepPictures } from "../../src/guide/figures/marks.ts"
 import * as drawing from "../../src/guide/tutorials/drawing.ts"
@@ -22,6 +23,12 @@ test("every tutorial plays through the editor's own ops and keys, its marks on a
       assert.ok(step.text.length > 4, `${name} step ${index + 1} says what to do`)
     }
     assert.equal(make(context), steps, `${name} is built once`)
+  }
+})
+
+test("no tutorial step has atoms on top of each other, on bonds, or odd bond lengths", () => {
+  for (const [name, make] of Object.entries(tutorials)) {
+    for (const [index, step] of make(context).entries()) assert.deepEqual(geometryProblems(step.drawing.molecule), [], `${name} step ${index + 1}`)
   }
 })
 

@@ -9,7 +9,7 @@ export const startPage = definePage({
   id: "start",
   group: "入门",
   title: "快速上手",
-  keywords: "开始 入门 画布 平移 缩放 显示全部 找回 热点 蓝圈 撤销 深色 暗色 夜间 浅色 主题 跟随系统",
+  keywords: "开始 入门 画布 平移 缩放 显示全部 找回 热点 蓝圈 方向键 撤销 深色 暗色 夜间 浅色 主题 跟随系统",
   body: (context) => (
     <>
       <Tutorial title="从空白画布到一个分子" steps={firstMolecule(context)} />
@@ -29,6 +29,7 @@ export const startPage = definePage({
         <li>单击空白，画出第一根键。</li>
         <li>鼠标停在一个原子上（出现蓝圈），按键就在这里接结构：<K>1</K> 延长碳链，<K>3</K> 或 <K>A</K> 接苯环，<K>6</K> 接环己烷，<K>O</K> 换成氧……</li>
         <li>刚接上的结构末端会成为“热点”，蓝圈留在那里，鼠标不动可以连按。</li>
+        <li>不碰鼠标也能挪热点：方向键移到那个方向上相连的原子，<K>⇧</K> + 方向键沿着链一直走到尽头或分叉（有选中时方向键仍用来移动选中部分）。</li>
         <li>鼠标移到别的原子上，按键就作用在那里。</li>
       </Steps>
       <Figure

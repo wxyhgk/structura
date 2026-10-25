@@ -5,7 +5,7 @@ import type { Attachment } from "@structura/markush"
 import { useHydrated } from "../hooks/useHydrated.ts"
 import { AtomLabelInput } from "./AtomLabelInput.tsx"
 import { SceneView } from "./SceneView.tsx"
-import { aimAt, createFingers, curveKey, hotkeyOps, keyOf, pointerDown, pointerMove, pointerUp, type CurveHover, type FingerHost, type RingHintShape } from "@structura/engine"
+import { aimAt, arrowDirection, chainEndToward, createFingers, curveKey, hotkeyOps, keyOf, neighborToward, pointerDown, pointerMove, pointerUp, type CurveHover, type FingerHost, type RingHintShape } from "@structura/engine"
 import { frameHandleCursor } from "./frameHandleCursor.ts"
 import { QuickScaffold } from "./QuickScaffold.tsx"
 import type { CanvasHandle, EditorSlice, Gesture, PointerHost, Preview } from "./types.ts"
@@ -112,7 +112,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   }
 
   /**
-   * Hover hotkeys: g, Tab, Enter and chemistry keys on the atom or bond under the pointer.
+   * Hover hotkeys: g, Tab, Enter and chemistry keys on the atom or bond under the pointer;
+   * arrows move the hotspot to a bonded atom.
    * Returns whether the key was used; the editor's key router asks here first. While a
    * custom curve is being edited, Delete and Escape are its own.
    */
@@ -123,6 +124,15 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     const mol = current()
     const hot = hotspot.active(mol)
     if (!hot) return false
+    const direction = arrowDirection(event.key)
+    if (direction) {
+      // Arrows walk the hotspot along bonds. With a selection they keep their own meaning (⇧ moves it).
+      const selected = props.selection.atoms.length > 0 || props.selection.bonds.length > 0
+      if (hot.type !== "atom" || selected) return false
+      const next = event.shiftKey ? chainEndToward(mol, hot.id, direction) : neighborToward(mol, hot.id, direction)
+      if (next != null) hotspot.remember({ type: "atom", id: next }, mol)
+      return true
+    }
     const key = keyOf(event)
     if (key === "g") {
       props.setSelection(hot.type === "atom" ? { atoms: [hot.id], bonds: [] } : { atoms: [], bonds: [hot.id] })

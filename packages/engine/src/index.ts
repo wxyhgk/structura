@@ -27,6 +27,7 @@ export { doubleClickAction, type DoubleClick } from "./pointer/doubleClick.ts"
 export { snappedMove } from "./pointer/moveSnap.ts"
 export { fuseReach, fusionSide, fusionTarget } from "./pointer/fusion.ts"
 export { chainCount } from "./pointer/chain.ts"
+export { arrowDirection, chainEndToward, neighborToward } from "./pointer/arrowStep.ts"
 
 export { clampZoom, createViewport, drawingPoints, fittedView, zoomedAt, type View, type Viewport } from "./view/viewport.ts"
 export { ROTATE_STEP, ZOOM_STEP } from "./view/steps.ts"

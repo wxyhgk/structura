@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { composing } from "../input/ime.ts"
 
 /**
  * The field that opens on an atom (Enter while hovering it) to type a label. Enter or
@@ -43,6 +44,7 @@ export function AtomLabelInput({
       onChange={(event) => setValue(event.target.value)}
       onKeyDown={(event) => {
         event.stopPropagation()
+        if (composing(event)) return
         if (event.key === "Enter") {
           event.preventDefault()
           event.currentTarget.blur()

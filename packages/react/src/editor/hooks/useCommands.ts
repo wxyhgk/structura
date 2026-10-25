@@ -4,7 +4,8 @@ import { sceneToSvg } from "@structura/core/draw"
 import { variableLabels } from "@structura/markush"
 import { atomIdsOfSelection, bondsLeaving, emptySelection, groupsTouching } from "@structura/core/molecule"
 import { toMolfile } from "@structura/core/molfile"
-import { download, MOD } from "../browser.ts"
+import { MOD } from "../browser.ts"
+import type { Save } from "../save.ts"
 import { drawingCdxml } from "../cdxml.ts"
 import type { CanvasHandle } from "../canvas/types.ts"
 import { type Command, command as engineCommand, type CommandOptions, drawingPoints, joinOps, ROTATE_STEP, type Viewport } from "@structura/engine"
@@ -34,6 +35,7 @@ export function useCommands({
   models,
   file,
   onDismiss,
+  save,
 }: {
   editor: EditorState
   canvas: RefObject<CanvasHandle | null>
@@ -48,6 +50,8 @@ export function useCommands({
   models: { recognize: boolean; fill: boolean }
   /** Which file this is: the names things are saved under, and what counts as saved. */
   file: DocumentFile
+  /** Where saved and exported files go: the host's onFile, or the browser's download. */
+  save: Save
   /** The host's, for an Escape with nothing left to cancel (see EditorProps.onDismiss). */
   onDismiss?: () => void
 }) {
@@ -88,7 +92,7 @@ export function useCommands({
     save: command(
       "保存",
       () => {
-        download(`${file.base}.structura`, toDocument(editor.latest()), "application/json")
+        save(`${file.base}.structura`, toDocument(editor.latest()), "application/json")
         file.markSaved(`${file.base}.structura`)
       },
       {
@@ -97,11 +101,11 @@ export function useCommands({
     }),
     exportSvg: command("导出 SVG", () => {
       const svg = sceneToSvg(editor.mol, editor.colorHetero, editor.arrows, editor.attachments, drawOptions(editor.raisedNumbers), { brackets: editor.brackets })
-      if (svg) download(`${file.base}.svg`, svg, "image/svg+xml")
+      if (svg) save(`${file.base}.svg`, svg, "image/svg+xml")
     }),
-    exportMol: command("导出 MOL", () => download(`${file.base}.mol`, toMolfile(editor.mol, "Structura", editor.brackets), "chemical/x-mdl-molfile")),
+    exportMol: command("导出 MOL", () => save(`${file.base}.mol`, toMolfile(editor.mol, "Structura", editor.brackets), "chemical/x-mdl-molfile")),
     // For ChemDraw: the generic formula's marks as ChemDraw's own objects, its definitions as text under it.
-    exportCdxml: command("导出 CDXML", () => download(`${file.base}.cdxml`, drawingCdxml(editor.latest(), editor.raisedNumbers), "chemical/x-cdxml")),
+    exportCdxml: command("导出 CDXML", () => save(`${file.base}.cdxml`, drawingCdxml(editor.latest(), editor.raisedNumbers), "chemical/x-cdxml")),
     undo: command("撤销", editor.undo, { keys: [{ key: "z", meta: true }], enabled: editor.canUndo }),
     redo: command("重做", editor.redo, {
       keys: [{ key: "z", meta: true, shift: true }, { key: "y", meta: true }],

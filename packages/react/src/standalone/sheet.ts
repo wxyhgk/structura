@@ -152,6 +152,8 @@ function openSheet(options: EditOptions, input: { document?: string; molfile?: s
       options.editor?.onDocumentChange?.(text)
     },
     onDismiss: () => cancel(),
+    // Already the larger editor.
+    onExpand: undefined,
   })
   editor.fit()
   // Keys go to the editor from the start, as after a click in it.

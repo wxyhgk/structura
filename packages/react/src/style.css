@@ -229,6 +229,14 @@
   box-shadow: inset 0 0 0 1px var(--c-7eadd4);
 }
 
+/* A finger needs a larger target than a mouse (and the palette, for two of them, is wider). */
+@media (pointer: coarse) {
+  :where(.chem-app, .chem-overlay) .tool-button {
+    width: 44px;
+    height: 40px;
+  }
+}
+
 :where(.chem-app, .chem-overlay) .flyout-caret {
   position: absolute;
   right: 0;

@@ -240,10 +240,13 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
       )}
       {quick.quick && <QuickScaffold left={quick.quick.screen.x} top={quick.quick.screen.y} target={quick.quick.target?.type ?? null} onCancel={quick.cancel} onPick={quick.pick} />}
       {shown.atoms.length === 0 && preview == null && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-[14px] leading-6 text-(--c-9a9a9a)">
-          在空白处点击，画一条键
-          <br />
-          悬停在原子上按键，可直接接苯环、羰基和碳链
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-[14px] leading-6 text-(--c-9a9a9a)">
+          <span>在空白处点击，画一条键</span>
+          {/* In a narrow canvas the second line breaks after its comma, not inside a word. */}
+          <span>
+            <span className="inline-block">悬停在原子上按键，</span>
+            <span className="inline-block">可直接接苯环、羰基和碳链</span>
+          </span>
         </div>
       )}
     </div>

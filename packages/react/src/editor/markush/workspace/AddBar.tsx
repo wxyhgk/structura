@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react"
 import { HelpLink, type GuideTopic } from "../../../guide/index.ts"
 import type { variableEdits } from "../variableEdits.ts"
+import { composing } from "../../input/ime.ts"
 
 const ACTION =
   "rounded-sm border border-(--c-9fc3ee) bg-(--c-ffffff) px-2.5 py-1 text-(--c-1a73e8) hover:bg-(--c-e8f1fb) disabled:border-(--c-dddddd) disabled:text-(--c-aaaaaa) disabled:hover:bg-transparent"
@@ -59,7 +60,7 @@ export function AddBar({
           setUnknown([])
         }}
         onKeyDown={(event) => {
-          if (event.key === "Enter") addLabels()
+          if (event.key === "Enter" && !composing(event)) addLabels()
         }}
         aria-label={`${name} 的候选项`}
       />

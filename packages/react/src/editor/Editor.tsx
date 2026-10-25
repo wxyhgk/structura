@@ -1,4 +1,5 @@
 import { forwardRef, useCallback, useMemo, useRef, useState } from "react"
+import { readDocument, toDocument } from "@structura/core/document"
 import { displayMolecule } from "@structura/core/molecule"
 import type { Selection } from "@structura/core/types"
 import { TooltipProvider } from "../components/ui/tooltip.tsx"
@@ -40,14 +41,16 @@ import { MarkushWorkspace } from "./markush/workspace/MarkushWorkspace.tsx"
 import type { WordExport } from "./markush/wordExport.ts"
 import { DarkContext, darkClass, useDark, type Theme } from "../components/theme.ts"
 import type { Workspace } from "./markush/workspace/types.ts"
-import { WorkspaceTabs } from "./markush/workspace/WorkspaceTabs.tsx"
+import { WorkspaceItems, WorkspaceTabs } from "./markush/workspace/WorkspaceTabs.tsx"
 import { SmilesDialog } from "./shell/dialogs/SmilesDialog.tsx"
-import { MenuBar } from "./shell/MenuBar.tsx"
+import { LayoutContext, useLayout, type Layout } from "./shell/layout.ts"
+import { MenuBar, MenuSheet } from "./shell/MenuBar.tsx"
 import { StatusBar } from "./shell/StatusBar.tsx"
 import { Toolbar } from "./shell/Toolbar.tsx"
 import { useEditor } from "./useEditor.ts"
 import type { TemplateStore } from "./templates/store.ts"
 import { useTemplates } from "./templates/useTemplates.ts"
+import { SaveContext, saveTo, type OnFile } from "./save.ts"
 
 export type { EditorHandle, RunResult } from "./hooks/useEditorHandle.ts"
 export type { Selection } from "@structura/core/types"
@@ -58,6 +61,22 @@ export type { RecognizeStructure } from "./vision/useRecognition.ts"
 export type { TemplateStore } from "./templates/store.ts"
 export type { WordExport } from "./markush/wordExport.ts"
 export type { Theme } from "../components/theme.ts"
+export type { Layout } from "./shell/layout.ts"
+export type { EditorFile, OnFile } from "./save.ts"
+
+/** Parts of the editor a host can leave out, each shown unless set to false. */
+export type EditorUi = {
+  /** 文件 编辑 结构 … (in a mini editor, the ☰ that holds them). */
+  menuBar?: boolean
+  /** Undo, zoom, rotate… */
+  toolbar?: boolean
+  /** The tools and elements down the left. */
+  palette?: boolean
+  /** The tool, formula, weight and zoom along the bottom (a mini editor has none anyway). */
+  statusBar?: boolean
+  /** The 通式 workspace and the switch to it: with false, the editor only draws. */
+  workspaces?: boolean
+}
 
 export type EditorProps = {
   /** Molfile or SD text to start with; read once, when the editor mounts. */
@@ -115,17 +134,38 @@ export type EditorProps = {
   theme?: Theme
   /** Offers 浅色 / 深色 / 跟随系统 in 查看; the host keeps the choice and passes it back as `theme`. Without it, no choice is shown. */
   onThemeChange?: (theme: Theme) => void
+  /**
+   * "auto" (the default) lays the editor out by the size of its own box, as it changes: full,
+   * then compact below 720×520 (fewer buttons, the generic formula's panes one at a time), then
+   * mini below 480×360 (the menus in one ☰, no status bar). Or one of those, always.
+   */
+  layout?: Layout | "auto"
+  /** Parts of the editor to leave out: see EditorUi. */
+  ui?: EditorUi
+  /**
+   * Offers 放大编辑 in a mini editor: the host opens the structure somewhere larger (mount()
+   * does, in edit()'s sheet) and resolves to the document as it was saved there, which this
+   * editor takes as one undoable edit; null or nothing leaves it as it was.
+   */
+  onExpand?: (document: string) => Promise<string | null | undefined> | void
+  /**
+   * Takes the files the editor makes (保存, 导出, tables of compounds) instead of the browser
+   * downloading them: for an app with its own storage or save dialog, or a page in an iframe.
+   * Returning false lets the browser download that one after all.
+   */
+  onFile?: OnFile
 }
 
 /**
  * Lays out the editor and wires state, commands and input together. It fills its
  * container, so the host decides its size.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onSelectionChange, onDirtyChange, fillVariables, recognizeStructure, templateStore, onDismiss, wordExport, theme = "light", onThemeChange }, ref) {
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onSelectionChange, onDirtyChange, fillVariables, recognizeStructure, templateStore, onDismiss, wordExport, theme = "light", onThemeChange, layout: askedLayout = "auto", ui = {}, onExpand, onFile }, ref) {
   const dark = useDark(theme)
   const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
   const editor = useEditor(initial)
-  const templates = useTemplates(templateStore)
+  const save = useMemo(() => saveTo(onFile), [onFile])
+  const templates = useTemplates(templateStore, save)
   const canvasRef = useRef<CanvasHandle>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [viewport] = useState(createViewport)
@@ -169,9 +209,33 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
     dialogs,
     openMarkush: () => setWorkspace("markush"),
     models: { recognize: recognizeStructure != null, fill: fillVariables != null },
+    save,
   })
   const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
   useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange, onSelectionChange })
+  const layout = useLayout(input.rootProps.ref, askedLayout)
+  const workspaces = ui.workspaces !== false
+  const shownWorkspace = workspaces ? workspace : "draw"
+  /** 放大编辑: the structure out to the host's larger editor, and what was saved there back as one edit. */
+  const expand = onExpand
+    ? () =>
+        void Promise.resolve(onExpand(toDocument(editor.latest()))).then((saved) => {
+          if (typeof saved !== "string") return
+          const read = readDocument(saved)
+          if ("drawing" in read) editor.loadDrawing(read.drawing)
+          else flash("放大编辑保存的结构读不出来，未改动")
+        })
+    : undefined
+  const menuProps = {
+    commands,
+    colorHetero: editor.colorHetero,
+    onColorHetero: editor.setColorHetero,
+    raisedNumbers: editor.raisedNumbers,
+    onRaisedNumbers: setRaisedNumbers,
+    hasFill: fillVariables != null,
+    theme,
+    onTheme: onThemeChange,
+  }
 
   /** The canvas with its right-click menu: the drawing workspace's centre, and the formula's canvas in the other. */
   const canvasArea = (
@@ -199,11 +263,14 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
 
   return (
     <DarkContext value={dark}>
+    <LayoutContext value={layout}>
+    <SaveContext value={save}>
     <TooltipProvider delayDuration={350}>
       <OverlayScope value={input.overlayScope}>
         <PadSlotContext value={padSlot}>
           <div
             className={`chem-app relative flex h-full w-full min-h-0 flex-col overflow-hidden ${darkClass(dark)}`}
+            data-layout={layout}
             {...input.rootProps}
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
@@ -224,13 +291,23 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
                 if (picked) void openFile(picked)
               }}
             />
-            <MenuBar commands={commands} colorHetero={editor.colorHetero} onColorHetero={editor.setColorHetero} raisedNumbers={editor.raisedNumbers} onRaisedNumbers={setRaisedNumbers} hasFill={fillVariables != null} title={file.title} dirty={file.dirty} tabs={<WorkspaceTabs value={workspace} onChange={setWorkspace} />} theme={theme} onTheme={onThemeChange} />
-            <Toolbar commands={commands} zoom={zoom} />
+            {ui.menuBar !== false && layout !== "mini" && (
+              <MenuBar {...menuProps} title={file.title} dirty={file.dirty} tabs={workspaces ? <WorkspaceTabs value={workspace} onChange={setWorkspace} /> : undefined} compact={layout === "compact"} />
+            )}
+            {ui.toolbar !== false && (
+              <Toolbar
+                commands={commands}
+                zoom={zoom}
+                layout={layout}
+                menus={ui.menuBar !== false && layout === "mini" ? <MenuSheet {...menuProps} workspace={workspaces ? <WorkspaceItems value={workspace} onChange={setWorkspace} /> : undefined} /> : undefined}
+                onExpand={expand}
+              />
+            )}
 
             <div className="flex min-h-0 flex-1">
-              <BoundPalette editor={pad?.editor ?? editor} onPick={pad?.onPick} structureTools={!pad} />
-              {workspace === "draw" && canvasArea}
-              {workspace === "markush" && (
+              {ui.palette !== false && <BoundPalette editor={pad?.editor ?? editor} onPick={pad?.onPick} structureTools={!pad} />}
+              {shownWorkspace === "draw" && canvasArea}
+              {shownWorkspace === "markush" && (
                 <MarkushWorkspace
                   canvas={canvasArea}
                   drawing={editor.drawing}
@@ -250,14 +327,16 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
               )}
             </div>
 
-            <StatusBar
-              toolLabel={paletteTool}
-              formula={editor.formula}
-              weight={editor.weight}
-              valenceErrors={editor.valenceErrors}
-              atomCount={editor.mol.atoms.length}
-              zoom={zoom}
-            />
+            {ui.statusBar !== false && layout !== "mini" && (
+              <StatusBar
+                toolLabel={paletteTool}
+                formula={editor.formula}
+                weight={editor.weight}
+                valenceErrors={editor.valenceErrors}
+                atomCount={editor.mol.atoms.length}
+                zoom={zoom}
+              />
+            )}
 
             <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
             <AnalysisDialog report={dialogs.report} onOpenChange={(open) => !open && dialogs.showReport(null)} onCopy={(text, what) => {
@@ -296,6 +375,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ in
         </PadSlotContext>
       </OverlayScope>
     </TooltipProvider>
+    </SaveContext>
+    </LayoutContext>
     </DarkContext>
   )
 })

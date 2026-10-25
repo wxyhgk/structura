@@ -3,6 +3,7 @@ import { alternativesFromText, type RingClosure, type Variable } from "@structur
 import type { Run } from "@structura/engine"
 import { Button } from "../../components/ui/button.tsx"
 import { closureText } from "./describe.ts"
+import { composing } from "../input/ime.ts"
 
 const FIELD = "h-6 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1 text-[12px] outline-none focus:border-(--c-1a73e8)"
 
@@ -70,7 +71,7 @@ export function ClosuresSection({ closures, variables, run }: { closures: RingCl
               placeholder="(CH2)3-4, OCH2O, CH=CHCH=CH"
               value={text}
               onChange={(event) => setText(event.target.value)}
-              onKeyDown={(event) => event.key === "Enter" && add()}
+              onKeyDown={(event) => event.key === "Enter" && !composing(event) && add()}
               aria-label="能成的环"
             />
             <div className="flex justify-end gap-1">

@@ -3,6 +3,7 @@ import type { Alternative, Template, TemplateSite } from "@structura/markush"
 import { Button } from "../../components/ui/button.tsx"
 import { aliasesFromText, groupNames, SITE_NAMES } from "./templateSearch.ts"
 import { OFFLINE_NOTE, type Templates } from "./useTemplates.ts"
+import { composing } from "../input/ime.ts"
 
 /** The shelf a new template goes on when the user names none. */
 export const DEFAULT_GROUP = "我的模板"
@@ -66,7 +67,7 @@ export function SaveTemplateForm({
       }}
       onKeyDown={(event) => {
         event.stopPropagation()
-        if (event.key === "Escape") onCancel()
+        if (event.key === "Escape" && !composing(event)) onCancel()
       }}
       data-testid="save-template-form"
     >

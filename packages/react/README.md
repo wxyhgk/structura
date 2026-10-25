@@ -51,6 +51,10 @@ colour variables do not override your own theme. Nor do your page's styles chang
 | `fillVariables`, `recognizeStructure` | Optional AI features; hidden unless given |
 | `theme` | `"light"` (the default), `"dark"`, or `"auto"`: dark when the page says so (`data-theme="dark"` or class `dark` on `<html>`) or, when it says nothing, when the system is dark; followed live. Files the editor writes (SVG, CDXML, Word…) stay light |
 | `onThemeChange(theme)` | Offers 浅色 / 深色 / 跟随系统 in the 查看 menu; keep the choice and pass it back as `theme`. Without it, no choice is shown |
+| `layout` | `"auto"` (the default) lays the editor out by the size of its own box, followed as it resizes: `"full"`; `"compact"` below 720×520 (less used buttons behind ⋯, the 通式 panes one at a time); `"mini"` below 480×360 (the menus behind one ☰, no status bar). Or one of those, whatever the size |
+| `ui` | Parts to leave out, each shown unless `false`: `{ menuBar, toolbar, palette, statusBar, workspaces }` (`workspaces: false`: drawing only, no 通式) |
+| `onExpand(document)` | Offers 放大编辑 in a mini editor: open the structure somewhere larger and resolve to the document saved there (or `null`); the editor takes it as one undoable edit. `mount()` does this by default, in `edit()`'s sheet |
+| `onFile({ name, type, data })` | Takes the files the editor makes (保存, 导出, tables of compounds; `data` a `Blob`) instead of the browser downloading them: for your own storage or save dialog, or a page in an iframe. Return `false` to let one download after all |
 
 ### Handle (`ref`)
 
@@ -157,7 +161,9 @@ own (`mount()`, or the React component) gets the same Escape through the `onDism
 ### An editor in your own element: `mount()`
 
 Give an element a size and mount the editor in it; the handle is the one above, plus
-`update(options)` (new callbacks, template store…) and `unmount()`.
+`update(options)` (new callbacks, template store…) and `unmount()`. The editor lays itself out
+for the element's size (`layout` above): in a small one, 放大编辑 opens it in `edit()`'s sheet and
+takes back what is saved there; pass `onExpand: undefined` for no such button.
 
 ```js
 const editor = ChemStructura.mount("#editor", { onChange: (molfile) => console.log(molfile) })

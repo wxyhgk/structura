@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { useSave } from "../../save.ts"
 import { downloadCompoundTable, downloadCsv, downloadSdf, downloadSmiles, downloadTableCdxml, downloadWord } from "../exportRows.ts"
 import { runNotes } from "../notes.ts"
 import { numberRows } from "../numbering.ts"
@@ -32,6 +33,7 @@ export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }:
   const kept = useMemo(() => numberRows(filterRows(rows, filter), table.numbering), [rows, filter, table.numbering])
   const notes = empty ? [] : runNotes(result, { limit: options.limit, status, dedupe: live.run.dedupe })
   const running = !empty && status === "running"
+  const save = useSave()
   const exporters = { csv: downloadCsv, sdf: downloadSdf, smi: downloadSmiles }
 
   return (
@@ -55,7 +57,7 @@ export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }:
         onNotesOpen={setNotesOpen}
         numbering={table.numbering}
         onNumbering={table.setNumbering}
-        onExport={(kind) => void exporters[kind](base, kept)}
+        onExport={(kind) => void exporters[kind](save, base, kept)}
         onTable={() => {
           setTableOpened(tableOpened + 1)
           setTableOpen(true)
@@ -68,10 +70,10 @@ export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }:
         rows={empty ? [] : kept}
         columns={table.columns}
         onColumns={table.setColumns}
-        onCdxml={() => downloadTableCdxml(base, kept, table.columns)}
-        onPackage={() => downloadCompoundTable(base, kept, table.columns)}
+        onCdxml={() => downloadTableCdxml(save, base, kept, table.columns)}
+        onPackage={() => downloadCompoundTable(save, base, kept, table.columns)}
         wordExport={wordExport}
-        onWord={() => downloadWord(base, kept, table.columns, wordExport)}
+        onWord={() => downloadWord(save, base, kept, table.columns, wordExport)}
       />
       {running && result && <Progress made={result.molecules.length} of={Math.min(result.total, options.limit)} />}
       {notesOpen && notes.length > 0 && (

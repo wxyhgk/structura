@@ -5,8 +5,9 @@ import type { Bracket, Molecule } from "@structura/core/types"
 import { looksLikeSmiles, smilesLines, smilesRecords } from "@structura/rdkit"
 import { clipboardBlocked, failure, MOD, readClipboard } from "../browser.ts"
 import type { Viewport } from "@structura/engine"
-import { importNotes, type ImportNotes } from "../imports/notes.ts"
+import type { ImportNotes } from "../imports/notes.ts"
 import { readMolText } from "../imports/read.ts"
+import { smilesNotes } from "../imports/smiles.ts"
 import { loadRDKit } from "../rdkit.ts"
 import type { EditorState } from "../useEditor.ts"
 
@@ -39,7 +40,7 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
     const records = smilesRecords(rdkit, text)
     const imported = usableRecords(records)
     addBeside(imported.molecules)
-    return { lines: importNotes(records, imported.problems), skipped: imported.skipped }
+    return { lines: smilesNotes(records, imported.problems), skipped: imported.skipped }
   }
 
   /**

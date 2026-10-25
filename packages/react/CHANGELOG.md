@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
 - **Small boxes**: the editor lays itself out by the size of its own box (not the window), as
   it changes. Below 720×520 it is compact: the menu bar keeps one row (menus no longer wrap one

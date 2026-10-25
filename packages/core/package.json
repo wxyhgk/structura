@@ -21,6 +21,11 @@
       "types": "./dist/cdxml.d.ts",
       "default": "./dist/cdxml.js"
     },
+    "./cdxmlDocument": {
+      "structura-source": "./src/cdxmlDocument.ts",
+      "types": "./dist/cdxmlDocument.d.ts",
+      "default": "./dist/cdxmlDocument.js"
+    },
     "./constants": {
       "structura-source": "./src/constants.ts",
       "types": "./dist/constants.d.ts",

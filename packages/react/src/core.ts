@@ -59,7 +59,10 @@ export function drawingSvg(drawing: Drawing, options: ExportOptions & SvgLook = 
   return pictureSvg(drawing, emptySelection(), options.colorHetero ?? true, drawOptions(options.raisedNumbers ?? false), { background: options.background, ink: options.color })
 }
 
-/** The drawing as a ChemDraw file (CDXML), as 导出 CDXML saves it, with a generic formula's definitions as text under it. */
+/**
+ * The drawing as a ChemDraw file (CDXML), as 导出 CDXML saves it, with a generic formula's
+ * definitions as text under it; without the Structura document 导出 CDXML also keeps in it.
+ */
 export function drawingCdxml(drawing: Drawing, options: ExportOptions = {}): string {
   return editorCdxml(drawing, options.raisedNumbers ?? false)
 }

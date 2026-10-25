@@ -1,7 +1,7 @@
 import { toCdxml, toCdxmlTable } from "@structura/core/cdxml"
 import { emptyDrawing } from "@structura/core/drawing"
 import { molecularWeight, plainFormula } from "@structura/core/formula"
-import { bondLengthAt, componentOf } from "@structura/core/molecule"
+import { bondLengthAt, componentOf, untangleGroups } from "@structura/core/molecule"
 import { applyOps } from "@structura/core/ops"
 import type { Molecule } from "@structura/core/types"
 import type { ZipEntry } from "../zip.ts"
@@ -24,11 +24,16 @@ import { rowFields, rowName, type Row } from "./results.ts"
 export const TABLE_FORMAT = "structura-compound-table"
 export const TABLE_VERSION = 1
 
-/** The molecule as a patent draws it: every abbreviation shown in full. */
+/**
+ * The molecule as a patent draws it: every abbreviation shown in full. A template is placed
+ * for its label, so drawn out two side by side can overlap (Bn beside Mes reads as a fused
+ * ring); those groups are swung clear, the rest of the molecule staying where it is.
+ */
 export function drawnInFull(mol: Molecule): Molecule {
-  if (!mol.groups.some((group) => group.collapsed)) return mol
+  const collapsed = mol.groups.filter((group) => group.collapsed).map((group) => group.id)
+  if (collapsed.length === 0) return mol
   const expanded = applyOps({ ...emptyDrawing(), molecule: mol }, [{ op: "set_collapsed", collapsed: false }])
-  return expanded.ok ? expanded.drawing.molecule : mol
+  return expanded.ok ? untangleGroups(expanded.drawing.molecule, collapsed) : mol
 }
 
 /** How far apart a salt's ions are drawn in a table, in bond lengths between the nearest atoms; and how far is too far. */

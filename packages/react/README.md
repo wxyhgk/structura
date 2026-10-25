@@ -83,8 +83,8 @@ The component renders on a server (Next.js, Remix…) and comes alive in the bro
 use React or a bundler: one stylesheet and one script.
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.6.0/dist/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.6.0"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chem-structura@0.6.2/dist/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/chem-structura@0.6.2"></script>
 ```
 
 The script (`dist/chem-structura.iife.js`, which the short address above serves) sets

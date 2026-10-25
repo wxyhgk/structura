@@ -46,3 +46,19 @@ for (const file of read) {
   assert.ok(!code.includes("//#region") && !spread, `${file} is minified`)
 }
 console.log(`✔ ${[...read].join(", ")} are minified`)
+
+// The stylesheet styles the editor and nothing else: every rule but <chem-molecule>'s own and the
+// popper wrappers' round its overlays matches only inside the editor's roots, so a Tailwind
+// page's `.border-border` keeps the page's colour.
+const { default: postcss } = await import("postcss")
+const IN_EDITOR = ":where(.chem-app,.chem-app *,.chem-overlay,.chem-overlay *)"
+const loose = []
+postcss.parse(readFileSync(new URL("style.css", dist), "utf8")).walkRules((rule) => {
+  if (rule.parent?.type === "atrule" && /keyframes$/.test(rule.parent.name)) return
+  for (const selector of rule.selectors) {
+    const onPage = selector.startsWith("chem-molecule") || selector.startsWith("[data-radix-popper-content-wrapper]:has(>.chem-overlay)")
+    if (!onPage && !selector.includes(IN_EDITOR)) loose.push(selector)
+  }
+})
+assert.deepEqual(loose.slice(0, 10), [], "every rule in style.css is confined to the editor")
+console.log("✔ style.css styles nothing outside the editor")

@@ -55,6 +55,8 @@
   `short-bond`), with Chinese `text` ("第 1 个原子（C）和第 7 个原子（N）画在了一起"). They are
   loose enough that nothing the editor's templates, scaffolds and tools lay out, nor RDKit's
   layouts of bridged rings, trips them, so `confirmProblems` does not ask about a normal drawing.
+- **Changed**: the pointer over an atom shows a small dot on it (3.5 px), not a 12 px ring; over
+  a labelled atom (NH₂, R1), a faint ground behind the label, which a dot would cover.
 - **Fixed**: in the table of compounds (Word, table.cdxml, the zip package) abbreviations
   drawn in full could land on each other: Bn beside Ph or Mes, placed as for their labels, read
   as a fused ring. The expanded groups are now flipped or swung about the atom they hang from

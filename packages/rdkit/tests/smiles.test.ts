@@ -83,11 +83,13 @@ test("SMILES text is split into lines with optional names", () => {
 })
 
 test("what RDKit writes but the editor cannot hold is reported, not dropped silently", () => {
+  // Dative bonds make RDKit write V3000; they come in as single bonds, and say so.
   const dative = smilesToMolfile(rdkit, "N->[Pt](Cl)(Cl)<-N")
-  assert.ok("molfile" in dative)
-  const skipped = usableRecords([{ ...readMolfile(dative.molfile), properties: {} }])
-  assert.equal(skipped.molecules.length, 0)
-  assert.equal(skipped.problems[0]?.code, "bad-molfile")
+  assert.ok("molfile" in dative && dative.molfile.includes("V3000"))
+  const coordinated = usableRecords([{ ...readMolfile(dative.molfile), properties: {} }])
+  assert.equal(coordinated.molecules.length, 1)
+  assert.equal(coordinated.molecules[0].bonds.length, 4)
+  assert.equal(coordinated.problems.filter((problem) => problem.message.includes("coordination bond; read as single")).length, 2)
 
   const radical = smilesToMolfile(rdkit, "[CH3]")
   assert.ok("molfile" in radical)

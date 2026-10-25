@@ -107,6 +107,43 @@ test("SMILES text becomes named records, and a bad line a record core leaves out
   assert.equal(usable.skipped, 1)
 })
 
+/** The angle, in degrees from level (0–90), of the line through the two atoms furthest apart. */
+function axisTilt(mol: { atoms: Array<{ x: number; y: number }> }): number {
+  let far = { length: 0, angle: 0 }
+  for (const [index, a] of mol.atoms.entries())
+    for (const b of mol.atoms.slice(index + 1)) {
+      const length = Math.hypot(b.x - a.x, b.y - a.y)
+      if (length > far.length) far = { length, angle: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI }
+    }
+  const folded = ((far.angle % 180) + 180) % 180
+  return Math.min(folded, 180 - folded)
+}
+
+test("SMILES come in lying level: the longest axis turned across, by a multiple of 30°, nothing else changed", () => {
+  const LEVEL = ["CCCCCCCCCCCC", "CC(C)Cc1ccc(cc1)[C@H](C)C(=O)O", "c1ccc2cc3ccccc3cc2c1", "CC(=O)Oc1ccccc1C(=O)O", "O=C(O)c1ccc(cc1)-c1ccc(cc1)-c1ccccc1", "C[C@@H](N)Cc1ccc(O)cc1"]
+  let turned = 0
+  for (const smiles of LEVEL) {
+    const result = smilesToMolfile(rdkit, smiles)
+    assert.ok("molfile" in result)
+    const asLaidOut = readMolfile(result.molfile).mol
+    const [record] = smilesRecords(rdkit, smiles)
+    assert.ok(axisTilt(record.mol) <= 15 + 1e-9, `${smiles} tilts ${axisTilt(record.mol).toFixed(1)}°`)
+    if (axisTilt(asLaidOut) > 15) turned++
+    // A rigid turn by k·30°: every bond keeps its length, and its direction moves by the same multiple of 30°.
+    const at = (mol: typeof asLaidOut, id: number) => mol.atoms.find((atom) => atom.id === id)!
+    const steps = asLaidOut.bonds.map((bond) => {
+      const [a0, b0, a1, b1] = [at(asLaidOut, bond.a), at(asLaidOut, bond.b), at(record.mol, bond.a), at(record.mol, bond.b)]
+      assert.ok(Math.abs(Math.hypot(b1.x - a1.x, b1.y - a1.y) - Math.hypot(b0.x - a0.x, b0.y - a0.y)) < 1e-6)
+      const turn = (Math.atan2(b1.y - a1.y, b1.x - a1.x) - Math.atan2(b0.y - a0.y, b0.x - a0.x)) / (Math.PI / 6)
+      assert.ok(Math.abs(turn - Math.round(turn)) < 1e-6, `${smiles} turned by ${turn * 30}°`)
+      return ((Math.round(turn) % 12) + 12) % 12
+    })
+    assert.equal(new Set(steps).size, 1, `${smiles}: every bond turned alike`)
+    assert.equal(canonical(toMolfile(record.mol)), canonical(smiles), `${smiles} keeps its structure and stereo`)
+  }
+  assert.ok(turned >= 2, `only ${turned} needed turning`)
+})
+
 test("[*:1] becomes the variable R1, as if typed on the atom, and a bare * becomes R", () => {
   const records = smilesRecords(rdkit, "c1ccccc1[*:1]\n[*:2]CC[*:1]\nc1ccccc1*")
   for (const record of records) assert.deepEqual(record.problems, [], record.title)

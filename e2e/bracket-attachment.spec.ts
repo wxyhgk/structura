@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
-import { doc, menu, openEditor } from "./support.ts"
+import { doc, menu, openEditor, toMarkush } from "./support.ts"
 
 // Brackets and variable attachments as one Markush feature: a bond dragged into a group
 // bracket means "joined at any position of the bracketed group", and a repeat unit [ … ]n
@@ -52,7 +52,7 @@ test("a bond dragged from an outside atom into a group bracket attaches anywhere
   await expect(page.getByTestId("attachments").locator("[data-shape]")).toHaveAttribute("data-shape", "bracket")
 
   // In the 通式 workspace: listed under the bracket, counted at every atom, the two fusion carbons skipped.
-  await page.getByRole("tab", { name: "通式" }).click()
+  await toMarkush(page)
   await constraintTab(page, "位置").click()
   await expect(page.getByTestId("group-bracket-row")).toContainText("连在括号里任一位置（8 个可接位置之一）")
   await expect(page.getByTestId("attachment-row")).toContainText("连在方括号里的基团上，8 个可接位置之一")
@@ -73,7 +73,7 @@ test("a repeat unit's count is changed in the 位置 tab, and generating writes 
     { op: "label", atom: 1, text: "Cl" },
     { op: "add_bracket", atoms: [2], kind: "repeat", repeat: { min: 1, max: 2, name: "n" } },
   ])
-  await page.getByRole("tab", { name: "通式" }).click()
+  await toMarkush(page)
   await constraintTab(page, "概览").click()
   await expect(page.getByTestId("repeat-counts")).toContainText("n = 1–2")
   await expect(page.getByTestId("library-size")).toContainText("可展开为 2 种组合")

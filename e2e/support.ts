@@ -17,6 +17,27 @@ export async function openEditor(page: Page) {
   await expect.poll(() => page.evaluate(() => "__structura" in window)).toBe(true)
 }
 
+/** Opens the 通式 page and waits until its editor hands itself to the tests. */
+export async function openMarkush(page: Page) {
+  await page.goto("/markush.html")
+  await expect.poll(() => page.evaluate(() => "__structura" in window)).toBe(true)
+}
+
+/**
+ * Takes the document drawn on this page to the 通式 page, in this tab: what 结构 → 通式与批量生成…
+ * does in a new one (enumerate.spec.ts follows that), here so the test goes on with one page.
+ * Leaving a drawing with changes asks first; the test says yes.
+ */
+export async function toMarkush(page: Page) {
+  const text = await page.evaluate(() => (window as unknown as { __structura: Handle }).__structura.getDocument())
+  const leave = (dialog: import("@playwright/test").Dialog) => void (dialog.type() === "beforeunload" ? dialog.accept() : dialog.dismiss())
+  page.once("dialog", leave)
+  await openMarkush(page)
+  page.off("dialog", leave)
+  await page.evaluate((given) => (window as unknown as { __structura: Handle }).__structura.setDocument(given), text)
+  await expect(page.getByTestId("markush-workspace")).toBeVisible()
+}
+
 /** The drawing as the editor would save it. */
 export async function doc(page: Page): Promise<Doc> {
   const text = await page.evaluate(() => (window as unknown as { __structura: Handle }).__structura.getDocument())

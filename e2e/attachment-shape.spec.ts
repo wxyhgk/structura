@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { fileURLToPath } from "node:url"
-import { doc, menu, openEditor, openFile } from "./support.ts"
+import { doc, menu, openEditor, openFile, toMarkush } from "./support.ts"
 
 // A variable attachment over a whole fused system is drawn as patents draw it: an ellipse
 // round the rings, or the bond sweeping round them; the 画法 can be chosen.
@@ -10,7 +10,7 @@ const fixture = (name: string) => fileURLToPath(new URL(`fixtures/${name}`, impo
 test("widened to the whole fused system the attachment becomes a curve, and its 画法 is chosen in one undoable step", async ({ page }) => {
   await openEditor(page)
   await openFile(page, fixture("carbazole-R1-one-ring.structura"))
-  await page.getByRole("tab", { name: "通式" }).click()
+  await toMarkush(page)
   const drawn = page.getByTestId("attachments").locator("[data-shape]")
   await expect(drawn).toHaveAttribute("data-shape", "line")
 

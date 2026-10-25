@@ -12,9 +12,9 @@ import { edit } from "./sheet.ts"
 export type MountOptions = EditorProps
 
 /** 放大编辑 by default: the structure in edit()'s sheet, with this editor's hooks and theme, and none of its callbacks. */
-function expandInSheet({ theme, onThemeChange, fillVariables, recognizeStructure, templateStore, wordExport, onFile }: MountOptions) {
+function expandInSheet({ theme, onThemeChange, recognizeStructure, templateStore, onFile }: MountOptions) {
   return async (document: string) => {
-    const saved = await edit({ document, theme, editor: { onThemeChange, fillVariables, recognizeStructure, templateStore, wordExport, onFile } })
+    const saved = await edit({ document, theme, editor: { onThemeChange, recognizeStructure, templateStore, onFile } })
     return saved?.changed ? saved.document : null
   }
 }

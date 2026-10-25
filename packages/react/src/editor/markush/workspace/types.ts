@@ -4,9 +4,6 @@ import type { GuideTopic } from "../../../guide/index.ts"
 import type { Templates } from "../../templates/useTemplates.ts"
 import type { WordExport } from "../wordExport.ts"
 
-/** Which of the editor's two workspaces is showing: drawing, or the generic formula and what it generates. */
-export type Workspace = "draw" | "markush"
-
 /** What every pane of the generic-formula workspace works from: the one document, and the way to change it. */
 export type WorkspaceProps = {
   /** The drawing as of the last edit: the formula with its variables, attachments, provisos and ring closures. */

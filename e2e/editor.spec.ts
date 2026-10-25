@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { fileURLToPath } from "node:url"
-import { canvasCentre, doc, drawnText, openEditor, openFile } from "./support.ts"
+import { canvasCentre, doc, drawnText, openEditor, openFile, toMarkush } from "./support.ts"
 
 const fixture = (name: string) => fileURLToPath(new URL(`fixtures/${name}`, import.meta.url))
 
@@ -43,7 +43,7 @@ test("Markush: dragging out of a ring's middle makes R1 attached anywhere on the
 
 test("Markush: (R1)m with m = 0–2 enumerates 1 + 12 + 60 = 73 compounds", async ({ page }) => {
   await openFile(page, fixture("benzene-R1-anywhere.structura"))
-  await page.getByRole("tab", { name: "通式" }).click()
+  await toMarkush(page)
   await page.getByRole("tablist", { name: "通式约束" }).getByRole("tab", { name: "位置" }).click()
   await page.getByLabel("R1 重复出现").check()
   await page.getByLabel("最多次数").fill("2")
@@ -59,7 +59,7 @@ test("Markush: (R1)m with m = 0–2 enumerates 1 + 12 + 60 = 73 compounds", asyn
 test("import: a MOL file's R# atom arrives as the variable R1, with no notice", async ({ page }) => {
   await openFile(page, fixture("phenyl-R1.mol"))
   await expect(page.getByTestId("import-notes")).toHaveCount(0)
-  await page.getByRole("tab", { name: "通式" }).click()
+  await toMarkush(page)
   await expect(page.getByTestId("variable-R1")).toBeVisible()
   const atoms = (await doc(page)).molecule.atoms
   expect(atoms.filter((atom) => atom.alias === "R1")).toHaveLength(1)
@@ -74,7 +74,7 @@ test("import: a V3000 MOL file opens like a V2000 one, its R# as R1 and its wedg
   const element = (id: number) => atoms.find((atom) => atom.id === id)?.el
   const wedges = (bonds as Array<{ a: number; b: number; stereo?: string }>).filter((bond) => bond.stereo === "up")
   expect(wedges.map((bond) => [element(bond.a), element(bond.b)])).toEqual([["C", "O"]])
-  await page.getByRole("tab", { name: "通式" }).click()
+  await toMarkush(page)
   await expect(page.getByTestId("variable-R1")).toBeVisible()
 })
 

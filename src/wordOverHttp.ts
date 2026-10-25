@@ -1,4 +1,4 @@
-import type { WordExport } from 'chem-structura'
+import type { WordExport } from '@structura/markush-page'
 
 /** This app's own server (the dev and preview servers' structuraWord plugin, backend/src/word.ts). */
 const WORD_PATH = '/api/word'

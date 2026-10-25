@@ -1,65 +1,21 @@
-import { forwardRef, useCallback, useMemo, useRef, useState } from "react"
-import { readDocument, toDocument } from "@structura/core/document"
-import { displayMolecule } from "@structura/core/molecule"
+import { forwardRef } from "react"
+import { toDocument } from "@structura/core/document"
+import { EditorFrame } from "./EditorFrame.tsx"
+import { DRAWING_PAGES } from "../guide/index.ts"
+import type { EditorHandle } from "./hooks/useEditorHandle.ts"
 import type { Selection } from "@structura/core/types"
-import { TooltipProvider } from "../components/ui/tooltip.tsx"
-import { ContextMenu, ContextMenuTrigger } from "../components/ui/context-menu.tsx"
-import { AnalysisDialog } from "./analysis/AnalysisDialog.tsx"
-import { writeClipboard } from "./browser.ts"
-import { BracketCountDialog } from "./canvas/BracketCountDialog.tsx"
-import { CanvasMenu } from "./canvas/CanvasMenu.tsx"
-import { canvasSlice } from "./canvas/slice.ts"
-import { useCanvasMenu } from "./canvas/useCanvasMenu.ts"
-import { Flash } from "./shell/Flash.tsx"
-import { useFlash } from "./shell/useFlash.ts"
-import { Canvas } from "./canvas/Canvas.tsx"
-import type { CanvasHandle } from "./canvas/types.ts"
-import { useZoom } from "./canvas/useViewport.ts"
-import { createViewport, placeDrawing } from "@structura/engine"
-import { selectionClipboard } from "./clipboard.ts"
-import { useCommands } from "./hooks/useCommands.ts"
-import { useDocumentFile } from "./hooks/useDocumentFile.ts"
-import { useEditorDialogs } from "./hooks/useEditorDialogs.ts"
-import { RAISED_NUMBERS, useRememberedSetting } from "./hooks/useRememberedSetting.ts"
-import { drawOptions } from "./drawOptions.ts"
-import { useEditorHandle, type EditorHandle } from "./hooks/useEditorHandle.ts"
-import { useImports } from "./hooks/useImports.ts"
-import { initialContent } from "./imports/read.ts"
-import { OverlayScope } from "./input/overlays.ts"
-import { useEditorInput } from "./input/useEditorInput.ts"
-import { BoundPalette } from "./palette/BoundPalette.tsx"
-import { PadSlotContext, type Pad, type PadSlot } from "./palette/padSlot.ts"
-import { useToolLabel } from "./palette/useToolLabel.ts"
-import { HelpDialog } from "./shell/dialogs/HelpDialog.tsx"
-import { EditorGuide } from "./shell/EditorGuide.tsx"
-import { ImportNotesDialog } from "./shell/dialogs/ImportNotesDialog.tsx"
-import { FillDialog } from "./markush/FillDialog.tsx"
-import type { FillVariables } from "./markush/useFill.ts"
-import { StructureDialog } from "./vision/StructureDialog.tsx"
 import type { RecognizeStructure } from "./vision/useRecognition.ts"
-import { MarkushWorkspace } from "./markush/workspace/MarkushWorkspace.tsx"
-import type { WordExport } from "./markush/wordExport.ts"
-import { DarkContext, darkClass, useDark, type Theme } from "../components/theme.ts"
-import type { Workspace } from "./markush/workspace/types.ts"
-import { WorkspaceItems, WorkspaceTabs } from "./markush/workspace/WorkspaceTabs.tsx"
-import { SmilesDialog } from "./shell/dialogs/SmilesDialog.tsx"
-import { LayoutContext, useLayout, type Layout } from "./shell/layout.ts"
-import { MenuBar, MenuSheet } from "./shell/MenuBar.tsx"
-import { StatusBar } from "./shell/StatusBar.tsx"
-import { Toolbar } from "./shell/Toolbar.tsx"
-import { useEditor } from "./useEditor.ts"
 import type { TemplateStore } from "./templates/store.ts"
-import { useTemplates } from "./templates/useTemplates.ts"
-import { SaveContext, saveTo, type OnFile } from "./save.ts"
+import type { Theme } from "../components/theme.ts"
+import type { Layout } from "./shell/layout.ts"
+import type { OnFile } from "./save.ts"
 
 export type { EditorHandle, RunResult } from "./hooks/useEditorHandle.ts"
 export type { Selection } from "@structura/core/types"
 export type { EnumerateOptions, Enumeration } from "@structura/markush"
 export type { Op } from "@structura/core/ops"
-export type { FillVariables } from "./markush/useFill.ts"
 export type { RecognizeStructure } from "./vision/useRecognition.ts"
 export type { TemplateStore } from "./templates/store.ts"
-export type { WordExport } from "./markush/wordExport.ts"
 export type { Theme } from "../components/theme.ts"
 export type { Layout } from "./shell/layout.ts"
 export type { EditorFile, OnFile } from "./save.ts"
@@ -74,8 +30,6 @@ export type EditorUi = {
   palette?: boolean
   /** The tool, formula, weight and zoom along the bottom (a mini editor has none anyway). */
   statusBar?: boolean
-  /** The 通式 workspace and the switch to it: with false, the editor only draws. */
-  workspaces?: boolean
 }
 
 export type EditorProps = {
@@ -99,12 +53,6 @@ export type EditorProps = {
    */
   onDirtyChange?: (dirty: boolean) => void
   /**
-   * How to reach the model for "从专利文字填写": the editor builds the request and checks the
-   * answer; the host sends it to a server holding the API key (@structura/ai/server).
-   * Without it the button is not shown.
-   */
-  fillVariables?: FillVariables
-  /**
    * How to reach the model for "从图片识别结构": the host streams the agent's steps back
    * (see @structura/ai/server's structureHandler). Without it the menu item is not shown.
    */
@@ -122,11 +70,6 @@ export type EditorProps = {
    */
   onDismiss?: () => void
   /**
-   * How to make Word tables of compounds with editable ChemDraw objects (chem2office, on the
-   * host's server). Without it, 化合物表 → Word still works, with the structures as pictures.
-   */
-  wordExport?: WordExport
-  /**
    * "light" (the default), "dark", or "auto": dark when the page says so (data-theme="dark", or
    * class "dark", on <html>) or, when it says nothing, when the system is dark; followed live.
    * Files the editor writes (SVG, CDXML, Word…) stay light either way.
@@ -136,7 +79,7 @@ export type EditorProps = {
   onThemeChange?: (theme: Theme) => void
   /**
    * "auto" (the default) lays the editor out by the size of its own box, as it changes: full,
-   * then compact below 720×520 (fewer buttons, the generic formula's panes one at a time), then
+   * then compact below 720×520 (fewer buttons), then
    * mini below 480×360 (the menus in one ☰, no status bar). Or one of those, always.
    */
   layout?: Layout | "auto"
@@ -154,229 +97,18 @@ export type EditorProps = {
    * Returning false lets the browser download that one after all.
    */
   onFile?: OnFile
+  /**
+   * Offers 结构 → 通式与批量生成…: the host opens the generic formula (this document) where
+   * its variables are defined and compounds generated (the standalone app: its 通式 page).
+   * Without it the item is not shown; `enumerate()` on the handle generates without a page.
+   */
+  onEnumerate?: (document: string) => void
 }
 
 /**
- * Lays out the editor and wires state, commands and input together. It fills its
- * container, so the host decides its size.
+ * The structure editor: it fills its container, so the host decides its size. The generic
+ * formula's variables and what they generate are the host's page (onEnumerate), not the editor's.
  */
-export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ initialMolfile, initialDocument, onChange, onDocumentChange, onSelectionChange, onDirtyChange, fillVariables, recognizeStructure, templateStore, onDismiss, wordExport, theme = "light", onThemeChange, layout: askedLayout = "auto", ui = {}, onExpand, onFile }, ref) {
-  const dark = useDark(theme)
-  const [initial] = useState(() => initialContent(initialDocument, initialMolfile))
-  const editor = useEditor(initial)
-  const save = useMemo(() => saveTo(onFile), [onFile])
-  const templates = useTemplates(templateStore, save)
-  const canvasRef = useRef<CanvasHandle>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
-  const [viewport] = useState(createViewport)
-  const zoom = useZoom(viewport)
-  const dialogs = useEditorDialogs()
-  /** The molecule as the canvas shows it: collapsed abbreviations as labels. */
-  const shownMol = useMemo(() => displayMolecule(editor.mol), [editor.mol])
-  /** Drawing, or the generic formula's workspace; both show the same document. */
-  const [workspace, setWorkspace] = useState<Workspace>("draw")
-
-  const imports = useImports(editor, viewport)
-  const clipboard = selectionClipboard(editor, (line) => imports.showNotes({ opened: false, title: "复制为图片", lines: [line] }))
-  /** How labels are written, the same on the canvas as in what is exported. */
-  const labelStyle = useMemo(() => drawOptions(editor.raisedNumbers), [editor.raisedNumbers])
-  /** A sketch pad that is open: the palette is its until it closes. */
-  const [pad, setPad] = useState<Pad | null>(null)
-  const claimPalette = useCallback((claimed: Pad) => {
-    setPad(claimed)
-    return () => setPad((current) => (current === claimed ? null : current))
-  }, [])
-  const paletteTool = useToolLabel(pad?.editor ?? editor)
-  const padSlot = useMemo<PadSlot>(() => ({ claim: claimPalette, colorHetero: editor.colorHetero, drawOptions: labelStyle }), [claimPalette, editor.colorHetero, labelStyle])
-  const setRaisedNumbers = useRememberedSetting(RAISED_NUMBERS, editor.raisedNumbers, editor.setRaisedNumbers)
-  const { message, flash } = useFlash()
-  /** The bracket whose 重复次数 dialog is open. */
-  const [countFor, setCountFor] = useState<number | null>(null)
-  const menu = useCanvasMenu({ editor, shownMol, canvas: canvasRef, flash, showReport: dialogs.showReport })
-  const file = useDocumentFile(editor.drawing, editor.latest, onDirtyChange)
-  /** Opens a file and, if it opened, remembers it as this document's file. */
-  const openFile = async (picked: File) => {
-    if (await imports.openFile(picked)) file.markSaved(picked.name)
-  }
-  const commands = useCommands({
-    onDismiss,
-    file,
-    editor,
-    canvas: canvasRef,
-    viewport,
-    clipboard: { ...clipboard, paste: () => void imports.pasteClipboard() },
-    openFileDialog: () => fileRef.current?.click(),
-    dialogs,
-    openMarkush: () => setWorkspace("markush"),
-    models: { recognize: recognizeStructure != null, fill: fillVariables != null },
-    save,
-  })
-  const input = useEditorInput({ editor, canvas: canvasRef, commands, onPaste: imports.paste, onCopy: clipboard.onEvent })
-  useEditorHandle(ref, { editor, viewport, openText: imports.openText, onChange, onDocumentChange, onSelectionChange })
-  const layout = useLayout(input.rootProps.ref, askedLayout)
-  const workspaces = ui.workspaces !== false
-  const shownWorkspace = workspaces ? workspace : "draw"
-  /** 放大编辑: the structure out to the host's larger editor, and what was saved there back as one edit. */
-  const expand = onExpand
-    ? () =>
-        void Promise.resolve(onExpand(toDocument(editor.latest()))).then((saved) => {
-          if (typeof saved !== "string") return
-          const read = readDocument(saved)
-          if ("drawing" in read) editor.loadDrawing(read.drawing)
-          else flash("放大编辑保存的结构读不出来，未改动")
-        })
-    : undefined
-  const menuProps = {
-    commands,
-    colorHetero: editor.colorHetero,
-    onColorHetero: editor.setColorHetero,
-    raisedNumbers: editor.raisedNumbers,
-    onRaisedNumbers: setRaisedNumbers,
-    hasFill: fillVariables != null,
-    theme,
-    onTheme: onThemeChange,
-  }
-
-  /** The canvas with its right-click menu: the drawing workspace's centre, and the formula's canvas in the other. */
-  const canvasArea = (
-            <ContextMenu>
-              <ContextMenuTrigger asChild>
-                <div className="flex min-h-0 min-w-0 flex-1" onContextMenu={menu.onContextMenu}>
-                <Canvas ref={canvasRef} {...canvasSlice(editor, { mol: shownMol, drawOptions: labelStyle, attachments: editor.attachments, brackets: editor.brackets, viewport })} />
-                </div>
-              </ContextMenuTrigger>
-              <CanvasMenu
-                target={menu.target}
-                attachments={editor.attachments}
-                commands={commands}
-                run={(ops) => void editor.run(ops)}
-                onEditLabel={(atom) => canvasRef.current?.editLabel(atom)}
-                onSelectMolecule={menu.selectMolecule}
-                onCopyAs={menu.copyAs}
-                onAnalyze={menu.analyze}
-                brackets={editor.brackets}
-                onBracketCount={setCountFor}
-                onSelectAtoms={menu.selectAtoms}
-              />
-            </ContextMenu>
-  )
-
-  return (
-    <DarkContext value={dark}>
-    <LayoutContext value={layout}>
-    <SaveContext value={save}>
-    <TooltipProvider delayDuration={350}>
-      <OverlayScope value={input.overlayScope}>
-        <PadSlotContext value={padSlot}>
-          <div
-            className={`chem-app relative flex h-full w-full min-h-0 flex-col overflow-hidden ${darkClass(dark)}`}
-            data-layout={layout}
-            {...input.rootProps}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault()
-              const dropped = event.dataTransfer.files[0]
-              if (dropped) void openFile(dropped)
-            }}
-          >
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".structura,.cdxml,.mol,.sdf,.sd,.mdl"
-              className="hidden"
-              data-testid="open-file"
-              onChange={(event) => {
-                const picked = event.target.files?.[0]
-                event.target.value = ""
-                if (picked) void openFile(picked)
-              }}
-            />
-            {ui.menuBar !== false && layout !== "mini" && (
-              <MenuBar {...menuProps} title={file.title} dirty={file.dirty} tabs={workspaces ? <WorkspaceTabs value={workspace} onChange={setWorkspace} /> : undefined} compact={layout === "compact"} />
-            )}
-            {ui.toolbar !== false && (
-              <Toolbar
-                commands={commands}
-                zoom={zoom}
-                layout={layout}
-                menus={ui.menuBar !== false && layout === "mini" ? <MenuSheet {...menuProps} workspace={workspaces ? <WorkspaceItems value={workspace} onChange={setWorkspace} /> : undefined} /> : undefined}
-                onExpand={expand}
-              />
-            )}
-
-            <div className="flex min-h-0 flex-1">
-              {ui.palette !== false && <BoundPalette editor={pad?.editor ?? editor} onPick={pad?.onPick} structureTools={!pad} />}
-              {shownWorkspace === "draw" && canvasArea}
-              {shownWorkspace === "markush" && (
-                <MarkushWorkspace
-                  canvas={canvasArea}
-                  drawing={editor.drawing}
-                  run={editor.run}
-                  selected={editor.selection.atoms}
-                  colorHetero={editor.colorHetero}
-                  base={file.base}
-                  onPlace={(mol) => {
-                    editor.appendMolecules([mol], viewport.centre())
-                    setWorkspace("draw")
-                  }}
-                  onHelp={dialogs.showGuide}
-                  onFill={fillVariables ? () => dialogs.open("fill") : undefined}
-                  wordExport={wordExport}
-                  templates={templates}
-                />
-              )}
-            </div>
-
-            {ui.statusBar !== false && layout !== "mini" && (
-              <StatusBar
-                toolLabel={paletteTool}
-                formula={editor.formula}
-                weight={editor.weight}
-                valenceErrors={editor.valenceErrors}
-                atomCount={editor.mol.atoms.length}
-                zoom={zoom}
-              />
-            )}
-
-            <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
-            <AnalysisDialog report={dialogs.report} onOpenChange={(open) => !open && dialogs.showReport(null)} onCopy={(text, what) => {
-              writeClipboard(text)
-              flash(`已复制${what}`)
-            }} />
-            <Flash message={message} />
-            {recognizeStructure && (
-              <StructureDialog
-                open={dialogs.recognize}
-                onOpenChange={dialogs.setOpen("recognize")}
-                recognize={recognizeStructure}
-                onApply={(drawing) => {
-                  const place = placeDrawing(editor.latest(), drawing)
-                  if ("load" in place) editor.loadDrawing(place.load)
-                  else editor.appendMolecules([place.append], viewport.centre())
-                }}
-              />
-            )}
-            {fillVariables && <FillDialog open={dialogs.fill} onOpenChange={dialogs.setOpen("fill")} drawing={editor.latest()} run={editor.run} fill={fillVariables} />}
-            <SmilesDialog
-              open={dialogs.smiles}
-              onOpenChange={dialogs.setOpen("smiles")}
-              onImport={imports.importSmiles}
-              onNotes={(lines) => imports.showNotes({ opened: true, lines })}
-              loadFailed={imports.rdkitFailed}
-            />
-            <BracketCountDialog
-              bracket={editor.brackets?.find((bracket) => bracket.id === countFor) ?? null}
-              onSave={(id, repeat) => editor.run([{ op: "set_bracket", id, kind: "repeat", repeat }], { keepSelection: true }) != null}
-              onClose={() => setCountFor(null)}
-            />
-            <HelpDialog open={dialogs.help} onOpenChange={dialogs.setOpen("help")} commands={commands} />
-            <EditorGuide topic={dialogs.guide} onTopic={dialogs.showGuide} openShortcuts={dialogs.guideToShortcuts} />
-          </div>
-        </PadSlotContext>
-      </OverlayScope>
-    </TooltipProvider>
-    </SaveContext>
-    </LayoutContext>
-    </DarkContext>
-  )
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ onEnumerate, ...props }, ref) {
+  return <EditorFrame ref={ref} {...props} guidePages={DRAWING_PAGES} onEnumerate={onEnumerate ? ({ editor }) => onEnumerate(toDocument(editor.latest())) : undefined} />
 })

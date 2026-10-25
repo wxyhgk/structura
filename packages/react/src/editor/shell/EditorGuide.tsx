@@ -1,4 +1,4 @@
-import { GuideDialog, type GuideTopic, type PressKey } from "../../guide/index.ts"
+import { GuideDialog, type GuidePages, type GuideTopic, type PressKey } from "../../guide/index.ts"
 import { MOD } from "../browser.ts"
 import { hotkeyOps } from "@structura/engine"
 import { useOverlayMark } from "../input/overlays.ts"
@@ -7,7 +7,7 @@ import { useOverlayMark } from "../input/overlays.ts"
 const pressKey: PressKey = (mol, atom, key) => hotkeyOps(mol, { type: "atom", id: atom }, key)
 
 /** The user guide inside this editor: what the guide needs from the editor, handed in. */
-export function EditorGuide({ topic, onTopic, openShortcuts }: { topic: GuideTopic | null; onTopic: (topic: GuideTopic | null) => void; openShortcuts: () => void }) {
+export function EditorGuide({ topic, onTopic, openShortcuts, pages }: { topic: GuideTopic | null; onTopic: (topic: GuideTopic | null) => void; openShortcuts: () => void; pages: GuidePages }) {
   const overlayMark = useOverlayMark()
-  return <GuideDialog topic={topic} onTopic={onTopic} host={{ mod: MOD, pressKey, openShortcuts, contentProps: overlayMark }} />
+  return <GuideDialog topic={topic} onTopic={onTopic} host={{ mod: MOD, pressKey, openShortcuts, contentProps: overlayMark }} pages={pages} />
 }

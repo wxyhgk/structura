@@ -18,9 +18,15 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
+      // The 通式 page, from chem-structura's sources: the app's own page, not in the published package.
+      '@structura/markush-page': path.resolve(import.meta.dirname, './packages/react/src/markushPage.ts'),
     },
     // The workspace packages (@structura/*) are used from their TypeScript sources, not a built dist/.
     conditions: ['structura-source', ...defaultClientConditions],
+  },
+  // Two pages: drawing (index.html) and 通式 (markush.html).
+  build: {
+    rollupOptions: { input: { main: path.resolve(import.meta.dirname, 'index.html'), markush: path.resolve(import.meta.dirname, 'markush.html') } },
   },
   // Agent worktrees live under .claude/; their edits must not reload this app's pages.
   server: {

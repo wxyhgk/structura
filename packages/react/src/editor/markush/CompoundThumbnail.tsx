@@ -43,7 +43,7 @@ export const CompoundThumbnail = memo(function CompoundThumbnail({ row, colorHet
         className="absolute top-1 right-1 rounded-sm bg-(--c-1a73e8) px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100 focus:opacity-100"
         onClick={() => onPlace(row.mol)}
       >
-        放到画布
+        在绘图页打开
       </button>
     </figure>
   )

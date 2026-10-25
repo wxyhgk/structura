@@ -5,9 +5,8 @@
 // chem-structura/core comes along, so a page can also show structures without opening the
 // editor (drawingSvg…) from the one file. Built twice: as an ES module (dist/standalone.js)
 // and for a plain <script> (dist/chem-structura.iife.js, which sets window.ChemStructura).
-export type { EditorFile, EditorHandle, EditorProps, EditorUi, EnumerateOptions, Enumeration, FillVariables, Layout, OnFile, Op, RecognizeStructure, RunResult, Selection } from "./editor/Editor.tsx"
+export type { EditorFile, EditorHandle, EditorProps, EditorUi, EnumerateOptions, Enumeration, Layout, OnFile, Op, RecognizeStructure, RunResult, Selection } from "./editor/Editor.tsx"
 export type { TemplateStore } from "./editor/templates/store.ts"
-export type { WordExport } from "./editor/markush/wordExport.ts"
 export { httpTemplateStore } from "./editor/templates/httpStore.ts"
 export { memoryTemplateStore } from "./editor/templates/memoryStore.ts"
 export { configureRDKit, type RDKitOptions } from "./editor/rdkit.ts"

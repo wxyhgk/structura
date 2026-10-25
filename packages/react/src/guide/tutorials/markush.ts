@@ -13,7 +13,7 @@ export const firstVariable = perHost(({ pressKey }) => {
   walk.step(`画一个苯环，悬停一个原子按 [1]，接出一根键。`, [{ kind: "key", key: "1", atom: 1 }])
   walk.step(`双击这根键末端的原子。`, [{ kind: "double", atom: end }])
   walk.act([{ op: "label", atom: end, text: "R1" }])
-  walk.step(`输入 R1，按 [Enter]。点菜单栏右侧的“通式”切换到通式工作区：R1 有了一张卡片，还没有定义。`, [], { name: "R1", chips: [], note: "未定义" })
+  walk.step(`输入 R1，按 [Enter]。点“结构 → 通式与批量生成…”打开通式页：R1 有了一张卡片，还没有定义。`, [], { name: "R1", chips: [], note: "未定义" })
   walk.act([{ op: "set_variable", name: "R1", alternatives: [label("H"), label("Cl"), label("Me")] }])
   walk.step(`在 R1 卡片的输入框里填 “H, Cl, Me”，回车。`, [], { name: "R1", chips: ["H", "Cl", "Me"] })
   walk.act([{ op: "set_variable", name: "R1", alternatives: [label("H"), label("Cl"), label("Me"), { kind: "class", class: "alkyl", min: 1, max: 30 }] }])

@@ -39,6 +39,7 @@ export type EditorHandle = {
   /**
    * The drawing as a ChemDraw file (CDXML), as 导出 CDXML saves it: variables, variable
    * attachments and brackets as ChemDraw's own objects, the definitions as text under it.
+   * Without the Structura document 导出 CDXML also keeps in it (adding that is asynchronous).
    */
   getCdxml(): string
   /**

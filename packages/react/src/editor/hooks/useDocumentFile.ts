@@ -6,7 +6,7 @@ const blank = (drawing: Drawing) => drawing.molecule.atoms.length === 0 && drawi
 
 /** A file's name without its extension, for the title and the names of what is saved or exported. */
 export function baseName(fileName: string): string {
-  return fileName.replace(/\.(structura|mol|sdf|sd|mdl|json)$/i, "").trim() || "未命名"
+  return fileName.replace(/\.(structura|cdxml|mol|sdf|sd|mdl|json)$/i, "").trim() || "未命名"
 }
 
 /**

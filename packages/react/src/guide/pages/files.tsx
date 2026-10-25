@@ -11,7 +11,7 @@ export const filesPage = definePage({
       <Table
         rows={[
           [`[${mod}][S] 保存`, "存成 .structura 文件，通式变量、可变连接、片段都在里面"],
-          [`[${mod}][O] 打开`, "打开 .structura、MOL 或 SDF；也可以把文件直接拖进页面"],
+          [`[${mod}][O] 打开`, "打开 .structura、MOL、SDF，或 Structura 导出的 CDXML；也可以把文件直接拖进页面"],
           ["导出 SVG / MOL", "文件菜单；MOL 含分子和方括号（重复单元连同它的次数范围、基团），不含通式变量的定义"],
           ["导出 CDXML", "文件菜单；给 ChemDraw 用的文件，通式也能完整带过去（见下）"],
           [`[${mod}][⇧][C] 复制为图片`, "编辑菜单；把图片放进剪贴板，粘贴到 Word、PowerPoint，不用先存文件"],
@@ -34,6 +34,7 @@ export const filesPage = definePage({
         ]}
       />
       <P>ChemDraw 不会自己展开通式，定义只是结构下面的文字，可以在 ChemDraw 里直接改；要列出具体化合物，用通式工作区的“展开”。</P>
+      <P>导出的 CDXML 里还夹着一份完整的 Structura 文件（ChemDraw 不读它），所以在 Structura 里打开这个 .cdxml，变量的候选项、限制条件、成环规则都原样回来。前提是结构没改过：在 ChemDraw 里改过结构，或另存后这份记录没了的 CDXML，目前打不开（会提示原因），不会悄悄读出改动前的内容。</P>
     </>
   ),
 })

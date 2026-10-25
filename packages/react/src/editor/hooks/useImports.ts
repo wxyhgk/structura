@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { isCdxml, readCdxml } from "@structura/core/cdxmlDocument"
 import { isDocument, readDocument } from "@structura/core/document"
 import { usableRecords } from "@structura/core/import"
 import type { Bracket, Molecule } from "@structura/core/types"
@@ -12,6 +13,9 @@ import { loadRDKit } from "../rdkit.ts"
 import type { EditorState } from "../useEditor.ts"
 
 const RDKIT_FAILED = "RDKit 加载失败，请检查网络后重试。"
+
+/** Only CDXML Structura wrote, unchanged since, can be opened: there is no reader for ChemDraw's own structures yet. */
+const CDXML_ONLY = "目前只能打开 Structura 导出且未改动的 CDXML。"
 
 /**
  * Opening files, pasting molfile or SMILES text, and importing SMILES: all go through
@@ -61,10 +65,29 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
     return { opened: true, lines }
   }
 
+  /**
+   * Replaces the drawing with the Structura document kept in CDXML that Structura exported.
+   * A file changed since is refused rather than read as it was when exported.
+   */
+  async function openCdxml(text: string): Promise<ImportNotes> {
+    const read = await readCdxml(text)
+    if ("drawing" in read) {
+      editor.loadDrawing(read.drawing)
+      return { opened: true, lines: [] }
+    }
+    const why = {
+      changed: "这个 CDXML 文件导出后改过（比如在 ChemDraw 里编辑后保存），里面的结构和 Structura 写进去的不一致，为免读出改动前的旧内容，没有打开。",
+      foreign: "这个 CDXML 文件里没有 Structura 的记录：不是 Structura 导出的，或在 ChemDraw 里另存过。",
+      broken: `这个 CDXML 文件里 Structura 的记录无法读取（${read.error}）。`,
+    }[read.reason]
+    return { opened: false, lines: [`${why}${CDXML_ONLY}`] }
+  }
+
   /** Replaces the drawing with a file's molecules; says whether it did. */
   async function openFile(file: File): Promise<boolean> {
     try {
-      const result = openText(await file.text())
+      const text = await file.text()
+      const result = isCdxml(text) ? await openCdxml(text) : openText(text)
       if (result.lines.length > 0) setNotes(result)
       return result.opened
     } catch (error) {

@@ -66,7 +66,7 @@ colour variables do not override your own theme. Nor do your page's styles chang
 | `getInchi()`, `getInchiKey()` | Promises (RDKit); refused for drawings with variables |
 | `getSvg()` | The picture as SVG text, as 导出 SVG saves it; empty for an empty page |
 | `getPng({ scale })` | A promise of the picture as a PNG `Blob` (`scale` 3 by default), or null for an empty page |
-| `getCdxml()` | ChemDraw CDXML, generic-formula marks and definitions included |
+| `getCdxml()` | ChemDraw CDXML, generic-formula marks and definitions included (导出 CDXML also keeps the whole Structura document in a comment, so the editor can open the file again; this text has no such comment) |
 | `run(ops)` | Edits through the op layer, as one undoable step |
 | `enumerate(options)` | The generic formula expanded into compounds, with their SD file |
 | `fit()` | Zooms and pans so the whole drawing is in view |

@@ -6,7 +6,7 @@ import { atomIdsOfSelection, bondsLeaving, emptySelection, groupsTouching } from
 import { toMolfile } from "@structura/core/molfile"
 import { MOD } from "../browser.ts"
 import type { Save } from "../save.ts"
-import { drawingCdxml } from "../cdxml.ts"
+import { drawingCdxmlFile } from "../cdxml.ts"
 import type { CanvasHandle } from "../canvas/types.ts"
 import { type Command, command as engineCommand, type CommandOptions, drawingPoints, joinOps, ROTATE_STEP, type Viewport } from "@structura/engine"
 import { drawOptions } from "../drawOptions.ts"
@@ -104,8 +104,12 @@ export function useCommands({
       if (svg) save(`${file.base}.svg`, svg, "image/svg+xml")
     }),
     exportMol: command("导出 MOL", () => save(`${file.base}.mol`, toMolfile(editor.mol, "Structura", editor.brackets), "chemical/x-mdl-molfile")),
-    // For ChemDraw: the generic formula's marks as ChemDraw's own objects, its definitions as text under it.
-    exportCdxml: command("导出 CDXML", () => save(`${file.base}.cdxml`, drawingCdxml(editor.latest(), editor.raisedNumbers), "chemical/x-cdxml")),
+    // For ChemDraw: the generic formula's marks as ChemDraw's own objects, its definitions as
+    // text under it, and the whole document in a comment, so 打开 brings the file back whole.
+    exportCdxml: command("导出 CDXML", () => {
+      const name = `${file.base}.cdxml`
+      void drawingCdxmlFile(editor.latest(), editor.raisedNumbers).then((text) => save(name, text, "chemical/x-cdxml"))
+    }),
     undo: command("撤销", editor.undo, { keys: [{ key: "z", meta: true }], enabled: editor.canUndo }),
     redo: command("重做", editor.redo, {
       keys: [{ key: "z", meta: true, shift: true }, { key: "y", meta: true }],

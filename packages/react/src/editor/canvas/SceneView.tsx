@@ -162,6 +162,9 @@ const Labels = memo(function Labels({ labels }: { labels: AtomLabel[] }) {
   )
 })
 
+/** The hover dot's radius on screen, in pixels. */
+const HOVER_DOT = 3.5
+
 function HoverCue({
   mol,
   hover,
@@ -175,7 +178,6 @@ function HoverCue({
 }) {
   const paint = usePaint()
   if (!hover || zoom <= 0) return null
-  const stroke = 1.6 / zoom
   if (hover.type === "bond") {
     const bond = mol.bonds.find((item) => item.id === hover.id)
     if (!bond) return null
@@ -198,16 +200,10 @@ function HoverCue({
   }
   const atom = atomById(mol, hover.id)
   if (!atom) return null
-  const circle = atomCircle(atom, labels.find((item) => item.atomId === atom.id), zoom, 12)
-  return (
-    <circle
-      data-testid="hover-atom"
-      {...circle}
-      fill={paint("rgba(26, 115, 232, 0.08)")}
-      stroke={paint("#1a73e8")}
-      strokeWidth={stroke}
-    />
-  )
+  const label = labels.find((item) => item.atomId === atom.id)
+  // A bare atom: a small dot on it. A labelled one: a faint ground behind its label, which a dot would cover.
+  if (!label) return <circle data-testid="hover-atom" cx={atom.x} cy={atom.y} r={HOVER_DOT / zoom} fill={paint("#1a73e8")} />
+  return <circle data-testid="hover-atom" {...atomCircle(atom, label, zoom, 0)} fill={paint("rgba(26, 115, 232, 0.12)")} />
 }
 
 /** The frame with rotate and scale handles around a selection of two or more atoms. */

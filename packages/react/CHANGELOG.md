@@ -13,7 +13,57 @@
   comes back as one undoable edit. `mount()` offers it by default, in `edit()`'s sheet.
 - **`onFile(file)`**: the host takes the files the editor makes (保存, every 导出, tables of
   compounds, the template library) instead of a browser download; `false` hands one back.
-- **Touch screens**: larger tool and toolbar buttons where the pointer is coarse.
+- **Touch screens**: larger tool and toolbar buttons where the pointer is coarse. Two fingers
+  pan the view together and pinch it to zoom about the point between them. A finger's press
+  waits until it moves or lifts, so a second finger down by then draws nothing (a ring, eraser
+  or charge tap would otherwise already be in the undo history); a second finger during a drag
+  drops the drag, with no half-drawn bond or box and nothing to undo. After a pinch the finger
+  left behind draws nothing until all have lifted. One finger draws as before, acting when it
+  lifts for a tap; mouse and pen are unchanged.
+- **Changed**: when the canvas changes size (the host resizes a panel, the window is resized,
+  the 通式 workspace's panels open), the view keeps the same part of the drawing in its middle
+  instead of keeping its top-left corner.
+- **Added**: CDXML comes back whole. 导出 CDXML also keeps the whole Structura document in the
+  file, compressed in an XML comment ChemDraw ignores, with a fingerprint of the structure
+  written around it (nodes, bonds and label text, as written). 打开 (and dropping a file) now
+  takes `.cdxml`: a file Structura exported opens with everything CDXML cannot say (variables'
+  alternatives, provisos, ring closures) as it was. A file whose structure was changed since,
+  or one with no Structura document in it, is refused with the reason rather than read as it
+  was exported; there is no reader for ChemDraw's own structures yet. `getCdxml()` and
+  `drawingCdxml` stay synchronous and leave the comment out.
+- **Added**: arrow keys move the hotspot without the mouse: to the bonded atom that way (none
+  when every bond turns more than 70° from the key), and with Shift along the chain to its end
+  or first branch, across a ring rather than round it. Keys pressed next land there. With a
+  selection, or no hotspot, arrows keep their old meaning (⇧ + arrow still moves the selection).
+- **Changed**: a SMILES RDKit cannot read now says why, in Chinese, with RDKit's own words
+  after it: an unpaired parenthesis, a ring left open, where the text goes wrong, an atom over
+  its valence, or an aromatic ring it cannot kekulize ("无法读取，环没有闭合…"). RDKit's error
+  log is captured for the call and no longer goes to the console.
+- **Changed**: molecules read from SMILES (import, paste, `setSmiles`, `edit({ smiles })`,
+  `<chem-molecule smiles>`) come in lying level: turned by a multiple of 30° so their longest
+  axis is within 15° of horizontal, instead of at whatever angle RDKit laid them out. Molfile
+  coordinates are kept as they are.
+- **Added**: V3000 molfiles open, on their own and as records of an SD file, read exactly as
+  their V2000 twins: charges, isotopes (MASS), R# atoms with RGROUPS as variables R1…, wedges
+  and hashes (CFG), aromatic bonds, and repeat units (SRU) and groups (GEN) as brackets. What
+  the editor cannot hold (radicals, abbreviations (SUP), coordination bonds, collections, other
+  properties) is said in the import notes, as for V2000; only a broken connection table is
+  refused. They were refused whole before, including what RDKit writes for dative bonds.
+- **Added**: `edit()`'s `problems` also report slips in the drawing, as warnings: atoms drawn
+  on top of each other (`atoms-overlap`), an atom lying on a bond it is not part of
+  (`atom-on-bond`), and bonds far longer or shorter than the molecule's usual one (`long-bond`,
+  `short-bond`), with Chinese `text` ("第 1 个原子（C）和第 7 个原子（N）画在了一起"). They are
+  loose enough that nothing the editor's templates, scaffolds and tools lay out, nor RDKit's
+  layouts of bridged rings, trips them, so `confirmProblems` does not ask about a normal drawing.
+- **Fixed**: in the table of compounds (Word, table.cdxml, the zip package) abbreviations
+  drawn in full could land on each other: Bn beside Ph or Mes, placed as for their labels, read
+  as a fused ring. The expanded groups are now flipped or swung about the atom they hang from
+  (no bond changes length), and only what that leaves is relaxed, stretching no bond more than
+  20%; nothing else in the molecule moves. On a crowded test formula (three neighbouring
+  substituents, 4913 compounds) overlaps fell from 12.7% to 1.2%.
+- **Fixed**: an editor mounted where it has no size yet (a `display: none` tab, a 0×0 box)
+  fitted its starting drawing at the smallest zoom (10%) and stayed there once shown. A fit
+  asked for while the canvas has no width or height now waits for its first size.
 - **Fixed**: an input method's Enter or Escape (choosing pinyin, kana…) no longer commits or
   cancels an atom's label, a variable's choices, a ring closure, a scaffold or template name.
 

@@ -3,19 +3,12 @@ import { elementMass, elementOf } from "../elements/index.ts"
 import { kekulizeAromaticReport } from "../molecule/kekule.ts"
 import { emptyMolecule } from "../molecule/graph.ts"
 import type { Atom, Bond, Bracket, Molecule } from "../types.ts"
-import { validate, type Problem, type ProblemCode } from "../validate.ts"
-import { CHARGE_CODES, PX_PER_ANGSTROM, R_GROUP_SYMBOLS, rGroupLabel, stereoFor } from "./codes.ts"
-import { readSgroupLine, REPEAT_FIELD, repeatFrom, type SgroupRead } from "./sgroups.ts"
-
-function int(text: string | undefined): number {
-  const value = Number.parseInt((text ?? "").trim(), 10)
-  return Number.isNaN(value) ? 0 : value
-}
-
-function float(text: string | undefined): number {
-  const value = Number.parseFloat((text ?? "").trim())
-  return Number.isFinite(value) ? value : 0
-}
+import { validate, type Problem } from "../validate.ts"
+import { PX_PER_ANGSTROM, R_GROUP_SYMBOLS, rGroupLabel, stereoFor } from "./codes.ts"
+import type { Ctab, CtabAtom, Note } from "./ctab.ts"
+import { REPEAT_FIELD, repeatFrom, type SgroupRead } from "./sgroups.ts"
+import { readV2000 } from "./v2000.ts"
+import { readV3000 } from "./v3000.ts"
 
 /**
  * Programs disagree on bond length (RDKit's CoordGen uses 1.0 Å, older depictions 1.5 Å),
@@ -37,17 +30,6 @@ function normaliseScale(atoms: Atom[], bonds: Bond[]): void {
     atom.x *= factor
     atom.y *= factor
   }
-}
-
-/** Pairs of (atom number, value) on an `M  CHG`-style line. */
-function propertyPairs(line: string): Array<[number, number]> {
-  const count = int(line.slice(6, 9))
-  const pairs: Array<[number, number]> = []
-  for (let index = 0; index < count; index++) {
-    const start = 9 + index * 8
-    pairs.push([int(line.slice(start, start + 4)), int(line.slice(start + 4, start + 8))])
-  }
-  return pairs
 }
 
 /** A key for a set of atom numbers, whatever their order. */
@@ -81,93 +63,65 @@ function bracketsOf(sgroups: Map<number, SgroupRead>, atomCount: number, others:
   return brackets
 }
 
-/**
- * Reads one V2000 molfile (the part up to `M  END`). Atoms are numbered 1…n in file order.
- * Repeat units (SRU) and generic groups (GEN) become brackets, on those numbers. Anything
- * the editor cannot hold is dropped and reported rather than guessed at.
- */
-export function readMolfile(text: string): { mol: Molecule; title: string; problems: Problem[]; brackets?: Bracket[] } {
-  const lines = text.replace(/\r\n?/g, "\n").split("\n")
-  const problems: Problem[] = []
-  const note = (code: ProblemCode, message: string, severity: Problem["severity"] = "warning") =>
-    problems.push({ code, severity, message })
-  const title = (lines[0] ?? "").trim()
-  const counts = lines[3] ?? ""
-  if (counts.includes("V3000")) {
-    note("bad-molfile", "V3000 molfiles are not supported yet", "error")
-    return { mol: emptyMolecule(), title, problems }
+/** What a table's atom means to the editor: an element, an isotope, an R-group or a label. */
+function atomOf(source: CtabAtom, number: number, note: Note): Atom {
+  const { symbol } = source
+  const atom: Atom = { id: number, el: symbol, x: source.x * PX_PER_ANGSTROM, y: -source.y * PX_PER_ANGSTROM, charge: source.charge }
+  let mass = source.mass
+  if (symbol === "D" || symbol === "T") {
+    atom.el = "H"
+    atom.isotope = symbol === "D" ? 2 : 3
+  } else if (R_GROUP_SYMBOLS.has(symbol)) {
+    // Numbered by the mapping field (RDKit's [*:2]), else the R-group number, else a mass
+    // number (RDKit's [4*]); a bare one is plain R.
+    atom.el = "C"
+    if (source.map > 0) atom.alias = rGroupLabel(source.map)
+    else if (source.rGroup != null) atom.alias = rGroupLabel(source.rGroup)
+    else {
+      atom.alias = rGroupLabel(mass ?? 0)
+      mass = undefined
+    }
+  } else if (!elementOf(symbol)) {
+    atom.el = "C"
+    atom.alias = symbol
+    note("unsupported-mol-feature", `atom ${number} is "${symbol}", not an element; kept as a label on carbon`)
+  } else if (source.rGroup != null) {
+    atom.alias = rGroupLabel(source.rGroup)
   }
-  const atomCount = int(counts.slice(0, 3))
-  const bondCount = int(counts.slice(3, 6))
-  if (atomCount < 0 || bondCount < 0) {
-    note("bad-molfile", `the counts line says ${atomCount} atoms and ${bondCount} bonds`, "error")
-    return { mol: emptyMolecule(), title, problems }
+  if (mass != null) {
+    if (mass >= 1 && mass <= 999) atom.isotope = mass
+    else note("bad-molfile", `atom ${number} has mass number ${mass}; ignored`)
+  } else if (source.massDifference && atom.isotope == null && !atom.alias) {
+    const isotope = Math.round(elementMass(atom.el)) + source.massDifference
+    if (isotope >= 1 && isotope <= 999) atom.isotope = isotope
+    else note("bad-molfile", `atom ${number} has a mass difference of ${source.massDifference}; ignored`)
   }
-  if (lines.length < 4 + atomCount + bondCount) {
-    note("bad-molfile", `expected ${atomCount} atoms and ${bondCount} bonds but the file ends early`, "error")
-    return { mol: emptyMolecule(), title, problems }
-  }
+  if (source.radical !== 0) note("unsupported-mol-feature", `atom ${number} is a radical; radicals are not supported yet and were dropped`)
+  if (source.alias) atom.alias = source.alias
+  return atom
+}
 
-  const atoms: Atom[] = []
-  // R-group atoms still labelled from their symbol alone, which RGP or ISO lines may number.
-  const unnumbered = new Set<number>()
-  let depth = false
-  for (let index = 0; index < atomCount; index++) {
-    const line = lines[4 + index] ?? ""
-    const symbol = line.slice(31, 34).trim()
-    const atom: Atom = {
-      id: index + 1,
-      el: symbol,
-      x: float(line.slice(0, 10)) * PX_PER_ANGSTROM,
-      y: -float(line.slice(10, 20)) * PX_PER_ANGSTROM,
-      charge: 0,
-    }
-    if (float(line.slice(20, 30)) !== 0) depth = true
-    if (symbol === "D" || symbol === "T") {
-      atom.el = "H"
-      atom.isotope = symbol === "D" ? 2 : 3
-    } else if (R_GROUP_SYMBOLS.has(symbol)) {
-      atom.el = "C"
-      atom.alias = rGroupLabel(int(line.slice(60, 63)))
-      if (atom.alias === "R") unnumbered.add(index + 1)
-    } else if (!elementOf(symbol)) {
-      atom.el = "C"
-      atom.alias = symbol
-      note("unsupported-mol-feature", `atom ${index + 1} is "${symbol}", not an element; kept as a label on carbon`)
-    }
-    const massDifference = int(line.slice(34, 36))
-    if (massDifference !== 0 && atom.isotope == null && !atom.alias) {
-      const mass = Math.round(elementMass(atom.el)) + massDifference
-      if (mass >= 1 && mass <= 999) atom.isotope = mass
-      else note("bad-molfile", `atom ${index + 1} has a mass difference of ${massDifference}; ignored`)
-    }
-    const chargeCode = int(line.slice(36, 39))
-    if (chargeCode === 4) note("unsupported-mol-feature", `atom ${index + 1} is a radical; radicals are not supported yet`)
-    atom.charge = CHARGE_CODES[chargeCode] ?? 0
-    atoms.push(atom)
-  }
-
+/** The table's bonds the editor can hold, numbered in file order; the rest are noted. */
+function bondsOf(table: Ctab, note: Note): { bonds: Bond[]; aromatic: boolean } {
   const bonds: Bond[] = []
   let aromatic = false
-  for (let index = 0; index < bondCount; index++) {
-    const line = lines[4 + atomCount + index] ?? ""
-    const a = int(line.slice(0, 3))
-    const b = int(line.slice(3, 6))
-    const type = int(line.slice(6, 9))
-    const stereo = int(line.slice(9, 12))
-    if (a < 1 || b < 1 || a > atomCount || b > atomCount || a === b) {
+  table.bonds.forEach(({ a, b, type, stereo }, index) => {
+    const count = table.atoms.length
+    if (a < 1 || b < 1 || a > count || b > count || a === b) {
       note("bad-molfile", `bond ${index + 1} joins atoms ${a} and ${b}, which do not exist`, "error")
-      continue
+      return
     }
     if (bonds.some((other) => (other.a === a && other.b === b) || (other.a === b && other.b === a))) {
       note("bad-molfile", `bond ${index + 1} repeats the bond between atoms ${a} and ${b}; kept the first`)
-      continue
+      return
     }
     const bond: Bond = { id: index + 1, a, b, order: 1, stereo: "none" }
     if (type === 2 || type === 3) bond.order = type
     else if (type === 4) {
       bond.aromatic = true
       aromatic = true
+    } else if (type === 9 || type === 10) {
+      note("unsupported-mol-feature", `bond ${index + 1} is a ${type === 9 ? "coordination" : "hydrogen"} bond; read as single`)
     } else if (type !== 1) {
       note("unsupported-mol-feature", `bond ${index + 1} is a query bond (type ${type}); read as single`)
     }
@@ -176,70 +130,34 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
       note("unsupported-mol-feature", `bond ${index + 1} is a crossed double bond (either E or Z); drawn plain`)
     }
     bonds.push(bond)
-  }
+  })
+  return { bonds, aromatic }
+}
 
-  // Property lines. CHG, RAD and ISO lines override the atom block, as the format says.
-  let charges: Array<[number, number]> | null = null
-  const sgroups = new Map<number, SgroupRead>()
-  for (let index = 4 + atomCount + bondCount; index < lines.length; index++) {
-    const line = lines[index] ?? ""
-    if (line.startsWith("M  END")) break
-    if (line.startsWith("M  CHG")) charges = [...(charges ?? []), ...propertyPairs(line)]
-    else if (line.startsWith("M  ISO")) {
-      for (const [number, mass] of propertyPairs(line)) {
-        const atom = atoms[number - 1]
-        if (!atom) continue
-        // RDKit writes the SMILES [1*] as an isotope on the R-group atom.
-        if (unnumbered.has(number)) {
-          atom.alias = rGroupLabel(mass)
-          unnumbered.delete(number)
-          continue
-        }
-        if (mass >= 1 && mass <= 999) atom.isotope = mass
-        else note("bad-molfile", `atom ${number} has mass number ${mass}; ignored`)
-      }
-    } else if (line.startsWith("M  RGP")) {
-      for (const [number, group] of propertyPairs(line)) {
-        const atom = atoms[number - 1]
-        if (atom && (!atom.alias || unnumbered.has(number))) atom.alias = rGroupLabel(group)
-        unnumbered.delete(number)
-      }
-    } else if (line.startsWith("M  RAD")) {
-      charges ??= []
-      note("unsupported-mol-feature", "radicals (M  RAD) are not supported yet and were dropped")
-    } else if (line.startsWith("A  ")) {
-      const atom = atoms[int(line.slice(3, 6)) - 1]
-      const label = (lines[index + 1] ?? "").trim()
-      if (atom && label) {
-        atom.alias = label
-        unnumbered.delete(int(line.slice(3, 6)))
-      }
-      index++
-    } else if (/^M {2}S(TY|LB|ST|AL|BL|SL|MT|DI|AP|CN|BV|DS|PA|NN|DT|DD|CD|ED|PL)/.test(line)) {
-      // The rest (labels, bonds, bracket corners…) are worked out again from the atoms.
-      readSgroupLine(line, sgroups)
-    } else if (line.startsWith("S  SKP")) {
-      index += int(line.slice(6, 9))
-    } else if (line.trim() !== "") {
-      note("unsupported-mol-feature", `ignored "${line.slice(0, 6).trim()}" line`)
-    }
-  }
-  if (charges) {
-    for (const atom of atoms) atom.charge = 0
-    for (const [number, charge] of charges) {
-      const atom = atoms[number - 1]
-      if (atom) atom.charge = charge
-    }
-  }
+/**
+ * Reads one molfile, V2000 or V3000 (the part up to `M  END`). Atoms are numbered 1…n in
+ * file order. Repeat units (SRU) and generic groups (GEN) become brackets, on those numbers.
+ * Anything the editor cannot hold is dropped and reported rather than guessed at.
+ */
+export function readMolfile(text: string): { mol: Molecule; title: string; problems: Problem[]; brackets?: Bracket[] } {
+  const lines = text.replace(/\r\n?/g, "\n").split("\n")
+  const problems: Problem[] = []
+  const note: Note = (code, message, severity = "warning") => problems.push({ code, severity, message })
+  const title = (lines[0] ?? "").trim()
+  const table = (lines[3] ?? "").includes("V3000") ? readV3000(lines, note) : readV2000(lines, note)
+  if (!table) return { mol: emptyMolecule(), title, problems }
+
+  const atoms = table.atoms.map((atom, index) => atomOf(atom, index + 1, note))
+  const { bonds, aromatic } = bondsOf(table, note)
   const others = new Set<string>()
-  const brackets = bracketsOf(sgroups, atomCount, others)
+  const brackets = bracketsOf(table.sgroups, atoms.length, others)
   if (others.size > 0) {
     note("unsupported-mol-feature", `Sgroups other than repeat units and groups (${[...others].join(", ")}: abbreviations and the like) were ignored; their atoms are drawn out`)
   }
-  if (depth || (lines[1] ?? "").slice(20, 22) === "3D") {
+  if (table.atoms.some((atom) => atom.z !== 0) || (lines[1] ?? "").slice(20, 22) === "3D") {
     note("flattened-3d", "the file has 3D coordinates; they were projected onto the page")
   }
-  if (atomCount > 1 && atoms.every((atom) => atom.x === 0 && atom.y === 0)) {
+  if (atoms.length > 1 && atoms.every((atom) => atom.x === 0 && atom.y === 0)) {
     note("missing-coordinates", "the file has no coordinates, so every atom sits on the same spot")
   }
 
@@ -247,7 +165,7 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
   bonds.forEach((bond, position) => {
     bond.id = position + 1
   })
-  let mol: Molecule = { ...emptyMolecule(), atoms, bonds, nextAtomId: atomCount + 1, nextBondId: bonds.length + 1 }
+  let mol: Molecule = { ...emptyMolecule(), atoms, bonds, nextAtomId: atoms.length + 1, nextBondId: bonds.length + 1 }
   if (aromatic) {
     const kekulized = kekulizeAromaticReport(mol)
     mol = kekulized.mol
@@ -258,4 +176,3 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
   problems.push(...validate(mol))
   return { mol, title, problems, ...(brackets.length > 0 ? { brackets } : {}) }
 }
-

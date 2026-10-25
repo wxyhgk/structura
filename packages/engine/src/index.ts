@@ -46,5 +46,6 @@ export { createHotspot, resolveTarget, type Hotspot } from "./pointer/hotspot.ts
 export { allCommands, command, type Command, type CommandOptions, type CommandTable } from "./commands/command.ts"
 export { routeFieldKey, routeKey, type KeyEvent, type KeyRoutes } from "./keys/router.ts"
 export { pointerDown, pointerMove, pointerUp } from "./gestures/index.ts"
+export { createFingers, pinchedView, type FingerHost, type FingerInput, type Fingers } from "./gestures/fingers.ts"
 export { ringHint, type RingHintShape } from "./gestures/hints.ts"
 export type { CurveHover, Gesture, GestureContext, PointerHost, PointerInput, Preview, SweptRing } from "./gestures/types.ts"

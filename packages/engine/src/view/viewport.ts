@@ -38,6 +38,12 @@ export function drawingPoints(mol: Molecule, arrows: Arrow[]): Point[] {
 }
 
 type Rect = { left: number; top: number; width: number; height: number }
+type Size = { width: number; height: number }
+
+/** The element's size, or null while it has none (display: none, a 0×0 container). */
+function sizeOf(rect: Rect | undefined): Size | null {
+  return rect && rect.width > 0 && rect.height > 0 ? { width: rect.width, height: rect.height } : null
+}
 
 /**
  * The one owner of zoom and pan. The canvas renders it and the toolbar, status bar, menu
@@ -47,11 +53,41 @@ type Rect = { left: number; top: number; width: number; height: number }
 export function createViewport() {
   let view = HOME
   let element: { getBoundingClientRect(): Rect } | null = null
+  /** The canvas's size when last seen with one: a resize keeps the middle of the view where it was. */
+  let size: Size | null = null
+  /** A fit asked for while the canvas had no size, made once it has one. */
+  let pendingFit: Point[] | null = null
   const listeners = new Set<() => void>()
 
   function set(next: View) {
     view = next
     for (const listener of listeners) listener()
+  }
+
+  /** Zooms and pans so all the points fit in a canvas of this size. */
+  function fitTo(points: Point[], next: Size) {
+    size = next
+    const fitted = fittedView(points, next.width, next.height)
+    if (fitted) set(fitted)
+  }
+
+  /**
+   * The canvas may have a new size: the first one it has makes a fit that waited for it; a
+   * change after that moves the view by half of it, so what was in the middle stays there.
+   */
+  function resize() {
+    const next = sizeOf(element?.getBoundingClientRect())
+    if (!next) return
+    if (pendingFit) {
+      const points = pendingFit
+      pendingFit = null
+      fitTo(points, next)
+      return
+    }
+    const last = size
+    size = next
+    if (!last || (last.width === next.width && last.height === next.height)) return
+    set({ zoom: view.zoom, pan: { x: view.pan.x + (next.width - last.width) / 2, y: view.pan.y + (next.height - last.height) / 2 } })
   }
 
   /** Zooms around the middle of the canvas. */
@@ -71,7 +107,10 @@ export function createViewport() {
     /** The element whose box is the canvas on screen. */
     attach(next: { getBoundingClientRect(): Rect } | null) {
       element = next
+      resize()
     },
+    /** Call when the canvas's box may have changed size (a ResizeObserver on it). */
+    resize,
     set,
     toWorld(clientX: number, clientY: number): Point {
       const rect = element?.getBoundingClientRect()
@@ -92,11 +131,14 @@ export function createViewport() {
     reset() {
       set(HOME)
     },
-    /** Zooms and pans so all the points fit; nothing happens with no points. */
+    /**
+     * Zooms and pans so all the points fit; nothing happens with no points. A canvas with no
+     * size yet (in a hidden tab) would fit at the smallest zoom, so it waits for its first size.
+     */
     fit(points: Point[]) {
-      const rect = element?.getBoundingClientRect()
-      const next = rect ? fittedView(points, rect.width, rect.height) : null
-      if (next) set(next)
+      const next = sizeOf(element?.getBoundingClientRect())
+      pendingFit = next ? null : points
+      if (next) fitTo(points, next)
     },
     /** The world point at the middle of the canvas: where new content lands on an empty page. */
     centre(): Point {

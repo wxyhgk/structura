@@ -1,11 +1,11 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
 import { atomById, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
 import type { Molecule } from "@structura/core/types"
 import type { Attachment } from "@structura/markush"
 import { useHydrated } from "../hooks/useHydrated.ts"
 import { AtomLabelInput } from "./AtomLabelInput.tsx"
 import { SceneView } from "./SceneView.tsx"
-import { aimAt, curveKey, hotkeyOps, keyOf, pointerDown, pointerMove, pointerUp, type CurveHover, type RingHintShape } from "@structura/engine"
+import { aimAt, createFingers, curveKey, hotkeyOps, keyOf, pointerDown, pointerMove, pointerUp, type CurveHover, type FingerHost, type RingHintShape } from "@structura/engine"
 import { frameHandleCursor } from "./frameHandleCursor.ts"
 import { QuickScaffold } from "./QuickScaffold.tsx"
 import type { CanvasHandle, EditorSlice, Gesture, PointerHost, Preview } from "./types.ts"
@@ -36,6 +36,8 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
   const [panning, setPanning] = useState(false)
   const [handleCursor, setHandleCursor] = useState<string | null>(null)
   const [rotating, setRotating] = useState(false)
+  /** Which touches draw and which pan and pinch the view; mouse and pen go straight through. */
+  const [fingers] = useState(createFingers<PointerEvent<SVGSVGElement>>)
   /** Where the pointer last was over the canvas, in client coordinates. */
   const lastPointer = useRef<{ x: number; y: number } | null>(null)
   /**
@@ -52,17 +54,23 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
       keep: hotspot.under(),
       with: { brackets: true },
     })
-  const { doubleClick, press } = useDoubleClick({ props, current, hitAt: (event) => aimed(event.clientX, event.clientY, event.pointerType).hit, openLabel: label.openLabel })
+  const { doubleClick, press: notePress } = useDoubleClick({ props, current, hitAt: (event) => aimed(event.clientX, event.clientY, event.pointerType).hit, openLabel: label.openLabel })
 
-  function cancelGesture() {
+  /** The pointer taken away mid-gesture (pointercancel, or a second finger down): it ends with no edit. */
+  function dropGesture() {
     gesture.current = { kind: "idle" }
     setPreview(null)
     setRingHint(null)
     hotspot.clearHover()
     setDraft(null)
     setAttachmentsDraft(null)
-    setPanning(false)
     setRotating(false)
+    if (!space.current) setPanning(false)
+  }
+
+  function cancelGesture() {
+    dropGesture()
+    setPanning(false)
   }
 
   const host: PointerHost = {
@@ -87,6 +95,20 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     hovered: hotspot.under,
     setFrameHandle: (handle) => setHandleCursor(handle && frameHandleCursor(handle)),
     setRotating,
+  }
+
+  const fingerHost: FingerHost<PointerEvent<SVGSVGElement>> = {
+    zoom: () => viewport.get().zoom,
+    pan: () => viewport.get().pan,
+    toWorld: viewport.toWorld,
+    setView: (nextZoom, nextPan) => viewport.set({ zoom: nextZoom, pan: nextPan }),
+    press(event) {
+      notePress(event)
+      pointerDown(host, event)
+    },
+    move: (event) => pointerMove(host, event),
+    release: (event) => pointerUp(host, event),
+    cancel: dropGesture,
   }
 
   /**
@@ -182,26 +204,17 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
             event.preventDefault()
             return
           }
-          press(event)
           // The canvas keeps the pointer while a drag goes on, even off its edge.
           if (event.button === 0 || event.button === 1) event.currentTarget.setPointerCapture(event.pointerId)
-          pointerDown(host, event)
+          fingers.down(fingerHost, event)
         }}
         onPointerMove={(event) => {
           lastPointer.current = { x: event.clientX, y: event.clientY }
           hotspot.track(event.clientX, event.clientY, () => aimed(event.clientX, event.clientY, event.pointerType).hit)
-          pointerMove(host, event)
+          fingers.move(fingerHost, event)
         }}
-        onPointerUp={(event) => pointerUp(host, event)}
-        onPointerCancel={() => {
-          gesture.current = { kind: "idle" }
-          setPreview(null)
-          hotspot.clearHover()
-          setDraft(null)
-          setAttachmentsDraft(null)
-          setRotating(false)
-          if (!space.current) setPanning(false)
-        }}
+        onPointerUp={(event) => fingers.up(fingerHost, event)}
+        onPointerCancel={(event) => fingers.cancel(fingerHost, event)}
         onPointerLeave={() => {
           hotspot.clearHover()
           setHandleCursor(null)

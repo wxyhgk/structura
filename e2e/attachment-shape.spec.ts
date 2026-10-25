@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { fileURLToPath } from "node:url"
-import { doc, openEditor, openFile } from "./support.ts"
+import { doc, menu, openEditor, openFile } from "./support.ts"
 
 // A variable attachment over a whole fused system is drawn as patents draw it: an ellipse
 // round the rings, or the bond sweeping round them; the 画法 can be chosen.
@@ -34,7 +34,10 @@ test("widened to the whole fused system the attachment becomes a curve, and its 
   await expect.poll(async () => (await doc(page)).attachments?.[0]?.shape).toBeUndefined()
   await expect(drawn).toHaveAttribute("data-shape", "loop")
 
-  // And from the canvas: right-click R1, 可变连接画法 → 直线.
+  // And from the canvas: right-click R1, 可变连接画法 → 直线. The document opened as saved,
+  // near the corner, and the canvas kept its middle as the workspace's panels took its right
+  // and bottom: 显示全部 brings R1 back into view first.
+  await menu(page, "查看", "显示全部")
   const label = page.getByTestId("canvas").locator("text", { hasText: /^R$/ }).first()
   const box = (await label.boundingBox())!
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, { button: "right" })

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { build } from "@structura/testkit"
+import { emptyDrawing } from "@structura/core/drawing"
+import { applyOps } from "@structura/core/ops"
+import { enumerate } from "@structura/markush"
+import { build, closestPair, label } from "@structura/testkit"
 import { compoundTableFiles, drawnInFull, fileNames, ionsBeside, TABLE_FORMAT } from "../../../src/editor/markush/compoundTable.ts"
 import { compoundId, numberRows } from "../../../src/editor/markush/numbering.ts"
 import { rowsToCsv, type Row } from "../../../src/editor/markush/results.ts"
@@ -34,6 +37,33 @@ test("a patent draws every abbreviation in full", () => {
   assert.ok(drawn.groups.every((group) => !group.collapsed))
   assert.equal(drawn.atoms.length, 12)
   assert.equal(drawnInFull(anisole), anisole, "nothing to expand, nothing changed")
+})
+
+test("groups drawn in full that would land on each other are swung clear, the rest left where it was", () => {
+  // Neighbouring R1 and R2: Bn beside Ph or Mes, as placed for their labels, overlap when drawn out.
+  const formula = build([
+    ring,
+    { op: "add_atom", el: "C", to: 1, as: "r1" },
+    { op: "label", atom: "r1", text: "R1" },
+    { op: "add_atom", el: "C", to: 2, as: "r2" },
+    { op: "label", atom: "r2", text: "R2" },
+    { op: "set_variable", name: "R1", alternatives: [label("Bn"), label("Mes")] },
+    { op: "set_variable", name: "R2", alternatives: [label("Ph"), label("Et"), label("NO2")] },
+  ])
+  const compounds = enumerate(formula).molecules
+  assert.equal(compounds.length, 6)
+  const asPlaced = (mol: (typeof compounds)[number]) => {
+    const result = applyOps({ ...emptyDrawing(), molecule: mol }, [{ op: "set_collapsed", collapsed: false }])
+    assert.ok(result.ok)
+    return result.drawing.molecule
+  }
+  assert.ok(compounds.filter((mol) => closestPair(asPlaced(mol)) < 0.5 * 40).length >= 4, "most start with atoms on top of each other")
+  for (const mol of compounds) {
+    const drawn = drawnInFull(mol)
+    assert.ok(closestPair(drawn) >= 0.5 * 40, `closest pair ${closestPair(drawn).toFixed(1)}`)
+    const grouped = new Set(mol.groups.flatMap((group) => group.atoms))
+    for (const atom of mol.atoms.filter((item) => !grouped.has(item.id))) assert.deepEqual(drawn.atoms.find((item) => item.id === atom.id), atom)
+  }
 })
 
 test("file names are safe and never two alike", () => {

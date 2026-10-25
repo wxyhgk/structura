@@ -7,8 +7,9 @@ import { validateDrawing } from "../src/validate.ts"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 
+/** A carbon to the right of the others, clear of them. */
 function addCarbon(history: History): { history: History; id: number } {
-  const step = addAtom(history.present.molecule, "C", 0, 0)
+  const step = addAtom(history.present.molecule, "C", history.present.molecule.atoms.length * 50, 0)
   return { history: historyReducer(history, { type: "commit-molecule", mol: step.mol }), id: step.id }
 }
 

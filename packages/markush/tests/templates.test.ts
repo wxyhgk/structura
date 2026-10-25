@@ -3,6 +3,7 @@ import test from "node:test"
 import { emptyDrawing } from "@structura/core/drawing"
 import type { Op } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
+import { geometryProblems } from "@structura/core/validate"
 import { run } from "@structura/testkit"
 import { chemistry } from "@structura/testkit/chem"
 import { builtinTemplates, enumerate, templateProblem, type Template } from "@structura/markush"
@@ -18,6 +19,12 @@ test("every built-in template is valid, suits its site, and has a unique builtin
   for (const group of groups) {
     const names = templates.filter((template) => template.group === group).map((template) => template.name)
     assert.equal(new Set(names).size, names.length, `names repeat in ${group}`)
+  }
+})
+
+test("no built-in template's drawn piece has atoms on top of each other, on bonds, or odd bond lengths", () => {
+  for (const template of builtinTemplates()) {
+    if (template.alternative.kind === "fragment") assert.deepEqual(geometryProblems(template.alternative.molecule), [], template.name)
   }
 })
 

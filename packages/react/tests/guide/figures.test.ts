@@ -1,6 +1,8 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { plainFormula } from "@structura/core/formula"
+import type { Molecule } from "@structura/core/types"
+import { geometryProblems } from "@structura/core/validate"
 import { figureSvg } from "../../src/guide/figures/build.ts"
 import * as drawing from "../../src/guide/figures/drawing.ts"
 import * as markush from "../../src/guide/figures/markush.ts"
@@ -31,6 +33,23 @@ test("every guide figure is built by the real ops, and shows what it says", () =
   const { carbazolyl, naphthylene, nR5 } = figures.pieces()
   for (const [piece, stars] of [[carbazolyl, 1], [naphthylene, 2], [nR5, 2]] as const) assert.equal(piece.molecule.atoms.filter((atom) => atom.alias === "*").length, stars)
   assert.equal(figures.expanded().length, 4)
+})
+
+/** Every molecule in what a figure makes: drawings, pieces, products, however it is wrapped. */
+function moleculesIn(value: unknown): Molecule[] {
+  if (Array.isArray(value)) return value.flatMap(moleculesIn)
+  if (value == null || typeof value !== "object") return []
+  if ("atoms" in value && "bonds" in value) return [value as Molecule]
+  return Object.values(value).flatMap(moleculesIn)
+}
+
+test("no guide figure has atoms on top of each other, on bonds, or odd bond lengths", () => {
+  const made = { hoverSteps: figures.hoverSteps(pressKey), ...Object.fromEntries(Object.entries({ ...drawing, ...markush, ...brackets }).filter(([name]) => name !== "hoverSteps").map(([name, make]) => [name, (make as () => unknown)()])) }
+  for (const [name, value] of Object.entries(made)) {
+    const molecules = moleculesIn(value)
+    assert.ok(molecules.length > 0, name)
+    for (const molecule of molecules) assert.deepEqual(geometryProblems(molecule), [], name)
+  }
 })
 
 test("the brackets page's figures carry their brackets into the picture", () => {

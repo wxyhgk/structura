@@ -7,17 +7,22 @@ import { identifierOf } from "../editor/identifiers.ts"
 
 /**
  * Something wrong with the saved structure, as the editor marks it in red: an atom over its
- * valence, mostly. `atoms` count from 1 in the molfile handed back with it (the first atom is
+ * valence, mostly; or a slip in the drawing, such as two atoms drawn on top of each other
+ * (geometryProblems). `atoms` count from 1 in the molfile handed back with it (the first atom is
  * 1), `text` says it in Chinese for the user, `message` in English, as validateDrawing does.
  */
 export type StructureProblem = { code: ProblemCode; severity: "error" | "warning"; atoms: number[]; text: string; message: string }
 
-const PROBLEM_TEXT: Partial<Record<ProblemCode, (atoms: string) => string>> = {
-  valence: (atoms) => `${atoms}超出化合价`,
-  "self-bond": (atoms) => `${atoms}有一根连到自己的键`,
-  "duplicate-bond": (atoms) => `${atoms}之间有重复的键`,
-  "stereo-on-multiple-bond": (atoms) => `${atoms}之间的多重键上画了楔形`,
+const PROBLEM_TEXT: Partial<Record<ProblemCode, (atoms: string[]) => string>> = {
+  valence: (atoms) => `${atoms.join("、")}超出化合价`,
+  "self-bond": (atoms) => `${atoms.join("、")}有一根连到自己的键`,
+  "duplicate-bond": (atoms) => `${atoms.join("、")}之间有重复的键`,
+  "stereo-on-multiple-bond": (atoms) => `${atoms.join("、")}之间的多重键上画了楔形`,
   "bad-bracket": () => "方括号框住的原子不对",
+  "atoms-overlap": (atoms) => `${atoms.slice(0, -1).join("、")}和${atoms.at(-1)}画在了一起`,
+  "atom-on-bond": ([atom, a, b]) => `${atom}压在${a}和${b}之间的键上`,
+  "long-bond": ([a, b]) => `${a}和${b}之间的键比别的键长得多`,
+  "short-bond": ([a, b]) => `${a}和${b}之间的键比别的键短得多`,
 }
 
 /** The drawing's problems, numbered as its molfile numbers atoms, in Chinese as well. */
@@ -27,8 +32,9 @@ export function structureProblems(drawing: Drawing): StructureProblem[] {
   return validateDrawing(drawing).map((problem) => {
     const ids = problem.atoms ?? []
     const atoms = ids.flatMap((id) => position.get(id) ?? [])
-    const named = ids.map((id) => `第 ${position.get(id)} 个原子（${element.get(id)}）`).join("、")
-    const text = PROBLEM_TEXT[problem.code]?.(named) ?? `${named}${named ? "：" : ""}${problem.message}`
+    const names = ids.map((id) => `第 ${position.get(id)} 个原子（${element.get(id)}）`)
+    const named = names.join("、")
+    const text = PROBLEM_TEXT[problem.code]?.(names) ?? `${named}${named ? "：" : ""}${problem.message}`
     return { code: problem.code, severity: problem.severity, atoms, text, message: problem.message }
   })
 }

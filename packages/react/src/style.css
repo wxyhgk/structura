@@ -5,7 +5,7 @@
 /* The layers' order. A page that compiles this source with CSS of its own must name the same
    order before its own layers (the published style.css has no layers, see harden-css.mjs): the
    first file to name a layer fixes its place, and reset must stay below base. */
-@layer host, reset, theme, base, components, utilities;
+@layer host, reset, around, theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "./styles/preflight.css";
 @import "tailwindcss/utilities.css" layer(utilities);
@@ -170,7 +170,9 @@
    say: in the published stylesheet this outweighs a page's rules (see scripts/harden-css.mjs),
    and the editor's styles below outweigh it. Not SVG, whose width, height, fill… are attributes
    that a rule would override. Popper wrappers (around menus and tooltips) are the overlays'
-   parents on <body>; inside :is(), which ignores a :has() the browser does not know. */
+   parents on <body>, outside the editor: the around layer weighs as the reset but, unlike every
+   other rule, is not confined to the editor's roots. Inside :is(), which ignores a :has() the
+   browser does not know. */
 @layer reset {
   :is(.chem-app, .chem-overlay),
   :is(.chem-app, .chem-overlay) :not(svg, svg *),
@@ -179,7 +181,7 @@
     all: revert;
   }
 }
-@layer reset {
+@layer around {
   :is([data-radix-popper-content-wrapper]:has(> .chem-overlay)) {
     all: revert;
   }

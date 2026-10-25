@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.2
+
+- **Fixed**: style.css restyled the page around the editor. Its utilities have the names a
+  Tailwind page uses for its own (`.border-border`, `.text-muted-foreground`, `.bg-secondary`…),
+  and with the ids' weight they carry (0.3.0) they beat the page's rules on the page's own
+  elements, with the editor's colour variables: on a page whose `--border` is not a whole colour
+  (shadcn's `214.3 31.8% 91.4%`) borders and grey text turned black and selected buttons lost
+  their fill. Every rule now matches only inside the editor (`.chem-app`, `.chem-overlay`),
+  adding no weight, but `<chem-molecule>`'s own and the reset of the popper wrappers round the
+  editor's menus; `check:dist` checks the built file for any other.
+
 ## 0.6.1
 
 - **Changed**: what the pointer is on is now simply what it is nearest, instead of each kind

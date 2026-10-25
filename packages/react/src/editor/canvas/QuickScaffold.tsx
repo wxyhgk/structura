@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { defaultEdge, defaultSite, matchScaffolds, type Scaffold } from "@structura/core/scaffolds"
+import { composing } from "../input/ime.ts"
 
 /**
  * The quick template field `/` opens by the pointer: type part of a name, ↑↓ to choose,
@@ -40,7 +41,7 @@ export function QuickScaffold({
         }}
         onBlur={onCancel}
         onKeyDown={(event) => {
-          if (event.nativeEvent.isComposing) return
+          if (composing(event)) return
           if (event.key === "Escape") onCancel()
           else if (event.key === "ArrowDown") setIndex((index + 1) % Math.max(found.length, 1))
           else if (event.key === "ArrowUp") setIndex((index - 1 + found.length) % Math.max(found.length, 1))

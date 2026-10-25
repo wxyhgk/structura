@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { builtinTemplates, type ImportReport, type Template, type TemplateInput } from "@structura/markush"
 import { download } from "../browser.ts"
+import type { Save } from "../save.ts"
 import { LIBRARY_FILE, readLibrary } from "./libraryFile.ts"
 import type { TemplateStore } from "./store.ts"
 
@@ -31,7 +32,8 @@ export const OFFLINE_NOTE = "自定义模板需要后端（npm run backend）"
  * backend). Without a store, or when it cannot be reached, it is offline: the built-ins still
  * work, and changing the user's templates says why it cannot.
  */
-export function useTemplates(store?: TemplateStore): Templates {
+/** The templates, kept in `store`; an exported library goes where `saveFile` sends files. */
+export function useTemplates(store?: TemplateStore, saveFile: Save = download): Templates {
   const builtins = useMemo(() => builtinTemplates(), [])
   const [mine, setMine] = useState<Template[]>([])
   const [status, setStatus] = useState<TemplatesStatus>(store ? "loading" : "offline")
@@ -83,8 +85,8 @@ export function useTemplates(store?: TemplateStore): Templates {
 
   const exportFile = useCallback(async () => {
     const library = await ready().exportLibrary()
-    download(LIBRARY_FILE, `${JSON.stringify(library, null, 2)}\n`, "application/json")
-  }, [ready])
+    saveFile(LIBRARY_FILE, `${JSON.stringify(library, null, 2)}\n`, "application/json")
+  }, [ready, saveFile])
 
   const importFile = useCallback(
     async (file: File) => {

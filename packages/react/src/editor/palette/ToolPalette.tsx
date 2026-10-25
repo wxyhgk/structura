@@ -73,7 +73,7 @@ export function ToolPalette(props: PaletteProps) {
   )
 
   return (
-    <aside className="flex w-[78px] shrink-0 flex-col border-r border-(--c-d0d0d0) bg-(--c-f3f3f3)">
+    <aside className="flex w-[78px] shrink-0 flex-col pointer-coarse:w-[98px] border-r border-(--c-d0d0d0) bg-(--c-f3f3f3)">
       <ScrollArea className="min-h-0 flex-1">
         <div className="grid grid-cols-2 gap-px p-1">
           {simple("lasso", "套索", <LassoIcon />)}

@@ -6,6 +6,7 @@ import { MoleculeThumb } from "../common/MoleculeThumb.tsx"
 import { useOverlayMark } from "../input/overlays.ts"
 import { defaultPick, type ScaffoldPick } from "@structura/engine"
 import { ScaffoldSites } from "./ScaffoldSites.tsx"
+import { composing } from "../input/ime.ts"
 
 /**
  * The template library: pick a ring system, then which of its atoms joins (or which bond
@@ -43,7 +44,7 @@ export function ScaffoldPicker({
         data-testid="scaffold-picker"
         onKeyDown={(event) => {
           // Enter takes the template as chosen, wherever the focus is (not mid-way through an IME word).
-          if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+          if (event.key === "Enter" && !composing(event)) {
             event.preventDefault()
             use(pick)
           }

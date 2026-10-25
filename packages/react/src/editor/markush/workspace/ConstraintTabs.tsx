@@ -23,7 +23,7 @@ export function ConstraintTabs({
 }) {
   return (
     <div className="flex h-9 shrink-0 items-stretch gap-0.5 border-t border-(--c-e3e3e3) bg-(--c-ffffff) pr-1.5 pl-1 text-[12px]">
-      <div className="flex items-stretch" role="tablist" aria-label="通式约束">
+      <div className="flex min-w-0 items-stretch overflow-x-auto" role="tablist" aria-label="通式约束">
         {tabs.map((tab) => {
           const selected = open && tab.id === active
           return (
@@ -32,7 +32,7 @@ export function ConstraintTabs({
               type="button"
               role="tab"
               aria-selected={selected}
-              className={`relative flex items-center gap-1 px-2.5 ${selected ? "font-medium text-(--c-1a73e8)" : "text-(--c-555555) hover:text-(--c-222222)"}`}
+              className={`relative flex shrink-0 items-center gap-1 px-2.5 whitespace-nowrap ${selected ? "font-medium text-(--c-1a73e8)" : "text-(--c-555555) hover:text-(--c-222222)"}`}
               onClick={() => onTab(tab.id)}
             >
               {tab.label}

@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- **Small boxes**: the editor lays itself out by the size of its own box (not the window), as
+  it changes. Below 720×520 it is compact: the menu bar keeps one row (menus no longer wrap one
+  character to a line), rotating, flipping and deleting go behind ⋯, and the 通式 workspace
+  shows 结构, 变量 and 生成结果 one at a time instead of three panes squeezed side by side.
+  Below 480×360 it is mini: the menus (and the switch to 通式) go behind one ☰ beside the
+  toolbar, and there is no status bar. The new `layout` prop fixes one of them instead.
+- **`ui`**: leave out the menu bar, toolbar, palette, status bar or the 通式 workspace.
+- **`onExpand(document)`**: 放大编辑 in a mini editor; the structure saved in the larger editor
+  comes back as one undoable edit. `mount()` offers it by default, in `edit()`'s sheet.
+- **`onFile(file)`**: the host takes the files the editor makes (保存, every 导出, tables of
+  compounds, the template library) instead of a browser download; `false` hands one back.
+- **Touch screens**: larger tool and toolbar buttons where the pointer is coarse.
+- **Fixed**: an input method's Enter or Escape (choosing pinyin, kana…) no longer commits or
+  cancels an atom's label, a variable's choices, a ring closure, a scaffold or template name.
+
 ## 0.6.2
 
 - **Fixed**: style.css restyled the page around the editor. Its utilities have the names a

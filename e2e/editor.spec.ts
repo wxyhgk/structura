@@ -89,3 +89,28 @@ test("the editor's chrome keeps its own look: buttons flat, not the browser's", 
   })
   expect(look).toEqual({ border: "0px", background: "rgba(0, 0, 0, 0)" })
 })
+
+test("arrow keys move the hotspot along bonds without the mouse; Shift runs to the chain's end", async ({ page }) => {
+  await page.getByRole("button", { name: "键 (B)" }).click()
+  const centre = await canvasCentre(page)
+  await page.mouse.click(centre.x, centre.y)
+  const [start, end] = (await doc(page)).molecule.atoms
+  // Rest on the bond's end and grow a chain from it: 1, 1, 1 leaves the hotspot on the tip.
+  await page.mouse.move(centre.x + (end.x - start.x), centre.y + (end.y - start.y))
+  for (let step = 0; step < 3; step++) await page.keyboard.press("1")
+  await expect(page.getByTestId("formula")).toHaveText("C₅H₁₂")
+  expect((await doc(page)).molecule.atoms.at(-1)!.x).toBeGreaterThan(start.x)
+  const elements = async () => (await doc(page)).molecule.atoms.map((atom) => atom.el).join("")
+  // ← steps back one atom from the tip; O lands there, not on the tip or under the pointer.
+  await page.keyboard.press("ArrowLeft")
+  await page.keyboard.press("o")
+  await expect.poll(elements).toBe("CCCOC")
+  // ⇧← runs from there along the chain to its far end, the first atom drawn.
+  await page.keyboard.press("Shift+ArrowLeft")
+  await page.keyboard.press("n")
+  await expect.poll(elements).toBe("NCCOC")
+  // No atom that way: the hotspot stays, and the next key still lands on it.
+  await page.keyboard.press("ArrowLeft")
+  await page.keyboard.press("s")
+  await expect.poll(elements).toBe("SCCOC")
+})

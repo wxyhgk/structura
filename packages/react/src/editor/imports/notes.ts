@@ -16,11 +16,14 @@ const PROBLEM_TEXT: Partial<Record<Problem["code"], string>> = {
   valence: "有原子超价",
 }
 
-/** One line per problem, in Chinese, naming the record when the file had several. */
-export function importNotes(records: MolRecord[], problems: Problem[]): string[] {
+/**
+ * One line per problem, in Chinese, naming the record when the file had several. `explain`
+ * can say more than the problem's kind, from its message (as SMILES do with RDKit's reason).
+ */
+export function importNotes(records: MolRecord[], problems: Problem[], explain?: (problem: Problem) => string | undefined): string[] {
   return problems.map((problem) => {
     const record = problem.record != null ? records[problem.record - 1] : undefined
     const where = records.length > 1 && record ? `第 ${problem.record} 条${record.title ? `（${record.title}）` : ""}：` : ""
-    return `${where}${PROBLEM_TEXT[problem.code] ?? problem.code}。${problem.message}`
+    return `${where}${explain?.(problem) ?? PROBLEM_TEXT[problem.code] ?? problem.code}。${problem.message}`
   })
 }

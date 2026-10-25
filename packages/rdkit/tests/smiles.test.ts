@@ -6,7 +6,7 @@ import { usableRecords } from "@structura/core/import"
 import { placeholders } from "@structura/markush"
 import { toMolfile } from "@structura/core/molfile"
 import { readMolfile } from "@structura/core/sdf"
-import { looksLikeSmiles, smilesLines, smilesRecords, smilesToMolfile } from "../src/index.ts"
+import { looksLikeSmiles, smilesFault, smilesLines, smilesRecords, smilesToMolfile, type SmilesFault } from "../src/index.ts"
 
 const rdkit = await initRDKitModule()
 rdkit.prefer_coordgen(true)
@@ -48,10 +48,27 @@ test(`SMILES go through RDKit ${rdkit.version()} and come back as the same molec
   }
 })
 
-test("bad SMILES are reported", () => {
-  for (const bad of ["C1CC", "Xx", "C(C", "c1cccc1"]) {
-    assert.ok("error" in smilesToMolfile(rdkit, bad), bad)
+test("bad SMILES are reported with RDKit's reason, sorted by kind", () => {
+  const cases: Array<[string, SmilesFault, string]> = [
+    ["CC(=O", { kind: "open-parenthesis" }, "extra open parentheses while parsing: CC(=O; check for mistakes around position 3"],
+    ["C1CC1)C", { kind: "close-parenthesis" }, "extra close parentheses"],
+    ["C1CC", { kind: "unclosed-ring" }, "unclosed ring for input: 'C1CC'"],
+    ["C[Xx]", { kind: "syntax", position: 3 }, "syntax error while parsing: C[Xx]"],
+    ["FC(F)(F)(F)(F)F", { kind: "valence", atom: 2, element: "C", valence: 6 }, "Explicit valence for atom # 1 C, 6, is greater than permitted"],
+    ["Cc1ccnc1", { kind: "kekulize", atoms: [2, 3, 4, 5, 6] }, "Can't kekulize mol. Unkekulized atoms: 1 2 3 4 5"],
+  ]
+  for (const [bad, fault, words] of cases) {
+    const result = smilesToMolfile(rdkit, bad)
+    assert.ok("error" in result, bad)
+    assert.deepEqual(result.fault, fault, bad)
+    assert.ok(result.error.startsWith(`RDKit could not read "${bad}": `), result.error)
+    assert.ok(result.error.includes(words), result.error)
+    assert.ok(!/\[\d\d:\d\d:\d\d\]|~\^/.test(result.error), `no timestamps or marker: ${result.error}`)
+    assert.deepEqual(smilesFault(result.error), fault, "the fault reads back from the error")
   }
+  assert.equal(smilesFault("RDKit could not read \"?\""), null)
+  // The capture ends with the call: a good SMILES after a bad one reads as before.
+  assert.ok("molfile" in smilesToMolfile(rdkit, "CCO"))
 })
 
 test("SMILES text is split into lines with optional names", () => {

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { openMarkush } from "./support.ts"
 
 // The editor in a small box, as pages embed it: the layout follows the box, not the window.
 // The package's script on a page of its own, served beside the examples (see standalone.spec.ts).
@@ -50,7 +51,7 @@ test("the layout follows the editor's own box as it is resized, whatever the win
   expect(errors).toEqual([])
 })
 
-test("compact: one row of menus that does not wrap, rotating behind ⋯, the formula's panes one at a time", async ({ page }) => {
+test("compact: one row of menus that does not wrap, rotating behind ⋯", async ({ page }) => {
   await boxed(page, 600, 450)
   const menuBar = page.locator("header").first()
   expect((await menuBar.boundingBox())!.height).toBeLessThanOrEqual(32)
@@ -58,24 +59,15 @@ test("compact: one row of menus that does not wrap, rotating behind ⋯, the for
   await page.evaluate(() => (window as unknown as Page$).editor.run([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]))
   await page.getByRole("button", { name: "更多" }).click()
   await expect(page.getByRole("menuitem", { name: /顺时针 15°/ })).toBeVisible()
-  await page.keyboard.press("Escape")
-  await page.getByRole("tab", { name: "通式" }).click()
-  const panes = page.getByRole("tablist", { name: "通式", exact: true })
-  await expect(panes).toBeVisible()
-  await expect(page.getByTestId("resultsPane")).toHaveCount(0)
-  await panes.getByRole("tab", { name: "生成结果" }).click()
-  await expect(page.getByTestId("resultsPane")).toBeVisible()
 })
 
-test("mini: ☰ holds every menu and the switch to 通式; nothing spills out of the box", async ({ page }) => {
+test("mini: ☰ holds every menu; nothing spills out of the box", async ({ page }) => {
   await boxed(page, 360, 480)
   expect(await layout(page)).toBe("mini")
   const wide = await page.locator(".chem-app").evaluate((app) => [...app.querySelectorAll("*")].filter((element) => element.scrollWidth > element.clientWidth + 1 && getComputedStyle(element).overflowX === "visible").length)
   expect(wide).toBe(0)
   await page.getByRole("button", { name: "菜单" }).click()
   for (const label of ["文件", "编辑", "结构", "查看", "帮助"]) await expect(page.getByRole("menuitem", { name: label })).toBeVisible()
-  await page.getByRole("menuitemradio", { name: "通式" }).click()
-  await expect(page.getByTestId("markush-workspace")).toBeVisible()
 })
 
 test("mini: 放大编辑 opens the structure in the sheet, and what is saved there comes back as an edit", async ({ page }) => {
@@ -100,14 +92,13 @@ test("mini: 放大编辑 opens the structure in the sheet, and what is saved the
 })
 
 test("mount() options: ui leaves parts out, onExpand undefined offers no 放大编辑, and layout holds whatever the size", async ({ page }) => {
-  await boxed(page, 1000, 700, `{ ui: { menuBar: false, statusBar: false, workspaces: false }, layout: "mini", onExpand: undefined }`)
+  await boxed(page, 1000, 700, `{ ui: { menuBar: false, statusBar: false }, layout: "mini", onExpand: undefined }`)
   expect(await layout(page)).toBe("mini")
   await expect(page.getByRole("button", { name: "菜单" })).toHaveCount(0)
   await expect(page.getByRole("button", { name: "放大编辑" })).toHaveCount(0)
   await page.evaluate(() => (window as unknown as Page$).editor.update({ ui: { toolbar: false, palette: false }, layout: "full" }))
   await expect(page.getByTestId("toolbar")).toHaveCount(0)
   await expect(page.getByTestId("document-title")).toBeVisible()
-  await expect(page.getByRole("tab", { name: "通式" })).toBeVisible()
 })
 
 test("onFile takes what the editor saves and exports, instead of a download; false lets it download", async ({ page }) => {
@@ -141,4 +132,14 @@ test("an input method's Enter picks its characters: it does not commit the atom'
   await expect(field).toBeVisible()
   await field.press("Enter")
   await expect(field).toHaveCount(0)
+})
+
+test("the 通式 page in a small window: its panes one at a time, chosen above them", async ({ page }) => {
+  await page.setViewportSize({ width: 600, height: 450 })
+  await openMarkush(page)
+  const panes = page.getByRole("tablist", { name: "通式", exact: true })
+  await expect(panes).toBeVisible()
+  await expect(page.getByTestId("resultsPane")).toHaveCount(0)
+  await panes.getByRole("tab", { name: "生成结果" }).click()
+  await expect(page.getByTestId("resultsPane")).toBeVisible()
 })

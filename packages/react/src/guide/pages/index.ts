@@ -15,12 +15,11 @@ import { templatesPage } from "./templates.tsx"
 import { visionPage } from "./vision.tsx"
 import { workspacePage } from "./workspace.tsx"
 
-/** Every page, in the order they are listed; pages with the same group sit together. */
+/** Every page, in the order they are listed (pages with the same group sit together): the 通式 page's guide; the structure editor's is drawing.ts. */
 export const PAGES = [startPage, drawPage, labelsPage, scaffoldsPage, selectPage, bracketsPage, shortcutsPage, filesPage, workspacePage, markushPage, attachmentPage, fragmentsPage, templatesPage, enumeratePage, aiPage, visionPage] as const
 
 /** A page's id: what a "?" link or the editor opens the guide on. */
 export type GuideTopic = (typeof PAGES)[number]["id"]
 
-export function pageOf(id: GuideTopic) {
-  return PAGES.find((page) => page.id === id) ?? PAGES[0]
-}
+/** A list of pages a guide shows: all of them, or the structure editor's. */
+export type GuidePages = ReadonlyArray<(typeof PAGES)[number]>

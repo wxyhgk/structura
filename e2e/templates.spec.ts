@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
-import { doc, openEditor, openFile } from "./support.ts"
+import { doc, openEditor, openFile, toMarkush } from "./support.ts"
 
 // The template library in the 通式 workspace. The e2e build keeps the user's templates in
 // memory (no backend), fresh for every page.
@@ -12,7 +12,7 @@ type Listed = { alternatives: Array<{ kind: string; class?: string; name?: strin
 async function openWorkspace(page: Page) {
   await openEditor(page)
   await openFile(page, fixture("benzene-R1-R2.structura"))
-  await page.getByRole("tab", { name: "通式" }).click()
+  await toMarkush(page)
   await expect(page.getByTestId("markush-workspace")).toBeVisible()
 }
 

@@ -1,9 +1,9 @@
 # chem-structura
 
-A ChemDraw-style 2D chemical structure editor as a React component, with drawing and
-enumeration of patent generic (Markush) formulas. The interface is in Chinese.
+A ChemDraw-style 2D chemical structure editor as a React component: it draws patent generic
+(Markush) formulas too, and its API expands them into compounds. The interface is in Chinese.
 
-ChemDraw 风格的 2D 化学结构编辑器 React 组件，支持专利通式（Markush）的绘制和批量生成。
+ChemDraw 风格的 2D 化学结构编辑器 React 组件，能画专利通式（Markush），并可通过接口批量生成化合物。
 
 ## Install
 
@@ -46,13 +46,13 @@ colour variables do not override your own theme. Nor do your page's styles chang
 | `onSelectionChange(selection)` | `{ atoms, bonds }` (ids as in `getDocument()`) each time the user selects something else: a click, a box or lasso (once, when released), select all, Escape, an edit that clears it. Not for the host's own `setSelection` |
 | `onDirtyChange(dirty)` | When the drawing gains or loses unsaved changes |
 | `templateStore` | Where the user's own group templates are kept (`httpTemplateStore()`, `memoryTemplateStore()`, or your own) |
-| `wordExport` | How to make Word tables of generated compounds with editable ChemDraw objects (`{ check(), make(pack, { columns }) }`, e.g. through chem2office on your server). Without it, the Word export holds pictures |
 | `onDismiss()` | An Escape the editor has no use for (no drag to stop, nothing to deselect): for a host showing it in a dialog of its own, to close that. Without it, that Escape takes the lasso |
-| `fillVariables`, `recognizeStructure` | Optional AI features; hidden unless given |
+| `recognizeStructure` | 从图片识别结构 (AI); hidden unless given |
+| `onEnumerate(document)` | Offers 结构 → 通式与批量生成…: open the generic formula (this document) where you define its variables and generate compounds. Hidden unless given; `enumerate()` on the handle, and `enumerate` in `chem-structura/core`, generate without a page |
 | `theme` | `"light"` (the default), `"dark"`, or `"auto"`: dark when the page says so (`data-theme="dark"` or class `dark` on `<html>`) or, when it says nothing, when the system is dark; followed live. Files the editor writes (SVG, CDXML, Word…) stay light |
 | `onThemeChange(theme)` | Offers 浅色 / 深色 / 跟随系统 in the 查看 menu; keep the choice and pass it back as `theme`. Without it, no choice is shown |
-| `layout` | `"auto"` (the default) lays the editor out by the size of its own box, followed as it resizes: `"full"`; `"compact"` below 720×520 (less used buttons behind ⋯, the 通式 panes one at a time); `"mini"` below 480×360 (the menus behind one ☰, no status bar). Or one of those, whatever the size |
-| `ui` | Parts to leave out, each shown unless `false`: `{ menuBar, toolbar, palette, statusBar, workspaces }` (`workspaces: false`: drawing only, no 通式) |
+| `layout` | `"auto"` (the default) lays the editor out by the size of its own box, followed as it resizes: `"full"`; `"compact"` below 720×520 (less used buttons behind ⋯); `"mini"` below 480×360 (the menus behind one ☰, no status bar). Or one of those, whatever the size |
+| `ui` | Parts to leave out, each shown unless `false`: `{ menuBar, toolbar, palette, statusBar }` |
 | `onExpand(document)` | Offers 放大编辑 in a mini editor: open the structure somewhere larger and resolve to the document saved there (or `null`); the editor takes it as one undoable edit. `mount()` does this by default, in `edit()`'s sheet |
 | `onFile({ name, type, data })` | Takes the files the editor makes (保存, 导出, tables of compounds; `data` a `Blob`) instead of the browser downloading them: for your own storage or save dialog, or a page in an iframe. Return `false` to let one download after all |
 

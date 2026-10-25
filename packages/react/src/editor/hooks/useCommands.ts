@@ -45,7 +45,8 @@ export function useCommands({
   /** The dialogs the commands open. */
   dialogs: Pick<EditorDialogs, "open" | "showGuide">
   /** Switches to the 通式 workspace. */
-  openMarkush: () => void
+  /** Opens the generic formula where its variables are defined (the host's 通式 page); absent, 通式与批量生成 is not offered. */
+  openMarkush?: () => void
   /** Which model-backed dialogs the host can serve: 从图片识别结构 and 从专利文字填写. */
   models: { recognize: boolean; fill: boolean }
   /** Which file this is: the names things are saved under, and what counts as saved. */
@@ -164,7 +165,7 @@ export function useCommands({
       enabled: join != null,
     }),
     // The 通式 workspace: the formula's variables, its constraints and the compounds it makes.
-    enumerate: command("通式与批量生成…", openMarkush),
+    enumerate: command("通式与批量生成…", () => openMarkush?.(), { enabled: openMarkush != null }),
     nudge: perArrow((direction, key) =>
       command("移动 10 像素", () => editor.nudgeSelection(direction), { keys: [{ key, shift: true }], enabled: selected }),
     ),

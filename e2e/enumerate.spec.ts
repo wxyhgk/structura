@@ -1,17 +1,16 @@
 import { expect, test, type Page } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
-import { doc, menu, openEditor, openFile, unzipText } from "./support.ts"
+import { doc, menu, openEditor, openFile, openMarkush, unzipText } from "./support.ts"
 
-// Generating compounds in the 通式 workspace: the results follow the formula as it changes.
+// Generating compounds on the 通式 page: the results follow the formula as it changes.
 
 const fixture = (name: string) => fileURLToPath(new URL(`fixtures/${name}`, import.meta.url))
 
-/** Opens a formula and switches to the 通式 workspace. */
+/** Opens a formula on the 通式 page. */
 async function openFormula(page: Page, name: string) {
-  await openEditor(page)
+  await openMarkush(page)
   await openFile(page, fixture(name))
-  await page.getByRole("tab", { name: "通式" }).click()
   await expect(page.getByTestId("markush-workspace")).toBeVisible()
 }
 
@@ -99,11 +98,24 @@ test("compounds are numbered as a patent numbers them, and come out as a table o
   await expect(compounds.first().getByTestId("compound-id")).toHaveText("化合物5")
 })
 
-test("the structure menu's command opens the 通式 workspace", async ({ page }) => {
+test("the drawing page's 通式与批量生成 opens what is drawn on the 通式 page, in a new tab", async ({ page }) => {
   await openEditor(page)
+  await openFile(page, fixture("benzene-R1-anywhere.structura"))
+  const opened = page.waitForEvent("popup")
   await menu(page, "结构", "通式与批量生成…")
-  await expect(page.getByTestId("markush-workspace")).toBeVisible()
-  await expect(page.getByTestId("variables-empty")).toBeVisible()
+  const markush = await opened
+  await expect(markush.getByTestId("markush-workspace")).toBeVisible()
+  expect(new URL(markush.url()).pathname).toBe("/markush.html")
+  // The same document: its variable and what it generates.
+  await expect(markush.getByTestId("variable-R1")).toBeVisible()
+  await expect(markush.getByTestId("results-summary")).toContainText("得到 2 个不同的化合物")
+  expect(await doc(markush)).toEqual(await doc(page))
+})
+
+test("the drawing page has no 通式 workspace of its own", async ({ page }) => {
+  await openEditor(page)
+  await expect(page.getByRole("tab", { name: "通式" })).toHaveCount(0)
+  await expect(page.getByTestId("markush-workspace")).toHaveCount(0)
 })
 
 test("an attachment drawn into one ring of carbazole widens to the whole fused system; symmetric repeats are merged", async ({ page }) => {

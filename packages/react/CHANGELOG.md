@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **Changed (breaking)**: the 通式 workspace is no longer in the editor. Its variables board,
+  constraints, generated compounds and their exports (CSV, SDF, 化合物表, Word) are the
+  Structura app's own 通式 page now, not the package's: the editor draws structures, generic
+  formulas included (R1, attachments anywhere on a ring, brackets), and `enumerate()` on the
+  handle and in `chem-structura/core` still generates their compounds. Gone with it: the 绘图 /
+  通式 switch, the `fillVariables` and `wordExport` props (and the `FillVariables` and
+  `WordExport` types), and `ui.workspaces`. The guide (帮助 → 使用说明) keeps the pages about
+  drawing. `index.js` is 180 KB instead of 308.
+- **Added**: `onEnumerate(document)`: offers 结构 → 通式与批量生成… for a host with a page of
+  its own for the formula's variables; without it the item is not shown.
+
 ## 0.7.0
 
 - **Small boxes**: the editor lays itself out by the size of its own box (not the window), as

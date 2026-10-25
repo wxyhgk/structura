@@ -25,7 +25,8 @@
     "noFallthroughCasesInSwitch": true,
 
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@structura/markush-page": ["./packages/react/src/markushPage.ts"]
     }
   },
   "include": ["src"]

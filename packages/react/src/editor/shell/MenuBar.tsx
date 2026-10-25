@@ -116,8 +116,12 @@ function menus({ commands: c, hasFill, colorHetero, onColorHetero, raisedNumbers
           <Item command={c.join} />
           <Item command={c.bracket} />
           <Item command={c.quickScaffold} />
-          <DropdownMenuSeparator />
-          <Item command={c.enumerate} />
+          {c.enumerate.enabled && (
+            <>
+              <DropdownMenuSeparator />
+              <Item command={c.enumerate} />
+            </>
+          )}
         </>
       ),
     },
@@ -177,38 +181,34 @@ function menus({ commands: c, hasFill, colorHetero, onColorHetero, raisedNumbers
   ]
 }
 
-/**
- * The menu bar: the name, the menus, the workspace switch and the document's title. Compact,
- * the name goes (the mark stays) and the switch follows the menus rather than centring.
- */
+/** The menu bar: the name, the menus and the document's title. Compact, the name goes (the mark stays). */
 export function MenuBar({
   title,
   dirty,
-  tabs,
   compact = false,
+  brand = "Structura",
   ...props
 }: MenuProps & {
   /** The document's name, and whether it has unsaved changes (shown as a dot). */
   title: string
   dirty: boolean
-  /** The workspace switch (绘图 / 通式), shown in the middle of the bar. */
-  tabs?: ReactNode
   compact?: boolean
+  /** The name beside the mark. */
+  brand?: string
 }) {
   return (
     <header className="flex h-8 shrink-0 items-center gap-1 border-b border-(--c-d0d0d0) bg-(--c-f2f2f2) pr-3 pl-2 pointer-coarse:h-10">
       <div className="mr-1 flex shrink-0 items-center gap-1.5 px-1.5 font-medium whitespace-nowrap">
         <LogoMark />
-        {!compact && "Structura"}
+        {!compact && brand}
       </div>
       {menus(props).map((menu) => (
         <MenuButton key={menu.label} label={menu.label}>
           {menu.items}
         </MenuButton>
       ))}
-      {tabs && <div className={compact ? "ml-2 shrink-0" : "mx-auto shrink-0"}>{tabs}</div>}
       <div
-        className={`${tabs && !compact ? "" : "ml-auto "}min-w-0 truncate text-[12px] whitespace-nowrap text-(--c-777777)`}
+        className="ml-auto min-w-0 truncate text-[12px] whitespace-nowrap text-(--c-777777)"
         data-testid="document-title"
         title={dirty ? `${title}（有未保存的修改）` : title}
       >
@@ -219,8 +219,8 @@ export function MenuBar({
   )
 }
 
-/** All the menus behind one ☰, for an editor with no room for a menu bar; the workspace switch too, when given. */
-export function MenuSheet({ workspace, ...props }: MenuProps & { workspace?: ReactNode }) {
+/** All the menus behind one ☰, for an editor with no room for a menu bar. */
+export function MenuSheet(props: MenuProps) {
   const overlayMark = useOverlayMark()
   return (
     <DropdownMenu>
@@ -239,12 +239,6 @@ export function MenuSheet({ workspace, ...props }: MenuProps & { workspace?: Rea
             </DropdownMenuSubContent>
           </DropdownMenuSub>
         ))}
-        {workspace && (
-          <>
-            <DropdownMenuSeparator />
-            {workspace}
-          </>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

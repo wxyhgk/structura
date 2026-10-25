@@ -3,5 +3,7 @@
 // the editor hands in what it needs through GuideHost. To add a page, see pages/index.ts.
 export { GuideDialog } from "./GuideDialog.tsx"
 export { HelpLink } from "./HelpLink.tsx"
-export type { GuideTopic } from "./pages/index.ts"
+export type { GuidePages, GuideTopic } from "./pages/index.ts"
+export { PAGES as ALL_PAGES } from "./pages/index.ts"
+export { DRAWING_PAGES } from "./pages/drawing.ts"
 export type { GuideHost, PressKey } from "./types.ts"

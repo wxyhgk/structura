@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../components/ui/dialog.tsx"
-import { PAGES, pageOf, type GuideTopic } from "./pages/index.ts"
+import type { GuidePages, GuideTopic } from "./pages/index.ts"
 import type { GuideHost } from "./types.ts"
 
 /** The system UI font, as on Apple platforms, with fallbacks for Chinese and elsewhere. */
@@ -14,17 +14,20 @@ export function GuideDialog({
   topic,
   onTopic,
   host,
+  pages,
 }: {
   /** The page shown; null when closed. */
   topic: GuideTopic | null
   onTopic: (topic: GuideTopic | null) => void
   host: GuideHost
+  /** The pages it lists: a topic not among them opens the first. */
+  pages: GuidePages
 }) {
   const [query, setQuery] = useState("")
   const words = query.trim().toLowerCase()
-  const found = words ? PAGES.filter((page) => `${page.title} ${page.group} ${page.keywords}`.toLowerCase().includes(words)) : PAGES
+  const found = words ? pages.filter((page) => `${page.title} ${page.group} ${page.keywords}`.toLowerCase().includes(words)) : pages
   const groups = [...new Set(found.map((page) => page.group))]
-  const page = pageOf(topic ?? "start")
+  const page = pages.find((item) => item.id === topic) ?? pages[0]
 
   return (
     <Dialog open={topic != null} onOpenChange={(open) => onTopic(open ? (topic ?? "start") : null)}>

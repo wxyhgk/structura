@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0
 
 - **Changed (breaking)**: the 通式 workspace is no longer in the editor. Its variables board,
   constraints, generated compounds and their exports (CSV, SDF, 化合物表, Word) are the

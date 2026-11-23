@@ -1,4 +1,4 @@
-import { cdxmlFingerprint } from "./cdxml/fingerprint.ts"
+import { cdxmlFingerprint, FINGERPRINT_VERSION } from "./cdxml/fingerprint.ts"
 import { readDocument, toDocument } from "./document.ts"
 import type { Drawing } from "./types.ts"
 
@@ -7,11 +7,14 @@ import type { Drawing } from "./types.ts"
 // ignores, with the fingerprint of the structure written around it. Read back, the document
 // is used only if the structure is still the one it was written with; a file changed since
 // (or saved again by a program that drops the comment) is refused, never read as it was.
+// The mark's version is the fingerprint's: v1 covers nodes, bonds and text, v2 the arrows,
+// brackets and curves too. v1 files (written before v2) are still checked the v1 way, so they
+// open as they did, though a deleted arrow in one goes unnoticed; new files are v2.
 // Apart from cdxml.ts: reading the document checks the generic formula, which reaches the
 // abbreviation tables a plain CDXML writer has no need of.
 
-/** `<!--structura:v1:<fingerprint>:<base64 of the deflate-raw document>-->` */
-const VERSION = 1
+/** `<!--structura:v2:<fingerprint>:<base64 of the deflate-raw document>-->` */
+const VERSION = FINGERPRINT_VERSION
 const MARK = /<!--structura:v(\d+):([\da-f]+):([A-Za-z\d+/=\s]*)-->/
 
 async function through(bytes: Uint8Array, stream: CompressionStream | DecompressionStream): Promise<Uint8Array> {
@@ -60,7 +63,7 @@ export async function readCdxml(text: string): Promise<CdxmlRead> {
   if (!mark) return { reason: "foreign", error: "no Structura document in this CDXML" }
   const [, version, fingerprint, packed] = mark
   if (Number(version) > VERSION) return { reason: "broken", error: `made by a newer Structura (version ${version})` }
-  if (cdxmlFingerprint(text) !== fingerprint) return { reason: "changed", error: "the structure was changed after Structura wrote it" }
+  if (cdxmlFingerprint(text, Number(version)) !== fingerprint) return { reason: "changed", error: "the structure was changed after Structura wrote it" }
   let json: string
   try {
     json = new TextDecoder().decode(await through(fromBase64(packed), new DecompressionStream("deflate-raw")))

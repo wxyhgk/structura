@@ -67,105 +67,159 @@ function ringCore(graph: Graph): Graph {
 
 const pairKey = (a: number, b: number) => (a < b ? `${a}-${b}` : `${b}-${a}`)
 
-function components(graph: Graph): number[][] {
-  const seen = new Set<number>()
+/**
+ * The 2-connected pieces of the ring core, as lists of vertex indices (a cut atom is in
+ * every piece it joins). A ring never crosses a cut atom, so each piece has its rings alone.
+ */
+function blocks(adjacent: number[][]): number[][] {
+  const order = new Int32Array(adjacent.length).fill(-1)
+  const low = new Int32Array(adjacent.length)
   const found: number[][] = []
-  for (const start of graph.keys()) {
-    if (seen.has(start)) continue
-    seen.add(start)
-    const piece = [start]
-    for (let index = 0; index < piece.length; index++) {
-      for (const other of graph.get(piece[index])!) {
-        if (seen.has(other)) continue
-        seen.add(other)
-        piece.push(other)
+  const members: number[] = []
+  let time = 0
+  for (let root = 0; root < adjacent.length; root++) {
+    if (order[root] >= 0) continue
+    order[root] = low[root] = time++
+    members.push(root)
+    // Depth-first without recursion, so long chains cannot overflow the stack.
+    const stack: Array<{ id: number; parent: number; next: number }> = [{ id: root, parent: -1, next: 0 }]
+    while (stack.length > 0) {
+      const frame = stack[stack.length - 1]
+      const around = adjacent[frame.id]
+      if (frame.next < around.length) {
+        const other = around[frame.next++]
+        if (other === frame.parent) continue
+        if (order[other] >= 0) {
+          low[frame.id] = Math.min(low[frame.id], order[other])
+        } else {
+          order[other] = low[other] = time++
+          members.push(other)
+          stack.push({ id: other, parent: frame.id, next: 0 })
+        }
+        continue
       }
+      stack.pop()
+      if (frame.parent < 0) continue
+      low[frame.parent] = Math.min(low[frame.parent], low[frame.id])
+      if (low[frame.id] < order[frame.parent]) continue
+      const block = [frame.parent]
+      for (let member = -1; member !== frame.id; ) block.push((member = members.pop()!))
+      found.push(block)
     }
-    found.push(piece)
+    members.pop()
   }
-  return found
-}
-
-/** Breadth-first parents from `root`, so the shortest path to any atom can be walked back. */
-function shortestTree(graph: Graph, root: number): Map<number, number | null> {
-  const parent = new Map<number, number | null>([[root, null]])
-  const queue = [root]
-  for (let index = 0; index < queue.length; index++) {
-    const current = queue[index]
-    for (const other of graph.get(current)!) {
-      if (parent.has(other)) continue
-      parent.set(other, current)
-      queue.push(other)
-    }
-  }
-  return parent
-}
-
-/** root … id along the tree. */
-function pathTo(parent: Map<number, number | null>, id: number): number[] {
-  const path: number[] = []
-  for (let cursor: number | null = id; cursor != null; cursor = parent.get(cursor) ?? null) path.push(cursor)
-  return path.reverse()
+  return found.filter((block) => block.length >= 3)
 }
 
 /** Same ring, same answer: start at the lowest id and go towards its lower neighbour. */
 function canonical(ring: number[]): number[] {
-  const start = ring.indexOf(Math.min(...ring))
+  let start = 0
+  for (let index = 1; index < ring.length; index++) if (ring[index] < ring[start]) start = index
   const turned = [...ring.slice(start), ...ring.slice(0, start)]
   if (turned.length > 2 && turned[turned.length - 1] < turned[1]) turned.splice(1, turned.length - 1, ...turned.slice(1).reverse())
   return turned
 }
 
-/** Bit set over the component's bonds, for telling whether a ring adds anything new. */
+/** Bit set over the piece's bonds, for telling whether a ring adds anything new. */
 type Bits = Uint32Array
 
 /**
- * Smallest set of smallest rings of one ring-bearing component (Horton's candidates, kept
+ * Smallest set of smallest rings of one 2-connected piece (Horton's candidates, kept
  * greedily while they are independent over GF(2)). Every candidate is a shortest path from
  * some atom to both ends of some bond, which always contains a minimum cycle basis.
+ *
+ * `around` is the piece's own graph, atoms numbered 0… in id order. A candidate (root, bond
+ * x–y) is a ring when the two paths meet only at the root, i.e. x and y hang below different
+ * neighbours of it, and then its length is known from the depths alone. So the lengths are
+ * counted first and only the candidates of the lengths the basis needs get built.
  */
-function componentRings(graph: Graph, piece: number[]): number[][] {
-  const edgeIndex = new Map<string, number>()
-  for (const id of piece) {
-    for (const other of graph.get(id)!) if (id < other) edgeIndex.set(`${id}-${other}`, edgeIndex.size)
+function blockRings(around: number[][]): number[][] {
+  const size = around.length
+  const bondA: number[] = []
+  const bondB: number[] = []
+  const bondOf = new Map<number, number>()
+  for (let a = 0; a < size; a++) {
+    for (const b of around[a]) {
+      if (a >= b) continue
+      bondOf.set(a * size + b, bondA.length)
+      bondA.push(a)
+      bondB.push(b)
+    }
   }
-  const rank = edgeIndex.size - piece.length + 1
+  const rank = bondA.length - size + 1
   if (rank <= 0) return []
 
-  const edgeOf = (a: number, b: number) => edgeIndex.get(a < b ? `${a}-${b}` : `${b}-${a}`)!
-  const candidates = new Map<string, number[]>()
-  for (const root of piece) {
-    const parent = shortestTree(graph, root)
-    for (const x of piece) {
-      const toX = pathTo(parent, x)
-      const onX = new Set(toX)
-      for (const y of graph.get(x)!) {
-        if (x > y) continue
-        const toY = pathTo(parent, y)
-        // The two paths may only meet at the root, or the loop is not a simple ring.
-        if (toY.slice(1).some((id) => onX.has(id))) continue
-        const ring = canonical([...toX, ...toY.slice(1).reverse()])
-        if (ring.length < 3) continue
-        const key = ring.join(",")
-        if (!candidates.has(key)) candidates.set(key, ring)
+  const parent = new Int32Array(size)
+  const depth = new Int32Array(size)
+  const branch = new Int32Array(size)
+  const queue = new Int32Array(size)
+  /** Breadth-first from `root` through the neighbours in id order; `branch` is the root's neighbour each atom hangs below. */
+  function spread(root: number) {
+    parent.fill(-1)
+    parent[root] = root
+    depth[root] = 0
+    branch[root] = -1
+    queue[0] = root
+    let end = 1
+    for (let head = 0; head < end; head++) {
+      const current = queue[head]
+      for (const other of around[current]) {
+        if (parent[other] >= 0) continue
+        parent[other] = current
+        depth[other] = depth[current] + 1
+        branch[other] = current === root ? other : branch[current]
+        queue[end++] = other
       }
     }
   }
 
-  const sorted = [...candidates.values()].sort((a, b) => a.length - b.length || compareIds(a, b))
-  const words = Math.ceil(edgeIndex.size / 32)
+  /** (root, bond) pairs of the candidate rings, by ring length, roots in order. */
+  const byLength = new Map<number, number[]>()
+  for (let root = 0; root < size; root++) {
+    spread(root)
+    for (let bond = 0; bond < bondA.length; bond++) {
+      const x = bondA[bond]
+      const y = bondB[bond]
+      if (x === root || y === root || branch[x] === branch[y]) continue
+      const length = depth[x] + depth[y] + 1
+      const list = byLength.get(length)
+      if (list) list.push(root, bond)
+      else byLength.set(length, [root, bond])
+    }
+  }
+
+  const words = Math.ceil(bondA.length / 32)
   /** Reduced rows keyed by their leading bit, for Gaussian elimination as rings arrive. */
   const basis = new Map<number, Bits>()
   const kept: number[][] = []
-  for (const ring of sorted) {
-    const bits: Bits = new Uint32Array(words)
-    for (let index = 0; index < ring.length; index++) {
-      const edge = edgeOf(ring[index], ring[(index + 1) % ring.length])
-      bits[edge >>> 5] ^= 1 << (edge & 31)
+  for (const length of [...byLength.keys()].sort((a, b) => a - b)) {
+    const list = byLength.get(length)!
+    const rings = new Map<string, number[]>()
+    for (let index = 0, built = -1; index < list.length; index += 2) {
+      if (list[index] !== built) spread((built = list[index]))
+      const x = bondA[list[index + 1]]
+      const y = bondB[list[index + 1]]
+      const ring: number[] = []
+      for (let at = x; at !== built; at = parent[at]) ring.push(at)
+      ring.push(built)
+      ring.reverse()
+      for (let at = y; at !== built; at = parent[at]) ring.push(at)
+      const turned = canonical(ring)
+      const key = turned.join(",")
+      if (!rings.has(key)) rings.set(key, turned)
     }
-    if (!reduceInto(basis, bits)) continue
-    kept.push(ring)
-    if (kept.length === rank) break
+    for (const ring of [...rings.values()].sort(compareIds)) {
+      const bits: Bits = new Uint32Array(words)
+      for (let index = 0; index < ring.length; index++) {
+        const a = ring[index]
+        const b = ring[(index + 1) % ring.length]
+        const edge = bondOf.get(a < b ? a * size + b : b * size + a)!
+        bits[edge >>> 5] ^= 1 << (edge & 31)
+      }
+      if (!reduceInto(basis, bits)) continue
+      kept.push(ring)
+      if (kept.length === rank) return kept
+    }
   }
   return kept
 }
@@ -175,20 +229,22 @@ function compareIds(a: number[], b: number[]): number {
   return a.length - b.length
 }
 
-function leadingBit(bits: Bits): number {
-  for (let word = 0; word < bits.length; word++) if (bits[word] !== 0) return word * 32 + (31 - Math.clz32(bits[word] & -bits[word]))
+/** The lowest set bit at or after word `from`, or -1. */
+function leadingBit(bits: Bits, from: number): number {
+  for (let word = from; word < bits.length; word++) if (bits[word] !== 0) return word * 32 + (31 - Math.clz32(bits[word] & -bits[word]))
   return -1
 }
 
 /** Adds the row to the basis if it is independent of what is there; false if it is not. */
 function reduceInto(basis: Map<number, Bits>, bits: Bits): boolean {
-  for (let lead = leadingBit(bits); lead >= 0; lead = leadingBit(bits)) {
+  // Each step clears the lowest set bit, so the next one is never in an earlier word.
+  for (let lead = leadingBit(bits, 0); lead >= 0; lead = leadingBit(bits, lead >>> 5)) {
     const row = basis.get(lead)
     if (!row) {
       basis.set(lead, bits)
       return true
     }
-    for (let word = 0; word < bits.length; word++) bits[word] ^= row[word]
+    for (let word = lead >>> 5; word < bits.length; word++) bits[word] ^= row[word]
   }
   return false
 }
@@ -200,7 +256,17 @@ function reduceInto(basis: Map<number, Bits>, bits: Bits): boolean {
  */
 export function smallestRings(mol: Molecule, atoms?: Iterable<number>): number[][] {
   const core = ringCore(graphOf(mol, atoms))
-  const rings = components(core).flatMap((piece) => componentRings(core, piece))
+  // Numbered in id order, so comparing numbers is comparing ids and neighbour lists stay sorted.
+  const ids = [...core.keys()].sort((a, b) => a - b)
+  const index = new Map(ids.map((id, at) => [id, at]))
+  const adjacent = ids.map((id) => core.get(id)!.map((other) => index.get(other)!))
+  const rings: number[][] = []
+  for (const block of blocks(adjacent)) {
+    block.sort((a, b) => a - b)
+    const local = new Map(block.map((at, number) => [at, number]))
+    const around = block.map((at) => adjacent[at].filter((other) => local.has(other)).map((other) => local.get(other)!))
+    for (const ring of blockRings(around)) rings.push(ring.map((number) => ids[block[number]]))
+  }
   return rings.sort((a, b) => a.length - b.length || compareIds(a, b))
 }
 

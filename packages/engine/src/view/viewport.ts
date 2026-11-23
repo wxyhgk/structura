@@ -22,13 +22,23 @@ export function zoomedAt(view: View, at: Point, factor: number): View {
 /** The view that shows all the points, centred, in a canvas of the given size; null if none. */
 export function fittedView(points: Point[], width: number, height: number): View | null {
   if (points.length === 0) return null
-  const xs = points.map((point) => point.x)
-  const ys = points.map((point) => point.y)
-  const spanX = Math.max(...xs) - Math.min(...xs) + FIT_MARGIN * 2
-  const spanY = Math.max(...ys) - Math.min(...ys) + FIT_MARGIN * 2
-  const zoom = Math.min(1.5, Math.max(0.1, Math.min(width / spanX, height / spanY)))
-  const cx = (Math.max(...xs) + Math.min(...xs)) / 2
-  const cy = (Math.max(...ys) + Math.min(...ys)) / 2
+  // A loop, not Math.max(...xs): spreading a big drawing's points can overflow the call stack.
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+  for (const point of points) {
+    if (point.x < minX) minX = point.x
+    if (point.x > maxX) maxX = point.x
+    if (point.y < minY) minY = point.y
+    if (point.y > maxY) maxY = point.y
+  }
+  const spanX = maxX - minX + FIT_MARGIN * 2
+  const spanY = maxY - minY + FIT_MARGIN * 2
+  // The same floor as every other zoom: below it the wheel and pinch would jump the view back in.
+  const zoom = Math.min(1.5, clampZoom(Math.min(width / spanX, height / spanY)))
+  const cx = (maxX + minX) / 2
+  const cy = (maxY + minY) / 2
   return { zoom, pan: { x: width / 2 - cx * zoom, y: height / 2 - cy * zoom } }
 }
 

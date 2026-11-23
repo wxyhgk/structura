@@ -26,6 +26,13 @@ test("a kept abbreviation is shown as its label while its atoms stay real", () =
   assert.ok(svg.includes(">Ph<"), "exports write the label")
 })
 
+test("the same molecule gives the same display molecule, so caches keyed by it keep hitting", () => {
+  const mol = toluene().molecule
+  assert.equal(displayMolecule(mol), displayMolecule(mol))
+  const plain = run(emptyDrawing(), [{ op: "add_atom", el: "C" }]).molecule
+  assert.equal(displayMolecule(plain), plain, "nothing collapsed: the molecule itself")
+})
+
 test("moving, deleting and copying the label take the whole group along", () => {
   const drawing = toluene()
   const anchor = drawing.molecule.groups[0].atoms[0]

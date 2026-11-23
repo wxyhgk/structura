@@ -20,13 +20,26 @@ export function withGroupMembers(mol: Molecule, ids: Iterable<number>): number[]
   return [...all]
 }
 
+/** Display molecules made once per molecule: pointer handling asks for one on every move, and caches keyed by reference (layout, lookup) must keep hitting. */
+const shown = new WeakMap<Molecule, Molecule>()
+
 /**
  * The molecule as it is shown: each collapsed group reduced to its anchor carrying the label,
  * the atoms behind it and their bonds left out. Ids are unchanged, so what is picked on it
  * names the same atoms in the real molecule. For drawing and pointing only, never chemistry.
+ * The same molecule always gives the same object back.
  */
 export function displayMolecule(mol: Molecule): Molecule {
   if (!mol.groups.some((group) => group.collapsed)) return mol
+  let found = shown.get(mol)
+  if (!found) {
+    found = collapseGroups(mol)
+    shown.set(mol, found)
+  }
+  return found
+}
+
+function collapseGroups(mol: Molecule): Molecule {
   const hidden = hiddenAtoms(mol)
   const labels = new Map(mol.groups.filter((group) => group.collapsed).map((group) => [group.atoms[0], group.label]))
   return {

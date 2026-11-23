@@ -25,6 +25,10 @@ test("fitting centres the points, caps the zoom at 150%, and needs points", () =
   assert.deepEqual(small.pan, { x: 400 - 5 * 1.5, y: 300 })
   const wide = fittedView([{ x: 0, y: 0 }, { x: 1880, y: 0 }], 800, 600)!
   assert.equal(wide.zoom, 0.4)
+  const huge = fittedView([{ x: 0, y: 0 }, { x: 100000, y: 0 }], 800, 600)!
+  assert.equal(huge.zoom, clampZoom(0), "never below the zoom floor the wheel and buttons use")
+  const many = Array.from({ length: 300000 }, (_, index) => ({ x: index % 1000, y: Math.floor(index / 1000) }))
+  assert.ok(fittedView(many, 800, 600), "a very large drawing does not overflow the stack")
 })
 
 test("the viewport notifies on every change and maps screen to world through its element", () => {

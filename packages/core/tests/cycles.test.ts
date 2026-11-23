@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { smallestRings } from "../src/molecule/cycles.ts"
+import { referenceSmallestRings } from "./support/hortonReference.ts"
 import type { Molecule } from "../src/types.ts"
 
 /** A molecule from a bond list; coordinates do not matter to ring perception. */
@@ -79,4 +80,85 @@ test("the same molecule always gives the same rings", () => {
   const first = smallestRings(graph(bonds))
   assert.deepEqual(smallestRings(graph([...bonds].reverse())), first)
   assert.deepEqual(sizes(first), [5, 5, 5])
+})
+
+// The ring search was made faster (2-connected pieces, candidates built by length); it has
+// to give exactly what the plain Horton search gave, rings and order.
+
+/** A small seeded generator, so a failure can be replayed. */
+function seeded(seed: number) {
+  let state = seed >>> 0
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
+    return state / 2 ** 32
+  }
+}
+
+function sameRings(mol: Molecule, atoms?: number[]) {
+  assert.deepEqual(smallestRings(mol, atoms), referenceSmallestRings(mol, atoms))
+}
+
+function grid(width: number, height: number): Array<[number, number]> {
+  const at = (x: number, y: number) => y * width + x + 1
+  const bonds: Array<[number, number]> = []
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (x + 1 < width) bonds.push([at(x, y), at(x + 1, y)])
+      if (y + 1 < height) bonds.push([at(x, y), at(x, y + 1)])
+    }
+  }
+  return bonds
+}
+
+test("known ring systems give the same rings as the plain search", () => {
+  const cubane = [[1, 2], [2, 3], [3, 4], [4, 1], [5, 6], [6, 7], [7, 8], [8, 5], [1, 5], [2, 6], [3, 7], [4, 8]] as Array<[number, number]>
+  const complete = [1, 2, 3, 4, 5, 6].flatMap((a) => [1, 2, 3, 4, 5, 6].filter((b) => b > a).map((b): [number, number] => [a, b]))
+  const spiroChain = [...cycle([1, 2, 3, 4, 5]), ...cycle([5, 6, 7]), ...cycle([7, 8, 9, 10]), [10, 11], ...cycle([11, 12, 13])] as Array<[number, number]>
+  for (const bonds of [cubane, complete, spiroChain, grid(7, 5), grid(12, 12), [...cycle([1, 2, 3, 4, 5, 6]), ...cycle([4, 7, 8, 9, 10, 11]), [1, 20], [20, 21], ...cycle([21, 22, 23])] as Array<[number, number]>]) {
+    sameRings(graph(bonds))
+  }
+})
+
+test("random graphs give the same rings as the plain search", () => {
+  const random = seeded(20240611)
+  for (let round = 0; round < 400; round++) {
+    const count = 2 + Math.floor(random() * 28)
+    const bonds = new Map<string, [number, number]>()
+    const extra = Math.floor(random() * count * 0.9)
+    // A forest of random trees (chains and branches), then extra bonds close rings of every size.
+    for (let id = 2; id <= count; id++) {
+      if (random() < 0.12) continue
+      const other = 1 + Math.floor(random() * (id - 1))
+      bonds.set(`${other}-${id}`, [other, id])
+    }
+    for (let index = 0; index < extra; index++) {
+      const a = 1 + Math.floor(random() * count)
+      const b = 1 + Math.floor(random() * count)
+      if (a !== b) bonds.set(a < b ? `${a}-${b}` : `${b}-${a}`, a < b ? [a, b] : [b, a])
+    }
+    if (bonds.size === 0) continue
+    const mol = graph([...bonds.values()])
+    // Ids with gaps, so numbering by position is not the same as by id.
+    const scale = 1 + Math.floor(random() * 3)
+    const spread: Molecule = {
+      ...mol,
+      atoms: mol.atoms.map((atom) => ({ ...atom, id: atom.id * scale + 7 })),
+      bonds: mol.bonds.map((bond) => ({ ...bond, a: bond.a * scale + 7, b: bond.b * scale + 7 })),
+    }
+    sameRings(spread)
+    sameRings(spread, spread.atoms.filter(() => random() < 0.7).map((atom) => atom.id))
+  }
+})
+
+test("sparse and ring-rich random graphs of some size give the same rings as the plain search", () => {
+  const random = seeded(7)
+  for (const [count, bondCount] of [[60, 70], [60, 120], [80, 100], [40, 120]]) {
+    const bonds = new Map<string, [number, number]>()
+    while (bonds.size < bondCount) {
+      const a = 1 + Math.floor(random() * count)
+      const b = 1 + Math.floor(random() * count)
+      if (a !== b) bonds.set(a < b ? `${a}-${b}` : `${b}-${a}`, a < b ? [a, b] : [b, a])
+    }
+    sameRings(graph([...bonds.values()]))
+  }
 })

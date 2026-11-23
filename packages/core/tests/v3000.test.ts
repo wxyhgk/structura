@@ -1,9 +1,11 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
+import { BOND_LENGTH } from "../src/constants.ts"
 import { createBondAt, emptyMolecule } from "../src/molecule.ts"
-import { toMolfile } from "../src/molfile.ts"
+import { toMolfile, toSdf } from "../src/molfile.ts"
 import { readMolfile, readSdf, type MolRecord } from "../src/sdf.ts"
+import type { Atom, Bond, Bracket, Molecule } from "../src/types.ts"
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8")
 const SINGLE = { order: 1 as const, stereo: "none" as const }
@@ -86,4 +88,85 @@ test("V2000 still reads what it read before", () => {
   const text = toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE))
   assert.deepEqual(readMolfile(text).problems, [])
   assert.equal(toMolfile(readMolfile(text).mol), text)
+})
+
+/** A zigzag chain of `count` carbons, with one of everything the writers carry spread along it. */
+function chain(count: number): { mol: Molecule; brackets: Bracket[] } {
+  const atoms: Atom[] = Array.from({ length: count }, (_, at) => ({ id: at + 1, el: "C", x: at * BOND_LENGTH * 0.8, y: (at % 2) * BOND_LENGTH * 0.6, charge: 0 }))
+  atoms[1].charge = -1
+  atoms[2].isotope = 13
+  atoms[3].el = "Sn"
+  atoms[4].alias = "R2"
+  atoms[5].alias = "NH 2"
+  atoms[6].el = "O"
+  atoms[count - 1].charge = 2
+  const bonds: Bond[] = atoms.slice(1).map((_, at) => ({ id: at + 1, a: at + 1, b: at + 2, order: 1, stereo: "none" }))
+  bonds[0].stereo = "up"
+  bonds[1].stereo = "down"
+  bonds[2].stereo = "either"
+  bonds[3].order = 2
+  bonds[4].order = 3
+  const mol: Molecule = { ...emptyMolecule(), atoms, bonds, nextAtomId: count + 1, nextBondId: count }
+  // A repeat unit and a group, the second long enough that its atom list goes on over lines.
+  const brackets: Bracket[] = [
+    { id: 1, atoms: [8, 9, 10], kind: "repeat", repeat: { min: 2, max: 7, name: "m" } },
+    { id: 2, atoms: atoms.slice(20, 220).map((atom) => atom.id), kind: "group" },
+  ]
+  return { mol, brackets }
+}
+
+test("more than 999 atoms or bonds is written as V3000, and reads back whole", () => {
+  const { mol, brackets } = chain(1200)
+  const text = toMolfile(mol, "big", brackets)
+  const lines = text.split("\n")
+  assert.ok(lines[3].endsWith("V3000"))
+  assert.deepEqual(lines.filter((line) => line.length > 80), [], "no line is longer than V3000 allows")
+  assert.ok(lines.some((line) => line.endsWith(" -")), "the long atom list is continued")
+  const read = readMolfile(text)
+  assert.deepEqual(read.problems, [])
+  assert.equal(read.title, "big")
+  assert.equal(read.mol.atoms.length, 1200)
+  assert.equal(read.mol.bonds.length, 1199)
+  assert.deepEqual(
+    read.mol.atoms.map(({ x: _x, y: _y, ...atom }) => atom),
+    mol.atoms.map(({ x: _x, y: _y, ...atom }) => (atom.alias != null || atom.el === "Sn" ? { ...atom, ...(atom.alias == null ? {} : { el: "C" }) } : atom)),
+  )
+  assert.deepEqual(read.mol.bonds, mol.bonds)
+  assert.deepEqual(read.brackets, brackets)
+  for (const [at, atom] of mol.atoms.entries()) assert.ok(Math.hypot(atom.x - read.mol.atoms[at].x, atom.y - read.mol.atoms[at].y) < 0.01)
+})
+
+/** `bonds` bonds among 60 atoms, every pair joined until they run out. */
+function dense(bonds: number): Molecule {
+  const atoms: Atom[] = Array.from({ length: 60 }, (_, at) => ({ id: at + 1, el: "C", x: at * 10, y: 0, charge: 0 }))
+  const all = atoms.flatMap((a, at) => atoms.slice(at + 1).map((b) => ({ a: a.id, b: b.id, order: 1 as const, stereo: "none" as const })))
+  return { ...emptyMolecule(), atoms, bonds: all.slice(0, bonds).map((bond, at) => ({ ...bond, id: at + 1 })), nextAtomId: 61, nextBondId: bonds + 1 }
+}
+
+test("999 atoms and 999 bonds are still V2000; one more of either is V3000", () => {
+  const edge = toMolfile(dense(999))
+  assert.ok(edge.split("\n")[3].startsWith(" 60999"))
+  assert.ok(edge.split("\n")[3].endsWith("V2000"))
+  assert.equal(readMolfile(edge).mol.bonds.length, 999)
+  const over = toMolfile(dense(1000))
+  assert.ok(over.split("\n")[3].endsWith("V3000"))
+  assert.equal(readMolfile(over).mol.bonds.length, 1000)
+  assert.ok(toMolfile(chain(999).mol).split("\n")[3].startsWith("999998"))
+  assert.ok(toMolfile(chain(999).mol).split("\n")[3].endsWith("V2000"))
+  assert.ok(toMolfile(chain(1000).mol).split("\n")[3].endsWith("V3000"))
+})
+
+test("a V3000 molfile reads back to what a V2000 one of the same molecule does", () => {
+  const { mol, brackets } = chain(30)
+  const small = readMolfile(toMolfile(mol, "t", brackets))
+  const forced = readMolfile(toMolfile({ ...mol, atoms: [...mol.atoms, ...Array.from({ length: 1000 }, (_, at) => ({ id: 100 + at, el: "He", x: 0, y: 0, charge: 0 }))] }, "t", brackets))
+  assert.deepEqual(forced.mol.atoms.slice(0, 30).map(({ x: _x, y: _y, ...atom }) => atom), small.mol.atoms.map(({ x: _x, y: _y, ...atom }) => atom))
+  assert.deepEqual(forced.mol.bonds, small.mol.bonds)
+  assert.deepEqual(forced.brackets, small.brackets)
+})
+
+test("an SD file carries a big molecule as V3000 beside a small one as V2000", () => {
+  const { mol } = chain(1100)
+  const records = readSdf(toSdf([chain(10).mol, mol]))
+  assert.deepEqual(records.map((record) => record.mol.atoms.length), [10, 1100])
 })

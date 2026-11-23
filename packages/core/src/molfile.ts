@@ -1,7 +1,7 @@
-import { elementOf } from "./elements/index.ts"
-import { bondOrderSum } from "./molecule/graph.ts"
 import { ANGSTROM_PER_PX, rGroupNumber, stereoCode } from "./molfile/codes.ts"
+import { symbolOf, valenceField } from "./molfile/fields.ts"
 import { sgroupLines } from "./molfile/sgroups.ts"
+import { toV3000 } from "./molfile/write3000.ts"
 import type { Bracket, Molecule } from "./types.ts"
 
 function pad3(value: number): string {
@@ -22,27 +22,13 @@ function propertyLines(tag: string, entries: Array<[number, number]>): string[] 
   return lines
 }
 
-/**
- * The atom block symbol. A labelled placeholder is R# for an R-group and * (any atom)
- * otherwise, never the carbon it sits on, so other programs do not read it as carbon.
- */
-function symbolOf(atom: Molecule["atoms"][number]): string {
-  if (!atom.alias) return atom.el
-  return rGroupNumber(atom.alias) != null ? "R#" : "*"
-}
+/** V2000's counts line has three digits for atoms and for bonds. */
+const V2000_LIMIT = 999
 
 /**
- * The atom block's valence field. Elements we give no implicit hydrogens to (metals, Sn…)
- * state their valence outright, 15 meaning zero, so readers do not add hydrogens we never
- * drew. Everything else is left to the reader's own rules (0).
+ * The molecule as a molfile; `brackets` (those wholly in it) go in as Sgroups. V2000, unless
+ * it has more atoms or bonds than that format's three-digit counts hold: then V3000.
  */
-function valenceField(mol: Molecule, atom: Molecule["atoms"][number]): number {
-  if (atom.alias || elementOf(atom.el)?.valences || atom.el === "H") return 0
-  const bonds = bondOrderSum(mol, atom.id)
-  return bonds === 0 ? 15 : Math.min(bonds, 14)
-}
-
-/** The molecule as a V2000 molfile; `brackets` (those wholly in it) go in as Sgroups. */
 export function toMolfile(mol: Molecule, title = "Structura", brackets: readonly Bracket[] = []): string {
   const index = new Map(mol.atoms.map((atom, position) => [atom.id, position + 1]))
   const atomLines = mol.atoms.map((atom) => {
@@ -60,6 +46,7 @@ export function toMolfile(mol: Molecule, title = "Structura", brackets: readonly
     const stereo = bond.order === 1 ? stereoCode(bond.stereo) : 0
     return [`${pad3(a)}${pad3(b)}${pad3(bond.order)}${pad3(stereo)}  0  0  0`]
   })
+  if (atomLines.length > V2000_LIMIT || bondLines.length > V2000_LIMIT) return toV3000(mol, title, brackets)
   const charged = mol.atoms
     .filter((atom) => atom.charge !== 0)
     .map((atom): [number, number] => [index.get(atom.id) ?? 0, atom.charge])

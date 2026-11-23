@@ -12,6 +12,9 @@ import type { Molecule } from "@structura/core/types"
  */
 export type Row = { number: number; mol: Molecule; picks: readonly Pick[]; formula?: number; id?: string }
 
+/** Whether two rows show the same: the list rebuilds its rows (numbering, filtering) on every update, so it is their content that counts, not their identity. */
+export const sameRow = (a: Row, b: Row): boolean => a.mol === b.mol && a.picks === b.picks && a.number === b.number && a.id === b.id && a.formula === b.formula
+
 /** What a row is called: its compound number, else its place in the list. */
 export const rowName = (row: Row): string => row.id ?? String(row.number)
 
@@ -39,47 +42,36 @@ export function picksText(picks: readonly Pick[]): string {
   return [...where.values(), ...[...values].map(([name, chosen]) => `${name} = ${chosen.join("、")}`)].join("，")
 }
 
-/**
- * The rows a filter keeps: every word must appear in the compound's formula or in what its
- * variables became (R1=Cl, Cl, C6H4…), ignoring case and spaces around "=".
- */
-export function filterRows(rows: readonly Row[], filter: string): Row[] {
-  const words = filter.toLowerCase().replace(/\s*=\s*/g, "=").split(/\s+/).filter(Boolean)
-  if (words.length === 0) return rows.slice()
-  return rows.filter((row) => {
-    const fields = pickFields(row.picks)
-    const which = row.formula != null ? [`式${row.formula}`] : []
-    const haystack = [plainFormula(row.mol), ...which, ...Object.entries(fields).flatMap(([name, value]) => [`${name}=${value}`, value])].join(" ").toLowerCase()
-    return words.every((word) => haystack.includes(word))
-  })
-}
-
 /** A CSV cell: quoted when it holds a comma, a quote or a line break. */
 const cell = (value: string) => (/[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value)
 
 /** A byte order mark at the start of a CSV, so Excel reads the Chinese and the subscripts as UTF-8. */
 export const CSV_BOM = "\uFEFF"
 
-/** The CSV's first line: number, SMILES, formula, molecular weight, then the variables' `columns`. */
-export const csvHead = (columns: readonly string[]): string => ["No", "SMILES", "Formula", "MW", ...columns].map(cell).join(",")
+/** The CSV's first line: number, SMILES, formula, molecular weight, the `extras` (properties), then the variables' `columns`. */
+export const csvHead = (columns: readonly string[], extras: readonly string[] = []): string => ["No", "SMILES", "Formula", "MW", ...extras, ...columns].map(cell).join(",")
 
-/** One compound's line under `csvHead(columns)`; a column the row has no value for is left empty. */
-export function csvLine(row: Row, columns: readonly string[], smiles: (mol: Molecule) => string): string {
+/** One compound's line under `csvHead(columns, extras)`, `more` holding the extras' values; a column the row has no value for is left empty. */
+export function csvLine(row: Row, columns: readonly string[], smiles: (mol: Molecule) => string, extras: readonly string[] = [], more: Record<string, string> = {}): string {
   const fields = rowFields(row)
-  return [rowName(row), smiles(row.mol), displayFormula(plainFormula(row.mol)).normalize("NFKC"), molecularWeight(row.mol).toFixed(2), ...columns.map((name) => fields[name] ?? "")].map(cell).join(",")
+  return [rowName(row), smiles(row.mol), displayFormula(plainFormula(row.mol)).normalize("NFKC"), molecularWeight(row.mol).toFixed(2), ...extras.map((name) => more[name] ?? ""), ...columns.map((name) => fields[name] ?? "")]
+    .map(cell)
+    .join(",")
 }
 
 /**
- * The rows as CSV for a spreadsheet: number, SMILES, formula, molecular weight, then one
- * column per variable (and per attachment position), in the order they first appear.
+ * The rows as CSV for a spreadsheet: number, SMILES, formula, molecular weight, the
+ * properties given (exact mass, cLogP…), then one column per variable (and per
+ * attachment position), in the order they first appear.
  */
-export function rowsToCsv(rows: readonly Row[], smiles: (mol: Molecule) => string): string {
+export function rowsToCsv(rows: readonly Row[], smiles: (mol: Molecule) => string, properties?: { columns: readonly string[]; of: (row: Row) => Record<string, string> }): string {
   const columns: string[] = []
   for (const row of rows) for (const name of Object.keys(rowFields(row))) if (!columns.includes(name)) columns.push(name)
-  return `${CSV_BOM}${[csvHead(columns), ...rows.map((row) => csvLine(row, columns, smiles))].join("\n")}\n`
+  const extras = properties?.columns ?? []
+  return `${CSV_BOM}${[csvHead(columns, extras), ...rows.map((row) => csvLine(row, columns, smiles, extras, properties?.of(row)))].join("\n")}\n`
 }
 
-/** The rows as a SMILES file: one compound a line, its number as the name. */
+/** The rows as a SMILES file: one compound a line, its number as the name; a compound with no SMILES (RDKit cannot read it) has no line. */
 export function rowsToSmiles(rows: readonly Row[], smiles: (mol: Molecule) => string): string {
-  return rows.map((row) => `${smiles(row.mol)}\t${rowName(row)}`).join("\n") + "\n"
+  return rows.flatMap((row) => (smiles(row.mol) ? [`${smiles(row.mol)}\t${rowName(row)}`] : [])).join("\n") + "\n"
 }

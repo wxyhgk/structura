@@ -21,6 +21,9 @@ export function ResultsToolbar({
   onOptions,
   filter,
   onFilter,
+  filtered,
+  scope,
+  onScope,
   kept,
   total,
   notes,
@@ -43,6 +46,11 @@ export function ResultsToolbar({
   onOptions: (options: ResultOptions) => void
   filter: string
   onFilter: (filter: string) => void
+  /** Whether any filter (the words, a structure, a range) is in force. */
+  filtered: boolean
+  /** What the downloads hold when filtered: what the filter keeps, or every compound generated. */
+  scope: "kept" | "all"
+  onScope: (scope: "kept" | "all") => void
   /** How many the filter keeps, of `total`. */
   kept: number
   total: number
@@ -57,6 +65,8 @@ export function ResultsToolbar({
   /** Opens 导出化合物表 (a patent's table of compounds). */
   onTable: () => void
 }) {
+  /** How many the downloads hold. */
+  const exporting = filtered && scope === "all" ? total : kept
   return (
     <div className="border-b border-(--c-e3e3e3) bg-(--c-ffffff) px-3 pb-1.5 text-[12px] text-(--c-333333)">
       <div className="flex h-9 items-center gap-2">
@@ -97,14 +107,14 @@ export function ResultsToolbar({
         <span className="flex items-center gap-1.5">
           <input
             className="h-6 w-56 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-2 text-[12px] outline-none focus:border-(--c-1a73e8) disabled:bg-(--c-f0f0f0)"
-            placeholder="筛选：如 Cl、R1=OMe、C6H4"
-            title="几个词都要满足；按分子式和各变量的取值筛选"
+            placeholder="筛选：R1=H、N、N2、Cl"
+            title={"空格或逗号隔开，几个条件都要满足：\nR1=H  变量 R1 取这个值（R1=H|Cl 取其中之一，R1!=H 不取）\nN  含氮，N2  恰好 2 个，N2+  至少 2 个，N0  没有\n式2  来自第 2 个式子\n其他文字在变量名和取值里找"}
             value={filter}
             disabled={total === 0}
             onChange={(event) => onFilter(event.target.value)}
             aria-label="筛选生成的化合物"
           />
-          {filter.trim() && (
+          {filtered && (
             <span className="text-(--c-666666)" data-testid="filter-count">
               {kept} / {total}
             </span>
@@ -137,20 +147,30 @@ export function ResultsToolbar({
         </Option>
         {numberControls}
         <span className="ml-auto flex items-center gap-1.5">
-          <span className="text-(--c-888888)">{filter.trim() && kept > 0 ? `下载筛选出的 ${kept} 个` : "下载"}</span>
-          <button type="button" className={button} disabled={kept === 0} onClick={() => onExport("csv")}>
+          {filtered ? (
+            <label className="flex items-center gap-1 text-(--c-888888)" title="筛选只决定下载哪些，编号不变">
+              下载
+              <select className="h-6 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1 text-(--c-333333)" value={scope} onChange={(event) => onScope(event.target.value as "kept" | "all")} aria-label="下载的范围" data-testid="export-scope">
+                <option value="kept">筛选出的 {kept} 个</option>
+                <option value="all">全部 {total} 个</option>
+              </select>
+            </label>
+          ) : (
+            <span className="text-(--c-888888)">{total > 0 ? `下载全部 ${total} 个` : "下载"}</span>
+          )}
+          <button type="button" className={button} disabled={exporting === 0} onClick={() => onExport("csv")}>
             CSV
           </button>
-          <button type="button" className={button} disabled={kept === 0} onClick={() => onExport("sdf")}>
+          <button type="button" className={button} disabled={exporting === 0} onClick={() => onExport("sdf")}>
             SDF
           </button>
-          <button type="button" className={button} disabled={kept === 0} onClick={() => onExport("smi")}>
+          <button type="button" className={button} disabled={exporting === 0} onClick={() => onExport("smi")}>
             SMILES
           </button>
           <button type="button" className={button} disabled={total === 0} onClick={onExportAll} title="不受“最多生成”和筛选限制，把整个库写成 CSV 或 SDF 文件，几万、几十万个也行">
             导出全部…
           </button>
-          <button type="button" className={`${button} border-(--c-1a73e8) text-(--c-1a73e8)`} disabled={kept === 0} onClick={onTable} title="像专利那样：结构一行、编号一行（ChemDraw 整表，或 Word 表格用的包）">
+          <button type="button" className={`${button} border-(--c-1a73e8) text-(--c-1a73e8)`} disabled={exporting === 0} onClick={onTable} title="像专利那样：结构一行、编号一行（ChemDraw 整表，或 Word 表格用的包）">
             化合物表…
           </button>
         </span>

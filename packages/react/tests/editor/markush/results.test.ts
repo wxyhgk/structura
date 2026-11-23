@@ -2,7 +2,8 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import type { Pick } from "@structura/markush"
 import { build } from "@structura/testkit"
-import { filterRows, picksText, rowsOf, rowsToCsv, rowsToSmiles, type Row } from "../../../src/editor/markush/results.ts"
+import { picksText, rowsOf, rowsToCsv, rowsToSmiles, type Row } from "../../../src/editor/markush/results.ts"
+import { filterRows } from "../../../src/editor/markush/rowFilter.ts"
 
 const benzene = build([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).molecule
 const chloro = build([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }, { op: "add_atom", el: "Cl", to: 1 }]).molecule
@@ -24,11 +25,12 @@ test("what the variables became reads briefly, each name once", () => {
 })
 
 test("the filter keeps rows whose formula or picks hold every word", () => {
-  assert.deepEqual(filterRows(rows, "").map((row) => row.number), [1, 2])
-  assert.deepEqual(filterRows(rows, "cl").map((row) => row.number), [2])
-  assert.deepEqual(filterRows(rows, "R1 = Cl").map((row) => row.number), [2])
-  assert.deepEqual(filterRows(rows, "C6H6").map((row) => row.number), [1])
-  assert.deepEqual(filterRows(rows, "Br").map((row) => row.number), [])
+  const numbers = (text: string) => filterRows(rows, text).map((row) => row.number)
+  assert.deepEqual(numbers(""), [1, 2])
+  assert.deepEqual(numbers("cl"), [2])
+  assert.deepEqual(numbers("R1 = Cl"), [2])
+  assert.deepEqual(numbers("C6H6"), [1])
+  assert.deepEqual(numbers("Br"), [])
 })
 
 test("CSV and SMILES exports carry number, structure and every variable's value", () => {
@@ -38,6 +40,18 @@ test("CSV and SMILES exports carry number, structure and every variable's value"
   assert.equal(first, "1,c1ccccc1,C6H6,78.11,none,")
   assert.equal(second, `2,Clc1ccccc1,C6H5Cl,112.56,#2,Cl`)
   assert.equal(rowsToSmiles(rows, smiles), "c1ccccc1\t1\nClc1ccccc1\t2\n")
+})
+
+test("a compound RDKit cannot read has no line in a SMILES file, rather than an empty one", () => {
+  assert.equal(rowsToSmiles(rows, (mol) => (mol === chloro ? "Clc1ccccc1" : "")), "Clc1ccccc1\t2\n")
+})
+
+test("a CSV carries the properties it is given right after the weight", () => {
+  const properties = { columns: ["cLogP", "TPSA"], of: (row: Row) => ({ cLogP: row.number === 1 ? "1.69" : "", TPSA: "0.0" }) }
+  const [head, first, second] = rowsToCsv(rows, smiles, properties).replace(/^﻿/, "").trim().split("\n")
+  assert.equal(head, "No,SMILES,Formula,MW,cLogP,TPSA,R1 position,R1")
+  assert.equal(first, "1,c1ccccc1,C6H6,78.11,1.69,0.0,none,")
+  assert.equal(second, "2,Clc1ccccc1,C6H5Cl,112.56,,0.0,#2,Cl")
 })
 
 test("with several formulas, each row says which, in the filter and in the exports", () => {

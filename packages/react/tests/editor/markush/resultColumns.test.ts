@@ -21,7 +21,7 @@ test("the table has a column for the number, each variable (and where it went), 
   assert.deepEqual(columns.map((column) => column.id), ["number", "v:R1", "p:R1", "formula", "prop:mw", "prop:exact", "prop:logp", "prop:tpsa", "prop:hbd", "prop:hba", "prop:rotb", "prop:heavy"])
   assert.equal(columnsOf(rows.map((row) => ({ ...row, formula: 1 })))[1].id, "which", "a column for the drawn formula only when there are several")
   assert.equal(cellText(columns[1], rows[0], undefined), "Cl")
-  assert.equal(cellText(columns[2], rows[3], undefined), "none")
+  assert.equal(cellText(columns[2], rows[3], undefined), "不出现")
   assert.equal(cellText(columns[4], rows[2], undefined), "92.14")
   assert.equal(cellText(columns[6], rows[2], undefined), "", "an RDKit property is empty until computed")
   assert.equal(cellText(columns[6], rows[2], { logp: 2.34, tpsa: 0, hbd: 0, hba: 0, rotb: 0, heavy: 7 }), "2.34")

@@ -37,7 +37,9 @@ function took(row: Row, name: string): string[] {
   return row.picks.flatMap((pick) => (!("position" in pick) && pick.name === name ? ["count" in pick ? String(pick.count) : choiceText(pick.choice)] : []))
 }
 
-const positionOf = (row: Row, name: string): string => row.picks.flatMap((pick) => ("position" in pick && pick.name === name ? [pick.position] : [])).join("、")
+/** Where a variable went in a row ("#1、#3"), or 不出现 when the attachment took none of its positions. */
+const positionOf = (row: Row, name: string): string =>
+  row.picks.flatMap((pick) => ("position" in pick && pick.name === name ? [pick.position === "none" ? "不出现" : pick.position.split(", ").join("、")] : [])).join("、")
 
 /** How a column's cell reads; "" when the compound has nothing there. */
 export function cellText(column: Column, row: Row, rd: RdProps | null | undefined): string {
@@ -87,8 +89,11 @@ function sortKey(column: Column, row: Row, context: SortContext): number | strin
       const first = took(row, column.name!)[0]
       return first == null ? null : (context.order.get(column.name!)?.get(first) ?? null)
     }
-    case "position":
-      return positionOf(row, column.name!) || null
+    case "position": {
+      // Not there at all goes with the rows that have no value: last.
+      const where = positionOf(row, column.name!)
+      return where && where !== "不出现" ? where : null
+    }
     case "formula":
       return plainFormula(row.mol)
     case "property":

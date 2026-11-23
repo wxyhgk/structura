@@ -1,5 +1,6 @@
 import { attachmentProblem } from "./markush/attachments.ts"
 import { ringClosureProblem } from "./markush/closures.ts"
+import { generationProblem, numberingProblem } from "./markush/numbering.ts"
 import { provisoProblem } from "./markush/provisos.ts"
 import { variableProblem } from "./markush/variables.ts"
 import type { Drawing } from "./types.ts"
@@ -53,6 +54,8 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
     ...(drawing.provisos ? { provisos: drawing.provisos } : {}),
     ...(drawing.ringClosures ? { ringClosures: drawing.ringClosures } : {}),
     ...(drawing.brackets ? { brackets: drawing.brackets } : {}),
+    ...(drawing.generation ? { generation: drawing.generation } : {}),
+    ...(drawing.numbering ? { numbering: drawing.numbering } : {}),
     ...bracketCounter(drawing),
   }
   const errors = errorsOf(validateDrawing(whole))
@@ -73,6 +76,14 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
   if (whole.ringClosures != null && !Array.isArray(whole.ringClosures)) return { error: "the ring closures are not a list" }
   for (const closure of whole.ringClosures ?? []) {
     const problem = ringClosureProblem(closure, whole.variables)
+    if (problem) return { error: problem }
+  }
+  if (whole.generation != null) {
+    const problem = generationProblem(whole.generation)
+    if (problem) return { error: problem }
+  }
+  if (whole.numbering != null) {
+    const problem = numberingProblem(whole.numbering)
     if (problem) return { error: problem }
   }
   return { drawing: whole }

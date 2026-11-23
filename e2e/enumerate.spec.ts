@@ -49,7 +49,7 @@ test("compounds are numbered as a patent numbers them, and come out as a table o
   await page.getByLabel("编号的写法").fill("化合物{n}")
   await page.getByLabel("起始编号").fill("5")
   await page.getByLabel("筛选生成的化合物").fill("Cl")
-  // Numbered as listed, after the filter: what is shown is what is downloaded.
+  // Numbered in the whole list (Cl is its first), not after the filter: what is shown is what is downloaded.
   await expect(compounds.first().getByTestId("compound-id")).toHaveText("化合物5")
 
   await page.getByTestId("resultsPane").getByRole("button", { name: "化合物表…" }).click()

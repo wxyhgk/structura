@@ -2,25 +2,33 @@ import { useMemo, useState } from "react"
 import { useSave } from "../../save.ts"
 import { downloadCompoundTable, downloadCsv, downloadSdf, downloadSmiles, downloadTableCdxml, downloadWord } from "../exportRows.ts"
 import { runNotes } from "../notes.ts"
-import { numberRows } from "../numbering.ts"
-import { DEFAULT_LIMIT, progressText } from "../progressText.ts"
+import { generationOf } from "../generation.ts"
+import { progressText } from "../progressText.ts"
 import { filterRows, rowsOf, type Row } from "../results.ts"
 import { emptyReason } from "./emptyState.ts"
 import { CompoundTableDialog } from "./CompoundTableDialog.tsx"
+import { NumberingControls } from "./NumberingControls.tsx"
 import { ResultGrid } from "./ResultGrid.tsx"
 import { ResultsToolbar, type ResultOptions } from "./ResultsToolbar.tsx"
 import type { WorkspaceProps } from "./types.ts"
+import { useGenerationInput } from "./useGenerationInput.ts"
 import { useLiveEnumeration } from "./useLiveEnumeration.ts"
+import { useNumbering } from "./useNumbering.ts"
 import { useTableSettings } from "./useTableSettings.ts"
 
 /**
  * The compounds the formula generates, kept up to date as it is edited: what was made, a
  * filter, the generation options, any compound put on the drawing, and the list as files.
+ * `active` is false while it is out of sight (a compact editor's other panes): it then keeps
+ * what it has and does not generate again until it is shown.
  */
-export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }: WorkspaceProps) {
+export function ResultsPane({ drawing, run, colorHetero, base, onPlace, wordExport, active = true }: WorkspaceProps & { active?: boolean }) {
   const empty = useMemo(() => emptyReason(drawing), [drawing])
-  const [options, setOptions] = useState<ResultOptions>({ representatives: true, dedupe: true, limit: DEFAULT_LIMIT })
-  const live = useLiveEnumeration(empty ? null : drawing, options)
+  // The generation options are the document's (the same file generates the same compounds for anyone).
+  const options = generationOf(drawing)
+  const setOptions = (next: ResultOptions) => void run([{ op: "set_generation", generation: next }], { keepSelection: true })
+  const input = useGenerationInput(drawing)
+  const live = useLiveEnumeration(empty ? null : input, options, active)
   const { result, status } = live.run
   const [filter, setFilter] = useState("")
   const [notesOpen, setNotesOpen] = useState(false)
@@ -29,8 +37,9 @@ export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }:
   const [tableOpen, setTableOpen] = useState(false)
   /** Counts the times 化合物表 was opened: a new dialog each time, asking afresh what Word can be made. */
   const [tableOpened, setTableOpened] = useState(0)
-  // Numbered as listed: what the cards show is what every download writes.
-  const kept = useMemo(() => numberRows(filterRows(rows, filter), table.numbering), [rows, filter, table.numbering])
+  // Numbered by the document's numbers, the whole list: a filter only chooses what is shown.
+  const numbers = useNumbering({ drawing, run, rows, bySmiles: live.run.dedupe === "on", fallback: table.numbering })
+  const kept = useMemo(() => filterRows(numbers.rows, filter), [numbers.rows, filter])
   const notes = empty ? [] : runNotes(result, { limit: options.limit, status, dedupe: live.run.dedupe })
   const running = !empty && status === "running"
   const save = useSave()
@@ -55,10 +64,24 @@ export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }:
         notes={notes.length}
         notesOpen={notesOpen}
         onNotesOpen={setNotesOpen}
-        numbering={table.numbering}
-        onNumbering={table.setNumbering}
-        onExport={(kind) => void exporters[kind](save, base, kept)}
+        numberControls={
+          <NumberingControls
+            numbering={numbers.numbering}
+            onNumbering={(next) => {
+              table.setNumbering(next)
+              numbers.setNumbering(next)
+            }}
+            taken={numbers.taken}
+            fresh={empty ? 0 : numbers.fresh}
+            unstable={!empty && (!options.dedupe || live.run.dedupe === "unavailable")}
+            onPin={numbers.pin}
+            onRenumber={() => confirm("丢掉已有的编号，按现在的顺序从头编？已经写进专利的编号会变。可以撤销。") && numbers.renumber()}
+          />
+        }
+        // Downloading fixes the numbers, so the file and the document agree.
+        onExport={(kind) => void exporters[kind](save, base, filterRows(numbers.pin(), filter))}
         onTable={() => {
+          numbers.pin()
           setTableOpened(tableOpened + 1)
           setTableOpen(true)
         }}

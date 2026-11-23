@@ -1,3 +1,4 @@
+import { assignNumbers, DEFAULT_NUMBERING, generationProblem, numberingProblem } from "../markush/numbering.ts"
 import { closureNames, ringClosureProblem } from "../markush/closures.ts"
 import { provisoNames, provisoProblem } from "../markush/provisos.ts"
 import { withGroupMembers } from "../molecule/collapse.ts"
@@ -133,6 +134,29 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       const rest = (drawing.ringClosures ?? []).filter((closure) => [closure.a, closure.b].sort().join(" ") !== pair)
       if (rest.length === (drawing.ringClosures ?? []).length) throw new OpError(`${op.a} and ${op.b} have no ring closure`)
       return { drawing: { ...drawing, ringClosures: rest.length > 0 ? rest : undefined } }
+    }
+    case "set_generation": {
+      const problem = generationProblem(op.generation)
+      if (problem) throw new OpError(problem)
+      return { drawing: { ...drawing, generation: { ...drawing.generation, ...op.generation } } }
+    }
+    case "set_numbering": {
+      const next = { ...(drawing.numbering ?? DEFAULT_NUMBERING), ...(op.pattern !== undefined ? { pattern: op.pattern } : {}), ...(op.start !== undefined ? { start: op.start } : {}) }
+      const problem = numberingProblem(next)
+      if (problem) throw new OpError(problem)
+      return { drawing: { ...drawing, numbering: next } }
+    }
+    case "assign_numbers": {
+      if (!Array.isArray(op.keys) || !op.keys.every((key) => typeof key === "string" && key.length > 0)) throw new OpError("keys must be a list of compound identities")
+      const next = assignNumbers(drawing.numbering ?? DEFAULT_NUMBERING, op.keys)
+      const problem = numberingProblem(next)
+      if (problem) throw new OpError(problem)
+      return { drawing: { ...drawing, numbering: next } }
+    }
+    case "clear_numbers": {
+      if (!drawing.numbering?.assigned) return { drawing }
+      const { assigned: _taken, ...rest } = drawing.numbering
+      return { drawing: { ...drawing, numbering: rest } }
     }
     case "remove_variable": {
       if (!drawing.variables || !Object.hasOwn(drawing.variables, op.name)) throw new OpError(`there is no variable ${op.name}`)

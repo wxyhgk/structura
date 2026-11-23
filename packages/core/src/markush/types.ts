@@ -127,3 +127,26 @@ export type GroupClass =
   /** Divalent, for a placeholder between two atoms (a linker such as L). */
   | "arylene"
   | "heteroarylene"
+
+/**
+ * How a generic formula is expanded into compounds, kept in the document so the same file
+ * generates the same compounds in anyone's hands. A field left out takes its default
+ * (representatives and dedupe on, 500 compounds at most).
+ */
+export type Generation = {
+  /** Group classes expand into representative structures (alkyl: methyl, ethyl, …). */
+  representatives?: boolean
+  /** Repeats are dropped, by canonical SMILES. */
+  dedupe?: boolean
+  /** How many compounds to generate at most. */
+  limit?: number
+}
+
+/**
+ * The compound numbers of a generic formula's patent, as they were given out: `assigned` maps
+ * a compound's identity (its canonical SMILES, or its choices when that is not available; the
+ * editor says which with a prefix) to the number it got, and a compound keeps its number for
+ * good. Numbers of compounds that are no longer generated stay taken. `pattern` says how a
+ * number is written ("C-{n}"), `start` is the number the first compound gets.
+ */
+export type CompoundNumbering = { pattern: string; start: number; assigned?: Record<string, number> }

@@ -37,9 +37,14 @@ test("generated compounds show what each variable became, filter, and export as 
   const file = await download
   expect(file.suggestedFilename()).toBe("benzene-R1-anywhere 展开.csv")
   const lines = (await readFile((await file.path())!, "utf8")).replace(/^﻿/, "").trim().split("\n")
-  expect(lines[0]).toBe("No,SMILES,Formula,MW,R1 position,R1")
+  expect(lines[0]).toBe("No,SMILES,Formula,MW,ExactMass,cLogP,TPSA,HBD,HBA,RotBonds,HeavyAtoms,R1 position,R1")
   expect(lines).toHaveLength(1 + 7)
   expect(lines.slice(1).every((line) => line.includes("Cl"))).toBe(true)
+  // RDKit's properties are there: chlorobenzene's cLogP and TPSA are numbers, not blanks.
+  const columns = lines[0].split(",")
+  const first = lines[1].split(",")
+  expect(first[columns.indexOf("cLogP")]).toMatch(/^-?\d+\.\d\d$/)
+  expect(first[columns.indexOf("TPSA")]).toBe("0.0")
 })
 
 test("more combinations than the limit are picked from evenly, and 导出全部 writes every one of them", async ({ page }) => {

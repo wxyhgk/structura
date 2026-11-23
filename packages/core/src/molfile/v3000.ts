@@ -151,11 +151,13 @@ export function readV3000(lines: string[], note: Note): Ctab | null {
         map: int(positional[5]),
       }
       if (keyed.has("MASS")) atom.mass = int(keyed.get("MASS"))
+      // Not V3000's own: our label text, as V2000's `A  ` lines hold it.
+      if (keyed.has("ALIAS")) atom.alias = keyed.get("ALIAS")
       const groups = list(keyed.get("RGROUPS"))
       if (groups.length > 0) atom.rGroup = groups[0]
       if (groups.length > 1) note("unsupported-mol-feature", `atom ${number} may be any of R-groups ${groups.join(", ")}; read as R${groups[0]}`)
       for (const key of keyed.keys()) {
-        if (!["CHG", "RAD", "MASS", "RGROUPS"].includes(key) && !QUIET_ATOM.has(key)) ignore(`atom property ${key}`, number)
+        if (!["CHG", "RAD", "MASS", "RGROUPS", "ALIAS"].includes(key) && !QUIET_ATOM.has(key)) ignore(`atom property ${key}`, number)
       }
       atoms.push(atom)
     } else if (block === "BOND") {

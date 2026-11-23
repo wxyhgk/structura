@@ -25,6 +25,29 @@ function fixed10(value: number): string {
   return (Object.is(value, -0) ? 0 : value).toFixed(4).padStart(10, " ")
 }
 
+/** The brackets whose atoms are all in the file (numbered by `atomIndex`). */
+function writable(brackets: readonly Bracket[], atomIndex: ReadonlyMap<number, number>): Bracket[] {
+  return brackets.filter((bracket) => bracket.atoms.length > 0 && bracket.atoms.every((id) => atomIndex.has(id)))
+}
+
+/** The bonds that cross a bracket's atoms, as file numbers (from `bondIndex`). */
+function crossingBonds(mol: Molecule, bracket: Bracket, bondIndex: ReadonlyMap<number, number>): number[] {
+  const inside = new Set(bracket.atoms)
+  return mol.bonds.filter((bond) => inside.has(bond.a) !== inside.has(bond.b)).flatMap((bond) => bondIndex.get(bond.id) ?? [])
+}
+
+/** Where upright brackets stand just clear of the atoms, in ångströms with y up. */
+function bracketBox(atoms: ReadonlyMap<number, Molecule["atoms"][number]>, bracket: Bracket): { left: number; right: number; top: number; bottom: number } {
+  const points = bracket.atoms.map((id) => atoms.get(id)!)
+  const pad = PAD * BOND_LENGTH
+  return {
+    left: (Math.min(...points.map((atom) => atom.x)) - pad) * ANGSTROM_PER_PX,
+    right: (Math.max(...points.map((atom) => atom.x)) + pad) * ANGSTROM_PER_PX,
+    top: -(Math.min(...points.map((atom) => atom.y)) - pad) * ANGSTROM_PER_PX,
+    bottom: -(Math.max(...points.map((atom) => atom.y)) + pad) * ANGSTROM_PER_PX,
+  }
+}
+
 /** `M  SAL`-style lines: the Sgroup, then up to 15 numbers a line. */
 function listLines(tag: string, sgroup: number, numbers: number[]): string[] {
   const lines: string[] = []
@@ -51,7 +74,7 @@ function pairLines(tag: string, pairs: Array<[number, string]>): string[] {
  * are left out.
  */
 export function sgroupLines(mol: Molecule, brackets: readonly Bracket[], atomIndex: ReadonlyMap<number, number>, bondIndex: ReadonlyMap<number, number>): string[] {
-  const written = brackets.filter((bracket) => bracket.atoms.length > 0 && bracket.atoms.every((id) => atomIndex.has(id)))
+  const written = writable(brackets, atomIndex)
   if (written.length === 0) return []
   // Each repeat unit's range is one more Sgroup, numbered after the brackets.
   const ranged = written.filter((bracket) => bracket.kind === "repeat")
@@ -64,21 +87,14 @@ export function sgroupLines(mol: Molecule, brackets: readonly Bracket[], atomInd
   const data: string[] = []
   written.forEach((bracket, index) => {
     const sgroup = index + 1
-    const inside = new Set(bracket.atoms)
     lines.push(...listLines("SAL", sgroup, bracket.atoms.map((id) => atomIndex.get(id)!)))
     if (bracket.kind === "repeat") {
-      const crossing = mol.bonds.filter((bond) => inside.has(bond.a) !== inside.has(bond.b)).flatMap((bond) => bondIndex.get(bond.id) ?? [])
+      const crossing = crossingBonds(mol, bracket, bondIndex)
       if (crossing.length > 0) lines.push(...listLines("SBL", sgroup, crossing))
       lines.push(`M  SMT ${pad3(sgroup)} ${bracket.repeat?.name ?? DEFAULT_REPEAT.name}`)
       heads.push([sgroup, "HT"])
     }
-    // Upright brackets just clear of the atoms, in ångströms with y up.
-    const points = bracket.atoms.map((id) => atoms.get(id)!)
-    const pad = PAD * BOND_LENGTH
-    const left = (Math.min(...points.map((atom) => atom.x)) - pad) * ANGSTROM_PER_PX
-    const right = (Math.max(...points.map((atom) => atom.x)) + pad) * ANGSTROM_PER_PX
-    const top = -(Math.min(...points.map((atom) => atom.y)) - pad) * ANGSTROM_PER_PX
-    const bottom = -(Math.max(...points.map((atom) => atom.y)) + pad) * ANGSTROM_PER_PX
+    const { left, right, top, bottom } = bracketBox(atoms, bracket)
     for (const x of [left, right]) lines.push(`M  SDI ${pad3(sgroup)}  4${fixed10(x)}${fixed10(bottom)}${fixed10(x)}${fixed10(top)}`)
     if (bracket.kind === "repeat") {
       // The range, as text, shown (by programs that show data) just past the count's name.
@@ -92,6 +108,47 @@ export function sgroupLines(mol: Molecule, brackets: readonly Bracket[], atomInd
   })
   lines.push(...pairLines("SCN", heads), ...data)
   return lines
+}
+
+/** A V3000 value, in quotes (with "" for a quote) when it has a space, quote or bracket. */
+export function v30Value(value: string): string {
+  return /[\s"()]|^$/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+}
+
+/** `(n a b c)`: a counted list. */
+function v30List(numbers: readonly number[]): string {
+  return `(${numbers.length} ${numbers.join(" ")})`
+}
+
+/**
+ * The V3000 SGROUP items (without their `M  V30` prefix) for `brackets`, as `sgroupLines`
+ * writes them for V2000: the same Sgroups, the same corners, a repeat unit's range as a
+ * data Sgroup on its atoms. `count` is how many there are.
+ */
+export function sgroupItems(mol: Molecule, brackets: readonly Bracket[], atomIndex: ReadonlyMap<number, number>, bondIndex: ReadonlyMap<number, number>): { items: string[]; count: number } {
+  const written = writable(brackets, atomIndex)
+  const ranged = written.filter((bracket) => bracket.kind === "repeat")
+  const atoms = new Map(mol.atoms.map((atom) => [atom.id, atom]))
+  const items: string[] = []
+  const data: string[] = []
+  const xyz = (...values: number[]) => values.map((value) => (Object.is(value, -0) ? 0 : value).toFixed(4)).join(" ")
+  written.forEach((bracket, index) => {
+    const { left, right, top, bottom } = bracketBox(atoms, bracket)
+    const fields = [`${index + 1}`, bracket.kind === "repeat" ? "SRU" : "GEN", "0", `ATOMS=${v30List(bracket.atoms.map((id) => atomIndex.get(id)!))}`]
+    if (bracket.kind === "repeat") {
+      const crossing = crossingBonds(mol, bracket, bondIndex)
+      if (crossing.length > 0) fields.push(`XBONDS=${v30List(crossing)}`)
+      fields.push(`LABEL=${v30Value(bracket.repeat?.name ?? DEFAULT_REPEAT.name)}`, "CONNECT=HT")
+    }
+    for (const x of [left, right]) fields.push(`BRKXYZ=(9 ${xyz(x, bottom, 0, x, top, 0, 0, 0, 0)})`)
+    items.push(fields.join(" "))
+    if (bracket.kind === "repeat") {
+      const repeat = bracket.repeat ?? DEFAULT_REPEAT
+      const number = written.length + ranged.indexOf(bracket) + 1
+      data.push(`${number} DAT 0 ATOMS=${v30List(bracket.atoms.map((id) => atomIndex.get(id)!))} FIELDNAME=${REPEAT_FIELD} FIELDDISP=${v30Value(`${xyz(right + 0.3)} ${xyz(bottom - 0.3)}    DA    ALL  1       5`)} FIELDDATA=${repeat.min}-${repeat.max}`)
+    }
+  })
+  return { items: [...items, ...data], count: items.length + data.length }
 }
 
 /**

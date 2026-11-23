@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from "rea
 import { forgetUnsaved, keepUnsaved, readUnsaved } from "@/autosave"
 import { httpTemplateStore, memoryTemplateStore, type EditorHandle, type Theme } from "chem-structura"
 import { recognizeOverHttp } from "@/recognizeOverHttp"
-import { RestoreBar } from "@/RestoreBar"
+import { RestoreBar, StorageNote } from "@/RestoreBar"
 import { takeHandoff } from "@/handoff"
 import { exposeForTests } from "@/testHook"
 
@@ -36,14 +36,18 @@ export type PageEditorProps = {
 /**
  * One of the app's pages: its editor filling the page, reaching the model through the app's
  * own server. It guards unsaved work: a warning before the page goes, and a copy in this
- * browser under `storageKey` (offered back on the next visit) while there are changes not saved
- * to a file. A document handed over from the other page (handoff.ts) is where it starts.
+ * browser under `storageKey` (its own, beside those of other tabs; the newest of theirs is
+ * offered back on the next visit) while there are changes not saved to a file. A document
+ * handed over from the other page (handoff.ts) is where it starts, and the copy is offered all the same.
  */
 export function EditorPage({ storageKey, what, children }: { storageKey: string; what: string; children: (props: PageEditorProps) => ReactNode }) {
   const editor = useRef<EditorHandle>(null)
   const dirty = useRef(false)
   const [handed] = useState(takeHandoff)
-  const [unsaved, setUnsaved] = useState(() => (handed ? null : readUnsaved(storageKey)))
+  const [unsaved, setUnsaved] = useState(() => readUnsaved(storageKey))
+  /** Whether a copy could not be kept (storage full or blocked), until the page says so once and it is dismissed. */
+  const [cannotKeep, setCannotKeep] = useState(false)
+  const told = useRef(false)
   const [theme, setTheme] = useState(readTheme)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   useEffect(() => exposeForTests(editor.current), [])
@@ -66,14 +70,17 @@ export function EditorPage({ storageKey, what, children }: { storageKey: string;
           what={what}
           onRestore={() => {
             editor.current?.setDocument(unsaved.document)
+            // The restored drawing is unsaved: it takes this page's own copy before the old one goes.
+            if (keepUnsaved(storageKey, unsaved.document)) forgetUnsaved(storageKey, unsaved)
             setUnsaved(null)
           }}
           onDiscard={() => {
-            forgetUnsaved(storageKey)
+            forgetUnsaved(storageKey, unsaved)
             setUnsaved(null)
           }}
         />
       )}
+      {cannotKeep && <StorageNote onClose={() => setCannotKeep(false)} />}
       <div className="min-h-0 flex-1">
         {children({
           ref: editor,
@@ -102,7 +109,12 @@ export function EditorPage({ storageKey, what, children }: { storageKey: string;
           onDocumentChange(document) {
             // Kept a moment after the last edit, not on every one.
             clearTimeout(timer.current)
-            timer.current = setTimeout(() => dirty.current && keepUnsaved(storageKey, document), 600)
+            timer.current = setTimeout(() => {
+              if (!dirty.current || keepUnsaved(storageKey, document) || told.current) return
+              // Said once: every edit would say it again.
+              told.current = true
+              setCannotKeep(true)
+            }, 600)
           },
         })}
       </div>

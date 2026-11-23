@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.1
 
 - **Fixed**: a molfile or SD record of more than 999 atoms or bonds was written broken (the
   counts line has three digits each), so it read back as a fragment. It is written as V3000

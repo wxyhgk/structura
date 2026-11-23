@@ -41,7 +41,7 @@ test("a generic formula exports as CDXML: R1 anywhere on the ring, a repeat unit
   expect(text).toContain("m = 0–3")
   expect(text).toContain("n = 1–4")
   // The host gets the same file through the handle, but for the Structura document kept in a comment.
-  expect(text).toMatch(/<!--structura:v1:[\da-f]+:[A-Za-z\d+/=]+-->\n<\/CDXML>\n$/)
+  expect(text).toMatch(/<!--structura:v2:[\da-f]+:[A-Za-z\d+/=]+-->\n<\/CDXML>\n$/)
   expect(await page.evaluate(() => (window as unknown as { __structura: Handle }).__structura.getCdxml())).toBe(text.replace(/<!--structura:[^>]*-->\n/, ""))
 })
 

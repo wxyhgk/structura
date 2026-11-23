@@ -36,8 +36,10 @@ function startHistory(initial: Molecule[] | Drawing): History {
 
 /** The part of a selection whose atoms and bonds the molecule still has. */
 function stillThere(selection: Selection, mol: Molecule): Selection {
-  const atoms = selection.atoms.filter((id) => mol.atoms.some((atom) => atom.id === id))
-  const bonds = selection.bonds.filter((id) => mol.bonds.some((bond) => bond.id === id))
+  const atomIds = new Set(mol.atoms.map((atom) => atom.id))
+  const bondIds = new Set(mol.bonds.map((bond) => bond.id))
+  const atoms = selection.atoms.filter((id) => atomIds.has(id))
+  const bonds = selection.bonds.filter((id) => bondIds.has(id))
   return atoms.length === selection.atoms.length && bonds.length === selection.bonds.length ? selection : { atoms, bonds }
 }
 

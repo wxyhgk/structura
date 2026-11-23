@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+- **Fixed**: a molfile or SD record of more than 999 atoms or bonds was written broken (the
+  counts line has three digits each), so it read back as a fragment. It is written as V3000
+  now; 999 and fewer are written as before.
+- **Fixed**: a CDXML exported by Structura, changed in ChemDraw only in its arrows or brackets,
+  opened with the old arrows and brackets as if unchanged. Those are checked too now (files
+  exported from now on; older ones as before). A file exported now tells 0.8.0 it is from a
+  newer Structura.
+- **Fixed**: copying when the browser refuses the clipboard said nothing, and cutting deleted
+  the selection anyway; now each says so, and a cut keeps the selection.
+- **Fixed**: any error reading SMILES was reported as RDKit failing to load; now only that is.
+- **Fixed**: `edit()` left the page inert and unscrollable when its editor failed to start,
+  and every later `edit()` refused; now it restores the page and rejects.
+- **Fixed**: a download could be cancelled in some browsers (the link was not in the page, and
+  its URL was revoked at once).
+- **Faster**: finding the rings of large fused systems (600 atoms: 630 ms to 16), and pointing
+  at a drawing with collapsed abbreviations no longer redoes the layout on every move.
+- **Changed**: fitting a large drawing zooms out to 25% at most, as far as zooming out goes;
+  it went to 10%, and the next wheel turn jumped back to 25%.
+
 ## 0.8.0
 
 - **Changed (breaking)**: the 通式 workspace is no longer in the editor. Its variables board,

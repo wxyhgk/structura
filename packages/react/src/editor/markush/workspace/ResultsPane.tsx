@@ -7,6 +7,7 @@ import { progressText } from "../progressText.ts"
 import { filterRows, rowsOf, type Row } from "../results.ts"
 import { emptyReason } from "./emptyState.ts"
 import { CompoundTableDialog } from "./CompoundTableDialog.tsx"
+import { ExportAllDialog } from "./ExportAllDialog.tsx"
 import { NumberingControls } from "./NumberingControls.tsx"
 import { ResultGrid } from "./ResultGrid.tsx"
 import { ResultsToolbar, type ResultOptions } from "./ResultsToolbar.tsx"
@@ -35,6 +36,9 @@ export function ResultsPane({ drawing, run, colorHetero, base, onPlace, wordExpo
   const rows: Row[] = useMemo(() => (result ? rowsOf(result) : []), [result])
   const table = useTableSettings()
   const [tableOpen, setTableOpen] = useState(false)
+  const [allOpen, setAllOpen] = useState(false)
+  /** Counts the times 导出全部 was opened: a new dialog each time, counting the library afresh. */
+  const [allOpened, setAllOpened] = useState(0)
   /** Counts the times 化合物表 was opened: a new dialog each time, asking afresh what Word can be made. */
   const [tableOpened, setTableOpened] = useState(0)
   // Numbered by the document's numbers, the whole list: a filter only chooses what is shown.
@@ -80,12 +84,17 @@ export function ResultsPane({ drawing, run, colorHetero, base, onPlace, wordExpo
         }
         // Downloading fixes the numbers, so the file and the document agree.
         onExport={(kind) => void exporters[kind](save, base, filterRows(numbers.pin(), filter))}
+        onExportAll={() => {
+          setAllOpened(allOpened + 1)
+          setAllOpen(true)
+        }}
         onTable={() => {
           numbers.pin()
           setTableOpened(tableOpened + 1)
           setTableOpen(true)
         }}
       />
+      <ExportAllDialog key={`all${allOpened}`} open={allOpen} onOpenChange={setAllOpen} drawing={drawing} representatives={options.representatives} dedupe={options.dedupe} numbering={{ ...numbers.numbering, assigned: drawing.numbering?.assigned }} base={base} save={save} />
       <CompoundTableDialog
         key={tableOpened}
         open={tableOpen}

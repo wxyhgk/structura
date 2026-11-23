@@ -13,10 +13,15 @@ import { rowFields, rowName, rowsToCsv, rowsToSmiles, type Row } from "./results
 
 // Generated compounds saved as files named after the document: "<base> 展开.sdf" and so on.
 
-/** The rows as an SD file: each record titled with the compound's number, which is also its ID item, then its variables. */
-export function downloadSdf(download: Save, base: string, rows: readonly Row[]) {
+/** The rows as SD records: each titled with the compound's number, which is also its ID item, then its variables. */
+export function sdfOf(rows: readonly Row[]): string {
   const fields = rows.map((row) => ({ ID: rowName(row), ...rowFields(row) }))
-  download(`${base} 展开.sdf`, toSdf(rows.map((row) => row.mol), rows.map(rowName), fields), "chemical/x-mdl-sdfile")
+  return toSdf(rows.map((row) => row.mol), rows.map(rowName), fields)
+}
+
+/** The rows as an SD file (see sdfOf). */
+export function downloadSdf(download: Save, base: string, rows: readonly Row[]) {
+  download(`${base} 展开.sdf`, sdfOf(rows), "chemical/x-mdl-sdfile")
 }
 
 /** The table of compounds as one ChemDraw document, `columns` to a row. */

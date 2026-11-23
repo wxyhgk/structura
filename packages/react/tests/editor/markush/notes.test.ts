@@ -59,11 +59,21 @@ test("stand-ins, misfits, missing lists and failures are each explained", () => 
   ])
 })
 
-test("a run cut short says whether the limit or the user stopped it", () => {
-  assert.deepEqual(notesOf(result(100, { total: 3000 }), { limit: 100 }), ["组合太多，只生成了前 100 种。"])
+test("a run cut short says whether the limit or the user stopped it, and how the ones made were taken", () => {
+  const first = notesOf(result(100, { total: 3000 }), { limit: 100 })
+  assert.equal(first.length, 1)
+  assert.match(first[0], /^组合太多（共 3000 种），只生成了前 100 种；.*靠前的变量一直停在第一个候选项上.*“均匀分布”。$/)
+  const spread = notesOf(result(100, { total: 3000, order: "spread", duplicates: 20 }), { limit: 100 })
+  assert.deepEqual(spread, ["组合太多（共 3000 种），均匀取了 120 种，得到 100 个化合物；要完整的库，用“导出全部”。"])
   assert.deepEqual(notesOf(result(40, { total: 3000 }), { limit: 100, status: "running" }), [], "still going: nothing is cut short yet")
   assert.deepEqual(notesOf(result(42, { total: 3000 }), { limit: 500, status: "stopped" }), ["已停止生成，只生成了前 42 种。"])
+  assert.deepEqual(notesOf(result(42, { total: 3000, order: "spread" }), { limit: 500, status: "stopped" }), ["已停止生成，只取了 42 种。"])
   assert.deepEqual(notesOf(result(500, { total: 500 }), { limit: 500, status: "stopped" }), [], "stopped after the last one: nothing is missing")
+})
+
+test("a count that was estimated says so, and a huge one reads as a power of ten", () => {
+  assert.ok(notesOf(result(10, { total: 10, estimated: true }), { limit: 500 }).some((note) => note.includes("估算")))
+  assert.match(notesOf(result(500, { total: 60_466_176, estimated: true, order: "spread" }), { limit: 500 })[1], /^组合太多（共 约 6\.0 × 10⁷ 种）/)
 })
 
 test("a run's notes add that repeats were kept when RDKit would not load", () => {

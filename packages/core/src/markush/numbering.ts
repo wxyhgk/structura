@@ -6,10 +6,11 @@ export const DEFAULT_NUMBERING: CompoundNumbering = { pattern: "C-{n}", start: 1
 /** Why a generation setting cannot be kept, or null when it can. */
 export function generationProblem(generation: unknown): string | null {
   if (typeof generation !== "object" || generation === null || Array.isArray(generation)) return "the generation settings are not an object"
-  const { representatives, dedupe, limit } = generation as Record<string, unknown>
+  const { representatives, dedupe, limit, order } = generation as Record<string, unknown>
   if (representatives !== undefined && typeof representatives !== "boolean") return "the generation setting 'representatives' is not true or false"
   if (dedupe !== undefined && typeof dedupe !== "boolean") return "the generation setting 'dedupe' is not true or false"
   if (limit !== undefined && !(Number.isInteger(limit) && (limit as number) >= 1 && (limit as number) <= 1_000_000)) return "the generation limit is not a whole number of at least 1"
+  if (order !== undefined && order !== "first" && order !== "spread") return "the generation order is not 'first' or 'spread'"
   return null
 }
 

@@ -131,7 +131,7 @@ export type GroupClass =
 /**
  * How a generic formula is expanded into compounds, kept in the document so the same file
  * generates the same compounds in anyone's hands. A field left out takes its default
- * (representatives and dedupe on, 500 compounds at most).
+ * (representatives and dedupe on, 500 compounds at most, spread over all the combinations).
  */
 export type Generation = {
   /** Group classes expand into representative structures (alkyl: methyl, ethyl, …). */
@@ -140,6 +140,8 @@ export type Generation = {
   dedupe?: boolean
   /** How many compounds to generate at most. */
   limit?: number
+  /** With more combinations than the limit: the first ones, or ones spread evenly over them all. */
+  order?: "first" | "spread"
 }
 
 /**

@@ -42,6 +42,38 @@ test("generated compounds show what each variable became, filter, and export as 
   expect(lines.slice(1).every((line) => line.includes("Cl"))).toBe(true)
 })
 
+test("more combinations than the limit are picked from evenly, and 导出全部 writes every one of them", async ({ page }) => {
+  await openFormula(page, "benzene-R1-anywhere.structura")
+  await constraintTab(page, "位置").click()
+  await page.getByLabel("R1 重复出现").check()
+  // Cl or F on any of six atoms, up to six times: 3^6 = 729 combinations. Not merged, so the limit alone decides how many come out.
+  await page.getByLabel("最多次数").fill("6")
+  await page.getByLabel("去重").uncheck()
+  await page.getByLabel("最多生成").selectOption("100")
+  const summary = page.getByTestId("results-summary")
+  const notes = page.getByTestId("enumeration-notes")
+  await expect(summary).toContainText("共 729 种组合，均匀取了 100 种，得到 100 个化合物")
+  await page.getByTestId("notes-toggle").click()
+  await expect(notes).toContainText("均匀取了 100 种")
+
+  // In order, the first hundred: the notes say what that leaves out.
+  await page.getByLabel("取样方式").selectOption("first")
+  await expect(summary).toContainText("共 729 种组合，得到 100 个化合物")
+  await expect(notes).toContainText("靠前的变量一直停在第一个候选项上")
+
+  await page.getByTestId("resultsPane").getByRole("button", { name: "导出全部…" }).click()
+  const dialog = page.getByTestId("export-all-dialog")
+  await expect(dialog.getByTestId("export-all-size")).toContainText("全库共 729 种组合")
+  const download = page.waitForEvent("download")
+  await dialog.getByRole("button", { name: "导出 CSV" }).click()
+  const file = await download
+  expect(file.suggestedFilename()).toBe("benzene-R1-anywhere 全部展开.csv")
+  const lines = (await readFile((await file.path())!, "utf8")).replace(/^﻿/, "").trim().split("\n")
+  expect(lines[0]).toBe("No,SMILES,Formula,MW,R1 position,R1")
+  expect(lines).toHaveLength(1 + 729)
+  await expect(dialog.getByTestId("export-all-message")).toContainText("已导出 729 个化合物")
+})
+
 test("compounds are numbered as a patent numbers them, and come out as a table of compounds", async ({ page }) => {
   await openFormula(page, "benzene-R1-anywhere.structura")
   const compounds = page.getByTestId("enumerated-compound")

@@ -24,3 +24,9 @@ test("once done it says what was made, the repeats merged, how many are drawn an
   assert.equal(progressText({ result: made(150), status: "done" }, 500), "共 150 种组合，得到 150 个化合物。")
   assert.equal(progressText({ result: made(7, { total: 30 }), status: "stopped" }, 500), "共 30 种组合，得到 7 个化合物（已停止）。")
 })
+
+test("a library picked from evenly says how many combinations it looked at, and a huge or estimated total reads short", () => {
+  assert.equal(progressText({ result: made(480, { total: 921_731, order: "spread", duplicates: 20, failed: 0, excluded: 0 }), status: "done" }, 500), "共 921731 种组合，均匀取了 500 种，得到 480 个不同的化合物（合并了 20 个重复的）。")
+  assert.equal(progressText({ result: made(500, { total: 60_466_176, order: "spread", estimated: true, failed: 0, excluded: 0 }), status: "done" }, 500), "共 约 6.0 × 10⁷ 种组合，均匀取了 500 种，得到 500 个化合物。")
+  assert.equal(progressText({ result: made(500, { total: 3000, order: "first", failed: 0, excluded: 0 }), status: "done" }, 500), "共 3000 种组合，得到 500 个化合物。", "in order, the first ones: nothing about how they were picked")
+})

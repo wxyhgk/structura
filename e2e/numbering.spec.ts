@@ -108,23 +108,28 @@ test("the generation options are saved in the document, and undone with it", asy
   await openFormula(page)
   expect((await doc(page)).generation).toBeUndefined()
   await results(page).getByLabel("去重").uncheck()
-  await results(page).getByRole("combobox").selectOption("100")
+  await results(page).getByLabel("最多生成").selectOption("100")
   // Every position of the ring, each with each candidate: nothing merged.
   await expect(page.getByTestId("results-summary")).toContainText("得到 12 个化合物")
-  expect((await doc(page)).generation).toEqual({ dedupe: false, limit: 100 })
+  // All of them, once one is set: the file then generates the same however the defaults change.
+  expect((await doc(page)).generation).toEqual({ representatives: true, dedupe: false, limit: 100, order: "spread" })
   // Without de-duplication compounds are told apart by their choices, and the page says so.
   await expect(results(page)).toContainText("编号按取值认化合物")
 
   const text = await page.evaluate(() => (window as unknown as { __structura: { getDocument(): string } }).__structura.getDocument())
+
+  // Each change is a step of the drawing's history.
+  await page.getByRole("button", { name: "撤销" }).click()
+  await page.getByRole("button", { name: "撤销" }).click()
+  await expect(results(page).getByLabel("去重")).toBeChecked()
+  await expect(results(page).getByLabel("最多生成")).toHaveValue("500")
+
+  // And the file keeps them.
   leaveFreely(page)
   await openMarkush(page)
   await page.evaluate((given) => (window as unknown as { __structura: { setDocument(text: string): string[] } }).__structura.setDocument(given), text)
   await expect(results(page).getByLabel("去重")).not.toBeChecked()
-  await expect(results(page).getByRole("combobox")).toHaveValue("100")
-
-  await page.getByRole("button", { name: "撤销" }).click()
-  await page.getByRole("button", { name: "撤销" }).click()
-  await expect(results(page).getByLabel("去重")).toBeChecked()
+  await expect(results(page).getByLabel("最多生成")).toHaveValue("100")
 })
 
 test("automatic updating is the person's own setting, kept in the browser and not in the file", async ({ page }) => {

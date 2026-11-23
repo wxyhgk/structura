@@ -113,7 +113,7 @@ export function ExportAllDialog({
         <DialogHeader>
           <DialogTitle>导出全部</DialogTitle>
           <DialogDescription>
-            把整个库写成一个文件，不受“最多生成”和筛选的限制，也不在页面上画结构；列和下载的 CSV、SDF 一样。固定过编号的化合物带着它的编号，其余的编号一栏空着。
+            把整个库写成一个文件，不受“最多生成”和筛选的限制，也不在页面上画结构；列和下载的 CSV、SDF 一样，只是不含 cLogP、TPSA 这些要 RDKit 逐个算的性质。固定过编号的化合物带着它的编号，其余的编号一栏空着。
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 text-[13px] text-(--c-555555)" data-testid="export-all-size">

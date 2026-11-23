@@ -17,7 +17,7 @@ export function structureHandler(provider: Provider | { error: string }) {
     }
     if (req.method !== "POST") return fail(405, "只接受 POST")
     const read = await readJsonBody(req, 15_000_000)
-    if ("error" in read) return fail(400, read.error)
+    if ("error" in read) return fail(read.status, read.error)
     const request = read.value
     const problem = structureProblem(request)
     if (problem) return fail(400, problem)

@@ -5,6 +5,7 @@ import type { IncomingMessage, ServerResponse } from "node:http"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { HttpError, readBody, requireContentType, sendError } from "./http.ts"
 
 // 导出 Word with editable ChemDraw objects: the page sends the compound-table package that
 // 化合物表 also downloads (packages/react/src/editor/markush/compoundTable.ts), and chem2office,
@@ -70,17 +71,6 @@ export async function makeWord(config: WordConfig, pack: Uint8Array, columns: nu
   }
 }
 
-async function readBody(req: IncomingMessage, limit: number): Promise<Uint8Array> {
-  const chunks: Buffer[] = []
-  let size = 0
-  for await (const chunk of req as AsyncIterable<Buffer>) {
-    size += chunk.length
-    if (size > limit) throw new Error("请求太大")
-    chunks.push(chunk)
-  }
-  return Buffer.concat(chunks)
-}
-
 function json(res: ServerResponse, status: number, value: unknown) {
   res.statusCode = status
   res.setHeader("content-type", "application/json; charset=utf-8")
@@ -88,9 +78,9 @@ function json(res: ServerResponse, status: number, value: unknown) {
 }
 
 /**
- * GET: { available: true } or { available: false, reason }. POST with the package (a zip) as
- * the body, ?columns=N optional: the .docx, or { error } as JSON. Availability is checked once
- * and kept while it holds; a failed check is tried again next time.
+ * GET: { available: true } or { available: false, reason }. POST with the package (a zip, sent
+ * as application/zip) as the body, ?columns=N optional: the .docx, or { error } as JSON.
+ * Availability is checked once and kept while it holds; a failed check is tried again next time.
  */
 export function wordHandler(config: WordConfig) {
   let known: Availability | null = null
@@ -99,6 +89,8 @@ export function wordHandler(config: WordConfig) {
     try {
       if (req.method === "GET") return json(res, 200, await availability())
       if (req.method !== "POST") return json(res, 405, { error: "只接受 GET 或 POST" })
+      // Before anything runs: application/zip is not a type a page on another site can send without a preflight.
+      requireContentType(req, "application/zip")
       const ready = await availability()
       if (!ready.available) return json(res, 503, { error: ready.reason })
       const columnsText = new URL(req.url ?? "/", "http://local").searchParams.get("columns")
@@ -108,6 +100,7 @@ export function wordHandler(config: WordConfig) {
       res.setHeader("content-type", DOCX)
       res.end(docx)
     } catch (error) {
+      if (error instanceof HttpError) return sendError(res, error)
       json(res, 500, { error: `生成 Word 失败：${error instanceof Error ? error.message : error}` })
     }
   }

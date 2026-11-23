@@ -20,6 +20,8 @@ if data.startswith(b"fail"):
 pathlib.Path(args.output).write_bytes(b"DOCX columns=" + str(args.columns).encode() + b" " + data)
 `
 
+const ZIP = { "content-type": "application/zip" }
+
 async function fakeChem2office(): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "fake-chem2office-"))
   for (const pkg of ["retain_cdx", "pycdxml", "scripts", "scripts/cli"]) {
@@ -77,11 +79,11 @@ test("over HTTP: GET tells whether Word can be made, POST makes it, a failure co
   const { server, url } = await serve({ dir, python: "python3" })
   try {
     assert.deepEqual(await (await fetch(url)).json(), { available: true })
-    const made = await fetch(`${url}?columns=3`, { method: "POST", body: "PK zip" })
+    const made = await fetch(`${url}?columns=3`, { method: "POST", headers: ZIP, body: "PK zip" })
     assert.equal(made.status, 200)
     assert.match(made.headers.get("content-type")!, /wordprocessingml/)
     assert.equal(await made.text(), "DOCX columns=3 PK zip")
-    const failed = await fetch(url, { method: "POST", body: "fail" })
+    const failed = await fetch(url, { method: "POST", headers: ZIP, body: "fail" })
     assert.equal(failed.status, 500)
     assert.match((await failed.json()).error, /生成 Word 失败.*could not read/s)
   } finally {
@@ -90,10 +92,43 @@ test("over HTTP: GET tells whether Word can be made, POST makes it, a failure co
   }
   const { server: missing, url: nowhere } = await serve({ dir: null, python: "python3" })
   try {
-    const refused = await fetch(nowhere, { method: "POST", body: "PK" })
+    const refused = await fetch(nowhere, { method: "POST", headers: ZIP, body: "PK" })
     assert.equal(refused.status, 503)
     assert.match((await refused.json()).error, /chem2office/)
   } finally {
     missing.close()
+  }
+})
+
+test("a POST not sent as application/zip is a 415 and runs nothing", async () => {
+  const dir = await fakeChem2office()
+  // A config that cannot run: were python started for a refused request, the answer would be a 503.
+  const { server, url } = await serve({ dir, python: "/nonexistent/python" })
+  try {
+    for (const type of ["text/plain", "application/x-www-form-urlencoded", "multipart/form-data; boundary=x"]) {
+      const response = await fetch(url, { method: "POST", headers: { "content-type": type }, body: "PK zip" })
+      assert.equal(response.status, 415, type)
+      assert.match((await response.json()).error, /application\/zip/)
+    }
+    assert.equal((await fetch(url, { method: "POST", body: "PK zip" })).status, 415)
+    assert.equal((await fetch(url)).status, 200, "GET needs no type")
+  } finally {
+    server.close()
+    await rm(dir, { recursive: true })
+  }
+})
+
+test("a package over 64 MB is a 413, not a 500", async () => {
+  const dir = await fakeChem2office()
+  const { server, url } = await serve({ dir, python: "python3" })
+  try {
+    const response = await fetch(url, { method: "POST", headers: ZIP, body: Buffer.alloc(65 * 1024 * 1024) })
+    assert.equal(response.status, 413)
+    assert.match((await response.json()).error, /64 MB/)
+    assert.equal((await fetch(url)).status, 200, "the server still answers")
+  } finally {
+    server.closeAllConnections()
+    server.close()
+    await rm(dir, { recursive: true })
   }
 })

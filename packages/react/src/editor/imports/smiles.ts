@@ -3,6 +3,7 @@ import type { MolRecord } from "@structura/core/sdf"
 import type { Molecule } from "@structura/core/types"
 import type { Problem } from "@structura/core/validate"
 import { smilesFault, smilesLines, smilesRecords, type SmilesFault } from "@structura/rdkit"
+import type { MainModule } from "@rdkit/rdkit"
 import { loadRDKit } from "../rdkit.ts"
 import { importNotes } from "./notes.ts"
 
@@ -46,4 +47,24 @@ export async function readSmiles(text: string): Promise<{ molecules: Molecule[];
   const imported = usableRecords(records)
   const lines = smilesNotes(records, imported.problems)
   return { molecules: imported.molecules, lines: imported.molecules.length > 0 || lines.length > 0 ? lines : ["SMILES 里没有可以读取的分子。"] }
+}
+
+const RDKIT_FAILED = "RDKit 加载失败，请检查网络后重试。"
+
+/** RDKit itself would not load, as opposed to a SMILES it then failed to convert. */
+class RDKitLoadError extends Error {}
+
+/** Loads RDKit for converting SMILES; a failure is marked as RDKit's, so it is not blamed on the text. */
+export async function loadRDKitForSmiles(load: () => Promise<MainModule> = loadRDKit): Promise<MainModule> {
+  try {
+    return await load()
+  } catch (error) {
+    throw new RDKitLoadError(RDKIT_FAILED, { cause: error })
+  }
+}
+
+/** What to tell the user when importing SMILES threw: the network only when RDKit did not load. */
+export function smilesImportFailure(error: unknown): string {
+  if (error instanceof RDKitLoadError) return error.message
+  return `转换 SMILES 时出错：${error instanceof Error ? error.message : String(error)}`
 }

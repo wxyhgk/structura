@@ -5,7 +5,7 @@ import { createEditorStore } from "@structura/engine"
 import { importNotes } from "../editor/imports/notes.ts"
 import { autoIsDark, type Theme } from "../components/theme.ts"
 import { readSmiles } from "../editor/imports/smiles.ts"
-import { mount, type MountOptions } from "./mount.tsx"
+import { mount, type MountedEditor, type MountOptions } from "./mount.tsx"
 import { drawingSmiles, structureProblems, type StructureProblem } from "./report.ts"
 
 /** What edit() opens with: a title, and the structure (a Structura document wins over a molfile, a molfile over SMILES). */
@@ -141,36 +141,48 @@ function openSheet(options: EditOptions, input: { document?: string; molfile?: s
 
   let changed = false
   let cancel = () => {}
-  const editor = mount(sheet.querySelector(".chem-sheet-editor")!, {
-    ...options.editor,
-    theme,
-    initialDocument: input.document,
-    initialMolfile: input.molfile,
-    onDocumentChange(text) {
-      changed = true
-      changedNote.hidden = false
-      options.editor?.onDocumentChange?.(text)
-    },
-    onDismiss: () => cancel(),
-    // Already the larger editor.
-    onExpand: undefined,
-  })
-  editor.fit()
-  // Keys go to the editor from the start, as after a click in it.
-  const root = sheet.querySelector<HTMLElement>(".chem-app")
-  if (root) {
-    root.tabIndex = -1
-    root.focus({ preventScroll: true })
+  let editor: MountedEditor | undefined
+  /** Gives the page back as it was: the sheet gone, nothing inert, scrolling as before. */
+  const restore = () => {
+    editor?.unmount()
+    sheet.remove()
+    for (const element of inert) element.inert = false
+    document.documentElement.style.overflow = scroll
+    open = false
   }
+  try {
+    editor = mount(sheet.querySelector(".chem-sheet-editor")!, {
+      ...options.editor,
+      theme,
+      initialDocument: input.document,
+      initialMolfile: input.molfile,
+      onDocumentChange(text) {
+        changed = true
+        changedNote.hidden = false
+        options.editor?.onDocumentChange?.(text)
+      },
+      onDismiss: () => cancel(),
+      // Already the larger editor.
+      onExpand: undefined,
+    })
+    editor.fit()
+    // Keys go to the editor from the start, as after a click in it.
+    const root = sheet.querySelector<HTMLElement>(".chem-app")
+    if (root) {
+      root.tabIndex = -1
+      root.focus({ preventScroll: true })
+    }
+  } catch (error) {
+    // A page left inert and unscrollable behind a sheet that never showed would be stuck for good.
+    restore()
+    return Promise.reject(error)
+  }
+  const mounted = editor
 
   return new Promise((resolve) => {
     /** Takes the sheet away at once; the result may still be on its way (SMILES from RDKit). */
     const close = (result: Edited | null | Promise<Edited>) => {
-      editor.unmount()
-      sheet.remove()
-      for (const element of inert) element.inert = false
-      document.documentElement.style.overflow = scroll
-      open = false
+      restore()
       returnFocus?.focus()
       resolve(result)
     }
@@ -179,11 +191,11 @@ function openSheet(options: EditOptions, input: { document?: string; molfile?: s
       close(null)
     }
     const save = () => {
-      const text = editor.getDocument()
+      const text = mounted.getDocument()
       const read = readDocument(text)
       const problems = "drawing" in read ? structureProblems(read.drawing) : []
       if (options.confirmProblems && problems.length > 0 && !confirm(`结构有问题：\n${problems.map((problem) => `· ${problem.text}`).join("\n")}\n\n仍然保存吗？`)) return
-      const saved: Edited = { document: text, molfile: editor.getMolfile(), problems, notes: input.notes, changed }
+      const saved: Edited = { document: text, molfile: mounted.getMolfile(), problems, notes: input.notes, changed }
       const wantSmiles = options.withSmiles || options.smiles !== undefined
       close(wantSmiles && "drawing" in read ? drawingSmiles(read.drawing).then((smiles) => ({ ...saved, smiles })) : saved)
     }

@@ -33,7 +33,10 @@ export function useCanvasMenu({
   async function copyAs(kind: IdentifierKind) {
     try {
       const text = await identifierOf(editor.mol, atoms(), kind)
-      writeClipboard(text)
+      if (!(await writeClipboard(text))) {
+        flash(`没能复制 ${IDENTIFIER_NAMES[kind]}：浏览器不允许写入剪贴板`)
+        return
+      }
       flash(`已复制 ${IDENTIFIER_NAMES[kind]}：${text.length > 48 ? `${text.slice(0, 48)}…` : text}`)
     } catch (error) {
       flash(`没能生成 ${IDENTIFIER_NAMES[kind]}：${error instanceof Error ? error.message : String(error)}`)

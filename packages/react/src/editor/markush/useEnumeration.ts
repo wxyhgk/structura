@@ -3,6 +3,7 @@ import { enumerateSteps, type EnumerateOptions, type Enumeration } from "@struct
 import type { Drawing } from "@structura/core/types"
 import { loadRDKit } from "../rdkit.ts"
 import { canonicalIdentity, canonicalSmiles } from "./identity.ts"
+import { runSlice } from "./slice.ts"
 
 /** Work done per slice before the page gets to paint and handle input again. */
 const SLICE_MS = 12
@@ -22,6 +23,8 @@ export type EnumerationRun = {
   status: "running" | "done" | "stopped"
   /** Whether repeats were dropped: asked and done, not asked, or asked but RDKit would not load. */
   dedupe: "on" | "off" | "unavailable"
+  /** Why the run ended early, in words, when a step threw; the run is then "stopped" with what was made before. */
+  error: string | null
   stop: () => void
 }
 
@@ -50,11 +53,12 @@ export function useEnumeration(
   { limit, representatives, dedupe }: Required<Omit<EnumerateOptions, "identity" | "identifySmiles">> & { dedupe: boolean },
 ): EnumerationRun {
   const inputs = useMemo(() => (drawing ? { drawing, limit, representatives, dedupe } : null), [drawing, limit, representatives, dedupe])
-  const [state, setState] = useState<{ inputs: typeof inputs; result: Enumeration | null; status: EnumerationRun["status"]; dedupe: EnumerationRun["dedupe"] }>({
+  const [state, setState] = useState<{ inputs: typeof inputs; result: Enumeration | null; status: EnumerationRun["status"]; dedupe: EnumerationRun["dedupe"]; error: string | null }>({
     inputs: null,
     result: null,
     status: "done",
     dedupe: "off",
+    error: null,
   })
   /** Stops the current run, keeping what it made; a no-op once it is over. */
   const stopRef = useRef<() => void>(() => {})
@@ -66,22 +70,32 @@ export function useEnumeration(
     let steps: ReturnType<typeof enumerateSteps> | null = null
     let dedupe: EnumerationRun["dedupe"] = "off"
     let shown = 0
+    /** Ends the run where it is, saying why. */
+    const fail = (error: string, last?: Enumeration) => {
+      steps = null
+      if (!cancelled) setState((current) => ({ inputs, result: last ? snapshot(last) : current.inputs === inputs ? current.result : null, status: "stopped", dedupe, error }))
+    }
     const slice = () => {
       if (!steps) return
       const end = performance.now() + SLICE_MS
-      let step = steps.next()
-      while (!step.done && performance.now() < end && !inputPending()) step = steps.next()
+      const made = runSlice(steps, () => performance.now() < end && !inputPending())
+      if (made.error != null) return fail(made.error, made.last?.value)
+      const { step } = made
       const now = performance.now()
       // The first result at once, then progress every SHOW_MS, and the end as soon as it comes.
       if (step.done || shown === 0 || now - shown >= SHOW_MS) {
         shown = now
-        setState({ inputs, result: snapshot(step.value), status: step.done ? "done" : "running", dedupe })
+        setState({ inputs, result: snapshot(step.value), status: step.done ? "done" : "running", dedupe, error: null })
       }
       if (!step.done) timer = setTimeout(slice, 0)
     }
     const start = (identities?: Pick<EnumerateOptions, "identity" | "identifySmiles">) => {
       if (cancelled) return
-      steps = enumerateSteps(inputs.drawing, { limit: inputs.limit, representatives: inputs.representatives, ...identities })
+      try {
+        steps = enumerateSteps(inputs.drawing, { limit: inputs.limit, representatives: inputs.representatives, ...identities })
+      } catch (error) {
+        return fail(error instanceof Error ? error.message : String(error))
+      }
       timer = setTimeout(slice, 0)
     }
     // Dropping repeats needs RDKit's canonical SMILES; without RDKit it all goes ahead, repeats kept.
@@ -101,7 +115,7 @@ export function useEnumeration(
       cancelled = true
       clearTimeout(timer)
       setState((current) => {
-        if (current.inputs !== inputs) return { inputs, result: null, status: "stopped", dedupe }
+        if (current.inputs !== inputs) return { inputs, result: null, status: "stopped", dedupe, error: null }
         return current.status === "running" ? { ...current, status: "stopped" } : current
       })
     }
@@ -113,6 +127,6 @@ export function useEnumeration(
   }, [inputs])
 
   const stop = useCallback(() => stopRef.current(), [])
-  if (!inputs || state.inputs !== inputs) return { result: null, status: inputs ? "running" : "done", dedupe: "off", stop }
-  return { result: state.result, status: state.status, dedupe: state.dedupe, stop }
+  if (!inputs || state.inputs !== inputs) return { result: null, status: inputs ? "running" : "done", dedupe: "off", error: null, stop }
+  return { result: state.result, status: state.status, dedupe: state.dedupe, error: state.error, stop }
 }

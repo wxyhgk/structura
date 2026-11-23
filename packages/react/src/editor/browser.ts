@@ -1,29 +1,53 @@
 /** Small browser helpers shared by the editor shell. */
 
-export function download(filename: string, contents: string | Uint8Array<ArrayBuffer> | Blob, type: string) {
-  const blob = new Blob([contents], { type })
-  const url = URL.createObjectURL(blob)
+/** How long a download's object URL stays valid: some browsers start reading it after the click returns. */
+const REVOKE_DELAY = 60_000
+
+/** Starts a download of `url` as `filename`; the link is attached to the page for the click, which some browsers require. */
+export function downloadUrl(url: string, filename: string) {
   const link = document.createElement("a")
   link.href = url
   link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
+  link.style.display = "none"
+  document.body.appendChild(link)
+  try {
+    link.click()
+  } finally {
+    link.remove()
+    setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY)
+  }
 }
 
-/** Writes text to the clipboard, also where the async clipboard API is unavailable (plain http). */
-export function writeClipboard(text: string) {
+export function download(filename: string, contents: string | Uint8Array<ArrayBuffer> | Blob, type: string) {
+  downloadUrl(URL.createObjectURL(new Blob([contents], { type })), filename)
+}
+
+/**
+ * Writes text to the clipboard, also where the async clipboard API is unavailable (plain http).
+ * Resolves to whether the browser took it: callers say so when it did not, and a cut keeps the selection.
+ */
+export async function writeClipboard(text: string): Promise<boolean> {
   if (window.isSecureContext && navigator.clipboard?.writeText) {
-    void navigator.clipboard.writeText(text)
-    return
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch {
+      // Denied (no focus, no permission): the selection-based copy below may still be allowed.
+    }
   }
   const area = document.createElement("textarea")
   area.value = text
   area.style.position = "fixed"
   area.style.opacity = "0"
   document.body.appendChild(area)
-  area.select()
-  document.execCommand("copy")
-  area.remove()
+  try {
+    area.select()
+    return document.execCommand("copy")
+  } catch {
+    return false
+  } finally {
+    area.remove()
+  }
 }
 
 /** The clipboard's text, for the Edit menu's paste; throws when the browser will not give it. */

@@ -96,7 +96,8 @@ export const EditorFrame = forwardRef<EditorHandle, FrameProps>(function EditorF
   const shownMol = useMemo(() => displayMolecule(editor.mol), [editor.mol])
 
   const imports = useImports(editor, viewport)
-  const clipboard = selectionClipboard(editor, (line) => imports.showNotes({ opened: false, title: "复制为图片", lines: [line] }))
+  const { message, flash } = useFlash()
+  const clipboard = selectionClipboard(editor, (line) => imports.showNotes({ opened: false, title: "复制为图片", lines: [line] }), flash)
   /** How labels are written, the same on the canvas as in what is exported. */
   const labelStyle = useMemo(() => drawOptions(editor.raisedNumbers), [editor.raisedNumbers])
   /** A sketch pad that is open: the palette is its until it closes. */
@@ -108,7 +109,6 @@ export const EditorFrame = forwardRef<EditorHandle, FrameProps>(function EditorF
   const paletteTool = useToolLabel(pad?.editor ?? editor)
   const padSlot = useMemo<PadSlot>(() => ({ claim: claimPalette, colorHetero: editor.colorHetero, drawOptions: labelStyle }), [claimPalette, editor.colorHetero, labelStyle])
   const setRaisedNumbers = useRememberedSetting(RAISED_NUMBERS, editor.raisedNumbers, editor.setRaisedNumbers)
-  const { message, flash } = useFlash()
   /** The bracket whose 重复次数 dialog is open. */
   const [countFor, setCountFor] = useState<number | null>(null)
   const menu = useCanvasMenu({ editor, shownMol, canvas: canvasRef, flash, showReport: dialogs.showReport })
@@ -239,9 +239,8 @@ export const EditorFrame = forwardRef<EditorHandle, FrameProps>(function EditorF
             )}
 
             <ImportNotesDialog notes={imports.notes} onClose={imports.clearNotes} />
-            <AnalysisDialog report={dialogs.report} onOpenChange={(open) => !open && dialogs.showReport(null)} onCopy={(text, what) => {
-              writeClipboard(text)
-              flash(`已复制${what}`)
+            <AnalysisDialog report={dialogs.report} onOpenChange={(open) => !open && dialogs.showReport(null)} onCopy={async (text, what) => {
+              flash((await writeClipboard(text)) ? `已复制${what}` : `没能复制${what}：浏览器不允许写入剪贴板`)
             }} />
             <Flash message={message} />
             {recognizeStructure && (
@@ -261,7 +260,6 @@ export const EditorFrame = forwardRef<EditorHandle, FrameProps>(function EditorF
               onOpenChange={dialogs.setOpen("smiles")}
               onImport={imports.importSmiles}
               onNotes={(lines) => imports.showNotes({ opened: true, lines })}
-              loadFailed={imports.rdkitFailed}
             />
             <BracketCountDialog
               bracket={editor.brackets?.find((bracket) => bracket.id === countFor) ?? null}

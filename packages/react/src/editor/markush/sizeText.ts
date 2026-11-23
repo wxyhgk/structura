@@ -3,10 +3,16 @@ import { choiceName, repeatSkipText, repeatStraddleText } from "./describe.ts"
 
 /** A count as people read it: 1 234, or 2.3 × 10⁶ once it is large. */
 export function countText(count: number): string {
+  if (!Number.isFinite(count)) return "超过 10³⁰⁰"
   if (count < 1_000_000) return count.toLocaleString("zh-CN")
   const power = Math.floor(Math.log10(count))
   const superscript = String(power).replace(/\d/g, (digit) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[Number(digit)])
   return `${(count / 10 ** power).toFixed(1)} × 10${superscript}`
+}
+
+/** A total of combinations in a sentence: plain up to a million, then as countText; "约" first when it is an estimate. */
+export function totalText(count: number, estimated = false): string {
+  return `${estimated ? "约 " : ""}${count < 1_000_000 ? count : countText(count)}`
 }
 
 /**
@@ -20,5 +26,5 @@ export function sizeText(size: LibrarySize): { headline: string; notes: string[]
     ...size.skippedRepeats.map(repeatSkipText),
     ...size.straddlingAttachments.map(repeatStraddleText),
   ]
-  return { headline: `可展开为 ${countText(size.combinations)} 种组合`, notes }
+  return { headline: `可展开为${size.estimated ? "约 " : " "}${countText(size.combinations)} 种组合`, notes }
 }

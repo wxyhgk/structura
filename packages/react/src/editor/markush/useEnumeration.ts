@@ -50,9 +50,9 @@ function snapshot(result: Enumeration): Enumeration {
  */
 export function useEnumeration(
   drawing: Drawing | null,
-  { limit, representatives, dedupe }: Required<Omit<EnumerateOptions, "identity" | "identifySmiles">> & { dedupe: boolean },
+  { limit, representatives, dedupe, order }: Required<Omit<EnumerateOptions, "identity" | "identifySmiles" | "onCompound">> & { dedupe: boolean },
 ): EnumerationRun {
-  const inputs = useMemo(() => (drawing ? { drawing, limit, representatives, dedupe } : null), [drawing, limit, representatives, dedupe])
+  const inputs = useMemo(() => (drawing ? { drawing, limit, representatives, dedupe, order } : null), [drawing, limit, representatives, dedupe, order])
   const [state, setState] = useState<{ inputs: typeof inputs; result: Enumeration | null; status: EnumerationRun["status"]; dedupe: EnumerationRun["dedupe"]; error: string | null }>({
     inputs: null,
     result: null,
@@ -92,7 +92,7 @@ export function useEnumeration(
     const start = (identities?: Pick<EnumerateOptions, "identity" | "identifySmiles">) => {
       if (cancelled) return
       try {
-        steps = enumerateSteps(inputs.drawing, { limit: inputs.limit, representatives: inputs.representatives, ...identities })
+        steps = enumerateSteps(inputs.drawing, { limit: inputs.limit, representatives: inputs.representatives, order: inputs.order, ...identities })
       } catch (error) {
         return fail(error instanceof Error ? error.message : String(error))
       }

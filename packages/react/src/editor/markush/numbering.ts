@@ -37,7 +37,7 @@ export function numberRows(rows: readonly Row[], numbering: Numbering): Row[] {
  * but changes when a candidate is edited (a piece's name, a class's range), so it is the
  * less stable of the two.
  */
-function rowKey(row: Row, smiles: ((mol: Molecule) => string | null) | undefined): string {
+export function rowKey(row: Row, smiles: ((mol: Molecule) => string | null) | undefined): string {
   const identity = smiles?.(row.mol)
   if (identity) return `s:${identity}`
   const fields = compoundFields(row.picks, row.formula)

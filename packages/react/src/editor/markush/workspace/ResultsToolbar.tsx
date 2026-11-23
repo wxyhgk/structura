@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { LIMITS } from "../progressText.ts"
 
-export type ResultOptions = { representatives: boolean; dedupe: boolean; limit: number }
+export type ResultOptions = { representatives: boolean; dedupe: boolean; limit: number; order: "first" | "spread" }
 
 const button = "h-6 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-2 text-[12px] text-(--c-333333) hover:bg-(--c-eef3fb) disabled:cursor-default disabled:text-(--c-aaaaaa) disabled:hover:bg-(--c-ffffff)"
 
@@ -28,6 +28,7 @@ export function ResultsToolbar({
   onNotesOpen,
   numberControls,
   onExport,
+  onExportAll,
   onTable,
 }: {
   summary: string
@@ -51,6 +52,8 @@ export function ResultsToolbar({
   /** How the compounds are numbered (C-1…, on the cards and in every download), and where the numbers stand. */
   numberControls: ReactNode
   onExport: (kind: "csv" | "sdf" | "smi") => void
+  /** Opens 导出全部 (the whole library as a file, however many compounds there are). */
+  onExportAll: () => void
   /** Opens 导出化合物表 (a patent's table of compounds). */
   onTable: () => void
 }) {
@@ -115,14 +118,21 @@ export function ResultsToolbar({
           <input type="checkbox" checked={options.dedupe} onChange={(event) => onOptions({ ...options, dedupe: event.target.checked })} />
           去重
         </Option>
-        <Option title="组合太多时只生成前这么多个">
+        <Option title="组合太多时最多生成这么多个（怎么取见“取样”）；要全部，用“导出全部”">
           最多生成
-          <select className="h-6 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1" value={options.limit} onChange={(event) => onOptions({ ...options, limit: Number(event.target.value) })}>
+          <select className="h-6 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1" value={options.limit} aria-label="最多生成" onChange={(event) => onOptions({ ...options, limit: Number(event.target.value) })}>
             {LIMITS.map((value) => (
               <option key={value} value={value}>
                 {value} 个
               </option>
             ))}
+          </select>
+        </Option>
+        <Option title="组合比“最多生成”多时怎么取：按顺序是最前面的那些（靠前的变量一直停在第一个候选项上）；均匀分布是在全部组合里等间隔取，每个变量的各个候选项、各种连接位置和重复次数都轮到。组合不多于上限时两者一样。">
+          取样
+          <select className="h-6 rounded-sm border border-(--c-d0d0d0) bg-(--c-ffffff) px-1" value={options.order} onChange={(event) => onOptions({ ...options, order: event.target.value as ResultOptions["order"] })} aria-label="取样方式">
+            <option value="spread">均匀分布</option>
+            <option value="first">按顺序</option>
           </select>
         </Option>
         {numberControls}
@@ -136,6 +146,9 @@ export function ResultsToolbar({
           </button>
           <button type="button" className={button} disabled={kept === 0} onClick={() => onExport("smi")}>
             SMILES
+          </button>
+          <button type="button" className={button} disabled={total === 0} onClick={onExportAll} title="不受“最多生成”和筛选限制，把整个库写成 CSV 或 SDF 文件，几万、几十万个也行">
+            导出全部…
           </button>
           <button type="button" className={`${button} border-(--c-1a73e8) text-(--c-1a73e8)`} disabled={kept === 0} onClick={onTable} title="像专利那样：结构一行、编号一行（ChemDraw 整表，或 Word 表格用的包）">
             化合物表…

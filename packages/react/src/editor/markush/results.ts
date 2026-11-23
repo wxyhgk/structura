@@ -57,6 +57,18 @@ export function filterRows(rows: readonly Row[], filter: string): Row[] {
 /** A CSV cell: quoted when it holds a comma, a quote or a line break. */
 const cell = (value: string) => (/[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value)
 
+/** A byte order mark at the start of a CSV, so Excel reads the Chinese and the subscripts as UTF-8. */
+export const CSV_BOM = "\uFEFF"
+
+/** The CSV's first line: number, SMILES, formula, molecular weight, then the variables' `columns`. */
+export const csvHead = (columns: readonly string[]): string => ["No", "SMILES", "Formula", "MW", ...columns].map(cell).join(",")
+
+/** One compound's line under `csvHead(columns)`; a column the row has no value for is left empty. */
+export function csvLine(row: Row, columns: readonly string[], smiles: (mol: Molecule) => string): string {
+  const fields = rowFields(row)
+  return [rowName(row), smiles(row.mol), displayFormula(plainFormula(row.mol)).normalize("NFKC"), molecularWeight(row.mol).toFixed(2), ...columns.map((name) => fields[name] ?? "")].map(cell).join(",")
+}
+
 /**
  * The rows as CSV for a spreadsheet: number, SMILES, formula, molecular weight, then one
  * column per variable (and per attachment position), in the order they first appear.
@@ -64,15 +76,7 @@ const cell = (value: string) => (/[",\n]/.test(value) ? `"${value.replace(/"/g, 
 export function rowsToCsv(rows: readonly Row[], smiles: (mol: Molecule) => string): string {
   const columns: string[] = []
   for (const row of rows) for (const name of Object.keys(rowFields(row))) if (!columns.includes(name)) columns.push(name)
-  const head = ["No", "SMILES", "Formula", "MW", ...columns]
-  const lines = rows.map((row) => {
-    const fields = rowFields(row)
-    return [rowName(row), smiles(row.mol), displayFormula(plainFormula(row.mol)).normalize("NFKC"), molecularWeight(row.mol).toFixed(2), ...columns.map((name) => fields[name] ?? "")]
-      .map(cell)
-      .join(",")
-  })
-  // A byte order mark, so Excel reads the Chinese and the subscripts as UTF-8.
-  return `﻿${[head.map(cell).join(","), ...lines].join("\n")}\n`
+  return `${CSV_BOM}${[csvHead(columns), ...rows.map((row) => csvLine(row, columns, smiles))].join("\n")}\n`
 }
 
 /** The rows as a SMILES file: one compound a line, its number as the name. */

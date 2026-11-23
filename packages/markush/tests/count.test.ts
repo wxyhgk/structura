@@ -80,7 +80,7 @@ test("the library size is what enumerate() counts, with and without representati
       const made = enumerate(drawing(), { limit: 0, representatives })
       assert.deepEqual(
         size,
-        { combinations: made.total, represented: made.represented, classesLeftOut: made.classesLeftOut, onlyClasses: made.onlyClasses, skippedRepeats: made.skippedRepeats, straddlingAttachments: made.straddlingAttachments },
+        { combinations: made.total, estimated: made.estimated, represented: made.represented, classesLeftOut: made.classesLeftOut, onlyClasses: made.onlyClasses, skippedRepeats: made.skippedRepeats, straddlingAttachments: made.straddlingAttachments },
         `${what}, representatives ${representatives}`,
       )
     }

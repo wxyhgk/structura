@@ -9,7 +9,8 @@ import { formulasOf } from "./formulas.ts"
 import { odometer } from "./odometer.ts"
 import type { Pick } from "./picks.ts"
 import { opsForAll } from "./place.ts"
-import { planFormulas, type Plan } from "./plans.ts"
+import { planFormulas, type Plan, type Planned, type Unit } from "./plans.ts"
+import { stride } from "./sampling.ts"
 import { excludedBy } from "./provisos.ts"
 import { placeholders, undefinedVariables } from "./queries.ts"
 import type { RepeatSkip, RepeatStraddle } from "./repeats.ts"
@@ -21,6 +22,14 @@ export type Enumeration = {
   picks: Pick[][]
   /** How many combinations the fitting choices allow, generated or not. */
   total: number
+  /** Whether `total` and `occupied` are estimates: too many layouts (or too many shared positions) to count them all exactly. */
+  estimated?: boolean
+  /**
+   * How the combinations were picked when there were more than `limit`: "first" for the
+   * first ones in order, "spread" for ones spaced evenly over all of them. "first" too when
+   * all of them were made.
+   */
+  order?: "first" | "spread"
   /**
    * Attachment placements left out because a candidate position already carries something
    * other than a placeholder (a ring carbon with a methyl has no hydrogen left to replace).
@@ -87,9 +96,28 @@ function newlyOverValence(mol: Molecule, before: Set<number>): string | null {
   return problem ? problem.message : null
 }
 
+/** One generated compound, as handed to `onCompound`. */
+export type Compound = { mol: Molecule; picks: Pick[]; formula: number }
+
 export type EnumerateOptions = {
-  /** Most molecules to build; the total is counted regardless. */
+  /** Most molecules to build (Infinity: all of them); the total is counted regardless. */
   limit?: number
+  /**
+   * Which combinations to build when there are more than `limit`. "first" (the default): the
+   * first ones, in order, which leaves the variables written first on their first choice
+   * (the last one turns fastest). "spread": ones spaced evenly over every combination, every
+   * attachment placement and repeat count included, so each variable goes through its
+   * choices; the compounds come out in the order they would have in "first". Combinations
+   * left out as repeats or by a proviso are replaced by further ones, up to a few times
+   * `limit` of them are tried.
+   */
+  order?: "first" | "spread"
+  /**
+   * Called with each compound as it is made, instead of keeping it in the result (whose
+   * `molecules` then stay empty): for writing out a library too big to hold. Repeats are
+   * still dropped, which keeps one identity for each compound made.
+   */
+  onCompound?: (compound: Compound) => void
   /** Let typical members stand in for each class (methyl, ethyl… for alkyl); else classes are left out. */
   representatives?: boolean
   /**
@@ -124,12 +152,13 @@ export function enumerate(drawing: Drawing, options: EnumerateOptions = {}): Enu
 
 /**
  * enumerate() one step at a time, so a caller can spread the work out, show progress, or
- * stop early and keep what was made. It first lays out every attachment placement (one
- * step each), so `total` and the misfits are complete before any molecule is built, then
- * builds one combination per step. Every step yields the same result object, growing in
+ * stop early and keep what was made. It first counts the layouts of the attachments (one
+ * step for each formula and repeat count, or one for each layout where they cannot be
+ * counted at once), so `total` and the misfits are complete before any molecule is built,
+ * then builds one combination per step. Every step yields the same result object, growing in
  * place: copy what you keep. The return value is exactly what enumerate() returns.
  */
-export function* enumerateSteps(drawing: Drawing, { limit = 1000, representatives = false, identity, identifySmiles }: EnumerateOptions = {}): Generator<Enumeration, Enumeration> {
+export function* enumerateSteps(drawing: Drawing, { limit = 1000, representatives = false, identity, identifySmiles, order = "first", onCompound }: EnumerateOptions = {}): Generator<Enumeration, Enumeration> {
   /** The compounds made so far, by identity, when repeats are being dropped. */
   const seen = new Set<string>()
   const variables = drawing.variables ?? {}
@@ -141,6 +170,8 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     molecules: [],
     picks: [],
     total: 0,
+    estimated: false,
+    order: "first",
     occupied: 0,
     classesLeftOut: resolver.classesLeftOut,
     represented: resolver.represented,
@@ -164,7 +195,7 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
   const excludedKeys = new Set(identity && identifySmiles ? compounds.flatMap((smiles) => identifySmiles(smiles) ?? []) : [])
   result.uncheckedCompounds = compounds.length - excludedKeys.size
   const planning = planFormulas(drawing, formulas, resolver, result)
-  let planned: { plans: Plan[]; unfilled: Set<string> }
+  let planned: Planned
   for (;;) {
     const step = planning.next()
     if (step.done) {
@@ -173,43 +204,145 @@ export function* enumerateSteps(drawing: Drawing, { limit = 1000, representative
     }
     yield result
   }
-  const { plans, unfilled } = planned
+  const { units, unfilled, layouts, plansAt, roomAt } = planned
   // Nothing at all could be laid out: only classes stand in the way.
-  if (plans.length === 0 && unfilled.size > 0) return result
+  if (units.length === 0 && unfilled.size > 0) return result
 
   const fail = (choice: Pick[], error: string) => {
     if (result.failed++ < 5) result.failures.push({ choice, error })
   }
-  for (const { formula, layout, sites } of plans) {
-    if ("error" in layout) {
-      fail(layout.where, layout.error)
-      continue
+  /** Compounds kept so far (handed on or held), and whether there are enough. */
+  let kept = 0
+  const done = () => kept + result.failed >= limit
+  /** Builds one combination of a plan (`index`: which choice at each of its sites), or says why it leaves none. */
+  const attempt = (plan: Plan, strained: Set<number>, index: number[]): boolean => {
+    const { formula, layout, sites } = plan
+    const laid = (layout as { drawing: Drawing }).drawing
+    const chosen = sites.map((site, at) => ({ site, choice: site.choices[index[at]] }))
+    const picks: Pick[] = [...layout.where, ...chosen.flatMap(({ site, choice }) => [{ name: site.name, choice }, ...(resolver.inside.get(choice) ?? [])])]
+    if (combinations.some((proviso) => excludedBy(proviso, picks))) {
+      result.excluded++
+      return false
     }
-    const laid = layout.drawing
-    const strained = overValence(laid.molecule)
-    for (const index of odometer(sites.map((site) => site.choices.length))) {
-      if (result.molecules.length + result.failed >= limit) break
-      const chosen = sites.map((site, at) => ({ site, choice: site.choices[index[at]] }))
-      const picks: Pick[] = [...layout.where, ...chosen.flatMap(({ site, choice }) => [{ name: site.name, choice }, ...(resolver.inside.get(choice) ?? [])])]
-      if (combinations.some((proviso) => excludedBy(proviso, picks))) {
-        result.excluded++
-        yield result
-        continue
-      }
-      const built = applyOps({ ...laid, variables: undefined }, opsForAll(chosen))
-      const wrong = built.ok ? (leftover(built.drawing.molecule, defined) ?? newlyOverValence(built.drawing.molecule, strained)) : built.error
-      if (built.ok && !wrong) {
-        const key = identity?.(built.drawing.molecule) ?? null
-        if (key != null && excludedKeys.has(key)) result.excluded++
-        else if (key != null && seen.has(key)) result.duplicates++
+    const built = applyOps({ ...laid, variables: undefined }, opsForAll(chosen))
+    const wrong = built.ok ? (leftover(built.drawing.molecule, defined) ?? newlyOverValence(built.drawing.molecule, strained)) : built.error
+    if (built.ok && !wrong) {
+      const key = identity?.(built.drawing.molecule) ?? null
+      if (key != null && excludedKeys.has(key)) result.excluded++
+      else if (key != null && seen.has(key)) result.duplicates++
+      else {
+        if (key != null) seen.add(key)
+        kept++
+        if (onCompound) onCompound({ mol: built.drawing.molecule, picks, formula })
         else {
-          if (key != null) seen.add(key)
           result.molecules.push(built.drawing.molecule)
           result.picks.push(picks)
           result.formulaOf.push(formula)
         }
-      } else fail(picks, wrong!)
+        return true
+      }
+    } else fail(picks, wrong!)
+    return false
+  }
+
+  /**
+   * Visits layouts in a scattered order (see stride), evenly over all of them, and takes one
+   * combination from each, another each time round once every layout has been visited. The
+   * combination is picked by the visit's place the same way, over the combinations of that
+   * layout. Visits that bring nothing (occupied, a repeat, a proviso) are replaced, to a limit.
+   */
+  const spreadOut = function* (): Generator<Enumeration, void> {
+    const starts: bigint[] = []
+    let from = 0n
+    for (const unit of units) {
+      starts.push(from)
+      from += unit.size
+    }
+    const locate = (layout: bigint): { unit: Unit; at: bigint } => {
+      let index = starts.length - 1
+      while (starts[index] > layout) index--
+      return { unit: units[index], at: layout - starts[index] }
+    }
+    const step = stride(layouts)
+    const visited = new Set<string>()
+    /** Where each kept compound came from, to put them back in order at the end. */
+    const places: Array<[bigint, bigint]> = []
+    const tries = Math.max(limit * 4, limit + 100)
+    /** Layouts passed over for want of room cost next to nothing, but not nothing. */
+    const passes = tries * 100
+    for (let visit = 0n, tried = 0, passed = 0; tried < tries && passed < passes && !done(); visit++) {
+      const layout = (visit * step) % layouts
+      const { unit, at } = locate(layout)
+      if (!roomAt(unit, at)) {
+        if (++passed % 1000 === 0) yield result
+        continue
+      }
+      tried++
+      const plans = plansAt(unit, at)
       yield result
+      if (!plans) continue
+      const sizes = plans.map((plan) => ("error" in plan.layout ? 1n : plan.sites.reduce((product, site) => product * BigInt(site.choices.length), 1n)))
+      const all = sizes.reduce((sum, size) => sum + size, 0n)
+      if (all === 0n) continue
+      // Another combination of this layout each time round, a different one to start from for each layout.
+      const start = (((layout + 1n) * 0x9e3779b97f4a7c15n) >> 20n) % all
+      const which = (start + (visit / layouts) * stride(all)) % all
+      const key = `${layout}:${which}`
+      if (visited.has(key)) continue
+      visited.add(key)
+      let rest = which
+      let found = 0
+      while (rest >= sizes[found]) rest -= sizes[found++]
+      const plan = plans[found]
+      if ("error" in plan.layout) {
+        fail(plan.layout.where, plan.layout.error)
+        continue
+      }
+      const index: number[] = []
+      for (let site = plan.sites.length - 1; site >= 0; site--) {
+        const choices = BigInt(plan.sites[site].choices.length)
+        index[site] = Number(rest % choices)
+        rest /= choices
+      }
+      if (attempt(plan, overValence(plan.layout.drawing.molecule), index)) places.push([layout, which])
+    }
+    // The compounds in the order of the layouts and combinations they came from.
+    const sorted = places.map((place, position) => ({ place, position })).sort((a, b) => (a.place[0] === b.place[0] ? (a.place[1] < b.place[1] ? -1 : 1) : a.place[0] < b.place[0] ? -1 : 1))
+    if (!onCompound) {
+      const [molecules, picks, formulaOf] = [result.molecules.slice(), result.picks.slice(), result.formulaOf.slice()]
+      for (const [to, { position }] of sorted.entries()) {
+        result.molecules[to] = molecules[position]
+        result.picks[to] = picks[position]
+        result.formulaOf[to] = formulaOf[position]
+      }
+    }
+  }
+
+  if (order === "spread" && result.total > limit && layouts > 0n) {
+    result.order = "spread"
+    yield* spreadOut()
+  } else {
+    // In order: each layout of each unit, and each combination of its plans, the last site turning fastest.
+    for (const unit of units) {
+      for (let at = 0n; at < unit.size && !done(); at++) {
+        const plans = plansAt(unit, at)
+        if (!plans) {
+          yield result
+          continue
+        }
+        for (const plan of plans) {
+          if ("error" in plan.layout) {
+            fail(plan.layout.where, plan.layout.error)
+            continue
+          }
+          const strained = overValence(plan.layout.drawing.molecule)
+          for (const index of odometer(plan.sites.map((site) => site.choices.length))) {
+            if (done()) break
+            attempt(plan, strained, index)
+            yield result
+          }
+        }
+      }
     }
   }
   return result

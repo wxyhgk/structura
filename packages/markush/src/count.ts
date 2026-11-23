@@ -13,6 +13,8 @@ export type LibrarySize = {
    * times every fitting choice at each placeholder (repeats not yet dropped).
    */
   combinations: number
+  /** Whether `combinations` is an estimate: too many layouts (or shared positions) to count them all exactly. */
+  estimated?: boolean
   /** Per variable, the typical members that stand in for its classes (a class itself is wider). */
   represented: Record<string, Choice[]>
   /** Per variable, how many classes were not counted at all (with representatives off). */
@@ -26,14 +28,15 @@ export type LibrarySize = {
 }
 
 /**
- * Counts what enumerate() would make, without making it: every attachment is laid out and
- * every placeholder's fitting choices are counted, and no molecule is built.
+ * Counts what enumerate() would make, without making it: the attachments' placements are
+ * counted (not made one by one, where they are plain: see countUnit), every placeholder's
+ * fitting choices are counted, and no molecule is built.
  */
-export function librarySize(drawing: Drawing, { representatives = true }: { representatives?: boolean } = {}): LibrarySize {
+export function librarySize(drawing: Drawing, { representatives = true, exact = false }: { representatives?: boolean; exact?: boolean } = {}): LibrarySize {
   const resolver = choiceResolver(drawing.variables ?? {}, representatives)
   for (const { name } of placeholders(drawing)) resolver.choicesFor(name)
-  const tally: Tally = { total: 0, occupied: 0, onlyClasses: [], skippedRepeats: [], straddlingAttachments: [] }
-  const planning = planFormulas(drawing, formulasOf(drawing), resolver, tally)
+  const tally: Tally = { total: 0, occupied: 0, onlyClasses: [], skippedRepeats: [], straddlingAttachments: [], estimated: false }
+  const planning = planFormulas(drawing, formulasOf(drawing), resolver, tally, { exact })
   while (!planning.next().done);
-  return { combinations: tally.total, represented: resolver.represented, classesLeftOut: resolver.classesLeftOut, onlyClasses: tally.onlyClasses, skippedRepeats: tally.skippedRepeats, straddlingAttachments: tally.straddlingAttachments }
+  return { combinations: tally.total, estimated: tally.estimated, represented: resolver.represented, classesLeftOut: resolver.classesLeftOut, onlyClasses: tally.onlyClasses, skippedRepeats: tally.skippedRepeats, straddlingAttachments: tally.straddlingAttachments }
 }

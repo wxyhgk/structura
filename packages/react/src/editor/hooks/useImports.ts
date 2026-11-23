@@ -8,11 +8,8 @@ import { clipboardBlocked, failure, MOD, readClipboard } from "../browser.ts"
 import type { Viewport } from "@structura/engine"
 import type { ImportNotes } from "../imports/notes.ts"
 import { readMolText } from "../imports/read.ts"
-import { smilesNotes } from "../imports/smiles.ts"
-import { loadRDKit } from "../rdkit.ts"
+import { loadRDKitForSmiles, smilesImportFailure, smilesNotes } from "../imports/smiles.ts"
 import type { EditorState } from "../useEditor.ts"
-
-const RDKIT_FAILED = "RDKit 加载失败，请检查网络后重试。"
 
 /** Only CDXML Structura wrote, unchanged since, can be opened: there is no reader for ChemDraw's own structures yet. */
 const CDXML_ONLY = "目前只能打开 Structura 导出且未改动的 CDXML。"
@@ -40,7 +37,7 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
    */
   async function importSmiles(text: string): Promise<{ lines: string[]; skipped: number }> {
     if (smilesLines(text).length === 0) return { lines: ["没有找到 SMILES。"], skipped: 0 }
-    const rdkit = await loadRDKit()
+    const rdkit = await loadRDKitForSmiles()
     const records = smilesRecords(rdkit, text)
     const imported = usableRecords(records)
     addBeside(imported.molecules)
@@ -114,7 +111,7 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
     if (looksLikeSmiles(text)) {
       void importSmiles(text)
         .then(({ lines, skipped }) => lines.length > 0 && setNotes({ opened: skipped < smilesLines(text).length, lines }))
-        .catch(() => setNotes({ opened: false, lines: [RDKIT_FAILED] }))
+        .catch((error) => setNotes({ opened: false, lines: [smilesImportFailure(error)] }))
       return true
     }
     return false
@@ -147,7 +144,6 @@ export function useImports(editor: Pick<EditorState, "openMolecules" | "appendMo
     paste,
     pasteClipboard,
     importSmiles,
-    rdkitFailed: RDKIT_FAILED,
   }
 }
 

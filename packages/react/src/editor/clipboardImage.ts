@@ -1,4 +1,4 @@
-import { clipboardBlocked } from "./browser.ts"
+import { clipboardBlocked, downloadUrl } from "./browser.ts"
 
 /** Copy as image: an exported SVG put on the clipboard as a picture Word and PowerPoint paste. */
 
@@ -33,12 +33,7 @@ export async function svgToPng(svg: string, scale = SCALE): Promise<Blob> {
  */
 /** The picture as a PNG file instead, for when the clipboard is out of reach. */
 export async function downloadImage(svg: string, filename = "结构.png"): Promise<void> {
-  const url = URL.createObjectURL(await svgToPng(svg))
-  const link = document.createElement("a")
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
+  downloadUrl(URL.createObjectURL(await svgToPng(svg)), filename)
 }
 
 export async function writeImage(svg: string): Promise<void> {

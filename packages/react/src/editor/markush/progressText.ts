@@ -9,7 +9,8 @@ export const DEFAULT_LIMIT = 500
  * A generation's state in a line: progress while generating, then what was made. `shown`
  * is how many the caller draws, when it draws fewer than were made.
  */
-export function progressText({ result, status }: { result: Enumeration | null; status: "running" | "done" | "stopped" }, limit: number, shown?: number): string {
+export function progressText({ result, status, error }: { result: Enumeration | null; status: "running" | "done" | "stopped"; error?: string | null }, limit: number, shown?: number): string {
+  if (error != null) return `生成时出错，已停止${result ? `（已生成 ${result.molecules.length} 个）` : ""}：${error}`
   if (!result) return status === "running" ? "正在生成…" : "没有可以生成的化合物。"
   const made = result.molecules.length
   if (status === "running") return `正在生成：已生成 ${made} / 共 ${Math.min(result.total, limit)}…`

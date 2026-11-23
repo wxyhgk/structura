@@ -3,7 +3,7 @@ import test from "node:test"
 import initRDKitModule from "@rdkit/rdkit"
 import { usableRecords } from "@structura/core/import"
 import { smilesRecords } from "@structura/rdkit"
-import { smilesNotes } from "../../../src/editor/imports/smiles.ts"
+import { loadRDKitForSmiles, smilesImportFailure, smilesNotes } from "../../../src/editor/imports/smiles.ts"
 
 const rdkit = await initRDKitModule()
 rdkit.prefer_coordgen(true)
@@ -29,4 +29,12 @@ test("a SMILES RDKit cannot read says why in Chinese, RDKit's own words after it
   }
   // With several lines, the bad one is named as before.
   assert.match(notes("CCO\nC1CC")[0], /^第 2 条（C1CC）：无法读取，环没有闭合/)
+})
+
+test("only an RDKit that did not load is blamed on the network", async () => {
+  const unloadable = await loadRDKitForSmiles(() => Promise.reject(new Error("fetch failed"))).catch((error: unknown) => error)
+  assert.equal(smilesImportFailure(unloadable), "RDKit 加载失败，请检查网络后重试。")
+  assert.equal(await loadRDKitForSmiles(() => Promise.resolve(rdkit)), rdkit)
+  assert.equal(smilesImportFailure(new Error("bad mol block")), "转换 SMILES 时出错：bad mol block")
+  assert.equal(smilesImportFailure("odd"), "转换 SMILES 时出错：odd")
 })

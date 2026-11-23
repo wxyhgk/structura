@@ -90,7 +90,7 @@ export function ResultsPane({ drawing, colorHetero, base, onPlace, wordExport }:
       ) : status !== "running" && rows.length > 0 ? (
         <Empty title="没有符合筛选条件的化合物" hint="换一个词试试，或清空筛选框。" />
       ) : status !== "running" ? (
-        <Empty title="没有可以生成的化合物" hint={notes.length > 0 ? "点上面的“提示”看看原因。" : "检查右边的变量是否都填了候选项。"} />
+        <Empty title={live.run.error != null ? "生成时出错" : "没有可以生成的化合物"} hint={live.run.error != null ? live.run.error : notes.length > 0 ? "点上面的“提示”看看原因。" : "检查右边的变量是否都填了候选项。"} />
       ) : null}
     </section>
   )

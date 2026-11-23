@@ -41,9 +41,17 @@ export function mount(target: Element | string, options: MountOptions = {}): Mou
   const root = createRoot(element)
   let current = options
   const render = () => flushSync(() => root.render(<Editor ref={ref} {...current} onExpand={"onExpand" in current ? current.onExpand : expandInSheet(current)} />))
-  render()
+  try {
+    render()
+  } catch (error) {
+    root.unmount()
+    throw error
+  }
   const handle = ref.current
-  if (!handle) throw new Error("chem-structura: the editor did not start")
+  if (!handle) {
+    root.unmount()
+    throw new Error("chem-structura: the editor did not start")
+  }
   let mounted = true
   const alive = () => {
     if (!mounted || !ref.current) throw new Error("chem-structura: the editor was unmounted")

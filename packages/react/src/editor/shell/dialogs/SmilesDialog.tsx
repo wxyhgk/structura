@@ -2,6 +2,7 @@ import { MOD } from "../../browser.ts"
 import { useState } from "react"
 import { Button } from "../../../components/ui/button.tsx"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../../components/ui/dialog.tsx"
+import { smilesImportFailure } from "../../imports/smiles.ts"
 import { useOverlayMark } from "../../input/overlays.ts"
 
 /**
@@ -13,13 +14,11 @@ export function SmilesDialog({
   onOpenChange,
   onImport,
   onNotes,
-  loadFailed,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   onImport: (text: string) => Promise<{ lines: string[]; skipped: number }>
   onNotes: (lines: string[]) => void
-  loadFailed: string
 }) {
   const overlayMark = useOverlayMark()
   const [text, setText] = useState("")
@@ -38,8 +37,8 @@ export function SmilesDialog({
       onOpenChange(false)
       setText("")
       if (lines.length > 0) onNotes(lines)
-    } catch {
-      setErrors([loadFailed])
+    } catch (error) {
+      setErrors([smilesImportFailure(error)])
     } finally {
       setBusy(false)
     }

@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- **Added**: a generic formula's compound numbers belong to the compounds and are kept in the
+  Structura file (`drawing.numbering`: the pattern, the first number and the number each
+  compound, told apart by canonical SMILES, was given), and the generation options
+  (`drawing.generation`: representatives, de-duplication, limit) are kept there too. Older
+  files open as before. New ops: `set_generation`, `set_numbering`, `assign_numbers`,
+  `clear_numbers`. A file with these fields opens in 0.8.1 too, but saving it there drops them.
+- **Changed**: on the 通式 page, numbers no longer follow the list and the filter: a compound
+  keeps the number it was given, new ones follow the highest, and 重新编号 starts over (one undoable step).
+- **Fixed**: in a compact editor, switching between the structure, variables and results
+  discarded the results' filter and options and generated everything again; the panes stay
+  mounted now, and the hidden results do not generate in the background.
+
 ## 0.8.1
 
 - **Fixed**: a molfile or SD record of more than 999 atoms or bonds was written broken (the

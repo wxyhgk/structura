@@ -12,7 +12,8 @@ import { VariablesBoard } from "./VariablesBoard.tsx"
  * drawing workspace) with its constraints below it on the left, the variables on the right,
  * and the compounds it generates along the bottom, kept up to date as it changes. The
  * dividers between them can be dragged, and are remembered. With no room for that (a compact
- * or mini editor), one of the three at a time, chosen above them.
+ * or mini editor), one of the three at a time, chosen above them: the others stay mounted,
+ * only hidden, so what is in them (a filter, the options, an open sketch) is still there.
  */
 export function MarkushWorkspace({ canvas, ...props }: WorkspaceProps & { canvas: ReactNode }) {
   if (useLayoutContext() !== "full") return <PaneByPane canvas={canvas} {...props} />
@@ -42,22 +43,17 @@ function PaneByPane({ canvas, ...props }: WorkspaceProps & { canvas: ReactNode }
           </button>
         ))}
       </div>
-      {pane === "formula" && (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-0 flex-1 bg-(--c-ffffff)">{canvas}</div>
-          <ConstraintsPane {...props} />
-        </div>
-      )}
-      {pane === "variables" && (
-        <div className="min-h-0 flex-1">
-          <VariablesBoard {...props} />
-        </div>
-      )}
-      {pane === "results" && (
-        <div className="min-h-0 flex-1">
-          <ResultsPane {...props} />
-        </div>
-      )}
+      <div className={`min-h-0 flex-1 flex-col ${pane === "formula" ? "flex" : "hidden"}`}>
+        <div className="flex min-h-0 flex-1 bg-(--c-ffffff)">{canvas}</div>
+        <ConstraintsPane {...props} />
+      </div>
+      <div className={`min-h-0 flex-1 ${pane === "variables" ? "" : "hidden"}`}>
+        <VariablesBoard {...props} />
+      </div>
+      <div className={`min-h-0 flex-1 ${pane === "results" ? "" : "hidden"}`}>
+        {/* Hidden, it does not generate: edits made meanwhile are taken up when it is shown again. */}
+        <ResultsPane {...props} active={pane === "results"} />
+      </div>
     </div>
   )
 }

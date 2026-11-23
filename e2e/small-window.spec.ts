@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
+import { readFile } from "node:fs/promises"
+import { fileURLToPath } from "node:url"
 import { openMarkush } from "./support.ts"
 
 // The editor in a small box, as pages embed it: the layout follows the box, not the window.
@@ -134,12 +136,33 @@ test("an input method's Enter picks its characters: it does not commit the atom'
   await expect(field).toHaveCount(0)
 })
 
-test("the 通式 page in a small window: its panes one at a time, chosen above them", async ({ page }) => {
+test("the 通式 page in a small window: its panes one at a time, chosen above them, each keeping what is in it", async ({ page }) => {
   await page.setViewportSize({ width: 600, height: 450 })
   await openMarkush(page)
   const panes = page.getByRole("tablist", { name: "通式", exact: true })
   await expect(panes).toBeVisible()
-  await expect(page.getByTestId("resultsPane")).toHaveCount(0)
+  await expect(page.getByTestId("resultsPane")).toBeHidden()
+  const summary = page.getByTestId("results-summary")
+
+  // A formula opened while the results are out of sight is not generated in the background.
+  const text = await readFile(fileURLToPath(new URL("fixtures/benzene-R1-anywhere.structura", import.meta.url)), "utf8")
+  await page.evaluate((given) => (window as unknown as { __structura: { setDocument(text: string): string[] } }).__structura.setDocument(given), text)
+  await page.waitForTimeout(1200)
+  await expect(summary).toHaveText("")
+
+  // Shown, it generates at once.
   await panes.getByRole("tab", { name: "生成结果" }).click()
   await expect(page.getByTestId("resultsPane")).toBeVisible()
+  await expect(summary).toContainText("得到 2 个不同的化合物")
+
+  // Away and back: the filter and the results are as they were, nothing is generated again.
+  await page.getByLabel("筛选生成的化合物").fill("Cl")
+  await expect(page.getByTestId("enumerated-compound")).toHaveCount(1)
+  await panes.getByRole("tab", { name: "变量" }).click()
+  await expect(page.getByTestId("resultsPane")).toBeHidden()
+  await expect(page.getByTestId("variable-R1")).toBeVisible()
+  await panes.getByRole("tab", { name: "生成结果" }).click()
+  await expect(page.getByLabel("筛选生成的化合物")).toHaveValue("Cl")
+  await expect(page.getByTestId("enumerated-compound")).toHaveCount(1)
+  await expect(summary).toContainText("得到 2 个不同的化合物")
 })

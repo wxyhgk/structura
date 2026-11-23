@@ -44,3 +44,40 @@ test("a file that cannot be used says why", () => {
   }
   assert.ok(!isDocument("Structura\n  molfile"))
 })
+
+test("generation settings and compound numbers survive a save and an open", () => {
+  const drawing: Drawing = {
+    ...formula(),
+    generation: { representatives: false, dedupe: true, limit: 2000 },
+    numbering: { pattern: "化合物{n}", start: 5, assigned: { "s:CCO": 5, "p:R1=Cl": 6 } },
+  }
+  const read = readDocument(toDocument(drawing))
+  assert.ok("drawing" in read)
+  assert.deepEqual(read.drawing.generation, drawing.generation)
+  assert.deepEqual(read.drawing.numbering, drawing.numbering)
+})
+
+test("a file from before generation settings and numbering opens without them", () => {
+  const read = readDocument(toDocument(formula()))
+  assert.ok("drawing" in read)
+  assert.equal(read.drawing.generation, undefined)
+  assert.equal(read.drawing.numbering, undefined)
+  assert.ok(!toDocument(formula()).includes("numbering"))
+})
+
+test("generation settings and numbering that cannot be used say why", () => {
+  const good = JSON.parse(toDocument(formula()))
+  const cases: Array<[Record<string, unknown>, RegExp]> = [
+    [{ generation: { limit: 0 } }, /limit/],
+    [{ generation: { dedupe: "yes" } }, /dedupe/],
+    [{ generation: [] }, /generation settings/],
+    [{ numbering: { pattern: "C-{n}", start: 1.5 } }, /first compound number/],
+    [{ numbering: { pattern: 3, start: 1 } }, /pattern/],
+    [{ numbering: { pattern: "C-{n}", start: 1, assigned: { "s:C": 1, "s:N": 1 } } }, /two compounds/],
+    [{ numbering: { pattern: "C-{n}", start: 1, assigned: { "s:C": "1" } } }, /whole number/],
+  ]
+  for (const [extra, message] of cases) {
+    const read = readDocument(JSON.stringify({ ...good, drawing: { ...good.drawing, ...extra } }))
+    assert.ok("error" in read && message.test(read.error), JSON.stringify(extra))
+  }
+})

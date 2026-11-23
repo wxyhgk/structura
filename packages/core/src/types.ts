@@ -1,4 +1,4 @@
-import type { Attachment, Proviso, Repeat, RingClosure, Variable } from "./markush/types.ts"
+import type { Attachment, CompoundNumbering, Generation, Proviso, Repeat, RingClosure, Variable } from "./markush/types.ts"
 import type { BondEmphasis, BondLook, BondOrder, BondStereo, Molecule } from "./types/molecule.ts"
 
 export type { Atom, Bond, BondEmphasis, BondLook, BondOrder, BondStereo, Group, Molecule } from "./types/molecule.ts"
@@ -45,6 +45,10 @@ export type Drawing = {
   brackets?: Bracket[]
   /** The next bracket's id; absent counts as 1. Ids are never handed out twice. */
   nextBracketId?: number
+  /** How a generic formula is expanded (representatives, repeats, limit); absent: the defaults. */
+  generation?: Generation
+  /** The numbers given to the compounds a generic formula generates, and how they are written. */
+  numbering?: CompoundNumbering
 }
 
 export type Point = { x: number; y: number }

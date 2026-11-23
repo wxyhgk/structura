@@ -1,5 +1,5 @@
 import type { BondEmphasis, BondLook, BondOrder, BondStereo, Bracket, Drawing, HotTarget, Molecule, Point, RingKind } from "../types.ts"
-import type { Alternative, AttachmentShape, BridgeName, Proviso, Repeat, RingClosure } from "../markush/types.ts"
+import type { Alternative, AttachmentShape, BridgeName, Generation, Proviso, Repeat, RingClosure } from "../markush/types.ts"
 import type { RecipeName } from "../molecule/recipes.ts"
 import type { Problem } from "../validate.ts"
 
@@ -123,6 +123,17 @@ export type Op =
   /** "R1 and R2 together form a ring": what they may close into (replaces any closure of the same pair). */
   | { op: "set_ring_closure"; closure: RingClosure }
   | { op: "remove_ring_closure"; a: string; b: string }
+  /** Changes how the generic formula is expanded (only the settings given); kept in the document. */
+  | { op: "set_generation"; generation: Generation }
+  /**
+   * How compounds are numbered: the pattern ("C-{n}") and/or the first number. Numbers
+   * already given stay as they are.
+   */
+  | { op: "set_numbering"; pattern?: string; start?: number }
+  /** Gives each compound identity a number if it has none (new ones follow the highest given out); the rest keep theirs. */
+  | { op: "assign_numbers"; keys: string[] }
+  /** Takes back every number given out, so numbering starts again from the first. */
+  | { op: "clear_numbers" }
   /**
    * A variable point of attachment: `atom` is bonded to one of `to`, whichever, as when a
    * line is drawn into a ring's middle. Replaces any earlier one from the same atom.

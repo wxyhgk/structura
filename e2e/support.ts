@@ -7,7 +7,7 @@ export type Doc = {
   molecule: { atoms: Atom[]; bonds: Array<{ a: number; b: number }> }
   attachments?: Array<{ atom: number; to: number[]; repeat?: { min: number; max: number; name: string }; shape?: "line" | "loop" | "arc" | "bracket" | "custom"; curve?: { nodes: Array<[number, number]>; closed: boolean } }>
   variables?: Record<string, unknown>
-  generation?: { representatives?: boolean; dedupe?: boolean; limit?: number }
+  generation?: { representatives?: boolean; dedupe?: boolean; limit?: number; order?: "first" | "spread" }
   numbering?: { pattern: string; start: number; assigned?: Record<string, number> }
   brackets?: Array<{ id: number; atoms: number[]; kind: string; repeat?: { min: number; max: number; name: string } }>
 }

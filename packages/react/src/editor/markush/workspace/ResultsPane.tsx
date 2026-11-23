@@ -83,7 +83,8 @@ export function ResultsPane({ drawing, run, colorHetero, base, onPlace, wordExpo
   return (
     <section className="flex h-full min-h-0 flex-col bg-(--c-ffffff)" data-testid="resultsPane" aria-label="生成结果">
       <ResultsToolbar
-        summary={empty ? "" : progressText(live.run, options.limit)}
+        // Nothing asked for yet (out of sight since the formula came): nothing to say, not "nothing to generate".
+        summary={empty || (!result && status === "done" && live.run.error == null) ? "" : progressText(live.run, options.limit)}
         running={running}
         onStop={live.run.stop}
         auto={live.auto}

@@ -5,11 +5,20 @@
 - **Added**: a generic formula's compound numbers belong to the compounds and are kept in the
   Structura file (`drawing.numbering`: the pattern, the first number and the number each
   compound, told apart by canonical SMILES, was given), and the generation options
-  (`drawing.generation`: representatives, de-duplication, limit) are kept there too. Older
+  (`drawing.generation`: representatives, de-duplication, limit, order) are kept there too. Older
   files open as before. New ops: `set_generation`, `set_numbering`, `assign_numbers`,
   `clear_numbers`. A file with these fields opens in 0.8.1 too, but saving it there drops them.
 - **Changed**: on the 通式 page, numbers no longer follow the list and the filter: a compound
   keeps the number it was given, new ones follow the highest, and 重新编号 starts over (one undoable step).
+- **Added**: `enumerate()` takes `order: "spread"`: with more combinations than the limit, it
+  takes ones spread evenly over them all (every candidate of every variable, every position
+  and repeat count comes round) instead of the first ones, where the first variables never
+  move off their first candidate. `"first"` stays the default.
+- **Faster**: `librarySize()` and planning a generation no longer lay out every combination of
+  positions and repeat counts first: two (R1)m on naphthalene, up to 4 each (148 996 layouts),
+  counted in 9 ms instead of 35 s, the first 500 generated in 0.3 s instead of 34. A layout
+  whose two attachments both claim a lone placeholder atom now counts as occupied (it was
+  generated with one of them missing).
 - **Fixed**: in a compact editor, switching between the structure, variables and results
   discarded the results' filter and options and generated everything again; the panes stay
   mounted now, and the hidden results do not generate in the background.

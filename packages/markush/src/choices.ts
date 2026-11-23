@@ -34,8 +34,8 @@ function fits(drawing: Drawing, atom: number, where: SiteKind, choice: Choice): 
 
 /** What each variable may concretely become, worked out once per variable, with what was left out on the way. */
 export type ChoiceResolver = {
-  /** The sites of a drawing's placeholders, each with the choices that fit there (misfits noted). */
-  sitesOf(drawing: Drawing, stack: string[]): Site[]
+  /** The sites of a drawing's placeholders, each with the choices that fit there (misfits noted, unless `quiet`). */
+  sitesOf(drawing: Drawing, stack: string[], quiet?: boolean): Site[]
   /** A variable's concrete choices, counting its classes once however many atoms carry it. */
   choicesFor(name: string): Choice[]
   /** For a piece made concrete, what the placeholders inside it became. */
@@ -59,11 +59,11 @@ export function choiceResolver(variables: Record<string, Variable>, representati
   const misfit = (name: string, choice: Choice) => {
     if (!(misfits[name] ?? []).some((other) => sameAlternative(other, choice))) misfits[name] = [...(misfits[name] ?? []), choice]
   }
-  const sitesOf = (drawing: Drawing, stack: string[]): Site[] =>
+  const sitesOf = (drawing: Drawing, stack: string[], quiet = false): Site[] =>
     placeholders(drawing).map(({ atom, name }) => {
       const where = siteKind(drawing, atom)
       const all = stack.includes(name) ? [] : choicesFor(name, stack)
-      for (const choice of all) if (!fits(drawing, atom, where, choice)) misfit(name, choice)
+      if (!quiet) for (const choice of all) if (!fits(drawing, atom, where, choice)) misfit(name, choice)
       return { atom, name, where, choices: all.filter((choice) => fits(drawing, atom, where, choice)) }
     })
   /**

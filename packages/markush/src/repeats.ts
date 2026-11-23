@@ -2,7 +2,6 @@ import { crossingBonds } from "@structura/core/drawing"
 import type { Attachment } from "@structura/core/markush"
 import { atomById, componentOf, deleteSelection, duplicateAtoms } from "@structura/core/molecule"
 import type { Bond, Bracket, Drawing, Molecule, Point } from "@structura/core/types"
-import { odometer } from "./odometer.ts"
 import type { Pick } from "./picks.ts"
 
 // Repeat units [ … ]n written out: the unit k times over, chained head to tail through the
@@ -226,19 +225,33 @@ export function repeatStraddles(drawing: Drawing): RepeatStraddle[] {
   })
 }
 
+/** The formula with its repeat units written out one way, and the counts as picks. */
+export type RepeatVariant = { drawing: Drawing; where: Pick[] }
+
+/** The ways of counting a formula's repeat units, reached by index (the last bracket's count turns fastest). */
+export type RepeatSpace = { size: number; at: (index: number) => RepeatVariant }
+
 /**
  * Every way of counting the formula's repeat units, each repeat bracket on its own from its
  * min to its max: the formula with the units written out (those brackets gone, the
  * attachments inside them one per copy) and the counts as picks ("n" = 3). A bracket that cannot be written out (see repeatSkips) stays
  * as drawn. With no repeat brackets, the formula itself.
  */
-export function* repeatVariants(drawing: Drawing): Generator<{ drawing: Drawing; where: Pick[] }> {
+export function repeatSpace(drawing: Drawing): RepeatSpace {
   const brackets = repeatBrackets(drawing).filter((bracket) => typeof throughBonds(drawing.molecule, bracket) !== "number")
-  if (brackets.length === 0) return yield { drawing, where: [] }
+  if (brackets.length === 0) return { size: 1, at: () => ({ drawing, where: [] }) }
   const counts = brackets.map((bracket) => Array.from({ length: bracket.repeat!.max - bracket.repeat!.min + 1 }, (_, index) => bracket.repeat!.min + index))
   const gone = new Set(brackets.map((bracket) => bracket.id))
   const rest = (drawing.brackets ?? []).filter((bracket) => !gone.has(bracket.id))
-  for (const choice of odometer(counts.map((list) => list.length))) {
+  const size = counts.reduce((product, list) => product * list.length, 1)
+  const at = (which: number): RepeatVariant => {
+    if (!Number.isInteger(which) || which < 0 || which >= size) throw new RangeError("no such count of repeat units")
+    const choice: number[] = []
+    let left = which
+    for (let digit = counts.length - 1; digit >= 0; digit--) {
+      choice[digit] = left % counts[digit].length
+      left = Math.floor(left / counts[digit].length)
+    }
     let formula: Formula = { mol: drawing.molecule, attachments: drawing.attachments ?? [] }
     const where: Pick[] = []
     for (const [index, bracket] of brackets.entries()) {
@@ -250,6 +263,13 @@ export function* repeatVariants(drawing: Drawing): Generator<{ drawing: Drawing;
     const { mol, attachments } = formula
     const kept = rest.filter((bracket) => bracket.atoms.every((id) => atomById(mol, id)))
     const { brackets: _all, attachments: _drawn, ...plain } = drawing
-    yield { drawing: { ...plain, molecule: mol, ...(kept.length > 0 ? { brackets: kept } : {}), ...(attachments.length > 0 ? { attachments } : {}) }, where }
+    return { drawing: { ...plain, molecule: mol, ...(kept.length > 0 ? { brackets: kept } : {}), ...(attachments.length > 0 ? { attachments } : {}) }, where }
   }
+  return { size, at }
+}
+
+/** Every way of counting the formula's repeat units, in order (see repeatSpace). */
+export function* repeatVariants(drawing: Drawing): Generator<RepeatVariant> {
+  const space = repeatSpace(drawing)
+  for (let index = 0; index < space.size; index++) yield space.at(index)
 }

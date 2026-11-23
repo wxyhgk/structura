@@ -5,7 +5,7 @@
 export * from "@structura/core/markush"
 export { joiningSiteName } from "./choices.ts"
 export { enumerate, enumerateSteps } from "./enumerate.ts"
-export type { EnumerateOptions, Enumeration } from "./enumerate.ts"
+export type { Compound, EnumerateOptions, Enumeration } from "./enumerate.ts"
 export { formulasOf } from "./formulas.ts"
 export { choiceText, pickFields } from "./picks.ts"
 export type { Pick } from "./picks.ts"

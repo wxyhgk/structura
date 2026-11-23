@@ -123,6 +123,22 @@ test("a body that is not JSON, or none at all, is a 400", async () => {
   assert.equal((await call("POST", "/api/templates/import", undefined, "nope")).status, 400)
 })
 
+test("a body not sent as application/json is a 415, so a cross-site page cannot POST without a preflight", async () => {
+  const body = JSON.stringify(alkylTemplate())
+  const before = (await call("GET", "/api/templates")).body as { templates: unknown[] }
+  const send = (path: string, method: string, type?: string) => fetch(base + path, { method, headers: type ? { "Content-Type": type } : {}, body })
+  for (const type of ["text/plain", "application/x-www-form-urlencoded", "multipart/form-data; boundary=x", undefined]) {
+    for (const [method, path] of [["POST", "/api/templates"], ["POST", "/api/templates/import"], ["PUT", "/api/templates/some-id"]]) {
+      const response = await send(path, method, type)
+      assert.equal(response.status, 415, `${method} ${path} as ${type}`)
+      assert.match(((await response.json()) as { error: string }).error, /application\/json/)
+    }
+  }
+  assert.deepEqual(((await call("GET", "/api/templates")).body as { templates: unknown[] }).templates, before.templates, "nothing was stored")
+  assert.equal((await send("/api/templates", "POST", "application/json; charset=utf-8")).status, 201)
+  reset()
+})
+
 test("a body over 2 MB is a 413", async () => {
   const big = await call("POST", "/api/templates", { ...alkylTemplate(), padding: "x".repeat(2 * 1024 * 1024) })
   assert.equal(big.status, 413)

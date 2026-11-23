@@ -6,9 +6,11 @@ from `@structura/markush` (`packages/markush/src/templates/model.ts`), and every
 is checked with `templateProblem` before it is stored. Built-in templates are not stored
 here: they ship with the app (`builtinTemplates()` in `@structura/markush`).
 
-All bodies are JSON (`Content-Type: application/json`, UTF-8). Errors are
-`{ "error": "<message>" }` with status 400 (bad input), 404 (no such template), 413 (body
-over 2 MB) or 500.
+All bodies are JSON (`Content-Type: application/json`, UTF-8); a request with a body sent as
+any other type is refused, so a page on another site cannot post to a local backend without a
+preflight, which the backend does not answer. Errors are `{ "error": "<message>" }` with
+status 400 (bad input), 404 (no such template), 413 (body over 2 MB), 415 (body not sent as
+`application/json`) or 500.
 
 | Method | Path | Body | Answer |
 |---|---|---|---|

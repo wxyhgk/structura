@@ -31,7 +31,7 @@ export function fillHandler(env: AiEnv = process.env) {
     if (req.method !== "POST") return send(res, 405, { ok: false, error: "只接受 POST" })
     // The text limit plus room for the variables and JSON escaping.
     const read = await readJsonBody(req, MAX_TEXT * 4)
-    if ("error" in read) return send(res, 400, { ok: false, error: read.error })
+    if ("error" in read) return send(res, read.status, { ok: false, error: read.error })
     const request = read.value
     const problem = requestProblem(request)
     if (problem) return send(res, 400, { ok: false, error: problem })

@@ -7,6 +7,8 @@ export type Doc = {
   molecule: { atoms: Atom[]; bonds: Array<{ a: number; b: number }> }
   attachments?: Array<{ atom: number; to: number[]; repeat?: { min: number; max: number; name: string }; shape?: "line" | "loop" | "arc" | "bracket" | "custom"; curve?: { nodes: Array<[number, number]>; closed: boolean } }>
   variables?: Record<string, unknown>
+  generation?: { representatives?: boolean; dedupe?: boolean; limit?: number }
+  numbering?: { pattern: string; start: number; assigned?: Record<string, number> }
   brackets?: Array<{ id: number; atoms: number[]; kind: string; repeat?: { min: number; max: number; name: string } }>
 }
 type Handle = { getDocument(): string; setDocument(text: string): string[] }
@@ -36,6 +38,11 @@ export async function toMarkush(page: Page) {
   page.off("dialog", leave)
   await page.evaluate((given) => (window as unknown as { __structura: Handle }).__structura.setDocument(given), text)
   await expect(page.getByTestId("markush-workspace")).toBeVisible()
+}
+
+/** How many unsaved-work copies this browser holds under a page's key (autosave.ts: one for each page that has kept one). */
+export function copies(page: Page, prefix: string): Promise<number> {
+  return page.evaluate((key) => Object.keys(localStorage).filter((name) => name === key || name.startsWith(`${key}:`)).length, prefix)
 }
 
 /** The drawing as the editor would save it. */

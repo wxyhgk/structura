@@ -135,6 +135,22 @@ test("a on a bond fuses benzene", () => {
   assert.equal(plainFormula(fused.mol), "C6H6")
 })
 
+test("a on the last bond of a chain puts the ring on the free side, not over the bond before it", () => {
+  const start = ethane()
+  const propane = press(start.mol, { type: "atom", id: start.end }, "1")
+  assert.ok(propane && propane.next.type === "atom")
+  const last = propane.mol.bonds.find((bond) => bond.a === propane.next.id || bond.b === propane.next.id)
+  assert.ok(last)
+  for (const key of ["a", "6", "5"]) {
+    const fused = press(propane.mol, { type: "bond", id: last.id }, key)
+    assert.ok(fused)
+    // The first carbon stays a substituent: toluene, not benzene with the chain folded into it.
+    assert.equal(fused.mol.atoms.length, 3 + (key === "5" ? 3 : 4), `key ${key}`)
+    assert.equal(neighbors(fused.mol, start.mol.atoms[0].id).length, 1, `key ${key}`)
+  }
+  assert.equal(plainFormula(press(propane.mol, { type: "bond", id: last.id }, "a")!.mol), "C7H8")
+})
+
 test("letter case changes the group", () => {
   const start = ethane()
   const alcohol = press(start.mol, { type: "atom", id: start.end }, "o")

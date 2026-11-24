@@ -129,7 +129,7 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
         if (op.as != null) ctx.name(op.as, mol.nextAtomId)
         return { mol: placed, next: null }
       }
-      const ring = op.atom != null ? growRing(mol, ctx.atom(op.atom), kind) : fuseRingAt(mol, ctx.bond(op.bond!), kind, op.side ?? 1)
+      const ring = op.atom != null ? growRing(mol, ctx.atom(op.atom), kind) : fuseRingAt(mol, ctx.bond(op.bond!), kind, op.side)
       if (ring.mol === mol) throw new OpError("the ring could not be placed there")
       ctx.name(op.as, ring.far)
       return { mol: ring.mol, next: { type: "atom", id: ring.far } }

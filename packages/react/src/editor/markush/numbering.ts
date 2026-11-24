@@ -44,15 +44,25 @@ export function rowKey(row: Row, smiles: ((mol: Molecule) => string | null) | un
   return `p:${Object.keys(fields).sort().map((name) => `${name}=${fields[name]}`).join("|")}`
 }
 
-/** One key for each row, in order; a second compound with the same key (repeats kept) gets "#2", "#3"… so no two share a number. */
-export function rowKeys(rows: readonly Row[], smiles?: (mol: Molecule) => string | null): string[] {
+/**
+ * Keys rows one after another, as rowKeys does for a whole list: a second compound with the
+ * same key (repeats kept) gets "#2", "#3"… so no two share a number. For a list written as it
+ * is made (导出全部), where `identity` is the canonical SMILES already worked out, or null.
+ */
+export function rowKeyer(): (row: Row, identity: string | null) => string {
   const seen = new Map<string, number>()
-  return rows.map((row) => {
-    const key = rowKey(row, smiles)
+  return (row, identity) => {
+    const key = rowKey(row, identity ? () => identity : undefined)
     const times = (seen.get(key) ?? 0) + 1
     seen.set(key, times)
     return times > 1 ? `${key}#${times}` : key
-  })
+  }
+}
+
+/** One key for each row, in order; a second compound with the same key (repeats kept) gets "#2", "#3"… so no two share a number. */
+export function rowKeys(rows: readonly Row[], smiles?: (mol: Molecule) => string | null): string[] {
+  const key = rowKeyer()
+  return rows.map((row) => key(row, smiles?.(row.mol) ?? null))
 }
 
 /**

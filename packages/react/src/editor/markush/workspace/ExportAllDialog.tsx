@@ -9,7 +9,7 @@ import type { Save } from "../../save.ts"
 import { loadRDKit } from "../../rdkit.ts"
 import { CONFIRM_ABOVE, EXPORT_CAP, EXPORT_TYPES, exportAll, type ExportAllKind, type ExportAllProgress } from "../exportAll.ts"
 import { canonicalIdentity, canonicalSmiles } from "../identity.ts"
-import { numberText, rowKey, type Numbering } from "../numbering.ts"
+import { numberText, rowKeyer, type Numbering } from "../numbering.ts"
 import { totalText } from "../sizeText.ts"
 
 /**
@@ -75,15 +75,17 @@ export function ExportAllDialog({
         if (kind === "csv") throw new Error("没能加载 RDKit，写不出 SMILES 列")
       }
       const identity = rdkit ? canonicalIdentity(rdkit) : null
+      const keyOf = rowKeyer()
       const outcome = await exportAll(drawing, {
         kind,
         representatives,
         identities: dedupe && rdkit && identity ? { identity, identifySmiles: canonicalSmiles(rdkit) } : undefined,
         smiles: identity ?? (() => null),
         numbering,
-        // Told apart as the page tells them (canonical SMILES when repeats are dropped, else what each variable became).
+        // Told apart as the page tells them (canonical SMILES when repeats are dropped, else what
+        // each variable became, a repeat "#2"…), so a compound gets the number the page gave it.
         numberOf: (row, identity) => {
-          const n = numbering.assigned?.[identity ? `s:${identity}` : rowKey(row, undefined)]
+          const n = numbering.assigned?.[keyOf(row, identity)]
           return n == null ? "" : numberText(numbering.pattern, n)
         },
         signal: controller.signal,

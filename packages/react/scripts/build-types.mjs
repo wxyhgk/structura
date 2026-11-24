@@ -1,4 +1,4 @@
-// Writes dist/index.d.ts, core.d.ts and standalone.d.ts: each entry's types, with the types of
+// Writes dist/index.d.ts, core.d.ts, chem.d.ts and standalone.d.ts: each entry's types, with the types of
 // Structura's own workspace packages (@structura/core, engine, markush…) bundled in, since those
 // are not published. Step 1: tsc emits plain declarations for everything into .types/; step 2: rolldown
 // joins them from the entry, mapping each @structura/… import to its emitted declaration.
@@ -45,7 +45,7 @@ const resolveDeclarations = {
 const pkg = JSON.parse(readFileSync(join(here, "package.json"), "utf8"))
 const external = [...Object.keys(pkg.peerDependencies), ...Object.keys(pkg.dependencies)]
 const bundle = await rolldown({
-  input: Object.fromEntries(["index.ts", "core.ts", "standalone.ts"].map((file) => [file.replace(/\.tsx?$/, ""), declarationOf(join(here, "src", file))])),
+  input: Object.fromEntries(["index.ts", "core.ts", "chem.ts", "standalone.ts"].map((file) => [file.replace(/\.tsx?$/, ""), declarationOf(join(here, "src", file))])),
   external: (id) => external.some((name) => id === name || id.startsWith(`${name}/`)),
   plugins: [resolveDeclarations, dts({ dtsInput: true, emitDtsOnly: true })],
 })

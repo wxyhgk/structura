@@ -1,5 +1,5 @@
 /** How long one slice of work may hold the page before it gets its turn. */
-const SLICE_MS = 12
+export const SLICE_MS = 12
 
 /**
  * Runs `each` over `items` in short slices, yielding to the page between them, so a long

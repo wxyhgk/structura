@@ -16,17 +16,27 @@ export function canonicalSmiles(rdkit: MainModule): (smiles: string) => string |
 }
 
 /**
+ * Canonical SMILES by molecule, kept while the molecule lives: the list, its numbering and its
+ * downloads all ask about the same molecules, and a growing result is keyed again on every
+ * update. There is one RDKit, so one answer per molecule.
+ */
+const identities = new WeakMap<Molecule, string | null>()
+
+/**
  * What makes two generated molecules the same compound: RDKit's canonical SMILES. A
  * molecule RDKit cannot read gives null, and is kept rather than merged.
  */
 export function canonicalIdentity(rdkit: MainModule): (mol: Molecule) => string | null {
   return (mol) => {
+    if (identities.has(mol)) return identities.get(mol) ?? null
     const read = rdkit.get_mol(toMolfile(mol))
-    if (!read) return null
+    let smiles: string | null = null
     try {
-      return read.get_smiles()
+      smiles = read ? read.get_smiles() : null
     } finally {
-      read.delete()
+      read?.delete()
     }
+    identities.set(mol, smiles)
+    return smiles
   }
 }

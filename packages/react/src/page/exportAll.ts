@@ -4,12 +4,11 @@ import { sdfOf } from "./exportRows.ts"
 import { compoundId, type Numbering } from "./numbering.ts"
 import { CSV_BOM, csvHead, csvLine, rowFields, type Row } from "./results.ts"
 import { runSlice } from "./slice.ts"
+import { SLICE_MS } from "./asyncSlices.ts"
 
 // The whole library written to a file, as it is generated: nothing is kept but the lines
 // already written, so a library too big to list on the page can still be exported.
 
-/** Work done per slice before the page gets to paint and handle input again. */
-const SLICE_MS = 12
 /** How often the progress is reported. */
 const REPORT_MS = 150
 /** SD records put together at a time. */

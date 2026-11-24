@@ -1,5 +1,6 @@
 import { ringPositionsAt } from "@structura/markush"
-import { atomById, bondLengthAt, chainPoints } from "@structura/core/molecule"
+import { atomById, bondLengthAt } from "@structura/core/molecule"
+import { chainPoints } from "@structura/core/layout"
 import { chainCount } from "../pointer/chain.ts"
 import { angleTo, snapAngle } from "@structura/core/geometry"
 import type { Point } from "@structura/core/types"

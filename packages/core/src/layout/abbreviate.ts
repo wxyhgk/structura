@@ -13,9 +13,9 @@ import {
   setAlias,
   setElement,
   setIsotope,
-} from "./graph.ts"
+} from "../molecule/graph.ts"
 import { sproutAngle } from "./angles.ts"
-import { bondLengthAt } from "./measure.ts"
+import { bondLengthAt } from "../molecule/measure.ts"
 import { sproutAt } from "./place.ts"
 import { BOND_LENGTH, SINGLE } from "../constants.ts"
 

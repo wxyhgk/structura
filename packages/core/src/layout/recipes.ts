@@ -1,5 +1,5 @@
 import { angleTo } from "../geometry.ts"
-import { atomById, bumpCharge, neighbors, setElement } from "./graph.ts"
+import { atomById, bumpCharge, neighbors, setElement } from "../molecule/graph.ts"
 import { branchAngles, sproutAngle } from "./angles.ts"
 import { attachChairAt } from "./chair.ts"
 import { sproutAt } from "./place.ts"

@@ -1,6 +1,7 @@
 import { BOND_LENGTH } from "@structura/core/constants"
 import { distToSegment, sideOfLine } from "@structura/core/geometry"
-import { atomById, canPlaceFused, openSide } from "@structura/core/molecule"
+import { atomById } from "@structura/core/molecule"
+import { canPlaceFused, openSide } from "@structura/core/layout"
 import type { Bond, Molecule, Point, RingKind } from "@structura/core/types"
 
 // The ring tool over a bond: which bond the pointer means and on which side the ring goes.

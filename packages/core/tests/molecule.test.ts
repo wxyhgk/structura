@@ -4,28 +4,8 @@ import { BOND_LENGTH } from "../src/constants.ts"
 import { plainFormula, molecularWeight, valenceErrorCount } from "../src/formula.ts"
 import { angleTo, dist } from "../src/geometry.ts"
 import { toMolfile } from "../src/molfile.ts"
-import {
-  addAtom,
-  addBond,
-  atomById,
-  attachRingAt,
-  bondBetween,
-  bumpCharge,
-  setElement,
-  neighbors,
-  bondOrderSum,
-  growRing,
-  centroidOf,
-  createBondAt,
-  emptyMolecule,
-  flipAtoms,
-  fuseRingAt,
-  placeRing,
-  ringOnBond,
-  rotateAtoms,
-  sprout,
-  tumbleAtoms,
-} from "../src/molecule.ts"
+import { addAtom, addBond, atomById, bondBetween, bumpCharge, setElement, neighbors, bondOrderSum, centroidOf, emptyMolecule, flipAtoms, rotateAtoms, tumbleAtoms } from "../src/molecule.ts"
+import { attachRingAt, growRing, createBondAt, fuseRingAt, placeRing, ringOnBond, sprout } from "../src/layout.ts"
 
 function bondAngle(mol: ReturnType<typeof createBondAt>, atomId: number): number[] {
   const atom = atomById(mol, atomId)
@@ -303,7 +283,7 @@ test("lookups by id and between atoms follow every edit", () => {
 })
 
 test("a fused ring goes where asked; a heteroatom it overfills is flagged, not refused (as ChemDraw does)", async () => {
-  const { canFuse } = await import("../src/molecule/fusion.ts")
+  const { canFuse } = await import("../src/layout/fusion.ts")
   const { validate } = await import("../src/validate.ts")
   const ring = placeRing(emptyMolecule(), { x: 0, y: 0 }, "cyclohexane")
   const decalin = fuseRingAt(ring, ring.bonds[0].id, "cyclohexane", 1).mol

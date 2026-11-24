@@ -1,5 +1,6 @@
 import { pointFrom } from "@structura/core/geometry"
-import { atomById, bondLengthAt, componentOf, deleteSelection, duplicateAtoms, sproutAngle, subMolecule } from "@structura/core/molecule"
+import { atomById, bondLengthAt, componentOf, deleteSelection, duplicateAtoms, subMolecule } from "@structura/core/molecule"
+import { sproutAngle } from "@structura/core/layout"
 import { applyOps } from "@structura/core/ops"
 import type { Drawing, Molecule } from "@structura/core/types"
 import type { Attachment } from "@structura/core/markush"

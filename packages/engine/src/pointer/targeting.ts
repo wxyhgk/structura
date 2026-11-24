@@ -1,6 +1,7 @@
 import { labelFor, type LabelBox } from "@structura/core/draw"
 import { angleTo, dist, distToSegment, snapAngle } from "@structura/core/geometry"
-import { SNAP_ATOM, atomById, atomIdsOfSelection, bondById, bondLengthAt, nearestAtom } from "@structura/core/molecule"
+import { atomById, atomIdsOfSelection, bondById, bondLengthAt } from "@structura/core/molecule"
+import { SNAP_ATOM, nearestAtom } from "@structura/core/layout"
 import type { Atom, HotTarget, Molecule, Point, Selection } from "@structura/core/types"
 import type { HoverTarget } from "./types.ts"
 

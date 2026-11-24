@@ -1,7 +1,7 @@
 import { BOND_LENGTH } from "../constants.ts"
 import { atomHydrogens } from "../formula.ts"
 import { bondById, spliceIn } from "../molecule.ts"
-import { attachPiece } from "../molecule/attach.ts"
+import { attachPiece } from "../layout/attach.ts"
 import { fuseBonds } from "../molecule/join.ts"
 import { kekulizeAromaticReport } from "../molecule/kekule.ts"
 import { freeSites, fusableEdges, scaffoldNamed, scaffolds, siteAtom, type Scaffold } from "../scaffolds.ts"

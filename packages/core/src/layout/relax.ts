@@ -1,5 +1,5 @@
 import type { Molecule } from "../types.ts"
-import { atomById, cloneMolecule, neighbors } from "./graph.ts"
+import { atomById, cloneMolecule, neighbors } from "../molecule/graph.ts"
 import { objective, positionsFor } from "./relax/energy.ts"
 import { minimize } from "./relax/minimize.ts"
 import { setUp } from "./relax/setup.ts"

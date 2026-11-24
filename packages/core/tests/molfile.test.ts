@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { addAtom, addBond, bondById, bumpCharge, createBondAt, emptyMolecule, sprout } from "../src/molecule.ts"
+import { addAtom, addBond, bondById, bumpCharge, emptyMolecule } from "../src/molecule.ts"
+import { createBondAt, sprout } from "../src/layout.ts"
 import { plainFormula } from "../src/formula.ts"
 import { setAtomLabel } from "../src/label.ts"
 import { toMolfile, toSdf } from "../src/molfile.ts"

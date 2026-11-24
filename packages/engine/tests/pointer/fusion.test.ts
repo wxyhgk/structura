@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { atomById, emptyMolecule, fuseRingAt, neighbors, placeRing, setElement } from "@structura/core/molecule"
+import { atomById, emptyMolecule, neighbors, setElement } from "@structura/core/molecule"
+import { fuseRingAt, placeRing } from "@structura/core/layout"
 import { fuseReach, fusionTarget } from "@structura/engine"
 
 test("the ring tool fuses onto the bond under the pointer, never a cleaner one nearby", () => {

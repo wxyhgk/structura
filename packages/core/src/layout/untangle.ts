@@ -1,6 +1,6 @@
 import type { Molecule } from "../types.ts"
-import { cloneMolecule } from "./graph.ts"
-import { bondLengthAt } from "./measure.ts"
+import { cloneMolecule } from "../molecule/graph.ts"
+import { bondLengthAt } from "../molecule/measure.ts"
 import { relax } from "./relax.ts"
 
 // Groups drawn out where a template first put them (a compound table showing Bn, Mes… in

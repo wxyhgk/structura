@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { sceneToSvg } from "../src/draw.ts"
 import { addReactionArrow, emptyDrawing } from "../src/drawing.ts"
-import { createBondAt } from "../src/molecule.ts"
+import { createBondAt } from "../src/layout.ts"
 
 test("a reaction arrow goes on the drawing and leaves the molecule alone", () => {
   const molecule = createBondAt(emptyDrawing().molecule, { x: 0, y: 0 }, { order: 1, stereo: "none" })

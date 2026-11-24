@@ -2,7 +2,7 @@ import { RING_SIZE } from "../constants.ts"
 import { hydrogenCount } from "../formula.ts"
 import { dist, sideOfLine } from "../geometry.ts"
 import type { Bond, Molecule, Point, RingKind } from "../types.ts"
-import { atomById, bondBetween, bondById, bondOrderSum, cycleAround, neighbors } from "./graph.ts"
+import { atomById, bondBetween, bondById, bondOrderSum, cycleAround, neighbors } from "../molecule/graph.ts"
 import { buildRing, ringOnBond } from "./rings.ts"
 
 const COINCIDENT = 0.8

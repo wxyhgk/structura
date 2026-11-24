@@ -81,6 +81,11 @@
       "types": "./dist/markush.d.ts",
       "default": "./dist/markush.js"
     },
+    "./layout": {
+      "structura-source": "./src/layout.ts",
+      "types": "./dist/layout.d.ts",
+      "default": "./dist/layout.js"
+    },
     "./molecule": {
       "structura-source": "./src/molecule.ts",
       "types": "./dist/molecule.d.ts",

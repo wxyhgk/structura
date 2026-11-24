@@ -1,28 +1,9 @@
 import { groupsTouching, setCollapsed, withGroupMembers } from "../molecule/collapse.ts"
 import { RING_SHAPES, ringKindFor } from "../constants.ts"
 import { setAtomLabel } from "../label.ts"
-import {
-  addAtom,
-  addBond,
-  attachChairAt,
-  atomById,
-  bondById,
-  bumpCharge,
-  deleteSelection,
-  fuseChairAt,
-  fuseRingAt,
-  growRing,
-  insertGroup,
-  placeRing,
-  setBondLook,
-  setBondOrder,
-  setElement,
-  setIsotope,
-  sproutAngle,
-  spotBeside,
-  sproutAt,
-} from "../molecule.ts"
-import { RECIPES } from "../molecule/recipes.ts"
+import { addAtom, addBond, atomById, bondById, bumpCharge, deleteSelection, setBondLook, setBondOrder, setElement, setIsotope, spotBeside } from "../molecule.ts"
+import { attachChairAt, fuseChairAt, fuseRingAt, growRing, insertGroup, placeRing, sproutAngle, sproutAt } from "../layout.ts"
+import { RECIPES } from "../layout/recipes.ts"
 import { templateFor } from "../templates.ts"
 import type { HotTarget, Molecule } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"

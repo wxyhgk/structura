@@ -1,6 +1,6 @@
 import { dist } from "../geometry.ts"
 import type { Atom, Bond, Molecule, Point } from "../types.ts"
-import { atomById } from "./graph.ts"
+import { atomById } from "../molecule/graph.ts"
 
 export function nearestAtom(
   mol: Molecule,

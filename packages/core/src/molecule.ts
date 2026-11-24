@@ -1,3 +1,4 @@
+// The molecule as a graph: atoms and bonds, rings found, selections, moves. No placement rules.
 export {
   addAtom,
   addBond,
@@ -23,35 +24,8 @@ export {
 } from "./molecule/graph.ts"
 export { atomIdsOfSelection, bondsLeaving, emptySelection, selectAll, selectionFromAtoms } from "./molecule/selection.ts"
 export { boundsCenter, centroidOf, flipAtoms, moveAtoms, rotateAtoms, scaleAtoms, tumbleAtoms } from "./molecule/transform.ts"
-export { nearestAtom, nearestBond } from "./molecule/snap.ts"
 export { bondLengthAt } from "./molecule/measure.ts"
-export { sproutAngle } from "./molecule/angles.ts"
-export { sproutAt } from "./molecule/place.ts"
-export {
-  attachRingAt,
-  growRing,
-  growRingPreview,
-  placeRing,
-  ringOnBond,
-  ringPoints,
-  spiroRing,
-} from "./molecule/rings.ts"
-export { canPlaceFused, fuseRingAt, openSide } from "./molecule/fusion.ts"
 export { ringMembership } from "./molecule/cycles.ts"
-export { attachChairAt, fuseChairAt } from "./molecule/chair.ts"
-export {
-  ATOM_HIT,
-  SNAP_ATOM,
-  chainPoints,
-  commitChain,
-  connectPoints,
-  createBondAt,
-  placeAtom,
-  sprout,
-} from "./molecule/pointer.ts"
-export { insertGroup } from "./molecule/abbreviate.ts"
 export { displayMolecule, groupsTouching, hiddenAtoms, setCollapsed, withGroupMembers } from "./molecule/collapse.ts"
 export { duplicateAtoms, placeBeside, sideBySide, spotBeside } from "./molecule/arrange.ts"
-export { relax } from "./molecule/relax.ts"
-export { untangleGroups } from "./molecule/untangle.ts"
 export { joinAtoms, joinBonds, landings, mergeAtoms, mergeLandings } from "./molecule/join.ts"

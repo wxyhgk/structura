@@ -1,6 +1,6 @@
 import type { BondEmphasis, BondLook, BondOrder, BondStereo, Bracket, Drawing, HotTarget, Molecule, Point, RingKind } from "../types.ts"
 import type { Alternative, AttachmentShape, BridgeName, Generation, Proviso, Repeat, RingClosure } from "../markush/types.ts"
-import type { RecipeName } from "../molecule/recipes.ts"
+import type { RecipeName } from "../layout/recipes.ts"
 import type { Problem } from "../validate.ts"
 
 /** An atom: its id, or a name given with `as` earlier in the same batch. */

@@ -1,6 +1,6 @@
 import type { Molecule } from "../../types.ts"
-import { smallestRings } from "../cycles.ts"
-import { bondsOf } from "../lookup.ts"
+import { smallestRings } from "../../molecule/cycles.ts"
+import { bondsOf } from "../../molecule/lookup.ts"
 import type { Setup } from "./setup.ts"
 
 /** Distance targets between atom pairs, in bond lengths. Angles are held by 1-3 distances. */

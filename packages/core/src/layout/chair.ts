@@ -2,8 +2,8 @@ import { BOND_LENGTH, SINGLE } from "../constants.ts"
 import { pointFrom } from "../geometry.ts"
 import type { Molecule } from "../types.ts"
 import { sproutAngle } from "./angles.ts"
-import { addBond, atomById, bondById } from "./graph.ts"
-import { bondLengthAt } from "./measure.ts"
+import { addBond, atomById, bondById } from "../molecule/graph.ts"
+import { bondLengthAt } from "../molecule/measure.ts"
 import { buildRing } from "./rings.ts"
 
 const CHAIR: Array<[number, number]> = [

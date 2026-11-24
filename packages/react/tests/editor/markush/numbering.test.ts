@@ -5,7 +5,7 @@ import { emptyDrawing } from "@structura/core/drawing"
 import { applyOps, type Op } from "@structura/core/ops"
 import type { Drawing } from "@structura/core/types"
 import { assignNumbers, enumerate } from "@structura/markush"
-import { DEFAULT_NUMBERING, numberByBook, rowKeys } from "../../../src/editor/markush/numbering.ts"
+import { DEFAULT_NUMBERING, numberByBook, rowKeyer, rowKeys } from "../../../src/editor/markush/numbering.ts"
 import { rowsOf } from "../../../src/editor/markush/results.ts"
 
 /** Benzene with an R1 that may be each of `choices`. */
@@ -64,4 +64,14 @@ test("without canonical SMILES compounds are told apart by their choices, and a 
   assert.deepEqual(twice, ["p:R1=Cl", "p:R1=Cl#2"])
   // With SMILES, a compound is named by its structure whatever the candidate was called.
   assert.deepEqual(rowKeys(rows, () => "c1ccccc1"), ["s:c1ccccc1", "s:c1ccccc1#2"])
+})
+
+test("导出全部 keys compounds one by one exactly as the page keys the list, repeats included", () => {
+  const rows = rowsOf(enumerate(benzene(["Cl", "F"])))
+  const list = [rows[0], rows[1], rows[0], rows[0]]
+  const key = rowKeyer()
+  assert.deepEqual(list.map((row) => key(row, null)), rowKeys(list))
+  assert.deepEqual(rowKeys(list), ["p:R1=Cl", "p:R1=F", "p:R1=Cl#2", "p:R1=Cl#3"])
+  const bySmiles = rowKeyer()
+  assert.deepEqual(list.map((row) => bySmiles(row, plainFormula(row.mol))), rowKeys(list, (mol) => plainFormula(mol)))
 })

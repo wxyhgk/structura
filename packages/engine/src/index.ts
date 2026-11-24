@@ -25,7 +25,7 @@ export { aimAt, type Aimed } from "./pointer/aim.ts"
 export { bondEnd, clampScale, dragIds, frameAt, hitOf, hoverOf, nearestTarget, reachOf, sameHover, selectionFrame, type Aim, type FrameHandle, type SelectionFrame } from "./pointer/targeting.ts"
 export { doubleClickAction, type DoubleClick } from "./pointer/doubleClick.ts"
 export { snappedMove } from "./pointer/moveSnap.ts"
-export { fuseReach, fusionSide, fusionTarget } from "./pointer/fusion.ts"
+export { fuseReach, fusionSide, fusionTarget, pointerSide } from "./pointer/fusion.ts"
 export { chainCount } from "./pointer/chain.ts"
 export { arrowDirection, chainEndToward, neighborToward } from "./pointer/arrowStep.ts"
 

@@ -17,11 +17,12 @@ export function hasHotkey(type: HotTarget["type"], key: string): boolean {
 /**
  * The ops pressing `key` over the target sends, or null when the key means nothing there.
  * The result's `next` is where the following key lands; `as` names that atom when the key
- * grows a new one.
+ * grows a new one. `side` is where a ring key puts its ring on a bond (the pointer's side, see
+ * pointerSide); left out, the ring takes the side with room.
  */
-export function hotkeyOps(mol: Molecule, target: HotTarget, key: string, as?: string): Op[] | null {
+export function hotkeyOps(mol: Molecule, target: HotTarget, key: string, as?: string, side?: 1 | -1): Op[] | null {
   if (!hasHotkey(target.type, key)) return null
-  return target.type === "atom" ? atomActionOps(mol, target.id, ATOM_KEYS[key], as) : bondActionOps(target.id, BOND_KEYS[key], as)
+  return target.type === "atom" ? atomActionOps(mol, target.id, ATOM_KEYS[key], as) : bondActionOps(target.id, BOND_KEYS[key], as, side)
 }
 
 const tipName = (index: number) => `tip${index}`

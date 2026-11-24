@@ -41,3 +41,18 @@ function fuseSide(mol: Molecule, bond: Bond, point: Point): 1 | -1 {
 export function fusionSide(mol: Molecule, bond: Bond, point: Point): 1 | -1 {
   return openSide(mol, bond, fuseSide(mol, bond, point))
 }
+
+/**
+ * The side of a bond the pointer is on when a ring key is pressed over it, so the ring goes
+ * there; none (the ring takes the side with room) when the pointer is within `dead` of the
+ * bond's line, where a hair's movement would flip it.
+ */
+export function pointerSide(mol: Molecule, bond: Bond, point: Point, dead: number): 1 | -1 | undefined {
+  const a = atomById(mol, bond.a)
+  const b = atomById(mol, bond.b)
+  if (!a || !b) return undefined
+  const length = Math.hypot(b.x - a.x, b.y - a.y)
+  if (length === 0) return undefined
+  const off = Math.abs((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)) / length
+  return off < dead ? undefined : sideOfLine(a, b, point)
+}

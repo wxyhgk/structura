@@ -1,4 +1,5 @@
-import { atomById, landings, moveAtoms, SNAP_ATOM } from "@structura/core/molecule"
+import { atomById, landings, moveAtoms } from "@structura/core/molecule"
+import { SNAP_ATOM } from "@structura/core/layout"
 import type { Molecule } from "@structura/core/types"
 
 /**

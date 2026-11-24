@@ -1,4 +1,4 @@
-import { neighbors } from "./graph.ts"
+import { neighbors } from "../molecule/graph.ts"
 import type { HotTarget, Molecule } from "../types.ts"
 
 export type HotResult = { mol: Molecule; next: HotTarget }

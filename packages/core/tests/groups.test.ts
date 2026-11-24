@@ -4,18 +4,8 @@ import { BOND_LENGTH } from "../src/constants.ts"
 import { dist } from "../src/geometry.ts"
 import { plainFormula } from "../src/formula.ts"
 import { setAtomLabel } from "../src/label.ts"
-import {
-  atomById,
-  createBondAt,
-  deleteSelection,
-  emptyMolecule,
-  groupOf,
-  insertGroup,
-  moveAtoms,
-  rotateAtoms,
-  setElement,
-  sprout,
-} from "../src/molecule.ts"
+import { atomById, deleteSelection, emptyMolecule, groupOf, moveAtoms, rotateAtoms, setElement } from "../src/molecule.ts"
+import { createBondAt, insertGroup, sprout } from "../src/layout.ts"
 import { keptAsLabel, templateFor } from "../src/templates.ts"
 import { ABBREVIATIONS } from "../src/templates/abbreviations.ts"
 import type { Molecule } from "../src/types.ts"

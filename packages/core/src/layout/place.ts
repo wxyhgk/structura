@@ -1,7 +1,7 @@
 import { pointFrom } from "../geometry.ts"
 import type { BondStyle, Molecule } from "../types.ts"
-import { addAtom, addBond, atomById } from "./graph.ts"
-import { bondLengthAt } from "./measure.ts"
+import { addAtom, addBond, atomById } from "../molecule/graph.ts"
+import { bondLengthAt } from "../molecule/measure.ts"
 import { nearestAtom } from "./snap.ts"
 
 /** Adds one atom bonded to `atomId`, one local bond length away along `angle`. */

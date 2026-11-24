@@ -1,5 +1,6 @@
 import { ringAt } from "@structura/markush"
-import { SNAP_ATOM, addAtom, atomById, bondLengthAt, nearestAtom } from "@structura/core/molecule"
+import { addAtom, atomById, bondLengthAt } from "@structura/core/molecule"
+import { SNAP_ATOM, nearestAtom } from "@structura/core/layout"
 import type { Point } from "@structura/core/types"
 import { attachmentOps } from "../markush/attachmentOps.ts"
 import { curveOp } from "../markush/curveEdit.ts"

@@ -1,7 +1,7 @@
 import { angleTo, norm, pointFrom, pointInPolygon, signedDelta } from "../geometry.ts"
 import type { Atom, Molecule } from "../types.ts"
-import { ringMembership } from "./cycles.ts"
-import { atomById, neighbors } from "./graph.ts"
+import { ringMembership } from "../molecule/cycles.ts"
+import { atomById, neighbors } from "../molecule/graph.ts"
 
 type Gap = { start: number; gap: number }
 

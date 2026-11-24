@@ -1,8 +1,8 @@
 import { angleTo, pointFrom } from "../../geometry.ts"
 import type { Molecule, Point } from "../../types.ts"
-import { smallestRings } from "../cycles.ts"
-import { atomById, cloneMolecule, neighbors } from "../graph.ts"
-import { bondLengthAt } from "../measure.ts"
+import { smallestRings } from "../../molecule/cycles.ts"
+import { atomById, cloneMolecule, neighbors } from "../../molecule/graph.ts"
+import { bondLengthAt } from "../../molecule/measure.ts"
 
 /** Nearer than this many bond lengths to an atom it is not bonded to, an atom is misplaced. */
 const CROWDED = 0.5

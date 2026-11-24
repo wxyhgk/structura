@@ -1,19 +1,6 @@
 import { withGroupMembers } from "../molecule/collapse.ts"
-import {
-  bondById,
-  bondLengthAt,
-  boundsCenter,
-  commitChain,
-  connectPoints,
-  createBondAt,
-  flipAtoms,
-  moveAtoms,
-  placeAtom,
-  relax,
-  rotateAtoms,
-  scaleAtoms,
-  sprout,
-} from "../molecule.ts"
+import { bondById, bondLengthAt, boundsCenter, flipAtoms, moveAtoms, rotateAtoms, scaleAtoms } from "../molecule.ts"
+import { commitChain, connectPoints, createBondAt, placeAtom, relax, sprout } from "../layout.ts"
 import { joinAtoms, joinBonds, landings, mergeLandings } from "../molecule/join.ts"
 import type { Molecule } from "../types.ts"
 import { OpError, type Context, type Step } from "./context.ts"

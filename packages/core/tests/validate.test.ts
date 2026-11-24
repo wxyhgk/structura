@@ -2,26 +2,9 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { addReactionArrow, emptyDrawing } from "../src/drawing.ts"
 import { setAtomLabel } from "../src/label.ts"
-import {
-  attachRingAt,
-  bumpCharge,
-  createBondAt,
-  deleteSelection,
-  emptyMolecule,
-  flipAtoms,
-  fuseChairAt,
-  fuseRingAt,
-  growRing,
-  placeRing,
-  rotateAtoms,
-  setBondLook,
-  setBondOrder,
-  setElement,
-  spiroRing,
-  sprout,
-  tumbleAtoms,
-} from "../src/molecule.ts"
-import { RECIPES, type RecipeName } from "../src/molecule/recipes.ts"
+import { bumpCharge, deleteSelection, emptyMolecule, flipAtoms, rotateAtoms, setBondLook, setBondOrder, setElement, tumbleAtoms } from "../src/molecule.ts"
+import { attachRingAt, createBondAt, fuseChairAt, fuseRingAt, growRing, placeRing, spiroRing, sprout } from "../src/layout.ts"
+import { RECIPES, type RecipeName } from "../src/layout/recipes.ts"
 import type { BondStyle, Molecule, RingKind } from "../src/types.ts"
 import { errorsOf, validate, validateDrawing, type Problem } from "../src/validate.ts"
 import { seeded } from "@structura/testkit"

@@ -1,7 +1,7 @@
 import { dist } from "../../geometry.ts"
 import type { Molecule } from "../../types.ts"
-import { componentOf } from "../graph.ts"
-import { bondLengthAt } from "../measure.ts"
+import { componentOf } from "../../molecule/graph.ts"
+import { bondLengthAt } from "../../molecule/measure.ts"
 
 /**
  * Something that moves as one: a single atom (two coordinates), or a group's atoms as a

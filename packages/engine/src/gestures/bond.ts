@@ -1,5 +1,6 @@
 import { ringPositionsAt } from "@structura/markush"
-import { SNAP_ATOM, atomById, nearestAtom } from "@structura/core/molecule"
+import { atomById } from "@structura/core/molecule"
+import { SNAP_ATOM, nearestAtom } from "@structura/core/layout"
 import type { Point } from "@structura/core/types"
 import { attachmentOps } from "../markush/attachmentOps.ts"
 import { bracketDropAt } from "../pointer/brackets.ts"

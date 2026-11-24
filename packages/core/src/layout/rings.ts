@@ -2,9 +2,9 @@ import { BOND_LENGTH, RING_SIZE, SINGLE } from "../constants.ts"
 import { pointFrom, signedDelta } from "../geometry.ts"
 import type { Molecule, Point, RingKind } from "../types.ts"
 import { outwardAngle, sproutAngle } from "./angles.ts"
-import { addAtom, addBond, atomById, bondBetween, cloneMolecule, neighbors } from "./graph.ts"
-import { kekulizeAromaticReport } from "./kekule.ts"
-import { bondLengthAt } from "./measure.ts"
+import { addAtom, addBond, atomById, bondBetween, cloneMolecule, neighbors } from "../molecule/graph.ts"
+import { kekulizeAromaticReport } from "../molecule/kekule.ts"
+import { bondLengthAt } from "../molecule/measure.ts"
 import { sproutAt } from "./place.ts"
 
 export function ringPoints(center: Point, size: number, length = BOND_LENGTH): Point[] {

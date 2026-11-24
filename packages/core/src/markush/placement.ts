@@ -2,7 +2,7 @@ import { hydrogenCount } from "../formula.ts"
 import { addBond, atomById, bondOrderSum, componentOf, deleteSelection, spliceIn, subMolecule } from "../molecule/graph.ts"
 import { ringMembership } from "../molecule/cycles.ts"
 import { bondLengthAt } from "../molecule/measure.ts"
-import { relax } from "../molecule/relax.ts"
+import { relax } from "../layout/relax.ts"
 import type { Bond, Molecule, Point } from "../types.ts"
 import { fragmentEnds, fragmentProblemText, STAR } from "./fragments.ts"
 

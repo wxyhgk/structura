@@ -2,7 +2,8 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { build, closestPair, run } from "@structura/testkit"
 import { dist } from "../src/geometry.ts"
-import { atomById, untangleGroups } from "../src/molecule.ts"
+import { atomById } from "../src/molecule.ts"
+import { untangleGroups } from "../src/layout.ts"
 import type { Molecule } from "../src/types.ts"
 
 const ring = { op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" } as const

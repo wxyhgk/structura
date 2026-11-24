@@ -1,8 +1,8 @@
 import { angleTo, pointFrom } from "../geometry.ts"
 import type { Molecule } from "../types.ts"
 import { sproutAngle } from "./angles.ts"
-import { addBond, atomById, spliceIn } from "./graph.ts"
-import { bondLengthAt } from "./measure.ts"
+import { addBond, atomById, spliceIn } from "../molecule/graph.ts"
+import { bondLengthAt } from "../molecule/measure.ts"
 
 /**
  * Puts a whole `piece` onto atom `anchor` by its atom `head`: one bond out from the anchor,

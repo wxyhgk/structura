@@ -2,22 +2,9 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { BOND_LENGTH } from "../src/constants.ts"
 import { dist } from "../src/geometry.ts"
-import {
-  addAtom,
-  addBond,
-  atomById,
-  attachChairAt,
-  attachRingAt,
-  bondLengthAt,
-  chainPoints,
-  createBondAt,
-  emptyMolecule,
-  growRing,
-  insertGroup,
-  scaleAtoms,
-  sprout,
-} from "../src/molecule.ts"
-import { RECIPES } from "../src/molecule/recipes.ts"
+import { addAtom, addBond, atomById, bondLengthAt, emptyMolecule, scaleAtoms } from "../src/molecule.ts"
+import { attachChairAt, attachRingAt, chainPoints, createBondAt, growRing, insertGroup, sprout } from "../src/layout.ts"
+import { RECIPES } from "../src/layout/recipes.ts"
 import { templateFor } from "../src/templates.ts"
 import type { Molecule } from "../src/types.ts"
 

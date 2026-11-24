@@ -1,5 +1,5 @@
 import { elementOf } from "./elements/index.ts"
-import { groupOrAlias, insertGroup } from "./molecule/abbreviate.ts"
+import { groupOrAlias, insertGroup } from "./layout/abbreviate.ts"
 import { setAlias, setElement, setIsotope } from "./molecule/graph.ts"
 import { bondsOf } from "./molecule/lookup.ts"
 import { ARYL, HYDROGEN_ISOTOPES, hydrideElement, isotopeLabel } from "./label/known.ts"

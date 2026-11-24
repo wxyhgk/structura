@@ -18,20 +18,8 @@ function violations(from: (file: string) => boolean, banned: (target: string) =>
     .flatMap(({ file, targets }) => targets.filter(banned).map((target) => `${file} → ${target}`))
 }
 
-const isLayout = (path: string) =>
-  [
-    "molecule/angles",
-    "molecule/place",
-    "molecule/rings",
-    "molecule/fusion",
-    "molecule/chair",
-    "molecule/pointer",
-    "molecule/snap",
-    "molecule/abbreviate",
-    "molecule/recipes",
-    "molecule/grow",
-    "molecule/relax",
-  ].some((prefix) => path.startsWith(prefix))
+/** Where new atoms go (angles, rings drawn and fused, relaxing…): everything under layout/. */
+const isLayout = (path: string) => path === "layout.ts" || path.startsWith("layout/")
 const isDraw = (path: string) => path === "draw.ts" || path.startsWith("draw/")
 
 test("the import scan actually sees imports", () => {
@@ -103,4 +91,22 @@ test("rendering does not reach layout even through a barrel", () => {
 test("no two chem files import each other, even through others or only for types", () => {
   const cycles = imports.filter(({ file }) => reachable(file).has(file)).map(({ file }) => file)
   assert.deepEqual(cycles, [])
+})
+
+test("the molecule graph never reaches layout, even through a barrel", () => {
+  const graph = imports.map(({ file }) => file).filter((file) => file === "molecule.ts" || file.startsWith("molecule/"))
+  assert.ok(graph.includes("molecule/graph.ts"))
+  const leaks = graph.flatMap((file) => [...reachable(file)].filter(isLayout).map((target) => `${file} ⇒ ${target}`))
+  assert.deepEqual(leaks, [])
+})
+
+/** The editing layer: ops, the saved document and undo history. */
+const isEditing = (path: string) => ["ops.ts", "document.ts", "cdxmlDocument.ts", "history.ts"].includes(path) || path.startsWith("ops/")
+
+test("the algorithms (molecule, layout, rendering) never reach the editing layer", () => {
+  const algorithms = imports
+    .map(({ file }) => file)
+    .filter((file) => ["molecule", "layout", "draw"].some((dir) => file === `${dir}.ts` || file.startsWith(`${dir}/`)))
+  const leaks = algorithms.flatMap((file) => [...reachable(file)].filter(isEditing).map((target) => `${file} ⇒ ${target}`))
+  assert.deepEqual(leaks, [])
 })

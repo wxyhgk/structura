@@ -7,7 +7,7 @@ import { addAtom, atomById, bondOrderSum, createBondAt, emptyMolecule, neighbors
 import { applyOps, type Op } from "@structura/core/ops"
 import type { HotTarget, Molecule } from "@structura/core/types"
 import { seeded } from "@structura/testkit"
-import { ATOM_KEYS, BOND_KEYS, hasHotkey, hotkeyOps, selectionHotkeyOps, selectionTips } from "@structura/engine"
+import { ATOM_KEYS, BOND_KEYS, hasHotkey, hotkeyOps, pointerSide, selectionHotkeyOps, selectionTips } from "@structura/engine"
 
 const SINGLE = { order: 1 as const, stereo: "none" as const }
 
@@ -149,6 +149,25 @@ test("a on the last bond of a chain puts the ring on the free side, not over the
     assert.equal(neighbors(fused.mol, start.mol.atoms[0].id).length, 1, `key ${key}`)
   }
   assert.equal(plainFormula(press(propane.mol, { type: "bond", id: last.id }, "a")!.mol), "C7H8")
+})
+
+test("a ring key goes to the side the pointer is on, and where there is room when it is on the line", () => {
+  const start = ethane()
+  const bond = start.mol.bonds[0]
+  const [a, b] = start.mol.atoms
+  const middle = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+  const above = pointerSide(start.mol, bond, { x: middle.x, y: middle.y - 5 }, 2)
+  const below = pointerSide(start.mol, bond, { x: middle.x, y: middle.y + 5 }, 2)
+  assert.ok(above && below && above !== below)
+  assert.equal(pointerSide(start.mol, bond, { x: middle.x, y: middle.y + 1 }, 2), undefined, "on the line")
+  const ringY = (side: 1 | -1) => {
+    const ops = hotkeyOps(start.mol, { type: "bond", id: bond.id }, "a", undefined, side)
+    assert.ok(ops)
+    const mol = run(start.mol, ops).mol
+    return mol.atoms.reduce((sum, atom) => sum + atom.y, 0) / mol.atoms.length - a.y
+  }
+  assert.ok(ringY(above) < 0, "pointer above, ring above")
+  assert.ok(ringY(below) > 0, "pointer below, ring below")
 })
 
 test("letter case changes the group", () => {

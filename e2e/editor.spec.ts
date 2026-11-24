@@ -127,3 +127,26 @@ test("arrow keys move the hotspot along bonds without the mouse; Shift runs to t
   await page.keyboard.press("s")
   await expect.poll(elements).toBe("SCCOC")
 })
+
+test("a over a bond puts the benzene ring on the side the pointer is on", async ({ page }) => {
+  await page.getByRole("button", { name: "键 (B)" }).click()
+  const centre = await canvasCentre(page)
+  await page.mouse.click(centre.x, centre.y)
+  const [start, end] = (await doc(page)).molecule.atoms
+  // The bond's middle on screen (100%: screen and drawing differ by a shift).
+  const middle = { x: centre.x + (end.x - start.x) / 2, y: centre.y + (end.y - start.y) / 2 }
+  const ringSide = async () => {
+    const atoms = (await doc(page)).molecule.atoms
+    return atoms.length === 6 ? Math.sign(atoms.reduce((sum, atom) => sum + atom.y, 0) / 6 - start.y) : 0
+  }
+  for (const [offset, side] of [[-6, -1], [6, 1]] as const) {
+    await page.mouse.move(middle.x, middle.y + offset)
+    await page.keyboard.press("a")
+    await expect(page.getByTestId("formula")).toHaveText("C₆H₆")
+    await expect.poll(ringSide).toBe(side)
+    await page.keyboard.press("ControlOrMeta+z")
+    await expect(page.getByTestId("formula")).toHaveText("C₂H₆")
+    // Away and back, so the pointer is over the bond again and not the ring's tip.
+    await page.mouse.move(centre.x - 200, centre.y - 200)
+  }
+})

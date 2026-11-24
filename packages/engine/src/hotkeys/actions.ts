@@ -61,8 +61,8 @@ export function atomActionOps(mol: Molecule, id: number, action: AtomAction, as?
   }
 }
 
-/** The ops a key sends for a bond; a fused ring's far atom is named `as`. */
-export function bondActionOps(id: number, action: BondAction, as?: string): Op[] {
+/** The ops a key sends for a bond; a fused ring's far atom is named `as`, and goes on `side` when given (else where there is room). */
+export function bondActionOps(id: number, action: BondAction, as?: string, side?: 1 | -1): Op[] {
   switch (action.do) {
     case "style": {
       const { order, stereo, look, emphasis } = action.style
@@ -70,7 +70,7 @@ export function bondActionOps(id: number, action: BondAction, as?: string): Op[]
     }
     case "fuse":
       // No side: the ring goes where there is room, not onto the chain beside the bond.
-      return [{ op: "add_ring", bond: id, kind: action.kind, as }]
+      return [{ op: "add_ring", bond: id, kind: action.kind, ...(side ? { side } : {}), as }]
     case "fuse-chair":
       return [{ op: "add_ring", bond: id, chair: action.turn, as }]
   }

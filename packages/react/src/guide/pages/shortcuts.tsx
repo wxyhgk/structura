@@ -9,6 +9,7 @@ export const shortcutsPage = definePage({
   body: ({ openShortcuts }) => (
     <>
       <P>所有快捷键分成三组：悬停在原子上、悬停在键上、什么都没悬停（切换工具）。完整的表按当前版本自动生成。</P>
+      <P>悬停在键上按 a、z、5、6 这类加环的键时，鼠标在键的哪一边，环就加在哪一边；鼠标正压在键上时，环放到原子少的一边。</P>
       <button className="rounded-full bg-(--c-0071e3) px-4 py-1.5 text-[13px] text-white hover:bg-(--c-0077ed)" onClick={openShortcuts}>
         打开完整快捷键表
       </button>

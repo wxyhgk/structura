@@ -1,11 +1,11 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
-import { atomById, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
+import { atomById, bondById, componentOf, displayMolecule, selectionFromAtoms } from "@structura/core/molecule"
 import type { Molecule } from "@structura/core/types"
 import type { Attachment } from "@structura/markush"
 import { useHydrated } from "../hooks/useHydrated.ts"
 import { AtomLabelInput } from "./AtomLabelInput.tsx"
 import { SceneView } from "./SceneView.tsx"
-import { aimAt, arrowDirection, chainEndToward, createFingers, curveKey, hotkeyOps, keyOf, neighborToward, pointerDown, pointerMove, pointerUp, type CurveHover, type FingerHost, type RingHintShape } from "@structura/engine"
+import { aimAt, arrowDirection, chainEndToward, createFingers, curveKey, hotkeyOps, keyOf, neighborToward, pointerDown, pointerMove, pointerSide, pointerUp, type CurveHover, type FingerHost, type RingHintShape } from "@structura/engine"
 import { frameHandleCursor } from "./frameHandleCursor.ts"
 import { QuickScaffold } from "./QuickScaffold.tsx"
 import type { CanvasHandle, EditorSlice, Gesture, PointerHost, Preview } from "./types.ts"
@@ -14,6 +14,9 @@ import { useHotspot } from "./useHotspot.ts"
 import { useLabelEditor } from "./useLabelEditor.ts"
 import { useQuickScaffold } from "./useQuickScaffold.ts"
 import { useViewport } from "./useViewport.ts"
+
+/** How near a bond's line, in screen pixels, the pointer counts as on it: a ring key there takes the side with room. */
+const RING_SIDE_DEAD = 2
 
 /** The cursor over a custom curve: moving a node, putting one in, picking the curve. */
 const CURVE_CURSORS: Record<NonNullable<CurveHover>, string> = { node: "move", insert: "copy", pick: "pointer" }
@@ -146,7 +149,12 @@ export const Canvas = forwardRef<CanvasHandle, EditorSlice>(function Canvas(prop
     if (event.key === "Enter" && hot.type === "atom") return label.openLabel(hot.id)
     // A key that means nothing here falls through to the tool keys. One that means something
     // but cannot apply (no room for the ring) is still used up, so it never switches tools.
-    const ops = hotkeyOps(mol, hot, key)
+    // A ring key over a bond puts the ring on the side the pointer is on (a bond is only ever
+    // hot under the pointer); right on the line, it takes the side with room.
+    const bond = hot.type === "bond" ? bondById(mol, hot.id) : undefined
+    const client = lastPointer.current
+    const side = bond && client ? pointerSide(mol, bond, viewport.toWorld(client.x, client.y), RING_SIDE_DEAD / viewport.get().zoom) : undefined
+    const ops = hotkeyOps(mol, hot, key, undefined, side)
     if (!ops) return false
     // A key on the atom under the pointer leaves the selection alone; it may be elsewhere.
     const result = props.run(ops, { quiet: true, keepSelection: true })

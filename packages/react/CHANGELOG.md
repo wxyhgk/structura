@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Fixed**: 导出全部 wrote a compound's number from the document as the page shows it, except
+  for repeats kept (去重 off): a second compound with the same choices got the first one's
+  number in the file, another on the page. Both now key compounds the same way.
+- **Changed**: `applyOps` checks a generic formula's parts (variables, attachments, provisos,
+  ring closures, generation, numbering) after every edit, as opening a file does, and refuses
+  an edit that would leave one broken. Before, only each op's own checks stood guard.
+
 ## 0.9.0
 
 - **Changed**: a ring key (a, z, v, 4–8) over a bond puts the ring on the side of the bond the

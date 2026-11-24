@@ -2,7 +2,7 @@ import { RING_SIZE } from "../constants.ts"
 import { hydrogenCount } from "../formula.ts"
 import { dist, sideOfLine } from "../geometry.ts"
 import type { Bond, Molecule, Point, RingKind } from "../types.ts"
-import { atomById, bondBetween, bondById, bondOrderSum, cycleAround } from "./graph.ts"
+import { atomById, bondBetween, bondById, bondOrderSum, cycleAround, neighbors } from "./graph.ts"
 import { buildRing, ringOnBond } from "./rings.ts"
 
 const COINCIDENT = 0.8
@@ -92,11 +92,36 @@ export function openSide(mol: Molecule, bond: Bond, preferred: 1 | -1): 1 | -1 {
   return occupied === 1 ? -1 : 1
 }
 
+/**
+ * The side of a chain bond with more room for a ring of this size: the one whose ring would
+ * cover fewer of the atoms around (a neighbour the ring would land on counts too, so a ring
+ * on the last bond of a zigzag chain does not swallow the bond before it). Even, it goes away
+ * from the bond's neighbours; still even, side 1.
+ */
+export function roomierSide(mol: Molecule, bond: Bond, size: number): 1 | -1 {
+  const a = atomById(mol, bond.a)
+  const b = atomById(mol, bond.b)
+  if (!a || !b) return 1
+  const crowd = (side: 1 | -1) => {
+    const points = ringOnBond(a, b, size, side)
+    const centre = { x: points.reduce((sum, point) => sum + point.x, 0) / size, y: points.reduce((sum, point) => sum + point.y, 0) / size }
+    const reach = dist(centre, a) * 1.2
+    return mol.atoms.filter((atom) => atom.id !== a.id && atom.id !== b.id && dist(atom, centre) < reach).length
+  }
+  const one = crowd(1)
+  const other = crowd(-1)
+  if (one !== other) return one < other ? 1 : -1
+  let lean = 0
+  for (const end of [a, b]) for (const near of neighbors(mol, end.id)) if (near.id !== a.id && near.id !== b.id) lean += sideOfLine(a, b, near)
+  return lean > 0 ? -1 : 1
+}
+
+/** A ring fused onto the bond; `side` picks the side for a chain bond, and left out the roomier one is taken. A ring bond always grows outward. */
 export function fuseRingAt(
   mol: Molecule,
   bondId: number,
   kind: RingKind,
-  side: 1 | -1,
+  side?: 1 | -1,
 ): { mol: Molecule; far: number } {
   const bond = bondById(mol, bondId)
   if (!bond) return { mol, far: 0 }
@@ -105,7 +130,8 @@ export function fuseRingAt(
   if (!a || !b) return { mol, far: bond.a }
   // A clean fusion if there is one; else the ring goes where it was asked for anyway, and the
   // atoms it overfills show red for the chemist to sort out (as ChemDraw does).
-  const plan = planFusion(mol, bond, kind, side) ?? planFusion(mol, bond, kind, side, false)
+  const chosen = side ?? roomierSide(mol, bond, RING_SIZE[kind])
+  const plan = planFusion(mol, bond, kind, chosen) ?? planFusion(mol, bond, kind, chosen, false)
   if (!plan) return { mol, far: bond.a }
   const built = buildRing(mol, plan.points, kind, plan.reuse)
   const far = built.ids[Math.floor(RING_SIZE[kind] / 2)] ?? a.id

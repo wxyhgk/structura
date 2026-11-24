@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Fixed**: a ring key (a, z, v, 4–8) over a chain bond puts the ring on the side with room. It
+  always took the same side, so on the last bond of a zigzag chain the ring folded the bond
+  before it in (benzene instead of toluene). An `add_ring` op on a bond with no `side` now
+  takes the roomier side too; the ring tool still goes to the side the pointer is on.
 - **Added**: a generic formula's compound numbers belong to the compounds and are kept in the
   Structura file (`drawing.numbering`: the pattern, the first number and the number each
   compound, told apart by canonical SMILES, was given), and the generation options

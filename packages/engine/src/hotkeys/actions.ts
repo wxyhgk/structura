@@ -69,7 +69,8 @@ export function bondActionOps(id: number, action: BondAction, as?: string): Op[]
       return [{ op: "set_bond", bond: id, order, stereo, look: look ?? null, emphasis: emphasis ?? null }]
     }
     case "fuse":
-      return [{ op: "add_ring", bond: id, kind: action.kind, side: 1, as }]
+      // No side: the ring goes where there is room, not onto the chain beside the bond.
+      return [{ op: "add_ring", bond: id, kind: action.kind, as }]
     case "fuse-chair":
       return [{ op: "add_ring", bond: id, chair: action.turn, as }]
   }

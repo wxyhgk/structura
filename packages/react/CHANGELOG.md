@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.0
 
 - **Changed**: a ring key (a, z, v, 4–8) over a bond puts the ring on the side of the bond the
   pointer is on, as the ring tool does; with the pointer right on the bond, on the side with

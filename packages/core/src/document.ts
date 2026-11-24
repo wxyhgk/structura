@@ -1,8 +1,4 @@
-import { attachmentProblem } from "./markush/attachments.ts"
-import { ringClosureProblem } from "./markush/closures.ts"
-import { generationProblem, numberingProblem } from "./markush/numbering.ts"
-import { provisoProblem } from "./markush/provisos.ts"
-import { variableProblem } from "./markush/variables.ts"
+import { markushProblem } from "./markush/problems.ts"
 import type { Drawing } from "./types.ts"
 import { errorsOf, validateDrawing } from "./validate.ts"
 
@@ -20,6 +16,25 @@ export function toDocument(drawing: Drawing): string {
 export function isDocument(text: string): boolean {
   return /^\s*\{[\s\S]*"format"\s*:\s*"structura"/.test(text.slice(0, 200))
 }
+
+/** The keys of T that may be left out. */
+type OptionalKeys<T> = { [K in keyof T]-?: object extends Pick<T, K> ? K : never }[keyof T]
+
+/**
+ * The drawing's optional parts, each kept from a file as it is (the bracket counter is worked
+ * out, below). Every optional field of Drawing must be here, or it fails to compile: a field
+ * left out would be dropped from every file opened, and saved without it.
+ */
+const PARTS: Record<Exclude<OptionalKeys<Drawing>, "nextBracketId">, true> = {
+  variables: true,
+  attachments: true,
+  provisos: true,
+  ringClosures: true,
+  brackets: true,
+  generation: true,
+  numbering: true,
+}
+const PART_KEYS = Object.keys(PARTS) as Array<keyof typeof PARTS>
 
 /** The bracket counter as saved, or one past the highest id when a file left it out. */
 function bracketCounter(drawing: Partial<Drawing>): Pick<Drawing, "nextBracketId"> {
@@ -49,42 +64,13 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
     molecule: { ...molecule, groups: molecule.groups ?? [], nextGroupId: molecule.nextGroupId ?? 1 },
     arrows: drawing.arrows,
     nextArrowId: drawing.nextArrowId ?? 1,
-    ...(drawing.variables ? { variables: drawing.variables } : {}),
-    ...(drawing.attachments ? { attachments: drawing.attachments } : {}),
-    ...(drawing.provisos ? { provisos: drawing.provisos } : {}),
-    ...(drawing.ringClosures ? { ringClosures: drawing.ringClosures } : {}),
-    ...(drawing.brackets ? { brackets: drawing.brackets } : {}),
-    ...(drawing.generation ? { generation: drawing.generation } : {}),
-    ...(drawing.numbering ? { numbering: drawing.numbering } : {}),
+    ...Object.fromEntries(PART_KEYS.filter((key) => drawing[key] != null).map((key) => [key, drawing[key]])),
     ...bracketCounter(drawing),
   }
   const errors = errorsOf(validateDrawing(whole))
   if (errors.length > 0) return { error: errors[0].message }
-  for (const attachment of whole.attachments ?? []) {
-    const problem = Array.isArray(attachment?.to) ? attachmentProblem(whole.molecule, attachment) : "an attachment lists no atoms"
-    if (problem) return { error: problem }
-  }
-  for (const [name, variable] of Object.entries(whole.variables ?? {})) {
-    const problem = variableProblem(name, variable, whole.variables)
-    if (problem) return { error: problem }
-  }
-  if (whole.provisos != null && !Array.isArray(whole.provisos)) return { error: "the provisos are not a list" }
-  for (const proviso of whole.provisos ?? []) {
-    const problem = provisoProblem(proviso, whole.variables)
-    if (problem) return { error: problem }
-  }
-  if (whole.ringClosures != null && !Array.isArray(whole.ringClosures)) return { error: "the ring closures are not a list" }
-  for (const closure of whole.ringClosures ?? []) {
-    const problem = ringClosureProblem(closure, whole.variables)
-    if (problem) return { error: problem }
-  }
-  if (whole.generation != null) {
-    const problem = generationProblem(whole.generation)
-    if (problem) return { error: problem }
-  }
-  if (whole.numbering != null) {
-    const problem = numberingProblem(whole.numbering)
-    if (problem) return { error: problem }
-  }
+  // The generic-formula parts, checked as every edit checks them (applyOps).
+  const markush = markushProblem(whole)
+  if (markush) return { error: markush }
   return { drawing: whole }
 }

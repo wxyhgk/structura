@@ -2,6 +2,7 @@ import type { Drawing, HotTarget, Molecule } from "../types.ts"
 import { followBrackets, pruneBrackets } from "../drawing/brackets.ts"
 import { pruneAttachments } from "../markush/attachments.ts"
 import { absorbRingPointers } from "../markush/pointer.ts"
+import { markushProblem } from "../markush/problems.ts"
 import { validateDrawing } from "../validate.ts"
 import { bracketOp } from "./brackets.ts"
 import { makeContext, OpError, type Context } from "./context.ts"
@@ -84,8 +85,8 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
   }
 
   const problems = validateDrawing(drawing)
-  const broken = problems.find((problem) => problem.severity === "error")
-  if (broken) return { ok: false, drawing: start, index: ops.length - 1, error: `the edit would break the drawing: ${broken.message}` }
+  const broken = problems.find((problem) => problem.severity === "error")?.message ?? markushProblem(drawing)
+  if (broken) return { ok: false, drawing: start, index: ops.length - 1, error: `the edit would break the drawing: ${broken}` }
   const mol = drawing.molecule
   const added = {
     atoms: mol.atoms.filter((item) => item.id >= start.molecule.nextAtomId).map((item) => item.id),

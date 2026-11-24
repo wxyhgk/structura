@@ -4,9 +4,8 @@ import type { Drawing } from "@structura/core/types"
 import { loadRDKit } from "../editor/rdkit.ts"
 import { canonicalIdentity, canonicalSmiles } from "./identity.ts"
 import { runSlice } from "./slice.ts"
+import { SLICE_MS } from "./asyncSlices.ts"
 
-/** Work done per slice before the page gets to paint and handle input again. */
-const SLICE_MS = 12
 /**
  * How often a running enumeration shows its progress. Every update re-renders the results;
  * showing each 12 ms slice kept the page busy rendering, so the pointer's hover lagged.

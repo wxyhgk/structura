@@ -1,43 +1,14 @@
-import { useEffect, useMemo, useState } from "react"
-import type { MainModule } from "@rdkit/rdkit"
+import { useMemo } from "react"
 import type { CompoundNumbering } from "@structura/markush"
-import type { Drawing, Molecule } from "@structura/core/types"
+import type { Drawing } from "@structura/core/types"
 import type { Op } from "@structura/core/ops"
 import type { Run } from "@structura/engine"
-import { loadRDKit } from "../../editor/rdkit.ts"
 import { canonicalIdentity } from "../identity.ts"
 import { numberByBook, rowKeys, type Numbering } from "../numbering.ts"
 import type { Row } from "../results.ts"
+import { useRdkit } from "./useRdkit.ts"
 
 const KEEP = { keepSelection: true }
-
-/** Canonical SMILES by molecule, kept while the molecule lives: a growing result is keyed again on every update. */
-const identities = new WeakMap<Molecule, string | null>()
-
-function cached(rdkit: MainModule): (mol: Molecule) => string | null {
-  const identity = canonicalIdentity(rdkit)
-  return (mol) => {
-    if (!identities.has(mol)) identities.set(mol, identity(mol))
-    return identities.get(mol) ?? null
-  }
-}
-
-/** RDKit once it has loaded, when `wanted`; null until then. */
-function useRdkit(wanted: boolean): MainModule | null {
-  const [rdkit, setRdkit] = useState<MainModule | null>(null)
-  useEffect(() => {
-    if (!wanted) return
-    let current = true
-    loadRDKit().then(
-      (module) => current && setRdkit(module),
-      () => {},
-    )
-    return () => {
-      current = false
-    }
-  }, [wanted])
-  return wanted ? rdkit : null
-}
 
 /**
  * The compound numbers of the generated rows, from the numbering the document keeps: a
@@ -51,10 +22,11 @@ function useRdkit(wanted: boolean): MainModule | null {
  * `fallback` is how numbers are written until the document says (this browser's habit).
  */
 export function useNumbering({ drawing, run, rows, bySmiles, fallback }: { drawing: Drawing; run: Run; rows: readonly Row[]; bySmiles: boolean; fallback: Numbering }) {
-  const rdkit = useRdkit(bySmiles)
+  const loaded = useRdkit(bySmiles).rdkit
+  const rdkit = bySmiles ? loaded : null
   const book: CompoundNumbering = drawing.numbering ?? fallback
   const waiting = bySmiles && !rdkit
-  const keys = useMemo(() => rowKeys(rows, rdkit ? cached(rdkit) : undefined), [rows, rdkit])
+  const keys = useMemo(() => rowKeys(rows, rdkit ? canonicalIdentity(rdkit) : undefined), [rows, rdkit])
   const numbered = useMemo(() => (waiting ? { rows: rows.slice(), fresh: 0 } : numberByBook(rows, keys, book)), [waiting, rows, keys, book])
 
   /** What writes the numbering's format into the document when it does not have one yet, then the ops that follow. */

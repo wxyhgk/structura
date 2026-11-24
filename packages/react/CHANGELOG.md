@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Added**: `chem-structura/chem`, Structura's algorithms on one molecule for other programs,
+  with no editor and no React: layout (`addRing`, `attachRing`, `fuseRing`, `growBond`,
+  `expandGroup`, `relax`, `untangleGroups`, `sideBySide`), ring finding (`findRings`,
+  `ringMembership`, `kekulize`), drawing (`moleculeSvg`) and reading (`moleculeFromMolfile`,
+  `moleculeFromSmiles` with an RDKit module passed in, `toMolfile`).
 - **Fixed**: 导出全部 wrote a compound's number from the document as the page shows it, except
   for repeats kept (去重 off): a second compound with the same choices got the first one's
   number in the file, another on the page. Both now key compounds the same way.

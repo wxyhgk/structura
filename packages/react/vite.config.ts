@@ -1,8 +1,9 @@
 // Builds the publishable package's code into dist/: index.js (ESM, React and the third-party UI
 // kit left to the host's install, Structura's own workspace packages bundled in), core.js (the
-// chemistry without the editor) and style.css (the editor's styles, confined to it). The
-// standalone builds (React bundled in) come next, from vite.standalone.config.ts, and the types
-// last, from scripts/build-types.mjs. Run them all with: npm run build -w chem-structura
+// chemistry without the editor), chem.js (the algorithms on one molecule) and style.css (the
+// editor's styles, confined to it). The standalone builds (React bundled in) come next, from
+// vite.standalone.config.ts, and the types last, from scripts/build-types.mjs. Run them all
+// with: npm run build -w chem-structura
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defaultClientConditions, defineConfig } from "vite"
@@ -42,7 +43,7 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true,
     lib: {
-      entry: { index: "src/index.ts", core: "src/core.ts", style: "src/style.css" },
+      entry: { index: "src/index.ts", core: "src/core.ts", chem: "src/chem.ts", style: "src/style.css" },
       formats: ["es"],
     },
     cssCodeSplit: true,

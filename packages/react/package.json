@@ -15,6 +15,11 @@
       "types": "./dist/core.d.ts",
       "default": "./dist/core.js"
     },
+    "./chem": {
+      "structura-source": "./src/chem.ts",
+      "types": "./dist/chem.d.ts",
+      "default": "./dist/chem.js"
+    },
     "./standalone": {
       "structura-source": "./src/standalone.ts",
       "types": "./dist/standalone.d.ts",

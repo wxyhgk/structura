@@ -7,7 +7,7 @@ import { forbiddenImports, reachableFrom } from "@structura/testkit/arch"
 const SRC = fileURLToPath(new URL("../../src/", import.meta.url))
 
 /** What the published package is built from. */
-const PUBLIC = ["index.ts", "core.ts", "standalone.ts"]
+const PUBLIC = ["index.ts", "core.ts", "chem.ts", "standalone.ts"]
 
 // The site's 通式 page (variables, results, exports, the template library) lives in page/,
 // reached through markushPage.ts; the editor in editor/. The page builds on the editor, never

@@ -1,7 +1,7 @@
 // Checks the built package (dist/) the way another project meets it, in plain Node: the React
 // entry renders on a server (Next.js, Remix… render components there first), and
-// chem-structura/core works with no React and no browser. Run after the build:
-// npm run check:dist -w chem-structura
+// chem-structura/core and chem-structura/chem work with no React and no browser. Run after the
+// build: npm run check:dist -w chem-structura
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { createElement } from "react"
@@ -21,6 +21,14 @@ assert.equal(core.plainFormula(built.drawing.molecule), "C6H6")
 assert.match(core.drawingSvg(built.drawing), /<svg/)
 console.log("✔ chem-structura/core builds and draws in Node")
 
+const chem = await import(new URL("chem.js", dist).href)
+const empty = { atoms: [], bonds: [], groups: [], nextAtomId: 1, nextBondId: 1, nextGroupId: 1 }
+const ring = chem.addRing(empty, { x: 0, y: 0 }, "benzene")
+const naphthalene = chem.fuseRing(ring, ring.bonds[0].id, "benzene")
+assert.deepEqual(chem.findRings(naphthalene).map((found) => found.length), [6, 6])
+assert.match(chem.moleculeSvg(naphthalene), /<svg/)
+console.log("✔ chem-structura/chem lays out, finds rings and draws in Node")
+
 /** Every built file read while following imports, for the checks after. */
 const read = new Set()
 
@@ -36,8 +44,9 @@ function outsideImports(file, seen = new Set()) {
   )
 }
 assert.deepEqual(outsideImports("core.js"), [], "core.js imports nothing")
+assert.deepEqual(outsideImports("chem.js"), [], "chem.js imports nothing (RDKit is passed in)")
 assert.deepEqual(outsideImports("standalone.js"), [], "standalone.js brings everything with it")
-console.log("✔ core.js and standalone.js import nothing from outside")
+console.log("✔ core.js, chem.js and standalone.js import nothing from outside")
 
 // Minified: no build comments, and (past a few lines' worth) long lines, not indented ones.
 for (const file of read) {

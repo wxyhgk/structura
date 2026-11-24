@@ -205,11 +205,40 @@ Also: `readDocument` / `toDocument` (the editor's `getDocument()` text), `valida
 `librarySize`, `plainFormula`, `molecularWeight`, `exactMass`, `elementalAnalysis`,
 `readSdf` / `toSdf`. The ops are those of the editor's `run()`.
 
+### Algorithms on one molecule: `chem-structura/chem`
+
+`chem-structura/chem` is Structura's layout, ring finding and drawing as plain functions on one
+molecule (`{ atoms, bonds, groups, … }`), for a program that handles structures itself. Every
+function returns a new molecule and leaves the one it is given as it was; an atom or bond id
+that is not in the molecule throws. One bond is `BOND_LENGTH` (40) long, y grows downwards.
+
+```ts
+import initRDKitModule from "@rdkit/rdkit"
+import { findRings, fuseRing, growBond, moleculeFromSmiles, moleculeSvg } from "chem-structura/chem"
+
+const rdkit = await initRDKitModule()
+let mol = moleculeFromSmiles(rdkit, "c1ccccc1CC(=O)O") // RDKit lays it out; only SMILES needs RDKit
+findRings(mol)                                          // [[1, 2, 3, 4, 5, 6]]
+mol = fuseRing(mol, mol.bonds[0].id, "benzene")         // naphthalene, on the side with room
+mol = growBond(mol, 1, { element: "O" }).molecule       // a bond at the angle a chemist would draw
+moleculeSvg(mol, { background: false })                 // an SVG, as the editor draws it
+```
+
+| | |
+|---|---|
+| Read and write | `moleculeFromMolfile`, `moleculeFromSmiles(rdkit, smiles)`, `toMolfile` |
+| Rings | `findRings` (smallest set of smallest rings), `ringMembership`, `kekulize` |
+| Layout | `addRing`, `attachRing`, `fuseRing`, `growBond`, `expandGroup` (Boc, Ph, CO2Me… drawn out), `relax` (tidy the listed atoms), `untangleGroups`, `sideBySide` |
+| Drawing | `moleculeSvg` |
+
+Ring kinds: `benzene`, `cyclopropane` … `cyclooctane`, `cyclopentene`.
+
 ### RDKit
 
 Some features (SMILES in and out, `<chem-molecule smiles>`, InChI, removing duplicate
 compounds) use [RDKit](https://www.rdkit.org/) compiled to WebAssembly, loaded on first use
-from the jsDelivr CDN. `chem-structura/core` does not use it. To serve it yourself (offline use,
+from the jsDelivr CDN. `chem-structura/core` does not use it, and `chem-structura/chem` only
+uses the module you pass to `moleculeFromSmiles`. To serve it yourself (offline use,
 a strict content security policy), copy `node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm`
 (the release this package pins) to your site; if your page loads RDKit already, lend it that
 module instead of a second copy:

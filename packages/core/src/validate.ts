@@ -315,14 +315,16 @@ export function geometryProblems(mol: Molecule): Problem[] {
   for (const bond of bonds) {
     const top = pieces.top(bond.a)
     counts.set(top, (counts.get(top) ?? 0) + 1)
-    if (length(bond) <= 1) continue
+    if (!(length(bond) > 0)) continue
     if (!lengths.has(top)) lengths.set(top, [])
     lengths.get(top)!.push(length(bond))
   }
-  const usual = median(bonds.map(length).filter((value) => value > 1)) ?? BOND_LENGTH
+  const usual = median(bonds.map(length).filter((value) => value > 0)) ?? BOND_LENGTH
   const medians = new Map([...lengths].map(([top, values]) => [top, median(values) ?? usual]))
   const unit = (id: number) => medians.get(pieces.top(id)) ?? usual
-  const largest = Math.max(usual, ...medians.values())
+  // A loop, not Math.max(...): one argument a molecule overflows the stack past ~120,000.
+  let largest = usual
+  for (const value of medians.values()) largest = Math.max(largest, value)
 
   // Atoms by x, so each check looks only at the atoms within reach.
   const byX = [...atoms].sort((a, b) => a.x - b.x)
@@ -368,14 +370,15 @@ export function geometryProblems(mol: Molecule): Problem[] {
     const [a, b] = [byId.get(bond.a)!, byId.get(bond.b)!]
     const reach = unit(bond.a)
     const span = length(bond)
-    for (const atom of span > 1 ? between(Math.min(a.x, b.x) - ON_BOND * reach, Math.max(a.x, b.x) + ON_BOND * reach) : []) {
+    for (const atom of span > 0 ? between(Math.min(a.x, b.x) - ON_BOND * reach, Math.max(a.x, b.x) + ON_BOND * reach) : []) {
       // Close to an end it sits on the atom there, which is reported as overlapping or a short bond.
       if (atom.id === bond.a || atom.id === bond.b || Math.min(dist(atom, a), dist(atom, b)) < OVERLAP * reach) continue
       if (distToSegment(atom, a, b) >= ON_BOND * reach) continue
       problems.push({ code: "atom-on-bond", severity: "warning", atoms: [atom.id, bond.a, bond.b], bonds: [bond.id], message: `atom #${atom.id} lies on bond #${bond.id} (#${bond.a}–#${bond.b})` })
     }
     const ratio = span / reach
-    if ((counts.get(pieces.top(bond.a)) ?? 0) >= FEWEST_BONDS && (ratio > LONG || ratio < SHORT)) {
+    // Too few bonds to say what is usual, only a bond of no length at all is surely wrong.
+    if (((counts.get(pieces.top(bond.a)) ?? 0) >= FEWEST_BONDS && (ratio > LONG || ratio < SHORT)) || span === 0) {
       problems.push({
         code: ratio > LONG ? "long-bond" : "short-bond",
         severity: "warning",

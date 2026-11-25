@@ -46,3 +46,12 @@ test("common ions and hypervalent groups", () => {
   assert.equal(hydrogenCount("N", 0, 4).error, true, "neutral N with four bonds")
   assert.equal(hydrogenCount("Cl", 0, 2).error, true, "neutral Cl with two bonds")
 })
+
+test("neutral N takes five bonds only with a double bond among them (nitro), never five single ones", async () => {
+  const { build } = await import("@structura/testkit")
+  const { atomHydrogens } = await import("../src/formula.ts")
+  const five = build([{ op: "add_atom", el: "N", as: "n" }, ...Array.from({ length: 5 }, () => ({ op: "add_atom" as const, el: "C", to: "n" }))]).molecule
+  assert.equal(atomHydrogens(five, 1).error, true)
+  const nitro = build([{ op: "add_atom", el: "N", as: "n" }, { op: "add_atom", el: "C", to: "n" }, { op: "add_atom", el: "O", to: "n", order: 2 }, { op: "add_atom", el: "O", to: "n", order: 2 }]).molecule
+  assert.deepEqual(atomHydrogens(nitro, 1), { h: 0, error: false })
+})

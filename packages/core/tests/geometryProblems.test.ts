@@ -71,6 +71,22 @@ test("size alone is no slip: a drawing, or one molecule in it, may be drawn larg
   assert.deepEqual(geometryProblems(scaled(3, every)), [])
   assert.deepEqual(geometryProblems(scaled(0.3, every)), [])
   assert.deepEqual(geometryProblems(scaled(0.5, new Set([1, 2, 3, 4, 5, 6]))), [])
+  // Below one unit too: bonds 0.04 long are a small drawing, not a heap of short bonds.
+  assert.deepEqual(geometryProblems(scaled(0.001, every)), [])
+})
+
+test("a bond of no length is reported however few bonds its molecule has", () => {
+  const ethane = build([{ op: "place_atom", el: "C", at: { x: 0, y: 0 } }, { op: "add_atom", el: "C", to: 1 }])
+  const flat = placed(ethane, 2, 0, 0)
+  assert.deepEqual(brief(geometryProblems(flat.molecule)), [{ code: "short-bond", atoms: [1, 2], bonds: [1], severity: "warning" }])
+})
+
+test("very many molecules are checked without running out of stack", () => {
+  const count = 130_000
+  const atoms = Array.from({ length: count * 2 }, (_, at) => ({ id: at + 1, el: "C", x: Math.floor(at / 2) * 100 + (at % 2) * 40, y: 0, charge: 0 }))
+  const bonds = Array.from({ length: count }, (_, at) => ({ id: at + 1, a: at * 2 + 1, b: at * 2 + 2, order: 1 as const, stereo: "none" as const }))
+  const mol: Molecule = { atoms, bonds, groups: [], nextAtomId: count * 2 + 1, nextBondId: count + 1, nextGroupId: 1 }
+  assert.deepEqual(geometryProblems(mol), [])
 })
 
 test("atoms behind a collapsed label are not looked at", () => {

@@ -124,6 +124,13 @@ function eachPiece(mol: Molecule, atomIds: number[] | undefined, add: (symbol: s
   }
 }
 
+/** How much of the mass each element (D and T apart) holds, a drawn isotope weighed as drawn: what molecularWeight adds up. */
+export function elementMasses(mol: Molecule, atomIds?: number[]): Map<string, number> {
+  const masses = new Map<string, number>()
+  eachPiece(mol, atomIds, (symbol, count, mass) => masses.set(symbol, (masses.get(symbol) ?? 0) + count * mass))
+  return masses
+}
+
 /** How many of each element (D and T apart) the atoms and their hydrogens hold; placeholders count for nothing. */
 export function elementCounts(mol: Molecule, atomIds?: number[]): Map<string, number> {
   return countsFor(mol, atomIds)

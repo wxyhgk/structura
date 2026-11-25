@@ -40,6 +40,10 @@ test("elemental analysis: benzene is 92.26% C and 7.74% H", () => {
   const benzene = build([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).molecule
   const shares = elementalAnalysis(benzene).map(({ symbol, percent }) => `${symbol} ${percent.toFixed(2)}`)
   assert.deepEqual(shares, ["C 92.26", "H 7.74"])
+  // A 13C label weighs as it does in the molecular weight: (5 x 12.011 + 13.003) / 79.10.
+  const labelled = build([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }, { op: "set_isotope", atom: 1, isotope: 13 }]).molecule
+  const carbon = elementalAnalysis(labelled).find((item) => item.symbol === "C")!.percent
+  close(carbon, ((5 * 12.011 + 13.00335484) / (5 * 12.011 + 13.00335484 + 6 * 1.008)) * 100, 2)
   assert.deepEqual(elementalAnalysis(build([]).molecule), [])
 })
 

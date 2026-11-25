@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { smallestRings } from "../src/molecule/cycles.ts"
+import { ringMembership, smallestRings } from "../src/molecule/cycles.ts"
 import { referenceSmallestRings } from "./support/hortonReference.ts"
 import type { Molecule } from "../src/types.ts"
 
@@ -161,4 +161,14 @@ test("sparse and ring-rich random graphs of some size give the same rings as the
     }
     sameRings(graph([...bonds.values()]))
   }
+})
+
+test("ring counts follow a molecule changed in place after they were asked for", () => {
+  const atoms = Array.from({ length: 6 }, (_, at) => ({ id: at + 1, el: "C", x: at * 40, y: 0, charge: 0 }))
+  const bonds = Array.from({ length: 5 }, (_, at) => ({ id: at + 1, a: at + 1, b: at + 2, order: 1 as const, stereo: "none" as const }))
+  const chain: Molecule = { atoms, bonds, groups: [], nextAtomId: 7, nextBondId: 6, nextGroupId: 1 }
+  assert.equal(ringMembership(chain).count.size, 0)
+  chain.bonds.push({ id: 6, a: 6, b: 1, order: 1, stereo: "none" })
+  assert.equal(ringMembership(chain).count.size, 6)
+  assert.equal(ringMembership(chain).rings.length, 1)
 })

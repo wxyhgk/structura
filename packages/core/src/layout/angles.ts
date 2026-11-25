@@ -1,4 +1,4 @@
-import { angleTo, norm, pointFrom, pointInPolygon, signedDelta } from "../geometry.ts"
+import { angleTo, dist, norm, pointFrom, pointInPolygon, signedDelta } from "../geometry.ts"
 import type { Atom, Molecule } from "../types.ts"
 import { ringMembership } from "../molecule/cycles.ts"
 import { atomById, neighbors } from "../molecule/graph.ts"
@@ -47,6 +47,19 @@ export function sproutAngle(mol: Molecule, atomId: number): number {
     const incoming = angleTo(parent, atom)
     const earlier = neighbors(mol, parent.id).filter((item) => item.id !== atomId)
     if (earlier.length === 0) return norm(incoming + Math.PI / 3)
+    if (earlier.length > 1) {
+      // A branched parent (a methyl of tert-butyl): of the two zigzag turns, the one that
+      // lands further from the atoms around, not a turn away from one neighbour only.
+      const reach = dist(parent, atom)
+      const room = (angle: number) => {
+        const tip = pointFrom(atom, angle, reach)
+        let nearest = Infinity
+        for (const item of mol.atoms) if (item.id !== atomId) nearest = Math.min(nearest, dist(tip, item))
+        return nearest
+      }
+      const [left, right] = [incoming + Math.PI / 3, incoming - Math.PI / 3]
+      return norm(room(left) >= room(right) ? left : right)
+    }
     const previous = angleTo(earlier[0], parent)
     const lastTurn = signedDelta(previous, incoming)
     return norm(incoming - lastTurn)

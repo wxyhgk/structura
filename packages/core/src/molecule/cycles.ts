@@ -270,18 +270,24 @@ export function smallestRings(mol: Molecule, atoms?: Iterable<number>): number[]
   return rings.sort((a, b) => a.length - b.length || compareIds(a, b))
 }
 
-/** Rings found once per molecule; asked on every pointer move while drawing, and per enumerated layout. */
-const membership = new WeakMap<Molecule, { rings: number[][]; count: Map<number, number> }>()
+type Membership = { rings: number[][]; count: Map<number, number>; atoms: unknown[]; bonds: unknown[]; atomCount: number; bondCount: number }
+
+/**
+ * Rings found once per molecule; asked on every pointer move while drawing, and per
+ * enumerated layout. As with the atom lookup (lookup.ts), the arrays and their lengths are
+ * checked too, so a molecule filled in or changed in place after being asked is asked again.
+ */
+const membership = new WeakMap<Molecule, Membership>()
 
 /** The molecule's smallest rings, and how many of them each atom is in (0 when absent). */
 export function ringMembership(mol: Molecule): { rings: number[][]; count: Map<number, number> } {
   let found = membership.get(mol)
-  if (!found) {
+  if (!found || found.atoms !== mol.atoms || found.bonds !== mol.bonds || found.atomCount !== mol.atoms.length || found.bondCount !== mol.bonds.length) {
     const rings = smallestRings(mol)
     const count = new Map<number, number>()
     for (const ring of rings) for (const id of ring) count.set(id, (count.get(id) ?? 0) + 1)
-    found = { rings, count }
+    found = { rings, count, atoms: mol.atoms, bonds: mol.bonds, atomCount: mol.atoms.length, bondCount: mol.bonds.length }
     membership.set(mol, found)
   }
-  return found
+  return { rings: found.rings, count: found.count }
 }

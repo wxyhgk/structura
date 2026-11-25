@@ -5,7 +5,8 @@ import { plainFormula } from "../src/formula.ts"
 import { addAtom, atomById, bondById, boundsCenter, emptyMolecule, neighbors, tumbleAtoms } from "../src/molecule.ts"
 import { createBondAt } from "../src/layout.ts"
 import { applyOps, type Op } from "../src/ops.ts"
-import type { Molecule } from "../src/types.ts"
+import type { Molecule, RingKind } from "../src/types.ts"
+import type { Alternative, Proviso } from "../src/markush/types.ts"
 import { validate } from "../src/validate.ts"
 import { seeded } from "@structura/testkit"
 
@@ -63,6 +64,10 @@ test("mistakes are reported instead of guessed at", () => {
     [[{ op: "add_ring", atom: 1, size: 9 }], /no ring of size 9/],
     [[{ op: "add_ring", atom: 1, size: 5, aromatic: true }], /six-membered/],
     [[{ op: "add_group", to: 1, name: "Zzz" }], /not a known abbreviation/],
+    // A name every object has is still not a ring kind.
+    [[{ op: "add_ring", atom: 1, kind: "toString" as RingKind }], /unknown ring kind "toString"/],
+    [[{ op: "replace", atoms: [2], with: { ring: "hexagon" as RingKind } }], /unknown ring kind "hexagon"/],
+    [[{ op: "replace", atoms: [2], with: { ring: "constructor" as RingKind } }], /unknown ring kind/],
   ]
   for (const [ops, message] of cases) {
     const result = run(start, ops)
@@ -98,6 +103,23 @@ test("a wedge named by its atoms starts at the first one", () => {
     assert.equal(touched?.a, 2, JSON.stringify(change))
     assert.equal(touched?.stereo, "up", JSON.stringify(change))
   }
+})
+
+test("what an op stores is its own: changing the object passed in later changes nothing", () => {
+  const alternatives: Alternative[] = [{ kind: "label", text: "O" }]
+  const proviso: Proviso = { kind: "compound", smiles: "CO" }
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const done = applyOps({ ...emptyDrawing(), molecule: start }, [
+    { op: "label", atom: 2, text: "X" },
+    { op: "set_variable", name: "X", alternatives },
+    { op: "add_proviso", proviso },
+  ])
+  assert.ok(done.ok)
+  const saved = structuredClone(done.drawing)
+  alternatives.push({ kind: "label", text: "S" })
+  ;(alternatives[0] as { text: string }).text = "N"
+  ;(proviso as { smiles: string }).smiles = "CCO"
+  assert.deepEqual(done.drawing, saved)
 })
 
 test("warnings come back but do not stop the edit", () => {

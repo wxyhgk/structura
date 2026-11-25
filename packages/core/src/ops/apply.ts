@@ -67,12 +67,16 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
     }
     try {
       const before = drawing.molecule.nextAtomId
-      const done = step(drawing, op, ctx, depth)
+      // The op's own copy: what it stores (a variable's alternatives, a proviso, a repeat
+      // range) must not change in the drawing, or in undo's history, when the caller later
+      // changes the object it passed.
+      const own = structuredClone(op)
+      const done = step(drawing, own, ctx, depth)
       // Deleting atoms takes their variable attachments with them, and takes them out of
       // brackets; an attachment drawn into a bracket keeps the bracket's atoms as candidates.
       drawing = followBrackets(drawing, pruneBrackets(pruneAttachments(done.drawing)))
       // Drawn with the pointer tools, a line into a ring's middle is a variable attachment.
-      const ends = pointerEnds(op, drawing, before, ctx)
+      const ends = pointerEnds(own, drawing, before, ctx)
       if (ends.length > 0) drawing = absorbRingPointers(drawing, ends)
       depth = done.depth
       if (done.next !== undefined) next = done.next

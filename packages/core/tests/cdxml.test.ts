@@ -326,3 +326,10 @@ test("a table's numbers in Chinese get a Chinese font", () => {
   const font = all(root, "font").find((item) => item.attrs.id === caption.children[0].attrs.font)!
   assert.equal(font.attrs.name, "SimSun")
 })
+
+test("characters XML cannot hold are dropped, so the file stays well-formed", async () => {
+  const { escapeXml } = await import("../src/cdxml/xml.ts")
+  assert.equal(escapeXml("ctl \u0001 char\u000b & <b>"), "ctl  char &amp; &lt;b&gt;")
+  assert.equal(escapeXml("tab\tnew\nline"), "tab\tnew\nline")
+  assert.equal(escapeXml("half \ud800 pair 😀"), "half  pair 😀")
+})

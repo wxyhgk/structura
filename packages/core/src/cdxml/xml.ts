@@ -7,9 +7,16 @@ export function el(tag: string, attrs: XmlNode["attrs"] = {}, children: XmlNode[
   return { tag, attrs, children }
 }
 
-/** Text made safe for XML content and attribute values. */
+/**
+ * Text made safe for XML content and attribute values. Characters XML cannot hold at all
+ * (control characters other than tab and line breaks, U+FFFE/U+FFFF, half a surrogate pair)
+ * are dropped: escaped or not, they make the file ill-formed.
+ */
 export function escapeXml(text: string): string {
-  return text.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[char]!)
+  return text
+    // oxlint-disable-next-line no-control-regex -- matching control characters is the point
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "")
+    .replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[char]!)
 }
 
 /** A coordinate in points, two decimals, never "-0". */

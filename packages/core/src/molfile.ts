@@ -73,6 +73,19 @@ export function toMolfile(mol: Molecule, title = "Structura", brackets: readonly
 }
 
 /**
+ * A data item's value as SD lines. A blank line ends the item, so blank (and blank-looking)
+ * lines are dropped; a line that would read as the end of the record ($$$$) or the next
+ * item (> <name>) is set in by a space.
+ */
+function sdfValue(value: string): string {
+  return value
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== "")
+    .map((line) => (line.startsWith("$$$$") || line.startsWith(">") ? ` ${line}` : line))
+    .join("\n")
+}
+
+/**
  * Molecules as one SD file, each record titled with its place in the list ("Structura 1",
  * …), or with titles[i] when `title` is a list (compound numbers such as "C-1"), with
  * `fields[i]` written as record i's data items (> <name> lines).
@@ -80,7 +93,7 @@ export function toMolfile(mol: Molecule, title = "Structura", brackets: readonly
 export function toSdf(molecules: readonly Molecule[], title: string | readonly string[] = "Structura", fields: ReadonlyArray<Record<string, string>> = []): string {
   return molecules
     .map((mol, index) => {
-      const items = Object.entries(fields[index] ?? {}).map(([name, value]) => `> <${name.replace(/[<>\r\n]/g, " ")}>\n${value.replace(/\r?\n\s*\n/g, "\n")}\n\n`)
+      const items = Object.entries(fields[index] ?? {}).map(([name, value]) => `> <${name.replace(/[<>\r\n]/g, " ")}>\n${sdfValue(value)}\n\n`)
       const named = typeof title === "string" ? `${title} ${index + 1}` : (title[index] ?? `Structura ${index + 1}`)
       return `${toMolfile(mol, named.replace(/[\r\n]+/g, " "))}${items.join("")}$$$$\n`
     })

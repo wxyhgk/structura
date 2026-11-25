@@ -233,8 +233,12 @@ export function componentOf(mol: Molecule, atomId: number): number[] {
   return [...seen]
 }
 
-/** Other ring around a bond, not using the bond itself. Empty when the bond is a chain. */
-export function cycleAround(mol: Molecule, bond: Bond): number[] | null {
+/**
+ * The smallest ring through a bond, as its atoms from `bond.a` to `bond.b`, of at most
+ * `longest` atoms (8 by default: the rings a double bond is drawn into). Null when there is
+ * none: the bond is a chain, or only in larger rings.
+ */
+export function cycleAround(mol: Molecule, bond: Bond, longest = 8): number[] | null {
   const start = bond.a
   const goal = bond.b
   const previous = new Map<number, number | null>([[start, null]])
@@ -244,7 +248,7 @@ export function cycleAround(mol: Molecule, bond: Bond): number[] | null {
     const current = queue.shift()
     if (current == null) break
     const currentDepth = depth.get(current) ?? 0
-    if (currentDepth >= 7) continue
+    if (currentDepth >= longest - 1) continue
     for (const neighbor of neighbors(mol, current)) {
       if (current === start && neighbor.id === goal) continue
       if (previous.has(neighbor.id)) continue
@@ -258,7 +262,7 @@ export function cycleAround(mol: Molecule, bond: Bond): number[] | null {
           cursor = previous.get(cursor) ?? null
         }
         path.reverse()
-        return path.length >= 3 && path.length <= 8 ? path : null
+        return path.length >= 3 && path.length <= longest ? path : null
       }
       queue.push(neighbor.id)
     }

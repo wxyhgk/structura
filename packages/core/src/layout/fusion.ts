@@ -71,9 +71,12 @@ export function canPlaceFused(mol: Molecule, bond: Bond, kind: RingKind): boolea
   return planFusion(mol, bond, kind, 1, false) != null || planFusion(mol, bond, kind, -1, false) != null
 }
 
-/** Side of a ring bond that does not already contain the ring. A chain bond keeps the requested side. */
+/**
+ * Side of a ring bond that does not already contain the ring, a macrocycle's too. A chain
+ * bond keeps the requested side.
+ */
 export function openSide(mol: Molecule, bond: Bond, preferred: 1 | -1): 1 | -1 {
-  const cycle = cycleAround(mol, bond)
+  const cycle = cycleAround(mol, bond, mol.atoms.length)
   const a = atomById(mol, bond.a)
   const b = atomById(mol, bond.b)
   if (!cycle || !a || !b) return preferred

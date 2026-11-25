@@ -4,6 +4,11 @@
 
 Fixes from a correctness review of the core.
 
+- **Changed**: a formula ends with the net charge, as RDKit and ChemDraw write it: `plainFormula`
+  gives C7H7+, C2H3O2-, C12H14N2+2 (it gave C7H7), and the editor shows C₇H₇⁺. An HRMS line
+  still writes the ion's formula bare after its name ([M]+ calcd for CH6N). Exports (CSV, the
+  properties) carry the plain text.
+
 - **Fixed**: an aromatic ring read from a molfile with aromatic bonds (type 4) and two ring
   nitrogens side by side got two hydrogens too many: tetrazole came out CH4N4, and cinnoline,
   the triazines and tetrazine were wrong the same way. Two such nitrogens can now share the

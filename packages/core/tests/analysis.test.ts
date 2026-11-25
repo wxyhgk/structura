@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { elementalAnalysis, exactMass, netCharge } from "@structura/core/analysis"
+import { displayFormula, plainFormula } from "@structura/core/formula"
 import { build } from "@structura/testkit"
 
 const close = (actual: number | null, expected: number, digits = 5) => assert.ok(actual != null && Math.abs(actual - expected) < 10 ** -digits, `${actual} ≠ ${expected}`)
@@ -45,4 +46,25 @@ test("elemental analysis: benzene is 92.26% C and 7.74% H", () => {
 test("the net charge adds up what is drawn", () => {
   const ammonium = build([{ op: "add_atom", el: "N", as: "n" }, { op: "set_charge", atom: "n", charge: 1 }]).molecule
   assert.equal(netCharge(ammonium), 1)
+})
+
+test("a formula ends with the net charge, as RDKit and ChemDraw write it", () => {
+  const charged = (charges: number[]) =>
+    build([
+      { op: "add_atom", el: "N", as: "n" },
+      { op: "add_atom", el: "C", to: "n", as: "c" },
+      { op: "add_atom", el: "N", to: "c", as: "m" },
+      ...charges.map((charge, at) => ({ op: "set_charge" as const, atom: at === 0 ? "n" : "m", charge })),
+    ]).molecule
+  assert.equal(plainFormula(charged([])), "CH6N2")
+  assert.equal(plainFormula(charged([1])), "CH7N2+")
+  assert.equal(plainFormula(charged([1, 1])), "CH8N2+2")
+  assert.equal(plainFormula(charged([-1])), "CH5N2-")
+  assert.equal(plainFormula(charged([1, -1])), "CH6N2", "a zwitterion is neutral")
+  // Only the atoms asked about: the charged N alone.
+  assert.equal(plainFormula(charged([1]), [1]), "H3N+")
+  assert.equal(displayFormula("CH7N2+"), "CH₇N₂⁺")
+  assert.equal(displayFormula("C12H14N2+2"), "C₁₂H₁₄N₂²⁺")
+  assert.equal(displayFormula("C2H3O2-"), "C₂H₃O₂⁻")
+  assert.equal(displayFormula(""), "")
 })

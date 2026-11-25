@@ -4,6 +4,7 @@ import { atomById, bondOrderSum } from "./molecule/graph.ts"
 import type { Atom, Molecule } from "./types.ts"
 
 const SUBSCRIPT = "₀₁₂₃₄₅₆₇₈₉"
+const SUPERSCRIPT = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 
 type ValenceList = { valences: number[]; anyAbove?: boolean }
 
@@ -128,6 +129,10 @@ function countsFor(mol: Molecule, atomIds?: number[]): Map<string, number> {
   return counts
 }
 
+/**
+ * The formula as plain text, Hill order (C, H, then the rest A to Z), ending with the net
+ * charge as RDKit and ChemDraw give it: C6H6, C7H7+, C2H3O2-, C12H14N2+2.
+ */
 export function plainFormula(mol: Molecule, atomIds?: number[]): string {
   const counts = countsFor(mol, atomIds)
   if (counts.size === 0) return ""
@@ -141,13 +146,32 @@ export function plainFormula(mol: Molecule, atomIds?: number[]): string {
     }
     return a[0].localeCompare(b[0])
   })
-  return entries.map(([el, count]) => (count === 1 ? el : `${el}${count}`)).join("")
+  return entries.map(([el, count]) => (count === 1 ? el : `${el}${count}`)).join("") + chargeSuffix(formulaCharge(mol, atomIds))
 }
 
+/** The net charge of the atoms a formula counts (placeholders count for nothing there either). */
+function formulaCharge(mol: Molecule, atomIds: number[] | undefined): number {
+  let charge = 0
+  for (const id of atomIds ?? mol.atoms.map((atom) => atom.id)) {
+    const atom = atomById(mol, id)
+    if (atom && !atom.alias) charge += atom.charge
+  }
+  return charge
+}
+
+/** A net charge as a plain formula ends with it, the way RDKit writes it: +, -, +2, -3. */
+function chargeSuffix(charge: number): string {
+  if (charge === 0) return ""
+  const sign = charge > 0 ? "+" : "-"
+  return Math.abs(charge) === 1 ? sign : `${sign}${Math.abs(charge)}`
+}
+
+/** A plain formula for showing: counts as subscripts, a charge as a superscript (C₇H₇⁺, C₁₂H₁₄N₂²⁺). */
 export function displayFormula(formula: string): string {
-  return formula.replace(/\d+/g, (digits) =>
-    [...digits].map((digit) => SUBSCRIPT[Number(digit)] ?? digit).join(""),
-  )
+  const [, body, sign, size] = /^(.*?)(?:([+-])(\d*))?$/.exec(formula)!
+  const sub = body.replace(/\d/g, (digit) => SUBSCRIPT[Number(digit)])
+  if (!sign) return sub
+  return `${sub}${[...size].map((digit) => SUPERSCRIPT[Number(digit)]).join("")}${sign === "+" ? "⁺" : "⁻"}`
 }
 
 export function molecularWeight(mol: Molecule, atomIds?: number[]): number {

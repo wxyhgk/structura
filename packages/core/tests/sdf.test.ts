@@ -168,11 +168,11 @@ function chargedRing(size: number, charge: number): Molecule {
 test("charged ring carbons keep their double bonds to themselves", () => {
   const tropylium = kekulizeAromaticReport(chargedRing(7, 1))
   assert.equal(tropylium.unresolved, 0)
-  assert.equal(plainFormula(tropylium.mol), "C7H7")
+  assert.equal(plainFormula(tropylium.mol), "C7H7+")
   assert.equal(tropylium.mol.bonds.filter((bond) => bond.order === 2).length, 3)
   const anion = kekulizeAromaticReport(chargedRing(5, -1))
   assert.equal(anion.unresolved, 0)
-  assert.equal(plainFormula(anion.mol), "C5H5")
+  assert.equal(plainFormula(anion.mol), "C5H5-")
 })
 
 /** A ring of aromatic bonds, its atoms the elements given in turn. */

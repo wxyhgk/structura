@@ -28,7 +28,7 @@ const CASES: Array<[string, string]> = [
   ["CC(C)Cc1ccc(cc1)[C@H](C)C(=O)O", "C13H18O2"],
   ["C/C=C/C(=O)O", "C4H6O2"],
   ["[Na+].CC(=O)[O-]", "C2H3NaO2"],
-  ["F[B-](F)(F)F", "BF4"],
+  ["F[B-](F)(F)F", "BF4-"],
   ["[2H]C([2H])([2H])O", "CHD3O"],
   ["c1ccc(cc1)N1c2ccccc2B2c3ccccc3N(c3ccccc3)c3cccc1c23", "C30H21BN2"],
   ["c1ccncc1.c1cc[nH]c1", "C9H10N2"],

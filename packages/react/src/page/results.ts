@@ -1,4 +1,4 @@
-import { displayFormula, molecularWeight, plainFormula } from "@structura/core/formula"
+import { molecularWeight, plainFormula } from "@structura/core/formula"
 import { compoundFields, pickFields, type Enumeration, type Pick } from "@structura/markush"
 import type { Molecule } from "@structura/core/types"
 
@@ -54,7 +54,7 @@ export const csvHead = (columns: readonly string[], extras: readonly string[] = 
 /** One compound's line under `csvHead(columns, extras)`, `more` holding the extras' values; a column the row has no value for is left empty. */
 export function csvLine(row: Row, columns: readonly string[], smiles: (mol: Molecule) => string, extras: readonly string[] = [], more: Record<string, string> = {}): string {
   const fields = rowFields(row)
-  return [rowName(row), smiles(row.mol), displayFormula(plainFormula(row.mol)).normalize("NFKC"), molecularWeight(row.mol).toFixed(2), ...extras.map((name) => more[name] ?? ""), ...columns.map((name) => fields[name] ?? "")]
+  return [rowName(row), smiles(row.mol), plainFormula(row.mol), molecularWeight(row.mol).toFixed(2), ...extras.map((name) => more[name] ?? ""), ...columns.map((name) => fields[name] ?? "")]
     .map(cell)
     .join(",")
 }

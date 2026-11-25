@@ -15,7 +15,7 @@ export function symbolOf(atom: Molecule["atoms"][number]): string {
 }
 
 /**
- * The atom block's valence field. Elements we give no implicit hydrogens to (metals, Sn…)
+ * The atom block's valence field. Elements we give no implicit hydrogens to (metals)
  * state their valence outright, 15 meaning zero, so readers do not add hydrogens we never
  * drew. Everything else is left to the reader's own rules (0).
  */

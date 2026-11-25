@@ -146,6 +146,15 @@ function dense(bonds: number): Molecule {
   return { ...emptyMolecule(), atoms, bonds: all.slice(0, bonds).map((bond, at) => ({ ...bond, id: at + 1 })), nextAtomId: 61, nextBondId: bonds + 1 }
 }
 
+test("a repeat count the editor cannot hold falls back to 1-4 and says so", () => {
+  const { mol, brackets } = chain(30)
+  const text = toMolfile(mol, "t", brackets)
+  assert.ok(text.includes("2-7"))
+  const read = readMolfile(text.replace("2-7", "1-500"))
+  assert.deepEqual(read.brackets?.[0].repeat, { min: 1, max: 4, name: "m" })
+  assert.ok(read.problems.some((problem) => /counted 1-500/.test(problem.message)))
+})
+
 test("999 atoms and 999 bonds are still V2000; one more of either is V3000", () => {
   const edge = toMolfile(dense(999))
   assert.ok(edge.split("\n")[3].startsWith(" 60999"))

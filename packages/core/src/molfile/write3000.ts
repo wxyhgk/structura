@@ -1,5 +1,5 @@
 import type { Bracket, Molecule } from "../types.ts"
-import { ANGSTROM_PER_PX, rGroupNumber, stereoCode } from "./codes.ts"
+import { ANGSTROM_PER_PX, rGroupLabel, rGroupNumber, stereoCode } from "./codes.ts"
 import { symbolOf, valenceField } from "./fields.ts"
 import { sgroupItems, v30Value } from "./sgroups.ts"
 
@@ -48,8 +48,9 @@ export function toV3000(mol: Molecule, title: string, brackets: readonly Bracket
     if (atom.isotope != null) fields.push(`MASS=${atom.isotope}`)
     const group = atom.alias ? rGroupNumber(atom.alias) : null
     if (group != null) fields.push(`RGROUPS=(1 ${group})`)
-    // Any other label rides along as ALIAS, as V2000's `A  ` lines carry it.
-    else if (atom.alias) fields.push(`ALIAS=${v30Value(atom.alias)}`)
+    // Any other label rides along as ALIAS, as V2000's `A  ` lines carry it; so does a plain
+    // R, written as R-group 1 (as V2000 writes it) but read back as R, not R1.
+    if (atom.alias && (group == null || rGroupLabel(group) !== atom.alias)) fields.push(`ALIAS=${v30Value(atom.alias)}`)
     const valence = valenceField(mol, atom)
     // VAL=-1 is "no valence", V2000's 15.
     if (valence !== 0) fields.push(`VAL=${valence === 15 ? -1 : valence}`)

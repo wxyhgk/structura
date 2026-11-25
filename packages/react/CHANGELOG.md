@@ -37,6 +37,27 @@ Fixes from a correctness review of the core.
 - **Fixed**: tidying (`relax`, the clean-up) could make a wedge mean the other stereoisomer when
   a centre's two plain neighbours swung past a straight line, and could turn an E double bond
   into Z. A wedge drawn so it could be read either way is left as drawn.
+- **Fixed**: ops refuse a value outside their choices instead of reading it as the nearest one
+  (an arrow `direction: "diag"`, a flip `axis: "z"`, `collapsed: "x"`, a ring `side: 2`, an
+  unknown generation setting, `remove_proviso` with index "0"); any name works as `as`,
+  "constructor" included; `names` no longer hands back atoms removed later in the batch.
+- **Fixed**: a Structura file saved with a byte-order mark opens; id counters past 2^53 are
+  refused.
+- **Fixed**: an edit that changes nothing (no ops, a move by 0) is no longer an undo step.
+- **Fixed**: neutral N with five single bonds is flagged; a drawing scaled below one unit is no
+  longer reported as overlapping atoms and short bonds; checking more than ~120,000 molecules no
+  longer overflows the stack; a bond of no length is reported however few bonds there are.
+- **Fixed**: a bond grown off a methyl of tert-butyl no longer lands on another methyl;
+  `ringMembership` follows a molecule changed in place.
+- **Fixed**: in `chem-structura/chem`, `expandGroup` says why a two-bond group (NMe) does not
+  fit an end atom, `fuseRing` throws for a bond with rings on both sides instead of returning the
+  molecule unchanged, and `kekulize` always returns a new molecule.
+- **Fixed**: an SD data value with a blank first line, a `$$$$` line or a `> <name>` line no
+  longer ends its item or record early; CDXML drops characters XML cannot hold (control
+  characters in a note made the file ill-formed); a counts line claiming more atoms than the file
+  has is an error; a radical voided by `M  CHG` lines is noted; reading big molfiles is over ten
+  times faster.
+- **Fixed**: the elemental analysis weighs a labelled isotope (13C) as the molecular weight does.
 
 ## 0.10.0
 

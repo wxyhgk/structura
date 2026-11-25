@@ -1,6 +1,5 @@
-import { elementMass } from "./elements/index.ts"
 import { COMMON_ISOTOPE } from "./elements/isotopes.ts"
-import { atomHydrogens, elementCounts, isotopeMass } from "./formula.ts"
+import { atomHydrogens, elementMasses, isotopeMass } from "./formula.ts"
 import { atomById } from "./molecule/graph.ts"
 import type { Molecule } from "./types.ts"
 
@@ -38,8 +37,8 @@ export function netCharge(mol: Molecule, atomIds?: number[]): number {
 
 /** Each element's share of the mass, in percent, C and H first: what an elemental analysis reports. */
 export function elementalAnalysis(mol: Molecule, atomIds?: number[]): Array<{ symbol: string; percent: number }> {
-  const counts = elementCounts(mol, atomIds)
-  const masses = [...counts].map(([symbol, count]) => ({ symbol, mass: count * (symbol === "D" || symbol === "T" ? monoisotopic(symbol)! : elementMass(symbol)) }))
+  // Weighed as molecularWeight weighs them, so a 13C label counts as 13.003, not as natural C.
+  const masses = [...elementMasses(mol, atomIds)].map(([symbol, mass]) => ({ symbol, mass }))
   const total = masses.reduce((sum, item) => sum + item.mass, 0)
   if (total === 0) return []
   const order = (symbol: string) => (symbol === "C" ? 0 : symbol === "H" ? 1 : 2)

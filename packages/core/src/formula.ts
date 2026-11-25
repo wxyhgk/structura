@@ -101,7 +101,13 @@ export function atomHydrogens(mol: Molecule, atomId: number): { h: number; error
   const atom = atomById(mol, atomId)
   if (!atom) return { h: 0, error: false }
   if (atom.alias) return { h: 0, error: false }
-  return hydrogenCount(atom.el, atom.charge, bondOrderSum(mol, atomId))
+  const sum = bondOrderSum(mol, atomId)
+  // Neutral N reaches five only as nitro or an N-oxide drawn with N=O; five single bonds
+  // (which hydrogenCount, seeing only the sum, would let pass) is no molecule.
+  if (atom.el === "N" && atom.charge === 0 && sum === 5 && !mol.bonds.some((bond) => (bond.a === atomId || bond.b === atomId) && bond.order > 1)) {
+    return { h: 0, error: true }
+  }
+  return hydrogenCount(atom.el, atom.charge, sum)
 }
 
 /** Walks the atoms once, handing each piece of the formula to `add` with its mass. */

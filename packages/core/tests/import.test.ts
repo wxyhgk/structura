@@ -17,6 +17,17 @@ test("a counts line with negative numbers is an error, not a crash", () => {
   assert.equal(read.problems[0]?.severity, "error")
 })
 
+test("a skip line with a count below one skips nothing instead of reading the same lines for ever", () => {
+  for (const count of [" -2", "  0", "abc"]) {
+    const read = readMolfile(ethane().replace("M  END", `S  SKP${count}\nM  CHG  1   1   1\nM  END`))
+    assert.equal(read.mol.atoms.length, 2, count)
+    assert.equal(read.mol.atoms[0].charge, 1, `the line after it is still read (${count})`)
+  }
+  // A real count skips that many lines.
+  const skipped = readMolfile(ethane().replace("M  END", "S  SKP  1\nM  CHG  1   1   1\nM  END"))
+  assert.equal(skipped.mol.atoms[0].charge, 0)
+})
+
 test("one unreadable record does not stop the rest of an SDF", () => {
   const text = [ethane(), ethane().replace("  2  1  0", "  2 -1  0"), ethane()].map((block) => `${block}$$$$\n`).join("")
   const records = readSdf(text)

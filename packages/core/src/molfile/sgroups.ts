@@ -110,9 +110,12 @@ export function sgroupLines(mol: Molecule, brackets: readonly Bracket[], atomInd
   return lines
 }
 
-/** A V3000 value, in quotes (with "" for a quote) when it has a space, quote or bracket. */
+/**
+ * A V3000 value, in quotes (with "" for a quote) when it has a space, quote or bracket, or
+ * ends in "-": last on a line, that dash would say the line goes on in the next (CO2-).
+ */
 export function v30Value(value: string): string {
-  return /[\s"()]|^$/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+  return /[\s"()]|^$|-$/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
 }
 
 /** `(n a b c)`: a counted list. */

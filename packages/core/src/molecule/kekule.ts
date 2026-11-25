@@ -106,6 +106,13 @@ function mayDouble(mol: Molecule, atomId: number): boolean {
   return bondOrderSum(mol, atomId) < 3
 }
 
+/**
+ * The double bonds: every atom that must have one gets one, and of those that may, as many as
+ * can, so pyridine's and pyridazine's N take one and only an N that cannot (pyrrole's) stays
+ * single and keeps its H. Two that may are paired too, for N=N in tetrazole, cinnoline and
+ * tetrazine. The sets of atoms one matching can cover form a matroid, so adding the atoms that
+ * may one by one, keeping each that still fits, ends with as many as any matching covers.
+ */
 function matchDoubles(mol: Molecule, bonds: Bond[]): { pairs: Array<[number, number]>; complete: boolean } {
   const degree = new Map<number, number>()
   for (const bond of bonds) {
@@ -120,9 +127,9 @@ function matchDoubles(mol: Molecule, bonds: Bond[]): { pairs: Array<[number, num
   }
   const partner = (id: number) => needy.has(id) || willing.has(id)
   const adj = new Map<number, number[]>()
-  for (const id of needy) adj.set(id, [])
+  for (const id of [...needy, ...willing]) adj.set(id, [])
   for (const bond of bonds) {
-    if (!partner(bond.a) || !partner(bond.b) || (!needy.has(bond.a) && !needy.has(bond.b))) continue
+    if (!partner(bond.a) || !partner(bond.b)) continue
     adj.get(bond.a)?.push(bond.b)
     adj.get(bond.b)?.push(bond.a)
   }
@@ -163,17 +170,36 @@ function matchDoubles(mol: Molecule, bonds: Bond[]): { pairs: Array<[number, num
     return false
   }
 
+  /** A matching covering every atom in `pending`, or null. */
+  function cover(pending: number[]): Array<[number, number]> | null {
+    chosen.length = 0
+    used.clear()
+    return search(pending) ? [...chosen] : null
+  }
+
   const everyone = [...needy]
-  if ((willing.size > 0 || everyone.length % 2 === 0) && search(everyone)) return { pairs: chosen, complete: true }
-  chosen.length = 0
-  used.clear()
+  let best = willing.size > 0 || everyone.length % 2 === 0 ? cover(everyone) : null
+  if (best) {
+    const covered = [...everyone]
+    for (const id of willing) {
+      if (best.some(([a, b]) => a === id || b === id)) {
+        covered.push(id)
+        continue
+      }
+      const wider = cover([...covered, id])
+      if (wider) {
+        covered.push(id)
+        best = wider
+      }
+    }
+    return { pairs: best, complete: true }
+  }
   // Phenalene has an odd number of aromatic carbons. One outer carbon stays
   // CH2 and the other twelve take one double bond each.
   const optional = everyone.filter((id) => (degree.get(id) ?? 0) <= 2)
   for (const skip of optional) {
-    if (search(everyone.filter((id) => id !== skip))) return { pairs: chosen, complete: false }
-    chosen.length = 0
-    used.clear()
+    const some = cover(everyone.filter((id) => id !== skip))
+    if (some) return { pairs: some, complete: false }
   }
   return { pairs: [], complete: everyone.length === 0 }
 }

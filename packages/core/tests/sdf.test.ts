@@ -4,7 +4,7 @@ import test from "node:test"
 import { BOND_LENGTH } from "../src/constants.ts"
 import { plainFormula } from "../src/formula.ts"
 import { setAtomLabel } from "../src/label.ts"
-import { addAtom, addBond, bondLengthAt, bumpCharge, emptyMolecule } from "../src/molecule.ts"
+import { addAtom, addBond, bondLengthAt, bumpCharge, emptyMolecule, setElement } from "../src/molecule.ts"
 import { createBondAt, fuseRingAt, placeRing, sprout } from "../src/layout.ts"
 import { kekulizeAromaticReport } from "../src/molecule/kekule.ts"
 import { toMolfile } from "../src/molfile.ts"
@@ -173,6 +173,43 @@ test("charged ring carbons keep their double bonds to themselves", () => {
   const anion = kekulizeAromaticReport(chargedRing(5, -1))
   assert.equal(anion.unresolved, 0)
   assert.equal(plainFormula(anion.mol), "C5H5")
+})
+
+/** A ring of aromatic bonds, its atoms the elements given in turn. */
+function aromaticRing(elements: string): Molecule {
+  let mol = placeRing(emptyMolecule(), { x: 0, y: 0 }, elements.length === 5 ? "cyclopentane" : "cyclohexane")
+  for (const [index, atom] of mol.atoms.entries()) if (elements[index] !== "C") mol = setElement(mol, [atom.id], elements[index])
+  return { ...mol, bonds: mol.bonds.map((bond) => ({ ...bond, order: 1 as const, aromatic: true })) }
+}
+
+test("two ring nitrogens side by side may share the double bond", () => {
+  // Aromatic bonds as a molfile's type 4 gives them; every N two-bonded with no H drawn.
+  const cases: Array<[string, Molecule, string]> = [
+    ["1,2,4,5-tetrazine", aromaticRing("CNNCNN"), "C2H2N4"],
+    ["1,2,4-triazine", aromaticRing("NNCNCC"), "C3H3N3"],
+    ["1,2,3-triazine", aromaticRing("NNNCCC"), "C3H3N3"],
+    ["pyridazine", aromaticRing("NNCCCC"), "C4H4N2"],
+    // Five atoms cannot all pair up: one N keeps its H, as tetrazole's does.
+    ["tetrazole", aromaticRing("CNNNN"), "CH2N4"],
+    ["pyrrole", aromaticRing("NCCCC"), "C4H5N"],
+  ]
+  for (const [name, mol, formula] of cases) {
+    const done = kekulizeAromaticReport(mol)
+    assert.equal(done.unresolved, 0, name)
+    assert.equal(plainFormula(done.mol), formula, name)
+  }
+  // Cinnoline: the N=N bond is the only way every carbon gets its double bond.
+  const ring = placeRing(emptyMolecule(), { x: 0, y: 0 }, "cyclohexane")
+  const shared = ring.bonds[0]
+  let cinnoline = fuseRingAt(ring, shared.id, "cyclohexane").mol
+  const fresh = cinnoline.atoms.filter((atom) => !ring.atoms.some((old) => old.id === atom.id))
+  const next = fresh.find((atom) => cinnoline.bonds.some((bond) => (bond.a === atom.id && bond.b === shared.a) || (bond.b === atom.id && bond.a === shared.a)))!
+  const beyond = fresh.find((atom) => atom.id !== next.id && cinnoline.bonds.some((bond) => (bond.a === atom.id && bond.b === next.id) || (bond.b === atom.id && bond.a === next.id)))!
+  cinnoline = setElement(cinnoline, [next.id, beyond.id], "N")
+  cinnoline = { ...cinnoline, bonds: cinnoline.bonds.map((bond) => ({ ...bond, order: 1 as const, aromatic: true })) }
+  const done = kekulizeAromaticReport(cinnoline)
+  assert.equal(done.unresolved, 0)
+  assert.equal(plainFormula(done.mol), "C8H6N2")
 })
 
 test("adding a ring elsewhere leaves an existing aromatic ring alone", () => {

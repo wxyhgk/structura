@@ -81,8 +81,10 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       if (order !== 1 && op.stereo && op.stereo !== "none") throw new OpError(`only a single bond can carry ${op.stereo}`)
       if (order !== 2 && op.emphasis) throw new OpError("only a double bond has an emphasised side")
       const next: HotTarget = { type: "bond", id }
-      if (typeof op.bond !== "number" && stereo !== "none") {
-        // Named by its atoms, a wedge starts at the first one.
+      if (typeof op.bond !== "number" && op.stereo != null && op.stereo !== "none") {
+        // Named by its atoms, a wedge being set starts at the first one. A wedge kept as it
+        // was (only the order or look changing) keeps its direction, whichever way round
+        // the atoms are named.
         const [from, to] = op.bond.between.map(ctx.atom)
         return { mol: addBond(mol, from, to, { order, stereo })?.mol ?? mol, next }
       }

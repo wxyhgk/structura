@@ -56,7 +56,7 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
   if (typeof file.version !== "number" || file.version > VERSION) return { error: `made by a newer Structura (version ${String(file.version)})` }
   const drawing = file.drawing
   const molecule = drawing?.molecule
-  if (!drawing || !molecule || !Array.isArray(molecule.atoms) || !Array.isArray(molecule.bonds) || !Array.isArray(drawing.arrows)) {
+  if (!drawing || !molecule || !Array.isArray(molecule.atoms) || !Array.isArray(molecule.bonds) || !Array.isArray(molecule.groups ?? []) || !Array.isArray(drawing.arrows)) {
     return { error: "the drawing is incomplete" }
   }
   if (![molecule.nextAtomId, molecule.nextBondId].every(Number.isInteger)) return { error: "the drawing's id counters are missing" }
@@ -67,10 +67,13 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
     ...Object.fromEntries(PART_KEYS.filter((key) => drawing[key] != null).map((key) => [key, drawing[key]])),
     ...bracketCounter(drawing),
   }
-  const errors = errorsOf(validateDrawing(whole))
-  if (errors.length > 0) return { error: errors[0].message }
-  // The generic-formula parts, checked as every edit checks them (applyOps).
-  const markush = markushProblem(whole)
-  if (markush) return { error: markush }
-  return { drawing: whole }
+  // The checks assume parts of the right shape; one that is not (an atom that is null, a
+  // variable that is a number) makes a check throw, and is refused like any other fault.
+  let problem: string | null
+  try {
+    problem = errorsOf(validateDrawing(whole))[0]?.message ?? markushProblem(whole)
+  } catch {
+    problem = "the drawing has parts of the wrong shape"
+  }
+  return problem ? { error: problem } : { drawing: whole }
 }

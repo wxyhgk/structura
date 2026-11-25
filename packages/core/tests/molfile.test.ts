@@ -187,3 +187,28 @@ test("an SD file's records can carry their own titles, such as compound numbers"
   const sdf = toSdf([acetate(), acetate()], ["C-1", "C-2\nsecond line"])
   assert.deepEqual(readSdf(sdf).map((record) => record.title), ["C-1", "C-2 second line"])
 })
+
+test("an SD data value cannot end its item or its record early", () => {
+  const ethane = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const value = "\nfirst\n$$$$\n> <other>\n  \nlast"
+  const text = toSdf([ethane, ethane], "t", [{ note: value, kept: "yes" }, {}])
+  const records = readSdf(text)
+  assert.equal(records.length, 2)
+  assert.deepEqual(records[0].properties, { note: "first\n $$$$\n > <other>\nlast", kept: "yes" })
+})
+
+test("a counts line that claims more atoms than the file has is an error, not a made-up atom", () => {
+  // Says three atoms; the third line is the bond.
+  const text = toMolfile(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)).replace("  2  1  0", "  3  0  0")
+  const read = readMolfile(text)
+  assert.equal(read.mol.atoms.length, 0)
+  assert.ok(read.problems.some((problem) => problem.severity === "error" && /not an atom line/.test(problem.message)))
+})
+
+test("a radical in the atom block that M  CHG lines void is noted, not lost without a word", () => {
+  const lines = toMolfile(bumpCharge(createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE), [1], 1)).split("\n")
+  // Atom 2's charge field set to 4, the atom block's doublet radical.
+  lines[5] = `${lines[5].slice(0, 36)}  4${lines[5].slice(39)}`
+  const read = readMolfile(lines.join("\n"))
+  assert.ok(read.problems.some((problem) => /atom 2 is marked a radical/.test(problem.message)))
+})

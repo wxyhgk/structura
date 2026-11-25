@@ -120,6 +120,7 @@ function atomOf(source: CtabAtom, number: number, note: Note): Atom {
 /** The table's bonds the editor can hold, numbered in file order; the rest are noted. */
 function bondsOf(table: Ctab, note: Note): { bonds: Bond[]; aromatic: boolean } {
   const bonds: Bond[] = []
+  const seen = new Set<string>()
   let aromatic = false
   table.bonds.forEach(({ a, b, type, stereo }, index) => {
     const count = table.atoms.length
@@ -127,10 +128,13 @@ function bondsOf(table: Ctab, note: Note): { bonds: Bond[]; aromatic: boolean } 
       note("bad-molfile", `bond ${index + 1} joins atoms ${a} and ${b}, which do not exist`, "error")
       return
     }
-    if (bonds.some((other) => (other.a === a && other.b === b) || (other.a === b && other.b === a))) {
+    // A set, not a search of the bonds so far: that made reading 30,000 atoms take seconds.
+    const pair = a < b ? `${a}-${b}` : `${b}-${a}`
+    if (seen.has(pair)) {
       note("bad-molfile", `bond ${index + 1} repeats the bond between atoms ${a} and ${b}; kept the first`)
       return
     }
+    seen.add(pair)
     const bond: Bond = { id: index + 1, a, b, order: 1, stereo: "none" }
     if (type === 2 || type === 3) bond.order = type
     else if (type === 4) {

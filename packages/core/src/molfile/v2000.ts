@@ -46,6 +46,13 @@ export function readV2000(lines: string[], note: Note): Ctab | null {
       map: int(line.slice(60, 63)),
     })
   }
+  // An atom line with no symbol is a bond or property line: the counts line overstates the
+  // atoms, and reading on would make up an atom and lose a bond without a word.
+  const blank = atoms.findIndex((atom) => atom.symbol === "")
+  if (blank !== -1) {
+    note("bad-molfile", `line ${5 + blank} should be atom ${blank + 1} but is not an atom line; the counts line says ${atomCount} atoms`, "error")
+    return null
+  }
   const bonds = lines.slice(4 + atomCount, 4 + atomCount + bondCount).map((line) => ({
     a: int(line.slice(0, 3)),
     b: int(line.slice(3, 6)),
@@ -91,6 +98,11 @@ export function readV2000(lines: string[], note: Note): Ctab | null {
     }
   }
   if (charges) {
+    // The format lets CHG lines void the atom block's radicals too; say so for any it voids.
+    const flagged = new Set(radicals.map(([number]) => number))
+    atoms.forEach((atom, index) => {
+      if (atom.radical !== 0 && !flagged.has(index + 1)) note("unsupported-mol-feature", `atom ${index + 1} is marked a radical in the atom block, which the M  CHG lines override; read without it`)
+    })
     for (const atom of atoms) {
       atom.charge = 0
       atom.radical = 0

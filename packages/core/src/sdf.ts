@@ -21,7 +21,9 @@ export function readSdf(text: string): MolRecord[] {
   const records: MolRecord[] = []
   let start = 0
   for (let index = 0; index <= lines.length; index++) {
-    if (index < lines.length && lines[index].trim() !== "$$$$") continue
+    // Only a line starting $$$$ ends the record (trailing spaces allowed): one set in by a
+    // space is a data value.
+    if (index < lines.length && lines[index].trimEnd() !== "$$$$") continue
     const chunk = lines.slice(start, index)
     start = index + 1
     if (chunk.every((line) => line.trim() === "")) continue

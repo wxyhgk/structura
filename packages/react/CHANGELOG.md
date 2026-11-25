@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.10.0
 
 - **Added**: `chem-structura/chem`, Structura's algorithms on one molecule for other programs,
   with no editor and no React: layout (`addRing`, `attachRing`, `fuseRing`, `growBond`,

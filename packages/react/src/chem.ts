@@ -8,7 +8,7 @@ import type { MainModule } from "@rdkit/rdkit"
 import { BOND_LENGTH, SINGLE } from "@structura/core/constants"
 import { sceneToSvg } from "@structura/core/draw"
 import { attachRingAt, fuseRingAt, insertGroup, placeRing, relax as relaxAtoms, sproutAngle, sproutAt, untangleGroups as untangle } from "@structura/core/layout"
-import { atomById, bondById, kekulizeAromaticReport, ringMembership as membership, setCollapsed, sideBySide as inARow, smallestRings } from "@structura/core/molecule"
+import { atomById, bondById, kekulizeAromaticReport, neighbors, ringMembership as membership, setCollapsed, sideBySide as inARow, smallestRings } from "@structura/core/molecule"
 import { toMolfile as writeMolfile } from "@structura/core/molfile"
 import { readMolfile } from "@structura/core/sdf"
 import { templateFor } from "@structura/core/templates"
@@ -74,7 +74,8 @@ export function ringMembership(mol: Molecule): Map<number, number> {
  */
 export function kekulize(mol: Molecule): { molecule: Molecule; unresolved: number } {
   const done = kekulizeAromaticReport(mol)
-  return { molecule: done.mol, unresolved: done.unresolved }
+  // A new molecule even when nothing was aromatic, as every function here returns.
+  return { molecule: done.mol === mol ? structuredClone(mol) : done.mol, unresolved: done.unresolved }
 }
 
 // ── Layout ────────────────────────────────────────────────────────────────────────────────────
@@ -98,11 +99,15 @@ export function attachRing(mol: Molecule, atomId: number, kind: RingKind): { mol
  * A new ring sharing the bond `bondId`, on `side` of it (1 or -1, the two sides going from the
  * bond's first atom to its second), or, without `side`, on the side with more room. On a bond
  * of a ring the new ring always goes outside that ring. A ring that cannot fit cleanly is still
- * drawn, its crowded atoms left for the caller to sort out.
+ * drawn, its crowded atoms left for the caller to sort out; one with no side to go on at all
+ * (naphthalene's middle bond) throws.
  */
 export function fuseRing(mol: Molecule, bondId: number, kind: RingKind, side?: 1 | -1): Molecule {
   if (!bondById(mol, bondId)) throw new Error(`no bond with id ${bondId} in the molecule`)
-  return fuseRingAt(mol, bondId, kind, side).mol
+  const fused = fuseRingAt(mol, bondId, kind, side).mol
+  // No side left for it: a bond already shared by two rings, say naphthalene's middle one.
+  if (fused === mol) throw new Error(`no room for a ring on bond ${bondId}: something is drawn on both sides of it`)
+  return fused
 }
 
 /**
@@ -127,7 +132,9 @@ export function expandGroup(mol: Molecule, atomId: number, abbreviation: string)
   const template = templateFor(abbreviation)
   if (!template) throw new Error(`unknown abbreviation "${abbreviation}"`)
   const done = insertGroup(mol, atomId, template)
-  if (!done) throw new Error(`no atom with id ${atomId} in the molecule`)
+  // The atom is there (checked above): a group that joins by more than one bond (NMe, a
+  // bridge) only fits an atom with that many neighbours.
+  if (!done) throw new Error(`"${abbreviation}" joins by ${template.attachments} bonds; atom ${atomId} has ${neighbors(mol, atomId).length}`)
   const added = done.mol.groups.filter((group) => !mol.groups.some((old) => old.id === group.id)).map((group) => group.id)
   return setCollapsed(done.mol, added, false)
 }

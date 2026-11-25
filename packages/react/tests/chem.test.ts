@@ -69,6 +69,10 @@ test("fuseRing goes on the side asked of a lone bond, outside a ring, and refuse
   assert.deepEqual(fused(1), fused(-1))
   assert.equal(findRings(fused(1)).length, 2)
   assert.throws(() => fuseRing(ring, 999, "benzene"), /no bond with id 999/)
+  // Naphthalene's middle bond has rings on both sides: nothing to fuse onto, said so.
+  const benzene = addRing(EMPTY, ORIGIN, "benzene")
+  const naphthalene = fuseRing(benzene, benzene.bonds[0].id, "benzene")
+  assert.throws(() => fuseRing(naphthalene, benzene.bonds[0].id, "benzene"), /no room for a ring on bond/)
 })
 
 test("attachRing hangs a ring off an atom by one bond and names its atoms", () => {
@@ -103,6 +107,8 @@ test("expandGroup draws an abbreviation out atom by atom, and refuses one it doe
   assert.equal(boc.atoms.find((item) => item.id === atom)?.el, "C")
   assert.ok(boc.groups.length > 0 && boc.groups.every((group) => !group.collapsed))
   assert.throws(() => expandGroup(grown, atom, "Xyz"), /unknown abbreviation "Xyz"/)
+  // NMe goes between two atoms: on an end atom it says why, not that the atom is missing.
+  assert.throws(() => expandGroup(grown, atom, "NMe"), /"NMe" joins by 2 bonds; atom \d+ has 1/)
 })
 
 test("relax brings a pulled atom back towards an even bond length, and moves only the atoms listed", () => {
@@ -131,6 +137,13 @@ test("sideBySide puts molecules in a row with fresh ids", () => {
   assert.equal(new Set(row.atoms.map((atom) => atom.id)).size, 12)
   const xs = (ids: Molecule["atoms"]) => ids.map((atom) => atom.x)
   assert.ok(Math.max(...xs(row.atoms.slice(0, 6))) < Math.min(...xs(row.atoms.slice(6))))
+})
+
+test("kekulize gives a new molecule even when nothing is aromatic", () => {
+  const ring = addRing(EMPTY, ORIGIN, "cyclohexane")
+  const { molecule } = kekulize(ring)
+  assert.notEqual(molecule, ring)
+  assert.deepEqual(molecule, ring)
 })
 
 test("kekulize gives an all-single aromatic ring alternating double bonds", () => {

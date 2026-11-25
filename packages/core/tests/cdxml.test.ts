@@ -105,7 +105,7 @@ test("atoms and bonds: elements, hydrogens, charge, isotope, orders and wedges",
   assert.match(labelOf(nitrogen)!, /^(NH3|H3N)\+$/)
   const carbon13 = nodes.find((node) => node.attrs.Isotope === "13")!
   assert.equal(carbon13.attrs.Element, undefined, "carbon is the default element")
-  assert.match(labelOf(carbon13)!, /^13C/)
+  assert.match(labelOf(carbon13)!, /^(13CH2|H213C)$/)
   assert.deepEqual(bonds.map((bond) => bond.attrs.Order ?? "1").sort(), ["1", "1", "1", "2"])
   const wedge = bonds.find((bond) => bond.attrs.Display === "WedgeBegin")!
   const hash = bonds.find((bond) => bond.attrs.Display === "WedgedHashBegin")!

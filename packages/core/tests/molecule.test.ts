@@ -232,6 +232,18 @@ test("growRing puts a singly bonded atom into the ring", () => {
   assert.equal(bondOrderSum(hexane.mol, target), 3)
 })
 
+test("a bond grown off a methyl of tert-butyl stays clear of the other methyls", () => {
+  const centre = addAtom(emptyMolecule(), "C", 0, 0)
+  let tBu = centre.mol
+  for (let at = 0; at < 4; at++) tBu = sprout(tBu, centre.id, { order: 1, stereo: "none" })
+  for (const methyl of tBu.atoms.filter((atom) => atom.id !== centre.id)) {
+    const grown = sprout(tBu, methyl.id, { order: 1, stereo: "none" })
+    const tip = grown.atoms.find((atom) => !atomById(tBu, atom.id))!
+    const nearest = Math.min(...tBu.atoms.filter((atom) => atom.id !== methyl.id).map((atom) => dist(atom, tip)))
+    assert.ok(nearest > BOND_LENGTH * 0.99, `off atom ${methyl.id}: ${nearest.toFixed(1)} px from another atom`)
+  }
+})
+
 test("a ring fused onto a macrocycle's bond goes outside it, as on a small ring", () => {
   for (const size of [9, 12, 16]) {
     // A regular ring of `size` carbons around the origin, every bond one bond long.

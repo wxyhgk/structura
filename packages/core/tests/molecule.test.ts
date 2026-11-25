@@ -232,6 +232,22 @@ test("growRing puts a singly bonded atom into the ring", () => {
   assert.equal(bondOrderSum(hexane.mol, target), 3)
 })
 
+test("a ring fused onto a macrocycle's bond goes outside it, as on a small ring", () => {
+  for (const size of [9, 12, 16]) {
+    // A regular ring of `size` carbons around the origin, every bond one bond long.
+    const radius = BOND_LENGTH / (2 * Math.sin(Math.PI / size))
+    let ring = emptyMolecule()
+    for (let at = 0; at < size; at++) ring = addAtom(ring, "C", radius * Math.cos((2 * Math.PI * at) / size), radius * Math.sin((2 * Math.PI * at) / size)).mol
+    for (let at = 0; at < size; at++) ring = addBond(ring, ring.atoms[at].id, ring.atoms[(at + 1) % size].id, { order: 1, stereo: "none" })!.mol
+    for (const side of [1, -1] as const) {
+      const fused = fuseRingAt(ring, ring.bonds[0].id, "benzene", side).mol
+      const added = fused.atoms.filter((atom) => atom.id >= ring.nextAtomId)
+      assert.equal(added.length, 4)
+      for (const atom of added) assert.ok(Math.hypot(atom.x, atom.y) > radius, `${size}-ring, side ${side}: atom ${atom.id} inside`)
+    }
+  }
+})
+
 test("a fused ring keeps equal side lengths", () => {
   const a = { x: 0, y: 0 }
   const b = { x: BOND_LENGTH, y: 0 }

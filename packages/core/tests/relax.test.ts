@@ -158,6 +158,47 @@ test("a wedge keeps meaning the same stereoisomer", () => {
   assert.ok(Math.abs(angle(cleaned, 2, 1, 3) - 120) < 10)
 })
 
+test("a wedge keeps its meaning when its plain neighbours open out past a straight line", () => {
+  // Alanine's centre as it can be left after a drag: the two plain neighbours 189° apart
+  // the long way round. Spreading them to 120° keeps their order round the centre but
+  // swings the turn from one to the other, and with it the configuration.
+  const at = (length: number, degrees: number) => ({ x: length * Math.cos((degrees * Math.PI) / 180), y: length * Math.sin((degrees * Math.PI) / 180) })
+  let mol = build([
+    { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
+    { op: "place_atom", el: "N", at: at(57, -159) },
+    { op: "place_atom", el: "C", at: at(44, 115) },
+    { op: "place_atom", el: "C", at: at(27, -74) },
+    { op: "add_bond", a: 1, b: 2 },
+    { op: "add_bond", a: 1, b: 3 },
+    { op: "add_bond", a: 1, b: 4 },
+    { op: "set_bond", bond: { between: [1, 2] }, stereo: "up" },
+  ])
+  // The plain neighbours' turn, which (with the wedge) is the configuration.
+  const turn = (m: Molecule) => {
+    const [c, p, q] = [1, 3, 4].map((id) => atomById(m, id)!)
+    return Math.sign((p.x - c.x) * (q.y - c.y) - (p.y - c.y) * (q.x - c.x))
+  }
+  const cleaned = relax(mol, { atoms: ids(mol) })
+  assert.equal(turn(cleaned), turn(mol))
+  // A double bond's E or Z stays too.
+  mol = build([
+    { op: "place_atom", el: "C", at: { x: 0, y: 0 } },
+    { op: "add_atom", el: "C", to: 1, order: 2 },
+    { op: "add_atom", el: "C", to: 1 },
+    { op: "add_atom", el: "C", to: 2 },
+  ])
+  const side = (m: Molecule) => {
+    const [a, b, p, q] = [1, 2, 3, 4].map((id) => atomById(m, id)!)
+    const of = (r: typeof a) => Math.sign((b.x - a.x) * (r.y - a.y) - (b.y - a.y) * (r.x - a.x))
+    return of(p) * of(q)
+  }
+  // 2-Butene dragged out of shape (found by a random search): spreading it out used to
+  // swing one methyl across, E to Z.
+  const where: Record<number, [number, number]> = { 1: [12.9, -7.6], 2: [60, -20.2], 3: [-31.3, 31.5], 4: [42.4, -44.8] }
+  const dragged = { ...mol, atoms: mol.atoms.map((atom) => ({ ...atom, x: where[atom.id][0], y: where[atom.id][1] })) }
+  assert.equal(side(relax(dragged, { atoms: [1, 2, 4] })), side(dragged))
+})
+
 test("a group moves as one rigid piece", () => {
   const mol = build([
     { op: "place_atom", el: "C", at: { x: 0, y: 0 } },

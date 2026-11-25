@@ -134,8 +134,9 @@ export function expandGroup(mol: Molecule, atomId: number, abbreviation: string)
 
 /**
  * Tidies the listed atoms: they move towards even bond lengths, ideal angles and regular rings,
- * and off atoms they overlap, staying near where they were. Every other atom, and those in
- * `locked`, stays put; no wedge comes to mean the other stereoisomer.
+ * and off atoms they overlap, staying near where they were. An atom of a group (from
+ * expandGroup, say) brings its whole group, which moves as one. Every other atom, and those
+ * in `locked`, stays put; no wedge and no double bond comes to mean the other stereoisomer.
  */
 export function relax(mol: Molecule, options: { atoms: Iterable<number>; locked?: Iterable<number>; iterations?: number }): Molecule {
   return relaxAtoms(mol, options)

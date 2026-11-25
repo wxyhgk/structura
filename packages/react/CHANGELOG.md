@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.10.1
+
+Fixes from a correctness review of the core.
+
+- **Fixed**: an aromatic ring read from a molfile with aromatic bonds (type 4) and two ring
+  nitrogens side by side got two hydrogens too many: tetrazole came out CH4N4, and cinnoline,
+  the triazines and tetrazine were wrong the same way. Two such nitrogens can now share the
+  double bond.
+- **Fixed**: `readDocument` (and `setDocument`, and an editor started with `initialDocument`)
+  threw on a document with parts of the wrong shape (an atom that is null, a variable that is
+  null) instead of returning an error. It also refuses id counters and ids that are not whole
+  numbers, which broke the next edit.
+- **Fixed**: `set_bond` naming a wedged bond by its atoms the other way round turned the wedge
+  round when only its order or look changed.
+- **Fixed**: a molfile with a negative `S  SKP` count made reading hang.
+- **Fixed**: a molecule over 999 atoms (written as V3000) with a label ending in "-" (CO2-) was
+  written so that it read back broken; a plain R in one read back as R1.
+- **Fixed**: an R# atom from another program that also carries an atom map is numbered by its
+  R-group number; a repeat count the editor cannot hold (over 100) is read as 1-4 with a notice,
+  instead of leaving the drawing broken.
+- **Fixed**: `add_ring` accepted "toString" (and any other name every object has) as a ring
+  kind, drawing nothing; `replace` with an unknown ring kind put in one carbon. Both refuse.
+- **Fixed**: an op kept the objects passed in (a variable's alternatives, a proviso), so
+  changing them afterwards changed the drawing and its undo history.
+- **Fixed**: Al, Ga, In, Ge, Sn, Pb, Sb, Bi and Po got no implicit hydrogens and no valence
+  check (Bu3SnH came out one H short); they now follow RDKit, charged too.
+- **Fixed**: exact masses use RDKit's isotope masses for every element: a natural isotope drawn
+  (35Cl) weighed its mass number, and He, Mo, W and some 40 other elements had no exact mass.
+- **Fixed**: a ring fused onto a bond of a ring of nine or more atoms went inside it.
+- **Fixed**: tidying (`relax`, the clean-up) could make a wedge mean the other stereoisomer when
+  a centre's two plain neighbours swung past a straight line, and could turn an E double bond
+  into Z. A wedge drawn so it could be read either way is left as drawn.
+
 ## 0.10.0
 
 - **Added**: `chem-structura/chem`, Structura's algorithms on one molecule for other programs,

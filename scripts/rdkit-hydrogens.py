@@ -12,7 +12,7 @@ import rdkit
 from rdkit import Chem, RDLogger
 
 RDLogger.DisableLog("rdApp.*")
-ELEMENTS = ["B", "C", "N", "O", "F", "Si", "P", "S", "Cl", "As", "Se", "Br", "Te", "I"]
+ELEMENTS = ["B", "C", "N", "O", "F", "Al", "Si", "P", "S", "Cl", "Ga", "Ge", "As", "Se", "Br", "In", "Sn", "Sb", "Te", "I", "Pb", "Bi", "Po"]
 
 cases = []
 for el in ELEMENTS:

@@ -154,15 +154,19 @@ test("a drawing with R and R1 round-trips through MOL", () => {
 })
 
 test("metals state their valence so readers add no hydrogens we did not draw", () => {
-  const tin = addAtom(emptyMolecule(), "Sn", 0, 0)
-  let mol = tin.mol
-  for (let index = 0; index < 3; index++) mol = sprout(mol, tin.id, SINGLE)
+  const iron = addAtom(emptyMolecule(), "Fe", 0, 0)
+  let mol = iron.mol
+  for (let index = 0; index < 3; index++) mol = sprout(mol, iron.id, SINGLE)
   mol = addAtom(mol, "Na", 200, 0).mol
+  const tin = addAtom(mol, "Sn", 400, 0)
+  mol = sprout(tin.mol, tin.id, SINGLE)
   const lines = toMolfile(mol).split("\n").slice(4, 4 + mol.atoms.length)
   const valence = (line: string) => line.slice(48, 51).trim()
-  assert.equal(valence(lines[0]), "3", "Sn with three bonds")
+  assert.equal(valence(lines[0]), "3", "Fe with three bonds")
   assert.equal(valence(lines[1]), "0", "carbon is left to the reader")
   assert.equal(valence(lines[4]), "15", "lone Na has zero valence")
+  // Sn has valences (2 and 4, as RDKit gives it): the reader fills it with hydrogens as we do.
+  assert.equal(valence(lines[5]), "0", "Sn is left to the reader")
 })
 
 test("an SD file holds each molecule as a numbered record, and reads back", () => {

@@ -50,7 +50,8 @@ export function reportFor(mol: Molecule, atomIds: number[]): Report {
             { name: "[M+Na]⁺", formula: `${formula}Na`, mz: exact + SODIUM },
             { name: "[M−H]⁻", formula: withH(-1), mz: exact - PROTON },
           ]
-        : [{ name: charge > 0 ? `[M]${charge > 1 ? charge : ""}⁺` : `[M]${charge < -1 ? -charge : ""}⁻`, formula, mz: (exact - charge * ELECTRON) / Math.abs(charge) }]
+        : // The ion's name carries the charge; its formula is written bare, as journals do.
+          [{ name: charge > 0 ? `[M]${charge > 1 ? charge : ""}⁺` : `[M]${charge < -1 ? -charge : ""}⁻`, formula: withH(0), mz: (exact - charge * ELECTRON) / Math.abs(charge) }]
   const analysis = elementalAnalysis(mol, ids)
   const first = ions[0]
   return {

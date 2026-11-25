@@ -179,7 +179,7 @@ test("metals state their valence so readers add no hydrogens we did not draw", (
 test("an SD file holds each molecule as a numbered record, and reads back", () => {
   const sdf = toSdf([acetate(), acetate()])
   assert.equal(sdf, `${ACETATE.replace("acetate", "Structura 1")}$$$$\n${ACETATE.replace("acetate", "Structura 2")}$$$$\n`)
-  assert.deepEqual(readSdf(sdf).map((record) => [record.title, plainFormula(record.mol)]), [["Structura 1", "C2H3O2"], ["Structura 2", "C2H3O2"]])
+  assert.deepEqual(readSdf(sdf).map((record) => [record.title, plainFormula(record.mol)]), [["Structura 1", "C2H3O2-"], ["Structura 2", "C2H3O2-"]])
   assert.equal(toSdf([]), "")
 })
 

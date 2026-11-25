@@ -1,6 +1,6 @@
 import type { MainModule } from "@rdkit/rdkit"
 import { exactMass } from "@structura/core/analysis"
-import { displayFormula, molecularWeight, plainFormula } from "@structura/core/formula"
+import { molecularWeight, plainFormula } from "@structura/core/formula"
 import { toMolfile } from "@structura/core/molfile"
 import type { Molecule } from "@structura/core/types"
 import { inSlices } from "./asyncSlices.ts"
@@ -96,7 +96,7 @@ export function propertyFields(mol: Molecule, rd: RdProps | null | undefined): R
 
 /** What an SD file's record carries beside the variables: formula, weight and the properties. */
 export function sdfProperties(mol: Molecule, rd: RdProps | null | undefined): Record<string, string> {
-  const fields = { Formula: displayFormula(plainFormula(mol)).normalize("NFKC"), MW: propertyText("mw", molecularWeight(mol)), ...propertyFields(mol, rd) }
+  const fields = { Formula: plainFormula(mol), MW: propertyText("mw", molecularWeight(mol)), ...propertyFields(mol, rd) }
   // An item with nothing to say is left out, rather than written empty.
   return Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== ""))
 }

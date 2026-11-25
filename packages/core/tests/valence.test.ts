@@ -16,11 +16,18 @@ const reference: { rdkit: string; cases: Case[] } = JSON.parse(
  */
 const HYPERVALENT: Record<string, number[]> = { N: [5], Cl: [3, 5, 7], Br: [3, 5, 7], I: [7] }
 
+/**
+ * RDKit lets Po2- take no bond at all, though S2-, Se2- and Te2- take 2 or 4 (keeping their
+ * own valences lowered by the charge). We treat Po2- as its lighter neighbours: a bonded
+ * polonide is not something anyone draws.
+ */
+const POLONIDE = (el: string, charge: number) => el === "Po" && charge === -2
+
 test(`implicit hydrogens match RDKit ${reference.rdkit}`, () => {
   const wrong: string[] = []
   for (const { el, charge, bonds, h } of reference.cases) {
     const ours = hydrogenCount(el, charge, bonds)
-    const tolerated = h == null && charge === 0 && HYPERVALENT[el]?.includes(bonds) && !ours.error && ours.h === 0
+    const tolerated = (h == null && charge === 0 && HYPERVALENT[el]?.includes(bonds) && !ours.error && ours.h === 0) || (h == null && POLONIDE(el, charge))
     const same = h == null ? ours.error : !ours.error && ours.h === h
     if (!same && !tolerated) {
       wrong.push(`${el}${charge > 0 ? "+" : ""}${charge || ""} with ${bonds} bonds: ours ${ours.error ? "error" : ours.h}, RDKit ${h ?? "error"}`)

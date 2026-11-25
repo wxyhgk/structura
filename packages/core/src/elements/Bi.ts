@@ -8,6 +8,7 @@ const element: ElementRecord = {
   col: 15,
   row: 6,
   category: "post-transition",
+  valences: [3, 5],
 }
 
 export default element

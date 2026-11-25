@@ -29,7 +29,7 @@ test("D is hydrogen with mass number 2, written CH3D and weighed exactly", () =>
   assert.equal(atom?.alias, undefined)
   assert.equal(plainFormula(deuterated), "CH3D")
   const extra = molecularWeight(deuterated) - molecularWeight(mol)
-  assert.ok(Math.abs(extra - (2.014102 - elementMass("H"))) < 1e-9)
+  assert.ok(Math.abs(extra - (2.014101778 - elementMass("H"))) < 1e-9)
 })
 
 test("a mass number in front of a symbol sets the isotope", () => {
@@ -37,7 +37,7 @@ test("a mass number in front of a symbol sets the isotope", () => {
   const labelled = setAtomLabel(mol, carbon, "13C")
   assert.equal(atomById(labelled, carbon)?.isotope, 13)
   assert.equal(plainFormula(labelled), "CH4")
-  assert.ok(Math.abs(molecularWeight(labelled) - molecularWeight(mol) - (13.003355 - elementMass("C"))) < 1e-9)
+  assert.ok(Math.abs(molecularWeight(labelled) - molecularWeight(mol) - (13.00335484 - elementMass("C"))) < 1e-9)
   assert.equal(atomById(setAtomLabel(mol, carbon, "15N"), carbon)?.el, "N")
   assert.equal(atomById(setAtomLabel(mol, carbon, "T"), carbon)?.isotope, 3)
   assert.equal(atomById(setAtomLabel(mol, carbon, "12Xx"), carbon)?.alias, "12Xx")

@@ -8,6 +8,7 @@ const element: ElementRecord = {
   col: 15,
   row: 5,
   category: "metalloid",
+  valences: [3, 5],
 }
 
 export default element

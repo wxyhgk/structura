@@ -1,4 +1,5 @@
 import { elementByNumber, elementMass, elementOf } from "./elements/index.ts"
+import { ISOTOPES } from "./elements/isotopes.ts"
 import { atomById, bondOrderSum } from "./molecule/graph.ts"
 import type { Atom, Molecule } from "./types.ts"
 
@@ -18,17 +19,13 @@ const STAND_INS: Record<number, ValenceList> = {
   10: { valences: [0] },
   11: { valences: [1], anyAbove: true },
   12: { valences: [2], anyAbove: true },
-  13: { valences: [3] },
   18: { valences: [0] },
   19: { valences: [1], anyAbove: true },
-  31: { valences: [3] },
-  32: { valences: [4] },
   36: { valences: [0] },
   37: { valences: [1], anyAbove: true },
-  50: { valences: [2, 4] },
-  51: { valences: [3, 5] },
   54: { valences: [0, 2, 4, 6] },
   55: { valences: [1] },
+  85: { valences: [1, 3, 5] },
 }
 
 const PERIOD_STARTS = [1, 3, 11, 19, 37, 55, 87]
@@ -43,14 +40,15 @@ function valencesOf(z: number): ValenceList | undefined {
 }
 
 /**
- * The valences a charged atom may fill up to, reproducing RDKit (see tests/chem/valence.test.ts).
- * A cation, a boron-group anion, or an ion whose electron count reaches the next period
- * behaves like its isoelectronic element: N+ like C, B- like C, I2- like Cs. Other anions
- * may also keep their own valences lowered by the charge, so S- takes 1, 3 or 5.
+ * The valences a charged atom may fill up to, reproducing RDKit (see tests/valence.test.ts).
+ * A cation, a boron- or carbon-group anion, or an ion whose electron count reaches the next
+ * period behaves like its isoelectronic element: N+ like C, B- like C, Sn- like Sb, I2- like
+ * Cs. Other anions may also keep their own valences lowered by the charge, so S- takes 1, 3
+ * or 5. An ion like a metal (Ga+ like Zn, Pb2+ like Hg) takes no hydrogens, as the metal.
  */
 function chargedValences(z: number, col: number, charge: number): ValenceList | undefined {
   const stand = valencesOf(z - charge)
-  if (charge > 0 || col <= 13 || period(z - charge) !== period(z)) return stand
+  if (charge > 0 || col <= 14 || period(z - charge) !== period(z)) return stand
   const own = (valencesOf(z)?.valences ?? []).map((valence) => valence + charge).filter((valence) => valence >= 0)
   const merged = [...new Set([...(stand?.valences ?? []), ...own])].sort((a, b) => a - b)
   return { valences: merged, anyAbove: stand?.anyAbove }
@@ -70,30 +68,13 @@ export function hydrogenCount(
   const element = elementOf(el)
   if (!element?.valences) return { h: 0, error: false }
   const list = charge === 0 ? { valences: element.valences } : chargedValences(element.z, element.col, charge)
-  if (!list) return { h: 0, error: true }
+  // Like a metal (no valences of its own): no hydrogens, and any number of bonds, as the metal.
+  if (!list) return { h: 0, error: elementByNumber(element.z - charge) == null }
   const fit = list.valences.find((valence) => valence >= bondSum)
   if (fit != null) return { h: fit - bondSum, error: false }
   if (list.anyAbove && list.valences.length > 0) return { h: 0, error: false }
   if (charge === 0 && element.hypervalent?.includes(bondSum)) return { h: 0, error: false }
   return { h: 0, error: true }
-}
-
-/** Exact masses of the isotopes people draw; others fall back to their mass number. */
-const ISOTOPE_MASS: Record<string, number> = {
-  H2: 2.014102,
-  H3: 3.016049,
-  C13: 13.003355,
-  C14: 14.003242,
-  N15: 15.000109,
-  O17: 16.999132,
-  O18: 17.99916,
-  F18: 18.000938,
-  P32: 31.973907,
-  S34: 33.967867,
-  Cl37: 36.965903,
-  Br81: 80.916291,
-  I125: 124.90463,
-  I131: 130.906125,
 }
 
 /** Deuterium and tritium keep their own letters in formulas, as in CH3D. */
@@ -103,14 +84,16 @@ function formulaSymbol(atom: Atom): string {
   return atom.el
 }
 
-/** A drawn isotope's exact mass (13C, D…), or its mass number when it is not in the table. */
+/**
+ * A drawn isotope's exact mass (13C, D, 35Cl…), or its mass number for one that is neither
+ * found in nature nor a common radiolabel.
+ */
 export function isotopeMass(el: string, isotope: number): number {
-  return ISOTOPE_MASS[`${el}${isotope}`] ?? isotope
+  return (Object.hasOwn(ISOTOPES, el) ? ISOTOPES[el][isotope] : undefined) ?? isotope
 }
 
 function atomMass(atom: Atom): number {
-  if (atom.isotope == null) return elementMass(atom.el)
-  return ISOTOPE_MASS[`${atom.el}${atom.isotope}`] ?? atom.isotope
+  return atom.isotope == null ? elementMass(atom.el) : isotopeMass(atom.el, atom.isotope)
 }
 
 export function atomHydrogens(mol: Molecule, atomId: number): { h: number; error: boolean } {

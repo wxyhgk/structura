@@ -18,6 +18,23 @@ test("exact masses as HRMS reports them: ethanol, benzene, chlorobenzene, and a 
   close(exactMass(benzene, [1]), 13.007825)
 })
 
+test("exact masses match RDKit's for every element and every isotope found in nature", () => {
+  const methyl = (el: string, isotope?: number) =>
+    build([{ op: "add_atom", el: "C", as: "c" }, { op: "add_atom", el, to: "c", as: "x" }, ...(isotope ? [{ op: "set_isotope" as const, atom: "x", isotope }] : [])]).molecule
+  // A natural isotope weighs what it weighs, not its mass number: CH3-35Cl is CH3Cl.
+  close(exactMass(methyl("Cl", 35)), 49.992327776)
+  close(exactMass(methyl("Cl")), 49.992327776)
+  close(exactMass(methyl("Cl", 37)), 51.989377686)
+  close(exactMass(methyl("Br", 79)), 93.941812196)
+  close(exactMass(methyl("C", 13)), 31.050305032)
+  // Elements the old table left out (no exact mass at all), and Ge, H-filled like Si.
+  close(exactMass(build([{ op: "add_atom", el: "He" }]).molecule), 4.002603254)
+  close(exactMass(build([{ op: "add_atom", el: "Mo" }]).molecule), 97.9054082)
+  close(exactMass(methyl("Ge")), 91.968127992)
+  const tungsten = build([{ op: "add_atom", el: "W", as: "w" }, ...Array.from({ length: 6 }, () => ({ op: "add_atom" as const, el: "C", to: "w" }))]).molecule
+  close(exactMass(tungsten), 274.091781776)
+})
+
 test("elemental analysis: benzene is 92.26% C and 7.74% H", () => {
   const benzene = build([{ op: "add_ring", at: { x: 0, y: 0 }, kind: "benzene" }]).molecule
   const shares = elementalAnalysis(benzene).map(({ symbol, percent }) => `${symbol} ${percent.toFixed(2)}`)

@@ -137,12 +137,14 @@ test("R-group atoms read as variables without a notice, numbered however the fil
   assert.equal(read(second("R", 2)).alias, "R2", "RDKit's [*:2]")
   assert.equal(read(second("*", 3)).alias, "R3")
   assert.equal(read(second("*")).alias, "R", "a bare *")
+  // R# goes by its M  RGP number even when an atom map is filled in as well.
+  assert.equal(read(second("R#", 7).replace("M  END", "M  RGP  1   2   5\nM  END")).alias, "R5", "R# with a map number")
   const isotope = read(second("R").replace("M  END", "M  ISO  1   2   4\nM  END"))
   assert.equal(isotope.alias, "R4", "RDKit's [4*]")
   assert.equal(isotope.isotope, undefined)
 })
 
-test("a drawing with R and R1 round-trips through MOL", () => {
+test("a drawing with R and R1 round-trips through MOL, V2000 and V3000", () => {
   let mol = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
   mol = setAtomLabel(mol, mol.atoms[0].id, "R")
   mol = setAtomLabel(mol, mol.atoms[1].id, "R1")
@@ -151,6 +153,11 @@ test("a drawing with R and R1 round-trips through MOL", () => {
   assert.deepEqual(read.problems, [])
   assert.deepEqual(read.mol.atoms.map((atom) => atom.alias), ["R", "R1"])
   assert.equal(toMolfile(read.mol), text)
+  // Past 999 atoms the file is V3000; a plain R still reads back as R, not R1.
+  const big: Molecule = { ...mol, atoms: [...mol.atoms, ...Array.from({ length: 1000 }, (_, at) => ({ id: 100 + at, el: "He", x: 0, y: 0, charge: 0 }))], nextAtomId: 1100 }
+  const v3000 = toMolfile(big)
+  assert.ok(v3000.split("\n")[3].endsWith("V3000"))
+  assert.deepEqual(readMolfile(v3000).mol.atoms.slice(0, 2).map((atom) => atom.alias), ["R", "R1"])
 })
 
 test("metals state their valence so readers add no hydrogens we did not draw", () => {

@@ -1,4 +1,5 @@
 import { BOND_LENGTH } from "../constants.ts"
+import { bracketRepeatProblem, DEFAULT_REPEAT } from "../drawing/brackets.ts"
 import { elementMass, elementOf } from "../elements/index.ts"
 import { kekulizeAromaticReport } from "../molecule/kekule.ts"
 import { emptyMolecule } from "../molecule/graph.ts"
@@ -43,7 +44,7 @@ function atomsKey(atoms: readonly number[]): string {
  * Sgroup written with it on the same atoms, else from its label. The types of any other
  * Sgroups go in `others`.
  */
-function bracketsOf(sgroups: Map<number, SgroupRead>, atomCount: number, others: Set<string>): Bracket[] {
+function bracketsOf(sgroups: Map<number, SgroupRead>, atomCount: number, others: Set<string>, note: Note): Bracket[] {
   const atomsOf = (sgroup: SgroupRead) => [...new Set(sgroup.atoms.filter((number) => number >= 1 && number <= atomCount))]
   const ranges = new Map<string, string>()
   for (const sgroup of sgroups.values()) {
@@ -58,7 +59,19 @@ function bracketsOf(sgroups: Map<number, SgroupRead>, atomCount: number, others:
       continue
     }
     const id = brackets.length + 1
-    brackets.push(sgroup.type === "SRU" ? { id, atoms, kind: "repeat", repeat: repeatFrom(sgroup.label, ranges.get(atomsKey(atoms))) } : { id, atoms, kind: "group" })
+    if (sgroup.type === "GEN") {
+      brackets.push({ id, atoms, kind: "group" })
+      continue
+    }
+    let repeat = repeatFrom(sgroup.label, ranges.get(atomsKey(atoms)))
+    // A count the editor cannot hold (another program's 1-500) would leave the drawing
+    // broken, every later edit refused: it falls back to the usual 1-4, and says so.
+    const problem = bracketRepeatProblem(repeat)
+    if (problem) {
+      note("unsupported-mol-feature", `repeat unit ${id} is counted ${repeat.min}-${repeat.max}: ${problem}; counted ${DEFAULT_REPEAT.min}-${DEFAULT_REPEAT.max} instead`)
+      repeat = { ...DEFAULT_REPEAT, name: bracketRepeatProblem({ ...DEFAULT_REPEAT, name: repeat.name }) ? DEFAULT_REPEAT.name : repeat.name }
+    }
+    brackets.push({ id, atoms, kind: "repeat", repeat })
   }
   return brackets
 }
@@ -72,11 +85,14 @@ function atomOf(source: CtabAtom, number: number, note: Note): Atom {
     atom.el = "H"
     atom.isotope = symbol === "D" ? 2 : 3
   } else if (R_GROUP_SYMBOLS.has(symbol)) {
-    // Numbered by the mapping field (RDKit's [*:2]), else the R-group number, else a mass
-    // number (RDKit's [4*]); a bare one is plain R.
+    // R# is numbered by its R-group number (`M  RGP`); R and * by the mapping field
+    // (RDKit's [*:2]); either, failing its own, by the other, else by a mass number
+    // (RDKit's [4*]). A bare one is plain R.
     atom.el = "C"
-    if (source.map > 0) atom.alias = rGroupLabel(source.map)
-    else if (source.rGroup != null) atom.alias = rGroupLabel(source.rGroup)
+    const own = symbol === "R#" ? source.rGroup : source.map > 0 ? source.map : null
+    const other = symbol === "R#" ? (source.map > 0 ? source.map : null) : source.rGroup
+    if (own != null) atom.alias = rGroupLabel(own)
+    else if (other != null) atom.alias = rGroupLabel(other)
     else {
       atom.alias = rGroupLabel(mass ?? 0)
       mass = undefined
@@ -150,7 +166,7 @@ export function readMolfile(text: string): { mol: Molecule; title: string; probl
   const atoms = table.atoms.map((atom, index) => atomOf(atom, index + 1, note))
   const { bonds, aromatic } = bondsOf(table, note)
   const others = new Set<string>()
-  const brackets = bracketsOf(table.sgroups, atoms.length, others)
+  const brackets = bracketsOf(table.sgroups, atoms.length, others, note)
   if (others.size > 0) {
     note("unsupported-mol-feature", `Sgroups other than repeat units and groups (${[...others].join(", ")}: abbreviations and the like) were ignored; their atoms are drawn out`)
   }

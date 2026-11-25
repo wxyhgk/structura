@@ -6,7 +6,7 @@ import { attachChairAt, fuseChairAt, fuseRingAt, growRing, insertGroup, placeRin
 import { RECIPES } from "../layout/recipes.ts"
 import { templateFor } from "../templates.ts"
 import type { HotTarget, Molecule } from "../types.ts"
-import { OpError, type Context, type Step } from "./context.ts"
+import { oneOf, OpError, type Context, type Step } from "./context.ts"
 import { addScaffold } from "./scaffold.ts"
 import { replaceFragment } from "./replace.ts"
 import type { Op } from "./types.ts"
@@ -98,6 +98,7 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       }
     case "add_ring": {
       if (op.kind != null && !Object.hasOwn(RING_SHAPES, op.kind)) throw new OpError(`unknown ring kind "${op.kind}"`)
+      if (op.side != null) oneOf(op.side, [1, -1] as const, "the side")
       if (op.chair != null) return chairRing(mol, op, ctx)
       const kind = op.kind ?? (op.size != null ? ringKindFor(op.size, op.aromatic ?? false) : undefined)
       if (!kind) {
@@ -146,7 +147,7 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       return replaceFragment(mol, op, ctx)
     case "set_collapsed": {
       const ids = op.atoms ? op.atoms.map(ctx.atom) : null
-      return { mol: setCollapsed(mol, groupsTouching(mol, ids), op.collapsed), next: null }
+      return { mol: setCollapsed(mol, groupsTouching(mol, ids), oneOf(op.collapsed, [true, false], "collapsed")), next: null }
     }
     default:
       return null

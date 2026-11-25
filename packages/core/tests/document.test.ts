@@ -52,6 +52,15 @@ test("a file that cannot be used says why", () => {
     assert.ok("error" in read && message.test(read.error), text.slice(0, 60))
   }
   assert.ok(!isDocument("Structura\n  molfile"))
+  // A counter past 2^53 cannot count up (n + 1 is n).
+  const huge = readDocument(JSON.stringify({ ...good, drawing: { ...good.drawing, molecule: { ...good.drawing.molecule, nextAtomId: 2 ** 60 } } }))
+  assert.ok("error" in huge && /whole numbers/.test(huge.error))
+})
+
+test("a file saved with a byte-order mark opens", () => {
+  const text = `\ufeff${toDocument(formula())}`
+  assert.ok(isDocument(text))
+  assert.ok("drawing" in readDocument(text))
 })
 
 test("generation settings and compound numbers survive a save and an open", () => {

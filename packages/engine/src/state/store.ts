@@ -92,6 +92,10 @@ export function createEditorStore(initial: Molecule[] | Drawing = []) {
       if (!options.quiet && !options.onReject) console.warn(`edit rejected at op ${result.index}: ${result.error}`)
       return null
     }
+    // An edit that changed nothing (no ops, a move by 0) is no undo step: undo would do
+    // nothing the first time it is pressed. The selection stays as it was too.
+    const present = state.history.present
+    if (result.drawing === present || JSON.stringify(result.drawing) === JSON.stringify(present)) return result
     const history = historyReducer(state.history, { type: "commit", drawing: result.drawing })
     // Kept, but only what is still there: a dragged atom that joined another is gone.
     set({ history, selection: options.keepSelection ? stillThere(state.selection, result.drawing.molecule) : emptySelection() })

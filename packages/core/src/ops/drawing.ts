@@ -3,7 +3,7 @@ import { bondById, bondLengthAt, boundsCenter, flipAtoms, moveAtoms, rotateAtoms
 import { commitChain, connectPoints, createBondAt, placeAtom, relax, sprout } from "../layout.ts"
 import { joinAtoms, joinBonds, landings, mergeLandings } from "../molecule/join.ts"
 import type { Molecule } from "../types.ts"
-import { OpError, type Context, type Step } from "./context.ts"
+import { oneOf, OpError, type Context, type Step } from "./context.ts"
 import type { Op } from "./types.ts"
 
 /** How close (in bond lengths) a dragged atom must come down on another to become it. */
@@ -42,7 +42,7 @@ export function drawingOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       return { mol: center ? scaleAtoms(mol, ids, center, op.sx, op.sy) : mol }
     }
     case "flip":
-      return { mol: flipAtoms(mol, withGroupMembers(mol, op.atoms.map(ctx.atom)), op.axis) }
+      return { mol: flipAtoms(mol, withGroupMembers(mol, op.atoms.map(ctx.atom)), oneOf(op.axis, ["horizontal", "vertical"] as const, "the axis")) }
     case "clean": {
       const atoms = op.atoms ? op.atoms.map(ctx.atom) : mol.atoms.map((atom) => atom.id)
       return { mol: relax(mol, { atoms, locked: (op.lock ?? []).map(ctx.atom) }) }
@@ -63,7 +63,7 @@ export function drawingOp(mol: Molecule, op: Op, ctx: Context): Step | null {
       return { mol: connectPoints(mol, from, origin, op.end, style), next: null }
     }
     case "draw_chain":
-      if (op.points.length < 2) throw new OpError("a chain needs at least two points")
+      if (!Array.isArray(op.points) || op.points.length < 2) throw new OpError("a chain needs at least two points")
       return { mol: commitChain(mol, op.points, op.from != null ? ctx.atom(op.from) : null), next: null }
     default:
       return null

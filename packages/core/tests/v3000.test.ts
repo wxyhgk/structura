@@ -100,6 +100,8 @@ function chain(count: number): { mol: Molecule; brackets: Bracket[] } {
   atoms[4].alias = "R2"
   atoms[5].alias = "NH 2"
   atoms[6].el = "O"
+  // Last on its line, the dash must not read as "goes on in the next line".
+  atoms[7].alias = "CO2-"
   atoms[count - 1].charge = 2
   const bonds: Bond[] = atoms.slice(1).map((_, at) => ({ id: at + 1, a: at + 1, b: at + 2, order: 1, stereo: "none" }))
   bonds[0].stereo = "up"

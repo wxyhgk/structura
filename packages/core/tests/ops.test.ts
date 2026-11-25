@@ -92,6 +92,12 @@ test("a wedge named by its atoms starts at the first one", () => {
   const wedged = ok(start, [{ op: "set_bond", bond: { between: [2, 1] }, stereo: "up" }])
   assert.equal(bondById(wedged.mol, 1)?.a, 2)
   assert.equal(bondById(wedged.mol, 1)?.stereo, "up")
+  // Named the other way round, an edit that leaves the wedge alone leaves it pointing as it was.
+  for (const change of [{ order: 1 as const }, { look: "bold" as const }]) {
+    const touched = bondById(ok(wedged.mol, [{ op: "set_bond", bond: { between: [1, 2] }, ...change }]).mol, 1)
+    assert.equal(touched?.a, 2, JSON.stringify(change))
+    assert.equal(touched?.stereo, "up", JSON.stringify(change))
+  }
 })
 
 test("warnings come back but do not stop the edit", () => {

@@ -37,6 +37,11 @@ test("a file that cannot be used says why", () => {
     [JSON.stringify({ ...good, drawing: { arrows: [] } }), /incomplete/],
     [JSON.stringify({ ...good, drawing: { ...good.drawing, variables: { R1: { alternatives: [] } } } }), /at least one alternative/],
     [JSON.stringify({ ...good, drawing: { ...good.drawing, molecule: { ...good.drawing.molecule, nextAtomId: 2 } } }), /not below nextAtomId/],
+    // Parts of the wrong shape are refused, not thrown on: an embedder's bad document must
+    // not take the editor down.
+    [JSON.stringify({ ...good, drawing: { ...good.drawing, molecule: { ...good.drawing.molecule, atoms: [null] } } }), /wrong shape/],
+    [JSON.stringify({ ...good, drawing: { ...good.drawing, variables: { R1: null } } }), /wrong shape/],
+    [JSON.stringify({ ...good, drawing: { ...good.drawing, molecule: { ...good.drawing.molecule, groups: 0 } } }), /incomplete/],
   ]
   for (const [text, message] of cases) {
     const read = readDocument(text)

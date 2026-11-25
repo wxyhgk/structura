@@ -83,7 +83,9 @@ export function readV2000(lines: string[], note: Note): Ctab | null {
       // The rest (labels, bonds, bracket corners…) are worked out again from the atoms.
       readSgroupLine(line, sgroups)
     } else if (line.startsWith("S  SKP")) {
-      index += int(line.slice(6, 9))
+      // Skips the next n lines; a count below one (a damaged file) skips none, rather than
+      // stepping back to read the same lines for ever.
+      index += Math.max(0, int(line.slice(6, 9)))
     } else if (line.trim() !== "") {
       note("unsupported-mol-feature", `ignored "${line.slice(0, 6).trim()}" line`)
     }

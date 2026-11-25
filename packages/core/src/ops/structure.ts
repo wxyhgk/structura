@@ -97,7 +97,7 @@ export function structureOp(mol: Molecule, op: Op, ctx: Context): Step | null {
         next: null,
       }
     case "add_ring": {
-      if (op.kind != null && !(op.kind in RING_SHAPES)) throw new OpError(`unknown ring kind "${op.kind}"`)
+      if (op.kind != null && !Object.hasOwn(RING_SHAPES, op.kind)) throw new OpError(`unknown ring kind "${op.kind}"`)
       if (op.chair != null) return chairRing(mol, op, ctx)
       const kind = op.kind ?? (op.size != null ? ringKindFor(op.size, op.aromatic ?? false) : undefined)
       if (!kind) {

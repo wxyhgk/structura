@@ -42,6 +42,10 @@ test("a file that cannot be used says why", () => {
     [JSON.stringify({ ...good, drawing: { ...good.drawing, molecule: { ...good.drawing.molecule, atoms: [null] } } }), /wrong shape/],
     [JSON.stringify({ ...good, drawing: { ...good.drawing, variables: { R1: null } } }), /wrong shape/],
     [JSON.stringify({ ...good, drawing: { ...good.drawing, molecule: { ...good.drawing.molecule, groups: 0 } } }), /incomplete/],
+    // A counter or id that is text would turn the next id into "71".
+    [JSON.stringify({ ...good, drawing: { ...good.drawing, nextArrowId: "7" } }), /whole numbers/],
+    [JSON.stringify({ ...good, drawing: { ...good.drawing, molecule: { ...good.drawing.molecule, nextGroupId: 1.5 } } }), /whole numbers/],
+    [JSON.stringify({ ...good, drawing: { ...good.drawing, arrows: good.drawing.arrows.map((arrow: { id: number }) => ({ ...arrow, id: String(arrow.id) })) } }), /whole-number id/],
   ]
   for (const [text, message] of cases) {
     const read = readDocument(text)

@@ -1,4 +1,4 @@
-import { SINGLE } from "../constants.ts"
+import { RING_SHAPES, SINGLE } from "../constants.ts"
 import { angleTo } from "../geometry.ts"
 import { setAtomLabel } from "../label.ts"
 import { addAtom, atomById, bondsLeaving, centroidOf, deleteSelection, neighbors } from "../molecule.ts"
@@ -93,6 +93,9 @@ export function replaceFragment(mol: Molecule, op: Extract<Op, { op: "replace" }
     return { mol: placed.mol, next: null }
   }
   const piece: Hanging = op.with
+  if ("ring" in piece && !Object.hasOwn(RING_SHAPES, piece.ring)) {
+    throw new OpError(`unknown ring kind "${piece.ring}" (${Object.keys(RING_SHAPES).join(", ")})`)
+  }
   if (joins.length > 1) {
     throw new OpError(`the fragment is joined to the rest by ${joins.length} bonds; only a fragment joined by one bond (or none) can be replaced, or one joined by two with a bond or a bridge`)
   }

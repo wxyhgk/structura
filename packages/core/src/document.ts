@@ -60,6 +60,15 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
     return { error: "the drawing is incomplete" }
   }
   if (![molecule.nextAtomId, molecule.nextBondId].every(Number.isInteger)) return { error: "the drawing's id counters are missing" }
+  // A counter or id that is text or a fraction ("7", 1.5) slips past the checks below (an
+  // id is compared with it, not counted up from it) and breaks the next edit: "7" + 1 is "71".
+  if (![molecule.nextGroupId ?? 1, drawing.nextArrowId ?? 1, drawing.nextBracketId ?? 1].every(Number.isInteger)) {
+    return { error: "the drawing's id counters must be whole numbers" }
+  }
+  const items: unknown[] = [...molecule.atoms, ...molecule.bonds, ...(molecule.groups ?? []), ...drawing.arrows, ...(Array.isArray(drawing.brackets) ? drawing.brackets : [])]
+  if (items.some((item) => typeof item === "object" && item !== null && !Number.isInteger((item as { id?: unknown }).id))) {
+    return { error: "every atom, bond, group, arrow and bracket needs a whole-number id" }
+  }
   const whole: Drawing = {
     molecule: { ...molecule, groups: molecule.groups ?? [], nextGroupId: molecule.nextGroupId ?? 1 },
     arrows: drawing.arrows,

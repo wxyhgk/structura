@@ -56,7 +56,7 @@ function movedAtoms(before: Molecule, after: Molecule): number[] {
 export function applyOps(start: Drawing, ops: Op[]): OpsResult {
   if (!Array.isArray(ops)) return { ok: false, drawing: start, index: 0, error: "ops must be a list of ops" }
   let drawing = start
-  const names: Record<string, number> = {}
+  const names = new Map<string, number>()
   let next: HotTarget | null = null
   let depth: Map<number, number> | undefined
   const ctx = makeContext(() => drawing.molecule, names)
@@ -99,5 +99,8 @@ export function applyOps(start: Drawing, ops: Op[]): OpsResult {
     brackets: (drawing.brackets ?? []).filter((item) => item.id >= (start.nextBracketId ?? 1)).map((item) => item.id),
   }
   const moved = movedAtoms(start.molecule, mol)
-  return { ok: true, drawing, names, problems, next, added, moved, ...(depth ? { depth: Object.fromEntries(depth) } : {}) }
+  // Only names whose atoms are still there: one removed later in the batch names nothing.
+  const present = new Set(mol.atoms.map((atom) => atom.id))
+  const named = Object.fromEntries([...names].filter(([, id]) => present.has(id)))
+  return { ok: true, drawing, names: named, problems, next, added, moved, ...(depth ? { depth: Object.fromEntries(depth) } : {}) }
 }

@@ -14,7 +14,12 @@ export function toDocument(drawing: Drawing): string {
 
 /** Whether text looks like a Structura file, before trying to read it. */
 export function isDocument(text: string): boolean {
-  return /^\s*\{[\s\S]*"format"\s*:\s*"structura"/.test(text.slice(0, 200))
+  return /^\s*\{[\s\S]*"format"\s*:\s*"structura"/.test(withoutBom(text).slice(0, 200))
+}
+
+/** The text without the byte-order mark some editors put in front of a UTF-8 file. */
+function withoutBom(text: string): string {
+  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
 }
 
 /** The keys of T that may be left out. */
@@ -47,7 +52,7 @@ function bracketCounter(drawing: Partial<Drawing>): Pick<Drawing, "nextBracketId
 export function readDocument(text: string): { drawing: Drawing } | { error: string } {
   let parsed: unknown
   try {
-    parsed = JSON.parse(text)
+    parsed = JSON.parse(withoutBom(text))
   } catch {
     return { error: "not valid JSON" }
   }
@@ -62,11 +67,13 @@ export function readDocument(text: string): { drawing: Drawing } | { error: stri
   if (![molecule.nextAtomId, molecule.nextBondId].every(Number.isInteger)) return { error: "the drawing's id counters are missing" }
   // A counter or id that is text or a fraction ("7", 1.5) slips past the checks below (an
   // id is compared with it, not counted up from it) and breaks the next edit: "7" + 1 is "71".
-  if (![molecule.nextGroupId ?? 1, drawing.nextArrowId ?? 1, drawing.nextBracketId ?? 1].every(Number.isInteger)) {
+  // One past 2^53 cannot count up at all (n + 1 is n), and an id below 1 is none the editor gives.
+  const counter = (value: unknown) => Number.isSafeInteger(value) && (value as number) >= 1
+  if (![molecule.nextAtomId, molecule.nextBondId, molecule.nextGroupId ?? 1, drawing.nextArrowId ?? 1, drawing.nextBracketId ?? 1].every(counter)) {
     return { error: "the drawing's id counters must be whole numbers" }
   }
   const items: unknown[] = [...molecule.atoms, ...molecule.bonds, ...(molecule.groups ?? []), ...drawing.arrows, ...(Array.isArray(drawing.brackets) ? drawing.brackets : [])]
-  if (items.some((item) => typeof item === "object" && item !== null && !Number.isInteger((item as { id?: unknown }).id))) {
+  if (items.some((item) => typeof item === "object" && item !== null && !counter((item as { id?: unknown }).id))) {
     return { error: "every atom, bond, group, arrow and bracket needs a whole-number id" }
   }
   const whole: Drawing = {

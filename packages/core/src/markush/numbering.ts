@@ -4,9 +4,14 @@ import type { CompoundNumbering } from "./types.ts"
 export const DEFAULT_NUMBERING: CompoundNumbering = { pattern: "C-{n}", start: 1 }
 
 /** Why a generation setting cannot be kept, or null when it can. */
+const GENERATION_KEYS = ["representatives", "dedupe", "limit", "order"]
+
 export function generationProblem(generation: unknown): string | null {
   if (typeof generation !== "object" || generation === null || Array.isArray(generation)) return "the generation settings are not an object"
   const { representatives, dedupe, limit, order } = generation as Record<string, unknown>
+  // A key that is none of these would be saved with the file and do nothing.
+  const unknown = Object.keys(generation).find((key) => !GENERATION_KEYS.includes(key))
+  if (unknown != null) return `"${unknown}" is not a generation setting (${GENERATION_KEYS.join(", ")})`
   if (representatives !== undefined && typeof representatives !== "boolean") return "the generation setting 'representatives' is not true or false"
   if (dedupe !== undefined && typeof dedupe !== "boolean") return "the generation setting 'dedupe' is not true or false"
   if (limit !== undefined && !(Number.isInteger(limit) && (limit as number) >= 1 && (limit as number) <= 1_000_000)) return "the generation limit is not a whole number of at least 1"

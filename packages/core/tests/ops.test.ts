@@ -68,6 +68,15 @@ test("mistakes are reported instead of guessed at", () => {
     [[{ op: "add_ring", atom: 1, kind: "toString" as RingKind }], /unknown ring kind "toString"/],
     [[{ op: "replace", atoms: [2], with: { ring: "hexagon" as RingKind } }], /unknown ring kind "hexagon"/],
     [[{ op: "replace", atoms: [2], with: { ring: "constructor" as RingKind } }], /unknown ring kind/],
+    // A value outside the choices is refused, not read as the nearest one.
+    [[{ op: "add_arrow", atoms: [1], direction: "diag" as "up" }], /direction must be/],
+    [[{ op: "flip", atoms: [1, 2], axis: "z" as "vertical" }], /axis must be/],
+    [[{ op: "tumble", atoms: [1, 2], axis: "z" as "x", angle: 30 }], /axis must be/],
+    [[{ op: "set_collapsed", collapsed: "x" as unknown as boolean }], /collapsed must be/],
+    [[{ op: "add_ring", bond: 1, kind: "benzene", side: 2 as 1 }], /side must be/],
+    [[{ op: "draw_chain", points: {} as never }], /at least two points/],
+    [[{ op: "set_generation", generation: { foo: 1 } as never }], /"foo" is not a generation setting/],
+    [[{ op: "add_proviso", proviso: { kind: "compound", smiles: "CO" } }, { op: "remove_proviso", index: "0" as unknown as number }], /no proviso #0/],
   ]
   for (const [ops, message] of cases) {
     const result = run(start, ops)
@@ -120,6 +129,19 @@ test("what an op stores is its own: changing the object passed in later changes 
   ;(alternatives[0] as { text: string }).text = "N"
   ;(proviso as { smiles: string }).smiles = "CCO"
   assert.deepEqual(done.drawing, saved)
+})
+
+test("any name can name an atom, and names of atoms removed later are not handed back", () => {
+  const start = createBondAt(emptyMolecule(), { x: 0, y: 0 }, SINGLE)
+  const named = ok(start, [
+    { op: "add_atom", el: "N", to: 1, as: "constructor" },
+    { op: "add_atom", el: "O", to: "constructor", as: "__proto__" },
+    { op: "add_atom", el: "C", to: 2, as: "gone" },
+    { op: "remove", atoms: ["gone"] },
+  ])
+  assert.equal(atomById(named.mol, named.names["constructor"] as number)?.el, "N")
+  assert.equal(atomById(named.mol, Object.getOwnPropertyDescriptor(named.names, "__proto__")?.value)?.el, "O")
+  assert.equal(Object.hasOwn(named.names, "gone"), false)
 })
 
 test("warnings come back but do not stop the edit", () => {

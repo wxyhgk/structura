@@ -6,6 +6,12 @@ import type { BondRef, Ref } from "./types.ts"
 /** A mistake in the ops themselves; the batch is rejected with this message. */
 export class OpError extends Error {}
 
+/** `value` when it is one of `allowed`; otherwise the op is refused, naming `what` it should be. */
+export function oneOf<T>(value: unknown, allowed: readonly T[], what: string): T {
+  if (!allowed.includes(value as T)) throw new OpError(`${what} must be ${allowed.map((item) => JSON.stringify(item)).join(" or ")}, not ${JSON.stringify(value)}`)
+  return value as T
+}
+
 /** What one op did: the new molecule, and where it leaves the hotspot (undefined keeps it). */
 export type Step = { mol: Molecule; next?: HotTarget | null }
 
@@ -17,9 +23,10 @@ export type Context = {
   element(el: string): void
 }
 
-export function makeContext(current: () => Molecule, names: Record<string, number>): Context {
+/** `names` maps the batch's `as` names to atom ids; a Map, so "constructor" or "__proto__" is a name like any other. */
+export function makeContext(current: () => Molecule, names: Map<string, number>): Context {
   const atom = (ref: Ref): number => {
-    const id = typeof ref === "string" ? names[ref] : ref
+    const id = typeof ref === "string" ? names.get(ref) : ref
     if (id == null) throw new OpError(`no atom is named "${ref}" yet`)
     if (!atomById(current(), id)) throw new OpError(`atom #${id} does not exist`)
     return id
@@ -39,8 +46,8 @@ export function makeContext(current: () => Molecule, names: Record<string, numbe
     },
     name(as, id) {
       if (as == null) return
-      if (as in names) throw new OpError(`the name "${as}" is already used in this batch`)
-      names[as] = id
+      if (names.has(as)) throw new OpError(`the name "${as}" is already used in this batch`)
+      names.set(as, id)
     },
     element(el) {
       if (!elementOf(el)) throw new OpError(`"${el}" is not an element symbol`)

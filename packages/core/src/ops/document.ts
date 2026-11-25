@@ -10,7 +10,7 @@ import { sharers, variableProblem } from "../markush/variables.ts"
 import { boundsCenter, tumbleAtoms } from "../molecule.ts"
 import type { Drawing, HotTarget } from "../types.ts"
 import type { Attachment, RingClosure, Variable } from "../markush/types.ts"
-import { OpError, type Context } from "./context.ts"
+import { oneOf, OpError, type Context } from "./context.ts"
 import type { Op } from "./types.ts"
 
 /**
@@ -42,10 +42,11 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
     case "add_arrow": {
       const ids = op.atoms.map(ctx.atom)
       if (ids.length === 0) throw new OpError("an arrow needs atoms to point away from")
-      return { drawing: addReactionArrow(drawing, ids, op.direction) }
+      return { drawing: addReactionArrow(drawing, ids, oneOf(op.direction, ["left", "right", "up", "down"] as const, "the direction")) }
     }
     case "tumble": {
       if (!Number.isFinite(op.angle)) throw new OpError(`angle ${op.angle} is not a number`)
+      oneOf(op.axis, ["x", "y"] as const, "the axis")
       const mol = drawing.molecule
       const ids = withGroupMembers(mol, op.atoms.map(ctx.atom))
       const center = op.center ?? boundsCenter(mol, ids)
@@ -118,7 +119,7 @@ export function documentOp(drawing: Drawing, op: Op, ctx: Context, depth: Map<nu
       return { drawing: { ...drawing, provisos: [...(drawing.provisos ?? []), op.proviso] } }
     }
     case "remove_proviso": {
-      if (!drawing.provisos?.[op.index]) throw new OpError(`there is no proviso #${op.index}`)
+      if (!Number.isInteger(op.index) || !drawing.provisos?.[op.index]) throw new OpError(`there is no proviso #${op.index}`)
       const rest = drawing.provisos.filter((_, index) => index !== op.index)
       return { drawing: { ...drawing, provisos: rest.length > 0 ? rest : undefined } }
     }
